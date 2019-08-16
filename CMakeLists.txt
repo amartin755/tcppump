@@ -18,20 +18,5 @@ if (MINGW)
 endif ()
 
 
-if(${WIN32})
-    # we must set the minimum supported windows version
 
-    # windows xp
-    set(supp_win_ver 0x0501)
-
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_WIN32_WINNT=${supp_win_ver}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DWINVER=${supp_win_ver}")
-    add_definitions(-D_WIN32_WINNT=${supp_win_ver})
-    add_definitions(-DWINVER=${supp_win_ver})
-
-    # get rid of deprecated and security warnings
-    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-    add_definitions(-D_WINSOCK_DEPRECATED_NO_WARNINGS)
-endif()
-
-add_executable (tcppump src/cmdline.cpp src/console.cpp src/tcppump.cpp)
+add_subdirectory (src)

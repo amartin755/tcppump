@@ -1,5 +1,5 @@
 /**
- * TCPPUMP <https://github.com/amartin755/tcppump>
+ * NETNAG <https://github.com/amartin755/netnag>
  * Copyright (C) 2012-2016 Andreas Martin (netnag@mailbox.org)
  *
  * cmdlineapp.hpp
@@ -23,8 +23,8 @@
 #ifndef CMDLINEAPP_HPP_
 #define CMDLINEAPP_HPP_
 
-#include "cmdline.hpp"
-#include "console.hpp"
+#include "../libnetnag/cmdline.hpp"
+#include "../libnetnag/console.hpp"
 
 class cCmdlineApp
 {

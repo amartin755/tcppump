@@ -1,9 +1,6 @@
 /**
- * TCPPUMP <https://github.com/amartin755/tcppump>
+ * NETNAG <https://github.com/amartin755/netnag>
  * Copyright (C) 2012-2016 Andreas Martin (netnag@mailbox.org)
- *
- * shellout.hpp
- *
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,32 +17,26 @@
  */
 
 
-#ifndef CONSOLE_HPP_
-#define CONSOLE_HPP_
+#ifndef SYSTEM_HPP_
+#define SYSTEM_HPP_
 
-#include <cstdarg>
+#include <cstdio> // FILE
+
+#include "protocoltypes.hpp"
 
 namespace nn
 {
-
-
-
-	class Console
+	class System
 	{
 	public:
-		static bool PrintError (const char* format, ...);
-		static bool Print (const char* format, ...);
-		static bool PrintVerbose (const char* format, ...);
-		static bool PrintDebug (const char* format, ...);
+		static int ExecuteProcess (const char* cmdline);
+		static const char* GetTmpFilePath ();
+		static FILE* OpenTmpFile (const char* mode = "rb", const char** path = NULL);
+		static bool Diff (const char* file1, const char* file2);
+		static bool ResolveMacForIpAddress (ipv4_t ip, mac_t &mac);
+		static void Sleep (unsigned seconds);
 
-		enum out_level {Silent = 1, Error = 2, Normal = 3, Verbose = 4, Debug = 5};
-		static void SetPrintLevel (out_level lvl);
-
-	private:
-		static bool print (out_level lvl, const char* format, va_list ap);
-
-	private:
-		static out_level level;
+		static void unitTest ();
 	};
 }
-#endif /* CONSOLE_HPP_ */
+#endif /* SYSTEM_HPP_ */

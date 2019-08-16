@@ -1,5 +1,5 @@
 /**
- * TCPPUMP <https://github.com/amartin755/tcppump>
+ * NETNAG <https://github.com/amartin755/netnag>
  * Copyright (C) 2012-2016 Andreas Martin (netnag@mailbox.org)
  *
  * cmdline.cpp
@@ -19,13 +19,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "../libnetnag/cmdline.hpp"
+
 #include <cassert>
 #include <cstring>
 #include <cstdlib>
 #include <getopt.h>
 
-#include "cmdline.hpp"
-#include "console.hpp"
+#include "../libnetnag/console.hpp"
 
 
 cCmdline::cCmdline (int argc, char* argv[])

@@ -1,9 +1,6 @@
 /**
- * TCPPUMP <https://github.com/amartin755/tcppump>
+ * NETNAG <https://github.com/amartin755/netnag>
  * Copyright (C) 2012-2016 Andreas Martin (netnag@mailbox.org)
- *
- * tcppump.hpp
- *
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,29 +17,29 @@
  */
 
 
-#ifndef TCPPUMP_HPP
-#define TCPPUMP_HPP
+#ifndef TOOLS_HPP_
+#define TOOLS_HPP_
 
-#include "cmdlineapp.hpp"
+#include <cstdint>
+#include "protocoltypes.hpp"
 
-typedef struct
+namespace nn
 {
-	const char*  ifc;
-	int          repeat;
-	bool         help;
-	bool         verbose;
-}appOptions;
 
-class cTcpPump : public cCmdlineApp
-{
-public:
-	cTcpPump(const char* name, const char* brief, const char* description);
-	virtual ~cTcpPump();
+	class Converter
+	{
+	public:
+		static uint8_t* hexStringToBin (const char* hexString, int* binLength);
+		static bool hexStringToBin (const char* hexString, int hexStringLen, uint8_t* bin, int* binLength);
+		static bool stringToMac (const char* str, mac_t& mac, int len = 0);
+		static uint16_t getIPv4Chksum (const uint16_t* ipheader, int headerLen);
+		static bool stringToIpv4 (const char* str, ipv4_t& ip, int len = 0);
 
-	int execute (int argc, char* argv[]);
+		static void unitTest ();
 
-private:
-	appOptions options;
-};
+	private:
+		static bool checkMacString (const char* mac, size_t len = 0);
+	};
 
-#endif /* TCPPUMP_HPP */
+}
+#endif /* TOOLS_HPP_ */

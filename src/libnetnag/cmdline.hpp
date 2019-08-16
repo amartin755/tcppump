@@ -1,5 +1,5 @@
 /**
- * TCPPUMP <https://github.com/amartin755/tcppump>
+ * NETNAG <https://github.com/amartin755/netnag>
  * Copyright (C) 2012-2016 Andreas Martin (netnag@mailbox.org)
  *
  * cmdline.hpp
