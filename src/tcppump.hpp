@@ -24,6 +24,7 @@
 #define TCPPUMP_HPP
 
 #include <vector>
+#include <cstddef>
 #include "libnetnag/cmdlineapp.hpp"
 
 typedef struct
@@ -39,8 +40,8 @@ typedef struct
 typedef struct
 {
 	int key;
-	const uint8_t* packet;
-	int packetLen;
+	uint8_t* packet;
+	size_t packetLen;
 }packet_t;
 
 

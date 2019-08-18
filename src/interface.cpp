@@ -61,3 +61,16 @@ bool cInterface::sendPacket (const uint8_t* payload, int length)
 	printf ("STUB sendPacket (%d)\n", length);
 	return true;
 }
+
+mac_t cInterface::getMAC ()
+{
+	//TODO implement me
+	mac_t x;
+	x.a = 0x10;
+	x.b = 0x20;
+	x.c = 0x30;
+	x.d = 0x40;
+	x.e = 0x50;
+	x.f = 0x60;
+	return x;
+}

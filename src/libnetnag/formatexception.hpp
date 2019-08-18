@@ -1,9 +1,6 @@
 /**
- * TCPPUMP <https://github.com/amartin755/tcppump>
- * Copyright (C) 2012-2016 Andreas Martin (netnag@mailbox.org)
- *
- * interface.hpp
- *
+ * NETNAG <https://github.com/amartin755/netnag>
+ * Copyright (C) 2012-2019 Andreas Martin (netnag@mailbox.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,28 +16,37 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef INTERFACE_H_
-#define INTERFACE_H_
+#ifndef FORMATEXCEPTION_HPP_
+#define FORMATEXCEPTION_HPP_
 
-#include <string>
-#include <cstdint>
+const int exParUnknown = 1;
+const int exParRange   = 2;
+const int exParFormat  = 3;
 
-#include "libnetnag/protocoltypes.hpp"
-
-class cInterface
+class FormatException
 {
 public:
-	cInterface(const char* ifname);
-	virtual ~cInterface();
-	bool open ();
-	bool close ();
-	bool sendPacket (const uint8_t* payload, int length);
-	mac_t getMAC ();
+	FormatException (int cause, const char* val)
+	{
+		this->cause = cause;
+		this->val   = val;
+	}
+
+	int what ()
+	{
+		return cause;
+	}
+
+	const char* value ()
+	{
+		return val;
+	}
 
 private:
-	std::string name;
-	int socket;
-
+	int cause;
+	const char* val;
 };
 
-#endif /* INTERFACE_H_ */
+
+
+#endif /* FORMATEXCEPTION_HPP_ */

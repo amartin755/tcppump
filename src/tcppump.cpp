@@ -26,6 +26,8 @@
 #include "interface.hpp"
 #include "libnetnag/converter.hpp"
 #include "libnetnag/system.hpp"
+#include "libnetnag/instructionparser.hpp"
+#include "libnetnag/ethernetpacket.hpp"
 
 using namespace nn;
 
@@ -68,13 +70,27 @@ int cTcpPump::execute (int argc, char* argv[])
 	for (int n = 0; n < argc && !ret; n++)
 	{
 		packet_t packet;
-		packet.packet = Converter::hexStringToBin (argv[n], &packet.packetLen);
+		packet.packetLen = cEthernetPacket::MAX_DOUBLE_TAGGED_PACKET;
+		packet.packet = new (std::nothrow) uint8_t[packet.packetLen];
+		if (!packet.packet)
+		{
+			nn::Console::PrintError ("Not enough memory\n");
+			goto cleanup;
+		}
 
-		if (packet.packet)
-			packets.push_back(packet);
-		else
-			ret = -3;
+		try
+		{
+			packet.packetLen = cInstructionParser (ifc.getMAC(), 0).parse (argv[n], packet.packet, packet.packetLen);
+		}
+		catch (ParseException &e)
+		{
+			nn::Console::PrintError ("%s %s\n", e.what (), e.value ());
+			goto cleanup;
+		}
+
+		packets.push_back(packet);
 	}
+
 	Console::PrintVerbose ("Sending %d packets, each delayed by %d seconds. Repeating %d times.\n\n", argc, options.delay, options.repeat);
 	while (options.repeat-- && !ret)
 	{
@@ -91,9 +107,10 @@ int cTcpPump::execute (int argc, char* argv[])
 		}
 	}
 
+cleanup:
 	for (const packet_t& p : packets)
 	{
-		free ((void*)p.packet);
+		delete[] p.packet;
 	}
 
 	return ret;

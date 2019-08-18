@@ -5,7 +5,10 @@ SET (sourcefiles
      tcppump.cpp
      libnetnag/cmdline.cpp
      libnetnag/console.cpp
-     libnetnag/converter.cpp)
+     libnetnag/converter.cpp
+     libnetnag/ethernetpacket.cpp
+     libnetnag/instructionparser.cpp
+     libnetnag/parameterlist.cpp)
 
 # platform specific files
 IF (WIN32)
