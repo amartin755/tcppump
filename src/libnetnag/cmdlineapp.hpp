@@ -23,8 +23,8 @@
 #ifndef CMDLINEAPP_HPP_
 #define CMDLINEAPP_HPP_
 
-#include "../libnetnag/cmdline.hpp"
-#include "../libnetnag/console.hpp"
+#include "cmdline.hpp"
+#include "console.hpp"
 
 class cCmdlineApp
 {

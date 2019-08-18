@@ -19,14 +19,13 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../libnetnag/cmdline.hpp"
-
 #include <cassert>
 #include <cstring>
 #include <cstdlib>
 #include <getopt.h>
 
-#include "../libnetnag/console.hpp"
+#include "cmdline.hpp"
+#include "console.hpp"
 
 
 cCmdline::cCmdline (int argc, char* argv[])

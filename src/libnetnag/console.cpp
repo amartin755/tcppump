@@ -20,12 +20,11 @@
  */
 
 
-#include "../libnetnag/console.hpp"
-
 #include <cassert>
 #include <cstdarg>
 #include <cstdio>
 
+#include "console.hpp"
 
 namespace nn
 {
