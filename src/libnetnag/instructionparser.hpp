@@ -24,6 +24,7 @@
 #include <cstdio>
 
 #include "protocoltypes.hpp"
+#include "ethernetpacket.hpp"
 #ifdef WITH_TIMESTAMP
 #include "timeval.hpp"
 #endif
@@ -36,17 +37,17 @@ public:
 	cInstructionParser (mac_t ownMac, ipv4_t ownIPv4);
 	~cInstructionParser ();
 #ifdef WITH_TIMESTAMP
-	int parse (const char* instruction, cTimeval& timestamp, bool& isAbsolute, uint8_t* packet, size_t packetBufSize);
+	int parse (const char* instruction, cTimeval& timestamp, bool& isAbsolute, cEthernetPacket& packet);
 #else
-	int parse (const char* instruction, uint8_t* packet, size_t packetBufSize);
+	int parse (const char* instruction, cEthernetPacket& packet);
 #endif
 
 private:
-	int compileRAW (cParameterList& params, uint8_t*frame, size_t);
-	int compileETH (cParameterList& params, uint8_t*frame, size_t);
-	int compileARP (cParameterList& params, uint8_t*frame, size_t);
-	int compileSNAP (cParameterList& params, uint8_t*frame, size_t);
-	int compileIPv4 (cParameterList& params, uint8_t*frame, size_t);
+	int compileRAW (cParameterList& params, cEthernetPacket& packet);
+	int compileETH (cParameterList& params, cEthernetPacket& packet);
+	int compileARP (cParameterList& params, cEthernetPacket& packet);
+	int compileSNAP (cParameterList& params, cEthernetPacket& packet);
+	int compileIPv4 (cParameterList& params, cEthernetPacket& packet);
 
 	mac_t  ownMac;
 	ipv4_t ownIPv4;

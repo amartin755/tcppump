@@ -65,55 +65,46 @@ int cTcpPump::execute (int argc, char* argv[])
 	if (!ifc.open())
 		return -1;
 
-	int ret = 0;
 
-	for (int n = 0; n < argc && !ret; n++)
+	for (int n = 0; n < argc; n++)
 	{
-		packet_t packet;
-		packet.packetLen = cEthernetPacket::MAX_DOUBLE_TAGGED_PACKET;
-		packet.packet = new (std::nothrow) uint8_t[packet.packetLen];
-		if (!packet.packet)
+		try
+		{
+			packets.emplace_back();
+		}
+		catch (...)
 		{
 			nn::Console::PrintError ("Not enough memory\n");
-			goto cleanup;
+			return -2;
 		}
 
 		try
 		{
-			packet.packetLen = cInstructionParser (ifc.getMAC(), 0).parse (argv[n], packet.packet, packet.packetLen);
+			cInstructionParser (ifc.getMAC(), 0).parse (argv[n], packets.back());
 		}
 		catch (ParseException &e)
 		{
 			nn::Console::PrintError ("%s %s\n", e.what (), e.value ());
-			goto cleanup;
+			return -3;
 		}
-
-		packets.push_back(packet);
 	}
 
 	Console::PrintVerbose ("Sending %d packets, each delayed by %d seconds. Repeating %d times.\n\n", argc, options.delay, options.repeat);
-	while (options.repeat-- && !ret)
+	while (options.repeat--)
 	{
-		for (const packet_t& p : packets)
+		for (cEthernetPacket& p : packets)
 		{
 			if (options.delay)
 				Console::PrintVerbose ("Waiting %d seconds\n", options.delay);
 			System::Sleep (options.delay);
-			if(!ifc.sendPacket (p.packet, p.packetLen))
+			if(!ifc.sendPacket (p.get(), p.getLength()))
 			{
-				ret = -4;
-				break;
+				return -4;
 			}
 		}
 	}
 
-cleanup:
-	for (const packet_t& p : packets)
-	{
-		delete[] p.packet;
-	}
-
-	return ret;
+	return 0;
 }
 
 int main(int argc, char* argv[])

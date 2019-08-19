@@ -26,6 +26,7 @@
 #include <vector>
 #include <cstddef>
 #include "libnetnag/cmdlineapp.hpp"
+#include "libnetnag/ethernetpacket.hpp"
 
 typedef struct
 {
@@ -36,13 +37,6 @@ typedef struct
 	int          delay;
 	bool         interactive;
 }appOptions;
-
-typedef struct
-{
-	int key;
-	uint8_t* packet;
-	size_t packetLen;
-}packet_t;
 
 
 class cTcpPump : public cCmdlineApp
@@ -55,7 +49,7 @@ public:
 
 private:
 	appOptions options;
-	std::vector <packet_t> packets;
+	std::vector <cEthernetPacket> packets;
 };
 
 #endif /* TCPPUMP_HPP */

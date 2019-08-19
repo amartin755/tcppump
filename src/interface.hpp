@@ -24,6 +24,7 @@
 
 #include <string>
 #include <cstdint>
+#include <cstddef>
 
 #include "libnetnag/protocoltypes.hpp"
 
@@ -34,7 +35,7 @@ public:
 	virtual ~cInterface();
 	bool open ();
 	bool close ();
-	bool sendPacket (const uint8_t* payload, int length);
+	bool sendPacket (const uint8_t* payload, size_t length);
 	mac_t getMAC ();
 
 private:

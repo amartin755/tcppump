@@ -24,6 +24,7 @@
 #include <cstdio>
 
 #include "protocoltypes.hpp"
+#include "ethernetpacket.hpp"
 
 #ifdef WITH_TIMESTAMP
 #include "timeval.hpp"
@@ -40,9 +41,9 @@ public:
 	~cFileParser ();
 	void init (FILE* fp, int defaultDelay, mac_t ownMac, ipv4_t ownIPv4);
 #ifdef WITH_TIMESTAMP
-	int parse (cTimeval&, bool&, uint8_t*, size_t);
+	int parse (cTimeval&, bool&, cEthernetPacket& packet);
 #else
-	int parse (uint8_t*, size_t);
+	int parse (cEthernetPacket& packet);
 #endif
 	const char* getLastError ();
 

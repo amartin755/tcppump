@@ -29,7 +29,9 @@
 class cEthernetPacket
 {
 public:
-	cEthernetPacket (uint8_t* packet, size_t maxLength);
+	cEthernetPacket ();
+	cEthernetPacket (size_t maxLength);
+	~cEthernetPacket ();
 	void setMacHeader (const mac_t& src, const mac_t& dest);
 	void addLlcHeader (uint8_t dsap, uint8_t ssap, uint16_t control);
 	void addSnapHeader (uint32_t oui, uint16_t protocol);
@@ -38,7 +40,9 @@ public:
 	void setLength ();
 	void setPayload (const char* payload, size_t len);
 	void setRaw (const char* payload, size_t len);
-	inline size_t getPacketLength () {return pPayload - packet + payloadLength;};
+	const uint8_t* get ();
+	inline size_t getLength () {return pPayload - packet + payloadLength;};
+	inline void clear () {reset ();};
 
 	static const size_t   MAX_ETHERNET_PAYLOAD     = 1500;
 	static const size_t   MAX_PACKET               = 6+6+2+MAX_ETHERNET_PAYLOAD;
@@ -55,13 +59,14 @@ private:
 	void updatePosition (size_t len);
 	inline void checkPacketLength (size_t addedBytes)
 	{
-		if ((getPacketLength () + addedBytes) > packetMaxLength)
+		if ((getLength () + addedBytes) > packetMaxLength)
 			throw FormatException (exParRange, NULL);
 	}
 
+	const uint32_t* data;       // holds the packet data; do never access directly; use packet instead!
 	uint8_t*  packet;			// always points to packet begin
 	size_t    packetMaxLength;
-	uint8_t*  pPayload; // points at begin of payload (will be moved in case of tagging)
+	uint8_t*  pPayload;         // points at begin of payload (will be moved in case of tagging)
 	uint16_t* pEthertypeLength; // points at ethertype/length field (will be moved in case of tagging)
 	size_t    payloadLength;
 	size_t    llcHeaderLength;

@@ -42,9 +42,9 @@ cInstructionParser::~cInstructionParser ()
 
 
 #ifdef WITH_TIMESTAMP
-int cInstructionParser::parse (const char* instruction, cTimeval& timestamp, bool& isAbsolute, uint8_t* packet, size_t packetBufSize)
+int cInstructionParser::parse (const char* instruction, cTimeval& timestamp, bool& isAbsolute, cEthernetPacket& packet)
 #else
-int cInstructionParser::parse (const char* instruction, uint8_t* packet, size_t packetBufSize)
+int cInstructionParser::parse (const char* instruction, cEthernetPacket& packet)
 #endif
 {
 	const char* p = instruction;
@@ -121,11 +121,11 @@ int cInstructionParser::parse (const char* instruction, uint8_t* packet, size_t 
 	{
 		//TODO find better way for protocol selection
 		if (!strncmp ("raw", keyword, keywordEnd - keyword))
-			return compileRAW (params, packet, packetBufSize);
+			return compileRAW (params, packet);
 		if (!strncmp ("eth", keyword, keywordEnd - keyword))
-			return compileETH (params, packet, packetBufSize);
+			return compileETH (params, packet);
 		if (!strncmp ("arp", keyword, keywordEnd - keyword))
-			return compileARP (params, packet, packetBufSize);
+			return compileARP (params, packet);
 
 		throw ParseException ("Unknown protocol type", keyword);
 	}
@@ -143,10 +143,6 @@ int cInstructionParser::parse (const char* instruction, uint8_t* packet, size_t 
 			assert ("BUG: unexpected compile exception" == 0);
 		}
 	}
-	catch (...)
-	{
-		assert ("BUG: unexpected exception" == 0);
-	}
 
 	assert ("BUG: unreachable code" == 0);
 
@@ -154,21 +150,18 @@ int cInstructionParser::parse (const char* instruction, uint8_t* packet, size_t 
 }
 
 
-int cInstructionParser::compileRAW (cParameterList& params, uint8_t* packet, size_t packetBufSize)
+int cInstructionParser::compileRAW (cParameterList& params, cEthernetPacket& eth)
 {
-	cEthernetPacket eth (packet, packetBufSize);
-
 	size_t len;
 	const char* value = params.findParameter ("payload")->asRaw(len);
 	eth.setRaw (value, len);
 
-	return eth.getPacketLength();
+	return eth.getLength();
 }
 
 
-int cInstructionParser::compileETH (cParameterList& params, uint8_t* packet, size_t packetBufSize)
+int cInstructionParser::compileETH (cParameterList& params, cEthernetPacket& eth)
 {
-	cEthernetPacket eth (packet, packetBufSize);
 	const cParameter* optionalPar;
 	bool hasLlcHeader = false;
 
@@ -224,11 +217,11 @@ int cInstructionParser::compileETH (cParameterList& params, uint8_t* packet, siz
 	}
 
 
-	return eth.getPacketLength();
+	return eth.getLength();
 }
 
 
-int cInstructionParser::compileARP (cParameterList& params, uint8_t* packet, size_t packetBufSize)
+int cInstructionParser::compileARP (cParameterList& params, cEthernetPacket& packet)
 {
 #if 0
 	ethernet_t* e = (ethernet_t*)frame;
@@ -266,7 +259,7 @@ int cInstructionParser::compileARP (cParameterList& params, uint8_t* packet, siz
 }
 
 
-int cInstructionParser::compileIPv4 (cParameterList& params, uint8_t* packet, size_t packetBufSize)
+int cInstructionParser::compileIPv4 (cParameterList& params, cEthernetPacket& packet)
 {
 #if 0
 	int i = -1;
