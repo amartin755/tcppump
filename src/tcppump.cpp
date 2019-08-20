@@ -32,8 +32,8 @@
 
 using namespace nn;
 
-cTcpPump::cTcpPump(const char* name, const char* brief, const char* description)
-: cCmdlineApp (name, brief, description)
+cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const char* description)
+: cCmdlineApp (name, brief, usage, description)
 {
 	memset (&options, 0, sizeof(options));
 	options.repeat = 1;
@@ -177,6 +177,6 @@ bool cTcpPump::parseScripts (mac_t ownMac, int scriptsCnt, char* scripts[])
 
 int main(int argc, char* argv[])
 {
-	cTcpPump app ("tcppump -i IFC [OPTIONS] packets", "An Ethernet packet generator", "TODO description");
+	cTcpPump app ("tcppump", "An Ethernet packet generator", "tcppump -i IFC [OPTIONS] packets", "TODO description");
 	return app.main (argc, argv);
 }

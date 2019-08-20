@@ -29,10 +29,11 @@
 class cCmdlineApp
 {
 public:
-	cCmdlineApp (const char* name, const char* brief, const char* description)
+	cCmdlineApp (const char* name, const char* brief, const char* usage, const char* description)
 	{
 			this->name = name;
 			this->brief = brief;
+			this->usage = usage;
 			this->description = description;
 			this->help = false;
 
@@ -65,7 +66,11 @@ protected:
 	virtual int execute (int argc, char* argv[]) = 0;
 	void printUsage ()
 	{
-		nn::Console::Print ("\nUsage: %s\n%s\n\nOptions:\n", name, brief);
+		const char* version = "";
+#ifdef APP_VERSION
+		version = " V" APP_VERSION;
+#endif
+		nn::Console::Print ("\n%s%s - %s\n\nUsage: %s\n\nOptions:\n", name, version, brief, usage);
 		cmdline.printOptions ();
 		nn::Console::Print ("\n%s\n\n", description);
 	}
@@ -74,6 +79,7 @@ protected:
 private:
 	const char* name;
 	const char* brief;
+	const char* usage;
 	const char* description;
 	bool help;
 };

@@ -45,7 +45,7 @@ typedef struct
 class cTcpPump : public cCmdlineApp
 {
 public:
-	cTcpPump(const char* name, const char* brief, const char* description);
+	cTcpPump (const char* name, const char* brief, const char* usage, const char* description);
 	virtual ~cTcpPump();
 
 	int execute (int argc, char* argv[]);

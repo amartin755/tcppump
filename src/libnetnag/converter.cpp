@@ -207,7 +207,7 @@ bool Converter::stringToIpv4 (const char* str, ipv4_t& ip, int len)
 	return true;
 }
 
-
+#ifdef WITH_UNITTESTS
 void Converter::unitTest ()
 {
 	assert (!checkMacString(""));
@@ -288,4 +288,5 @@ void Converter::unitTest ()
 	assert (!stringToIpv4 ("1.2.ab3.4", ip));
 
 }
+#endif
 }

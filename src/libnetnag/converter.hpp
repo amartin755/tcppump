@@ -35,7 +35,9 @@ namespace nn
 		static uint16_t getIPv4Chksum (const uint16_t* ipheader, int headerLen);
 		static bool stringToIpv4 (const char* str, ipv4_t& ip, int len = 0);
 
+#ifdef WITH_UNITTESTS
 		static void unitTest ();
+#endif
 
 	private:
 		static bool checkMacString (const char* mac, size_t len = 0);
