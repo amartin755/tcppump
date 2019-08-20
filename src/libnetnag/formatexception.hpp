@@ -36,6 +36,19 @@ public:
 	{
 		return cause;
 	}
+	const char* why ()
+	{
+		switch (cause)
+		{
+		case exParUnknown:
+			return "Unknown or missing parameter";
+		case exParRange:
+			return "Range of parameter violated";
+		case exParFormat:
+			return "Invalid parameter format";
+		}
+		return "";
+	}
 
 	const char* value ()
 	{

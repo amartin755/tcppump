@@ -27,6 +27,7 @@
 #include "libnetnag/converter.hpp"
 #include "libnetnag/system.hpp"
 #include "libnetnag/instructionparser.hpp"
+#include "libnetnag/fileparser.hpp"
 #include "libnetnag/ethernetpacket.hpp"
 
 using namespace nn;
@@ -40,9 +41,11 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* description)
 
 	cmdline.addOption ('i', "interface", "IFC", "Interface name", &options.ifc);
 	cmdline.addOption ('v', "verbose", "Enable verbose mode", &options.verbose, true);
-	cmdline.addOption ('r', "repeat", "CNT", "Send the file/frame CNT times", &options.repeat, true);
+	cmdline.addOption ('n', "repeat", "N", "Send the file/frame N times", &options.repeat, true);
 	cmdline.addOption ('d', "delay", "SECONDS", "Packet transmission is delayed SECONDS", &options.delay, true);
 	cmdline.addOption ('a', "interactive", "Enable interactive mode", &options.interactive, true);
+	cmdline.addOption ('r', "raw", "Send raw packets without intepretation", &options.raw, true);
+	cmdline.addOption ('s', "script", "Execute script file", &options.script, true);
 }
 
 cTcpPump::~cTcpPump()
@@ -57,7 +60,7 @@ int cTcpPump::execute (int argc, char* argv[])
 
 	if (!argc)
 	{
-		Console::PrintError ("no packet data provided\n");
+		Console::PrintError (options.script ? "no script files provided\n": "no packet data provided\n");
 		return -2;
 	}
 
@@ -65,31 +68,11 @@ int cTcpPump::execute (int argc, char* argv[])
 	if (!ifc.open())
 		return -1;
 
+	bool ok = options.script ? parseScripts (ifc.getMAC(), argc, argv) : parsePackets (ifc.getMAC(), argc, argv);
+	if (!ok)
+		return -2;
 
-	for (int n = 0; n < argc; n++)
-	{
-		try
-		{
-			packets.emplace_back();
-		}
-		catch (...)
-		{
-			nn::Console::PrintError ("Not enough memory\n");
-			return -2;
-		}
-
-		try
-		{
-			cInstructionParser (ifc.getMAC(), 0).parse (argv[n], packets.back());
-		}
-		catch (ParseException &e)
-		{
-			nn::Console::PrintError ("%s %s\n", e.what (), e.value ());
-			return -3;
-		}
-	}
-
-	Console::PrintVerbose ("Sending %d packets, each delayed by %d seconds. Repeating %d times.\n\n", argc, options.delay, options.repeat);
+	Console::PrintVerbose ("Sending %d packets, each delayed by %d seconds. Repeating %d times.\n\n", packets.size(), options.delay, options.repeat);
 	while (options.repeat--)
 	{
 		for (cEthernetPacket& p : packets)
@@ -106,6 +89,91 @@ int cTcpPump::execute (int argc, char* argv[])
 
 	return 0;
 }
+
+
+bool cTcpPump::parsePackets (mac_t ownMac, int argc, char* argv[])
+{
+	for (int n = 0; n < argc; n++)
+	{
+		try
+		{
+			packets.emplace_back();
+		}
+		catch (...)
+		{
+			Console::PrintError ("Not enough memory\n");
+			return false;
+		}
+
+		try
+		{
+			if (!options.raw)
+				cInstructionParser (ownMac, 0).parse (argv[n], packets.back());
+			else
+				packets.back().setRaw (argv[n], strlen (argv[n]));
+		}
+		catch (ParseException &e)
+		{
+			Console::PrintError ("%s %s\n", e.what (), e.value ());
+			return false;
+		}
+		catch (FormatException& e)
+		{
+			Console::PrintError ("%s %s\n", e.why (), e.value ());
+			return false;
+		}
+	}
+	return true;
+}
+
+
+bool cTcpPump::parseScripts (mac_t ownMac, int scriptsCnt, char* scripts[])
+{
+	FILE *fp;
+	int len;
+	cFileParser parser;
+
+	do
+	{
+		if (scriptsCnt && ((fp = fopen (*scripts, "rt")) == NULL))
+		{
+			Console::PrintError ("Unable to open the script file %s.\n", *scripts);
+			return false;
+		}
+
+		parser.init (fp, 0, ownMac, 0);
+
+		do
+		{
+		//	printf ("capacity %d\n", packets.capacity());
+			// allocate a new packet
+			try
+			{
+				packets.emplace_back();
+			}
+			catch (...)
+			{
+				Console::PrintError ("Not enough memory\n");
+				return false;
+			}
+
+		}while ((len = parser.parse (packets.back())) > 0);
+
+		if (len == PARSE_ERROR)
+			Console::PrintError ("%s %s\n", *scripts, parser.getLastError ());
+
+		fclose (fp);
+
+		if (len != EOF)
+			return false;
+
+		scripts++;
+
+	}while (--scriptsCnt > 0);
+
+	return true;
+}
+
 
 int main(int argc, char* argv[])
 {

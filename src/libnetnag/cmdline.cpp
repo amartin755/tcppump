@@ -247,7 +247,7 @@ int cCmdline::findOption (char shortname)
 	return -1;
 }
 
-
+#ifdef WITH_UNITTESTS
 void cCmdline::unitTest ()
 {
 	// parsing rules:
@@ -511,3 +511,4 @@ void cCmdline::unitTest ()
 		assert (index == 7);
     }
 }
+#endif

@@ -24,13 +24,14 @@
 #include <cstddef>	// size_t
 #include "protocoltypes.hpp"
 #include "formatexception.hpp"
-
+#include <cassert>
 
 class cEthernetPacket
 {
 public:
 	cEthernetPacket ();
 	cEthernetPacket (size_t maxLength);
+	cEthernetPacket (const cEthernetPacket& obj) = delete;
 	~cEthernetPacket ();
 	void setMacHeader (const mac_t& src, const mac_t& dest);
 	void addLlcHeader (uint8_t dsap, uint8_t ssap, uint16_t control);

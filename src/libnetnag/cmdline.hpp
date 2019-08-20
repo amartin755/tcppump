@@ -47,7 +47,10 @@ public:
 	cCmdline (int argc, char* argv[]);
 	cCmdline ();
 	virtual ~cCmdline();
+
+#ifdef WITH_UNITTESTS
 	static void unitTest ();
+#endif
 
 	// adds a options without arguments
 	bool addOption (char shortname, const char* longname, const char* argname, const char* description, int* arg, bool optional = false);

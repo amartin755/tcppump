@@ -23,8 +23,9 @@
 #ifndef TCPPUMP_HPP
 #define TCPPUMP_HPP
 
-#include <vector>
+#include <list>
 #include <cstddef>
+#include "libnetnag/protocoltypes.hpp"
 #include "libnetnag/cmdlineapp.hpp"
 #include "libnetnag/ethernetpacket.hpp"
 
@@ -36,6 +37,8 @@ typedef struct
 	bool         verbose;
 	int          delay;
 	bool         interactive;
+	bool         raw;
+	bool         script;
 }appOptions;
 
 
@@ -48,8 +51,10 @@ public:
 	int execute (int argc, char* argv[]);
 
 private:
+	bool parsePackets (mac_t ownMac, int cnt, char* packets[]);
+	bool parseScripts (mac_t ownMac, int cnt, char* packets[]);
 	appOptions options;
-	std::vector <cEthernetPacket> packets;
+	std::list <cEthernetPacket> packets;
 };
 
 #endif /* TCPPUMP_HPP */

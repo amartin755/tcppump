@@ -1,3 +1,22 @@
+CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0)
+
+PROJECT (tcppump VERSION 0.0.1.0)
+
+# set output directories to "bin"
+SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
+SET (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
+SET (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
+
+
+# set warning level
+SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+
+# on mingw we link the std library statically
+IF (MINGW)
+    SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -static-libgcc")
+    SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++")
+ENDIF (MINGW)
+
 
 # list of source files
 SET (sourcefiles
@@ -8,6 +27,7 @@ SET (sourcefiles
      libnetnag/converter.cpp
      libnetnag/ethernetpacket.cpp
      libnetnag/instructionparser.cpp
+     libnetnag/fileparser.cpp
      libnetnag/parameterlist.cpp)
 
 # platform specific files
