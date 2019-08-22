@@ -32,6 +32,12 @@ public:
 	bool dissect () const;
 
 private:
+	const void* dissectVLAN (const void *) const;
+	const void* dissectLLC  (const void *) const;
+	const void* dissectARP  (const void *) const;
+	const void* dissectIPv4 (const void *) const;
+	const void* dissectPN   (const void *) const;
+	const void* unknown   (const void *) const;
 	void dump (const void* p, size_t length) const;
 	const char* ethertypeToString (uint16_t ethertype) const;
 	bool isWithinPacket (const void* p, size_t size) const;

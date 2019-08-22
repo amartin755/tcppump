@@ -35,115 +35,166 @@ cDissector::~cDissector()
 	// TODO Auto-generated destructor stub
 }
 
-//FIXME this code is only for proof-of-concept. It's a total mess and must be cleaned up!
 bool cDissector::dissect () const
 {
-	bool isMalformed = false;
 	mac_header_t* header = (mac_header_t*)packet;
+	const void* payload = NULL;
 
-	if (sizeof (mac_header_t) > packetLength)
+	try
 	{
-		isMalformed = true;
-	}
-	else
-	{
-		nn::Console::Print("%02x:%02x:%02x:%02x:%02x:%02x > %02x:%02x:%02x:%02x:%02x:%02x, ",
-				header->src.a, header->src. b, header->src.c, header->src.d, header->src.e, header->src.f,
-				header->dest.a, header->dest. b, header->dest.c, header->dest.d, header->dest.e, header->dest.f);
-
-		uint16_t* typeLength = &header->ethertypeLength;
-
-		for (vlan_t* tag = (vlan_t*)&header->ethertypeLength; tag->isVlan() && !isMalformed; tag++, typeLength = (uint16_t*)tag)
+		if (sizeof (mac_header_t) > packetLength)
 		{
-			tag->isCVlan() ? nn::Console::Print ("C-VLAN ") : nn::Console::Print ("P-VLAN ");
-			if (isWithinPacket (tag + 1, sizeof (tag->tpid)))
-			{
-				nn::Console::Print ("id %u prio %u DEI %u, ", tag->getId(), tag->getPrio(), tag->getDEI());
-			}
-			else
-			{
-				isMalformed = true;
-			}
+			throw "Packet too short (< 14 bytes)";
 		}
+		// first, we print the mac header
+		nn::Console::Print("%02x:%02x:%02x:%02x:%02x:%02x > %02x:%02x:%02x:%02x:%02x:%02x (packet length %d)\n  ",
+				header->src.a, header->src. b, header->src.c, header->src.d, header->src.e, header->src.f,
+				header->dest.a, header->dest. b, header->dest.c, header->dest.d, header->dest.e, header->dest.f,
+				packetLength);
 
-		if (!isMalformed)
+		// ... then walk through possible existing VLAN and LLC/SNAP headers
+		const uint16_t* typeLength = (const uint16_t*)dissectVLAN (&header->ethertypeLength);
+						typeLength = (const uint16_t*)dissectLLC (typeLength);
+
+	    // ... now it's time for processing some known L3 protocols
+		if (typeLength)
 		{
 			uint16_t type = ntohs(*typeLength);
 			switch (type)
 			{
 			case ETHERTYPE_IPV4:
-				nn::Console::Print("IPv4, ");
+				payload = dissectIPv4 (typeLength);
 				break;
 			case ETHERTYPE_ARP:
-				nn::Console::Print("ARP, ");
+				payload = dissectARP (typeLength);
 				break;
 			case ETHERTYPE_PN:
-				nn::Console::Print("PN, ");
+				payload = dissectPN (typeLength);
 				break;
 			default:
-				if (type <= cEthernetPacket::MAX_ETHERNET_PAYLOAD)
-				{
-					size_t llcHeaderLength;
-
-					nn::Console::Print("LLC (length %d) ", type);
-
-
-					size_t len = packetLength - ((uint8_t*)(typeLength + 1) - packet);
-
-					if (len != type)
-					{
-						nn::Console::Print("XXXX ");
-						isMalformed = true;
-					}
-
-					if (len >= (sizeof (llc_t) - 1))
-					{
-						llc_t* llc = (llc_t*)(typeLength + 1);
-						nn::Console::Print("DSAP 0x%02x, SSAP 0x%02x, ", llc->dsap, llc->ssap);
-						if ((llc->control.c8 & 0x03) == 3)
-						{
-							llcHeaderLength = sizeof (llc_t) - 1;
-							nn::Console::Print("Control 0x%02x, ", llc->control.c8);
-						}
-						else
-						{
-							llcHeaderLength = sizeof (llc_t);
-							if (len >= llcHeaderLength)
-								nn::Console::Print("Control 0x%04x, ", ntohs(llc->control.c16));
-							else
-								isMalformed = true;
-						}
-
-						// SNAP header
-						if (!isMalformed && llc->dsap == 0xaa && llc->ssap == 0xaa)
-						{
-							snap_t* snap = (snap_t*)((uint8_t*)llc + llcHeaderLength);
-							if (len >= (llcHeaderLength + sizeof(snap_t)))
-							{
-								nn::Console::Print("SNAP OUI 0x%02x%02x%02x protocol 0x%04x, ", snap->oui.a, snap->oui.b, snap->oui.c, ntohs(snap->protocol));
-							}
-							else
-								isMalformed = true;
-						}
-					}
-					else
-					{
-						isMalformed = true;
-					}
-				}
-				else
-					nn::Console::Print("unknown (%04x), ", type);
+				payload = unknown (typeLength);
 			}
 		}
+		// Finally, all upper layer protocols are just 'payload'
+		if (payload)
+			Console::Print("Payload %u bytes\n ", packet + packetLength - (uint8_t*)payload);
 	}
-	if (isMalformed)
+	catch (const char *malformed)	// malformed packet?
 	{
-		nn::Console::Print ("malformed packet, length %u", packetLength);
+		nn::Console::Print ("%s\n  ", malformed);
+	}
+	catch (...)
+	{
+		assert ("???" == 0);
 	}
 	nn::Console::Print("\n");
 	dump (packet, packetLength);
+	nn::Console::PrintVerbose("\n");
 
-	return !isMalformed;
+	return true;
+}
+
+const void* cDissector::dissectVLAN (const void * pTypeLength) const
+{
+	const vlan_t* tag = (const vlan_t*)pTypeLength;
+
+	if (!tag->isVlan()) return pTypeLength;
+
+	tag->isCVlan() ? nn::Console::Print ("C-VLAN ") : nn::Console::Print ("P-VLAN ");
+
+	if (isWithinPacket (tag + 1, sizeof (tag->tpid)))
+	{
+		nn::Console::Print ("id %u, prio %u, DEI %u\n  ", tag->getId(), tag->getPrio(), tag->getDEI());
+		return dissectVLAN (tag + 1);
+	}
+
+	throw "malformed packet";
+	return NULL;
+}
+
+
+const void* cDissector::dissectLLC (const void * pTypeLength) const
+{
+	uint16_t typeLength = ntohs(*(uint16_t*)pTypeLength);
+
+	if (typeLength > cEthernetPacket::MAX_ETHERNET_PAYLOAD)
+		return pTypeLength;
+
+
+	nn::Console::Print("LLC (length %d) ", typeLength);
+
+
+	size_t payloadLen = packetLength - ((uint8_t*)((uint16_t*)pTypeLength + 1) - packet);
+
+	if (payloadLen != typeLength)
+	{
+		throw "malformed packet XXX";
+	}
+
+	if (payloadLen >= (sizeof (llc_t) - 1))
+	{
+		size_t llcHeaderLength;
+		llc_t* llc = (llc_t*)((uint16_t*)pTypeLength + 1);
+		nn::Console::Print("DSAP 0x%02x, SSAP 0x%02x, ", llc->dsap, llc->ssap);
+		if ((llc->control.c8 & 0x03) == 3)
+		{
+			llcHeaderLength = sizeof (llc_t) - 1;
+			nn::Console::Print("Control 0x%02x\n  ", llc->control.c8);
+		}
+		else
+		{
+			llcHeaderLength = sizeof (llc_t);
+			if (payloadLen >= llcHeaderLength)
+				nn::Console::Print("Control 0x%04x\n  ", ntohs(llc->control.c16));
+			else
+				throw "malformed packet";
+		}
+
+		// SNAP extention header
+		if (llc->dsap == 0xaa && llc->ssap == 0xaa)
+		{
+			snap_t* snap = (snap_t*)((uint8_t*)llc + llcHeaderLength);
+			if (payloadLen >= (llcHeaderLength + sizeof(snap_t)))
+			{
+				nn::Console::Print("SNAP OUI 0x%02x%02x%02x protocol 0x%04x\n  ", snap->oui.a, snap->oui.b, snap->oui.c, ntohs(snap->protocol));
+				return &snap->protocol;
+			}
+			else
+				throw "malformed packet";
+		}
+	}
+	else
+	{
+		throw "malformed packet";
+	}
+	return NULL;
+}
+const void* cDissector::dissectARP (const void * p) const
+{
+	nn::Console::Print("ARP\n  ");
+	return p;
+}
+const void* cDissector::dissectIPv4 (const void * p) const
+{
+	nn::Console::Print("IPv4\n  ");
+	return p;
+}
+const void* cDissector::dissectPN (const void * p) const
+{
+	nn::Console::Print("PN\n  ");
+	return p;
+}
+const void* cDissector::unknown (const void * p) const
+{
+	uint16_t ethertype = ntohs(*(uint16_t*)p);
+
+	const char* str = ethertypeToString (ethertype);
+	if (str)
+		Console::Print("%s\n  ", str);
+	else
+		Console::Print("Unknown ethertype 0x%04x\n  ", ethertype);
+
+	return (uint16_t*)p + 1;
 }
 
 // based on https://stackoverflow.com/questions/7775991/how-to-get-hexdump-of-a-structure-data
@@ -210,12 +261,43 @@ const char* cDissector::ethertypeToString (uint16_t ethertype) const
 		return "C-VLAN";
 	case ETHERTYPE_SVLAN:
 		return "P-VLAN";
-	default:
-		return "unknown";
+	case 0x0842:
+		return "Wake-on-LAN";
+	case 0x22F3:
+		return "TRILL";
+	case 0x22EA:
+		return "SRP";
+	case 0x8035:
+		return "RARP";
+	case 0x8102:
+		return "SLPP";
+	case 0x8137:
+		return "IPX";
+	case 0x86DD:
+		return "IPv6";
+	case 0x8808:
+		return "Ethernet Flow Control";
+	case 0x8863:
+		return "PPPoE Discovery";
+	case 0x8864:
+		return "PPPoE Session";
+	case 0x88A4:
+		return "EtherCAT";
+	case 0x88CC:
+		return "LLDP";
+	case 0x88E3:
+		return "MRP";
+	case 0x88E5:
+		return "MACsec";
+	case 0x88F5:
+		return "MVRP";
+	case 0x88F6:
+		return "MMRP";
+	case 0x880B:
+		return "PPP";
 
 	}
-	assert ("unreachable code" == 0);
-	return "";
+	return NULL;
 }
 
 bool cDissector::isWithinPacket (const void* p, size_t size) const
