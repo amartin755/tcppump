@@ -44,6 +44,7 @@ ENDIF (MINGW)
 SET (sourcefiles
      interface.cpp
      tcppump.cpp
+     dissector.cpp
      libnetnag/cmdline.cpp
      libnetnag/console.cpp
      libnetnag/converter.cpp

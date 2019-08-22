@@ -24,6 +24,7 @@
 
 #include "tcppump.hpp"
 #include "interface.hpp"
+#include "dissector.hpp"
 #include "libnetnag/converter.hpp"
 #include "libnetnag/system.hpp"
 #include "libnetnag/instructionparser.hpp"
@@ -84,6 +85,7 @@ int cTcpPump::execute (int argc, char* argv[])
 			{
 				return -4;
 			}
+			cDissector(p).dissect();
 		}
 	}
 
@@ -158,6 +160,8 @@ bool cTcpPump::parseScripts (mac_t ownMac, int scriptsCnt, char* scripts[])
 			}
 
 		}while ((len = parser.parse (packets.back())) > 0);
+
+		packets.pop_back();
 
 		if (len == PARSE_ERROR)
 			Console::PrintError ("%s %s\n", *scripts, parser.getLastError ());

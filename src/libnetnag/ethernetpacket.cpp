@@ -23,59 +23,7 @@
 #include "ethernetpacket.hpp"
 
 #include "converter.hpp"
-#include "inet.h"
 
-#pragma pack(1)
-
-typedef struct
-{
-	mac_t    dest;
-	mac_t    src;
-	uint16_t ethertypeLength;
-}mac_header_t;
-
-typedef struct
-{
-	uint16_t tpid;
-	uint16_t tci;  // tag control information | prio (3 bit) | CFI/DEI (1 bit) | vlan id (12 bit)
-
-	void setCTag (int id, int prio = 0, int dei = 0)
-	{
-		tpid = htons (ETHERTYPE_CVLAN);
-		setTci (id, prio, dei);
-	}
-	void setSTag (int id, int prio = 0, int dei = 0)
-	{
-		tpid = htons (ETHERTYPE_SVLAN);
-		setTci (id, prio, dei);
-	}
-
-private:
-	void setTci (int id, int prio, int dei)
-	{
-		tci = htons (short (id | (dei << 12) | (prio << 13)));
-	}
-
-}vlan_t;
-
-typedef struct
-{
-	uint8_t  dsap;
-	uint8_t  ssap;
-	union
-	{
-		uint16_t c16;
-		uint8_t  c8;
-	}control;
-}llc_t;
-
-typedef struct
-{
-	oui_t    oui;
-	uint16_t protocol;
-}snap_t;
-
-#pragma pack()
 
 
 cEthernetPacket::cEthernetPacket () : cEthernetPacket (MAX_DOUBLE_TAGGED_PACKET)

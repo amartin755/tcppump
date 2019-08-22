@@ -24,7 +24,8 @@
 #include <cstddef>	// size_t
 #include "protocoltypes.hpp"
 #include "formatexception.hpp"
-#include <cassert>
+#include "inet.h"
+
 
 class cEthernetPacket
 {
@@ -42,7 +43,7 @@ public:
 	void setPayload (const char* payload, size_t len);
 	void setRaw (const char* payload, size_t len);
 	const uint8_t* get ();
-	inline size_t getLength () {return pPayload - packet + payloadLength;};
+	inline size_t getLength () const {return pPayload - packet + payloadLength;}
 	inline void clear () {reset ();};
 
 	static const size_t   MAX_ETHERNET_PAYLOAD     = 1500;
@@ -82,5 +83,84 @@ enum ethertypes_t
 	ETHERTYPE_SVLAN = 0x88a8,
 	ETHERTYPE_PN    = 0x8892,
 };
+
+#pragma pack(1)
+
+typedef struct
+{
+	mac_t    dest;
+	mac_t    src;
+	uint16_t ethertypeLength;
+}mac_header_t;
+
+typedef struct
+{
+	uint16_t tpid;
+	uint16_t tci;  // tag control information | prio (3 bit) | CFI/DEI (1 bit) | vlan id (12 bit)
+
+public:
+	void setCTag (int id, int prio = 0, int dei = 0)
+	{
+		tpid = htons (ETHERTYPE_CVLAN);
+		setTci (id, prio, dei);
+	}
+	void setSTag (int id, int prio = 0, int dei = 0)
+	{
+		tpid = htons (ETHERTYPE_SVLAN);
+		setTci (id, prio, dei);
+	}
+	unsigned getId () const
+	{
+		return unsigned (ntohs (tci) & 0x03ff);
+	}
+	unsigned getPrio () const
+	{
+		return unsigned ((ntohs (tci) >> 13) & 0x0007);
+	}
+	unsigned getDEI () const
+	{
+		return unsigned ((ntohs (tci) >> 12) & 0x0001);
+	}
+	bool isVlan () const
+	{
+		uint16_t type = ntohs (tpid);
+		return type == ETHERTYPE_CVLAN || type == ETHERTYPE_SVLAN;
+	}
+	bool isCVlan () const
+	{
+		return ntohs (tpid) == ETHERTYPE_CVLAN;
+	}
+	bool isPVlan () const
+	{
+		return ntohs (tpid) == ETHERTYPE_SVLAN;
+	}
+
+
+private:
+	void setTci (int id, int prio, int dei)
+	{
+		tci = htons (short (id | (dei << 12) | (prio << 13)));
+	}
+
+}vlan_t;
+
+typedef struct
+{
+	uint8_t  dsap;
+	uint8_t  ssap;
+	union
+	{
+		uint16_t c16;
+		uint8_t  c8;
+	}control;
+}llc_t;
+
+typedef struct
+{
+	oui_t    oui;
+	uint16_t protocol;
+}snap_t;
+
+#pragma pack()
 
 #endif /* ETHERNET_PACKET_H_ */
