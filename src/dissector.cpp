@@ -20,6 +20,7 @@
 
 #include <cassert>
 
+#include "libnetnag/inet.h"
 #include "libnetnag/console.hpp"
 
 
@@ -34,6 +35,7 @@ cDissector::~cDissector()
 {
 	// TODO Auto-generated destructor stub
 }
+
 
 bool cDissector::dissect () const
 {
@@ -63,13 +65,13 @@ bool cDissector::dissect () const
 			switch (type)
 			{
 			case ETHERTYPE_IPV4:
-				payload = dissectIPv4 (typeLength);
+				payload = dissectIPv4 (typeLength + 1);
 				break;
 			case ETHERTYPE_ARP:
-				payload = dissectARP (typeLength);
+				payload = dissectARP (typeLength + 1);
 				break;
 			case ETHERTYPE_PN:
-				payload = dissectPN (typeLength);
+				payload = dissectPN (typeLength + 1);
 				break;
 			default:
 				payload = unknown (typeLength);
@@ -93,6 +95,7 @@ bool cDissector::dissect () const
 
 	return true;
 }
+
 
 const void* cDissector::dissectVLAN (const void * pTypeLength) const
 {
@@ -169,21 +172,69 @@ const void* cDissector::dissectLLC (const void * pTypeLength) const
 	}
 	return NULL;
 }
+
+
 const void* cDissector::dissectARP (const void * p) const
 {
 	nn::Console::Print("ARP\n  ");
 	return p;
 }
+
+
 const void* cDissector::dissectIPv4 (const void * p) const
 {
-	nn::Console::Print("IPv4\n  ");
-	return p;
+	//FIXME only a hack to show at least the ip addresses and L4 protocol
+	nn::Console::Print("IPv4 ");
+
+	const ipv4_header_t* header = (const ipv4_header_t*)p;
+
+	if (!isWithinPacket (header, sizeof (header)))
+		throw "malformed packet";
+
+	ipv4_t src = ntohl(header->srcIp);
+	ipv4_t dst = ntohl(header->dstIp);
+
+    Console::Print ("%d.%d.%d.%d > %d.%d.%d.%d, ",
+    		(src >> 24) & 0xff, (src >> 16) & 0xff, (src >> 8) & 0xff, src & 0xff,
+			(dst >> 24) & 0xff, (dst >> 16) & 0xff, (dst >> 8) & 0xff, dst & 0xff);
+
+    switch (header->protocol)
+    {
+    case 1:
+    	Console::Print ("ICMP");
+    	break;
+    case 2:
+    	Console::Print ("IGMP");
+    	break;
+    case 17:
+    	Console::Print ("UDP");
+    	break;
+    case 6:
+    	Console::Print ("TCP");
+    	break;
+    case 50:
+    	Console::Print ("ESP");
+    	break;
+    case 115:
+    	Console::Print ("L2TP");
+    	break;
+    default:
+    	Console::Print ("Protocol %d", header->protocol);
+    }
+
+    Console::Print ("\n  ");
+
+	return header + 1;
 }
+
+
 const void* cDissector::dissectPN (const void * p) const
 {
 	nn::Console::Print("PN\n  ");
 	return p;
 }
+
+
 const void* cDissector::unknown (const void * p) const
 {
 	uint16_t ethertype = ntohs(*(uint16_t*)p);
@@ -196,6 +247,7 @@ const void* cDissector::unknown (const void * p) const
 
 	return (uint16_t*)p + 1;
 }
+
 
 // based on https://stackoverflow.com/questions/7775991/how-to-get-hexdump-of-a-structure-data
 void cDissector::dump (const void* p, size_t length) const
@@ -245,6 +297,7 @@ void cDissector::dump (const void* p, size_t length) const
     // And print the final ASCII bit.
     Console::PrintVerbose ("  %s\n", buff);
 }
+
 
 const char* cDissector::ethertypeToString (uint16_t ethertype) const
 {
@@ -299,6 +352,7 @@ const char* cDissector::ethertypeToString (uint16_t ethertype) const
 	}
 	return NULL;
 }
+
 
 bool cDissector::isWithinPacket (const void* p, size_t size) const
 {
