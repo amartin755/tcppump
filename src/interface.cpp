@@ -58,7 +58,7 @@ bool cInterface::close ()
 bool cInterface::sendPacket (const uint8_t* payload, size_t length)
 {
 	//TODO implement me
-	printf ("STUB sendPacket (%d)\n", length);
+	printf ("STUB sendPacket (%zd)\n", length);
 	return true;
 }
 

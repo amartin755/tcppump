@@ -112,7 +112,7 @@ bool cCmdline::parse (int* optind)
 		}
 	}
 
-	pShort = '\0';
+	pShort         = NULL;
 	pLong->name    = NULL;
 	pLong->has_arg = 0;
 	pLong->flag    = NULL;
