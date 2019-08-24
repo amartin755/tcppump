@@ -53,6 +53,8 @@ public:
 private:
 	bool parsePackets (mac_t ownMac, int cnt, char* packets[]);
 	bool parseScripts (mac_t ownMac, int cnt, char* packets[]);
+	bool sendPacket (cInterface &ifc, cEthernetPacket& p);
+
 	appOptions options;
 	std::list <cEthernetPacket> packets;
 };

@@ -73,22 +73,33 @@ int cTcpPump::execute (int argc, char* argv[])
 	if (!ok)
 		return -2;
 
-	Console::PrintVerbose ("Sending %d packets, each delayed by %d seconds. Repeating %d times.\n\n", packets.size(), options.delay, options.repeat);
-	while (options.repeat--)
+	if (!options.interactive)
 	{
-		for (cEthernetPacket& p : packets)
+		Console::PrintVerbose ("Sending %d packets, each delayed by %d seconds. Repeating %d times.\n\n", packets.size(), options.delay, options.repeat);
+		while (options.repeat--)
 		{
-			if (options.delay)
-				Console::PrintVerbose ("Waiting %d seconds\n", options.delay);
-			System::Sleep (options.delay);
-			if(!ifc.sendPacket (p.get(), p.getLength()))
+			for (cEthernetPacket& p : packets)
 			{
-				return -4;
+				if (!sendPacket (ifc, p))
+					return -4;
 			}
-			cDissector(p).dissect();
 		}
 	}
+	else
+	{
+		/* testcode for win32
+		int key;
+		do
+		{
+			key = getch ();
 
+			if (key == '1') sendPacket (ifc, packets.front());
+			if (key == '2') sendPacket (ifc, packets.back());
+
+		}while (key != 'x');
+
+	}
+*/
 	return 0;
 }
 
@@ -147,7 +158,6 @@ bool cTcpPump::parseScripts (mac_t ownMac, int scriptsCnt, char* scripts[])
 
 		do
 		{
-		//	printf ("capacity %d\n", packets.capacity());
 			// allocate a new packet
 			try
 			{
@@ -178,6 +188,19 @@ bool cTcpPump::parseScripts (mac_t ownMac, int scriptsCnt, char* scripts[])
 	return true;
 }
 
+bool cTcpPump::sendPacket (cInterface &ifc, cEthernetPacket &p)
+{
+	if (options.delay)
+		Console::PrintVerbose ("Waiting %d seconds\n", options.delay);
+	System::Sleep (options.delay);
+	if(!ifc.sendPacket (p.get(), p.getLength()))
+	{
+		return false;
+	}
+	cDissector(p).dissect();
+
+	return true;
+}
 
 int main(int argc, char* argv[])
 {

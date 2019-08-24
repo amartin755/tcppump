@@ -6,7 +6,7 @@ PROJECT (tcppump VERSION 0.0.1.0)
 ###############################################################################
 
 
-INCLUDE (CheckIncludeFiles)
+INCLUDE (CheckSymbolExists)
 
 
 # set output directories to "bin"
@@ -18,10 +18,14 @@ SET (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
 ###############################################################################
 
 # commandline parsing is based on GNUs getopt_long()
-CHECK_INCLUDE_FILES (getopt.h HAVE_GETOPT_H)
-IF (NOT HAVE_GETOPT_H)
-MESSAGE (FATAL_ERROR "getopt.h not found!")
-ENDIF (NOT HAVE_GETOPT_H)
+CHECK_SYMBOL_EXISTS (getopt_long getopt.h HAVE_GETOPT_LONG)
+IF (NOT HAVE_GETOPT_LONG)
+MESSAGE (FATAL_ERROR "Symbol getopt_long not found!")
+ENDIF (NOT HAVE_GETOPT_LONG)
+
+# getch() is needed for unbuffered stdin on Windows
+CHECK_SYMBOL_EXISTS (getch conio.h HAVE_GETCH)
+
 
 # definitions
 ###############################################################################
