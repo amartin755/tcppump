@@ -1,6 +1,6 @@
 /**
- * NETNAG <https://github.com/amartin755/netnag>
- * Copyright (C) 2012-2016 Andreas Martin (netnag@mailbox.org)
+ * tcppump <https://github.com/amartin755/netnag>
+ * Copyright (C) 2012-2019 Andreas Martin (netnag@mailbox.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,27 +16,19 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <unistd.h>
 
-#ifndef SYSTEM_HPP_
-#define SYSTEM_HPP_
 
-#include <cstdio> // FILE
-
-#include "protocoltypes.hpp"
-
-namespace nn
+namespace tcppump
 {
-	class System
-	{
-	public:
-		static int ExecuteProcess (const char* cmdline);
-		static const char* GetTmpFilePath ();
-		static FILE* OpenTmpFile (const char* mode = "rb", const char** path = NULL);
-		static bool Diff (const char* file1, const char* file2);
-		static bool ResolveMacForIpAddress (ipv4_t ip, mac_t &mac);
-		static void Sleep (unsigned seconds);
 
-		static void unitTest ();
-	};
+void Sleep (unsigned seconds)
+{
+	::sleep (seconds);
 }
-#endif /* SYSTEM_HPP_ */
+
+}
+
+
+
+

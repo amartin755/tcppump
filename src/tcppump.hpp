@@ -41,6 +41,8 @@ typedef struct
 	bool         script;
 }appOptions;
 
+class cInterface;
+
 
 class cTcpPump : public cCmdlineApp
 {

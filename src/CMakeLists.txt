@@ -29,7 +29,12 @@ CHECK_SYMBOL_EXISTS (getch conio.h HAVE_GETCH)
 
 # definitions
 ###############################################################################
-add_definitions(-DAPP_VERSION="${PROJECT_VERSION}")
+ADD_DEFINITIONS(-DAPP_VERSION="${PROJECT_VERSION}")
+IF (WIN32)
+    # min. supported version is Windows 7
+    ADD_DEFINITIONS(-D_WIN32_WINNT=0x0601)
+    ADD_DEFINITIONS(-DWINVER=0x0601)
+ENDIF (WIN32)
 
 
 # warning level
@@ -45,8 +50,26 @@ ENDIF (MINGW)
 
 # source files
 ###############################################################################
+
+# platform specific libs and files
+IF (WIN32)
+	# on windows we need winpcap
+	FIND_PATH (WINPCAP_INCLUDE_DIR pcap.h "${PROJECT_SOURCE_DIR}/../pcap/*")
+	INCLUDE_DIRECTORIES (${WINPCAP_INCLUDE_DIR})
+	FIND_LIBRARY (WINPCAP_LIBRARY NAMES "wpcap" PATHS "${PROJECT_SOURCE_DIR}/../pcap/*")
+	
+	SET (os_specific os/win32)
+	SET (libs 
+	     ws2_32 
+	     IPHLPAPI 
+	     ${WINPCAP_LIBRARY})
+ENDIF (WIN32)
+IF (UNIX)
+	SET (os_specific os/posix)
+ENDIF (UNIX)
+
+
 SET (sourcefiles
-     interface.cpp
      tcppump.cpp
      dissector.cpp
      libnetnag/cmdline.cpp
@@ -55,19 +78,16 @@ SET (sourcefiles
      libnetnag/ethernetpacket.cpp
      libnetnag/instructionparser.cpp
      libnetnag/fileparser.cpp
-     libnetnag/parameterlist.cpp)
-
-# platform specific files
-IF (WIN32)
-	SET (sourcefiles ${sourcefiles}
-	     libnetnag/system_win32.cpp)
-	SET (libs ws2_32)
-ENDIF (WIN32)
-IF (UNIX)
-	SET (sourcefiles ${sourcefiles}
-	     libnetnag/system_posix.cpp)
-ENDIF (UNIX)
+     libnetnag/parameterlist.cpp
+     ${os_specific}/interface.cpp
+     ${os_specific}/sleep.cpp
+     )
 
 
 ADD_EXECUTABLE (tcppump ${sourcefiles})
 TARGET_LINK_LIBRARIES (tcppump LINK_PUBLIC ${libs})
+
+TARGET_INCLUDE_DIRECTORIES (tcppump PUBLIC ${os_specific})
+TARGET_INCLUDE_DIRECTORIES (tcppump PUBLIC os)
+TARGET_INCLUDE_DIRECTORIES (tcppump PUBLIC libnetnag)
+

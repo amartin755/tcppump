@@ -1,9 +1,6 @@
 /**
- * TCPPUMP <https://github.com/amartin755/tcppump>
- * Copyright (C) 2012-2016 Andreas Martin (netnag@mailbox.org)
- *
- * interface.hpp
- *
+ * tcppump <https://github.com/amartin755/netnag>
+ * Copyright (C) 2012-2019 Andreas Martin (netnag@mailbox.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,29 +16,13 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef INTERFACE_H_
-#define INTERFACE_H_
 
-#include <string>
-#include <cstdint>
-#include <cstddef>
+#ifndef SLEEP_HPP_
+#define SLEEP_HPP_
 
-#include "libnetnag/protocoltypes.hpp"
 
-class cInterface
+namespace tcppump
 {
-public:
-	cInterface(const char* ifname);
-	virtual ~cInterface();
-	bool open ();
-	bool close ();
-	bool sendPacket (const uint8_t* payload, size_t length);
-	mac_t getMAC ();
-
-private:
-	std::string name;
-	int socket;
-
-};
-
-#endif /* INTERFACE_H_ */
+	extern void Sleep (unsigned seconds);
+}
+#endif /* SLEEP_HPP_ */

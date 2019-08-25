@@ -23,10 +23,10 @@
 #include <cstdint>
 
 #include "tcppump.hpp"
+#include "sleep.hpp"
 #include "interface.hpp"
 #include "dissector.hpp"
 #include "libnetnag/converter.hpp"
-#include "libnetnag/system.hpp"
 #include "libnetnag/instructionparser.hpp"
 #include "libnetnag/fileparser.hpp"
 #include "libnetnag/ethernetpacket.hpp"
@@ -68,8 +68,14 @@ int cTcpPump::execute (int argc, char* argv[])
 	cInterface ifc (options.ifc);
 	if (!ifc.open())
 		return -1;
+	mac_t ownMac;
+	if (!ifc.getMAC(&ownMac))
+	{
+		Console::PrintError ("Could not determine mac address of interface.\n");
+		return -1;
+	}
 
-	bool ok = options.script ? parseScripts (ifc.getMAC(), argc, argv) : parsePackets (ifc.getMAC(), argc, argv);
+	bool ok = options.script ? parseScripts (ownMac, argc, argv) : parsePackets (ownMac, argc, argv);
 	if (!ok)
 		return -2;
 
@@ -81,7 +87,10 @@ int cTcpPump::execute (int argc, char* argv[])
 			for (cEthernetPacket& p : packets)
 			{
 				if (!sendPacket (ifc, p))
+				{
+					Console::PrintError ("Could not send packet.\n");
 					return -4;
+				}
 			}
 		}
 	}
@@ -97,9 +106,9 @@ int cTcpPump::execute (int argc, char* argv[])
 			if (key == '2') sendPacket (ifc, packets.back());
 
 		}while (key != 'x');
-
-	}
 */
+	}
+
 	return 0;
 }
 
@@ -192,7 +201,7 @@ bool cTcpPump::sendPacket (cInterface &ifc, cEthernetPacket &p)
 {
 	if (options.delay)
 		Console::PrintVerbose ("Waiting %d seconds\n", options.delay);
-	System::Sleep (options.delay);
+	tcppump::Sleep (options.delay);
 	if(!ifc.sendPacket (p.get(), p.getLength()))
 	{
 		return false;
