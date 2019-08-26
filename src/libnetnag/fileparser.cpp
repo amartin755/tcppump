@@ -38,7 +38,7 @@ cFileParser::cFileParser ()
 	ownIPv4 = 0;
 
 	fp           = NULL;
-	lineNbr      = 0;
+	lineNbr      = 1;
 	lastError[0] = '\0';
 }
 
@@ -53,7 +53,7 @@ void cFileParser::init (FILE* fp, int defaultDelay, mac_t ownMac, ipv4_t ownIPv4
 
 	this->fp      = fp;
 
-	lineNbr       =  0;
+	lineNbr       =  1;
 	lastError[0]  = '\0';
 
 	delay         = defaultDelay;
