@@ -36,7 +36,7 @@ public:
 	virtual ~cInterface();
 	bool open ();
 	bool close ();
-	bool sendPacket (const uint8_t* payload, size_t length);
+	bool sendPacket (const uint8_t* payload, size_t length) const;
 	bool getMAC (mac_t*);
 
 private:
@@ -44,6 +44,7 @@ private:
 	std::string name;
 	int ifcHandle;
 	int ifIndex;
+	mac_t myMac;
 };
 
 #endif /* INTERFACE_H_ */
