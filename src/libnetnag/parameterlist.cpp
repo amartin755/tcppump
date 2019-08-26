@@ -187,22 +187,22 @@ const char* cParameterList::parseParameters (const char* parameters)
 	const char* p = parameters;
 	cParameter v;
 	enum {FIND_PARAMETER, PAR_START, PAR_END, OPERATOR, VAL_START, VAL_END}state;
-	const char MAGIC_SYMBOL = '$';
+	const char MAGIC_SYMBOL = '.';
 
 	list.clear ();
-// parameter startet beim ersten . (vorher muss whitespace stehen)
-	// parameter endet beim ersten whitespace oder =
-	// value startet beim ersten nicht whitespace nach dem =
-	// value endet beim ersten whitespace
+
+	/*
+	 * Parsing rules
+	 * - parameter name start with MAGIC_SYMBOL (a whitespace before is mandatory)
+	 * - parameter name ends with first whitespace or '='
+	 * - value starts with first non-whitespace after the '='
+	 * - value ends with first whitespace
+	 */
+
 	state = FIND_PARAMETER;
 
 	while (*p != '\0')
 	{
-		// the magic symbol is only allowed as first character of parameter names
-		if (state != FIND_PARAMETER && *p == MAGIC_SYMBOL)
-		{
-			return p;
-		}
 
 		switch (state)
 		{
@@ -320,7 +320,7 @@ void cParameterList::unitTest ()
 
 	try
 	{
-		cParameterList obj ("     $first=100 $second = 200 $third   =300");
+		cParameterList obj ("     .first=100 .second = 200 .third   =300");
 		assert (obj.isValid ());
 		assert (obj.findParameter("first")->asInt32()  == (uint32_t)100);
 		assert (obj.findParameter("second")->asInt32() == (uint32_t)200);
@@ -332,7 +332,7 @@ void cParameterList::unitTest ()
 	}
 
 	{
-		cParameterList obj ("$first=100 $second = 200 $third   =300");
+		cParameterList obj (".first=100 .second = 200 .third   =300");
 		assert (obj.isValid ());
 		try
 		{
@@ -426,7 +426,7 @@ void cParameterList::unitTest ()
 
 	try
 	{
-		cParameterList obj ("$first=100 $firstsecond = 200 $third   =300");
+		cParameterList obj (".first=100 .firstsecond = 200 .third   =300");
 		assert (obj.findParameter("first")->asInt32()  == (uint32_t)100);
 		assert (obj.findParameter("firstsecond")->asInt32()  == (uint32_t)200);
 		assert (obj.isValid ());
@@ -437,24 +437,24 @@ void cParameterList::unitTest ()
 	}
 
 	{
-		cParameterList obj ("$first=100$firstsecond = 200 $third   =300");
+		cParameterList obj (".first=100.firstsecond = 200 .third   =300");
 		assert (!obj.isValid ());
 	}
 	{
-		cParameterList obj ("d$first=100$second =");
+		cParameterList obj ("d.first=100.second =");
 		assert (!obj.isValid ());
 	}
 	{
-		cParameterList obj ("d$first=100");
+		cParameterList obj ("d.first=100");
 		assert (!obj.isValid ());
 	}
 	{
-		cParameterList obj ("$=123");
+		cParameterList obj (".=123");
 		assert (!obj.isValid ());
 	}
 	try
 	{
-		cParameterList obj ("  $first=123");
+		cParameterList obj ("  .first=123");
 		assert (obj.isValid ());
 		assert (obj.findParameter("first")->asInt32()  == (uint32_t)123);
 	}
@@ -463,11 +463,11 @@ void cParameterList::unitTest ()
 		assert (0);
 	}
 	{
-		cParameterList obj (".$dkfjsdf=sd$djhdslk$$0=0sd sdlfkjf");
+		cParameterList obj ("$.dkfjsdf=sd.djhdslk..0=0sd sdlfkjf");
 		assert (!obj.isValid ());
 	}
 	{
-		cParameterList obj ("$long=100 $ipv4 = 1.2.3.4 $mac =12:34:56:78:9A:BC $payload=012345");
+		cParameterList obj (".long=100 .ipv4 = 1.2.3.4 .mac =12:34:56:78:9A:BC .payload=012345");
 		try
 		{
 			assert (obj.isValid ());
@@ -486,7 +486,7 @@ void cParameterList::unitTest ()
 		}
 	}
 	{
-		cParameterList obj ("$first=0xFFFF $second=0x10000 $toolong=0x100000000");
+		cParameterList obj (".first=0xFFFF .second=0x10000 .toolong=0x100000000");
 		assert (obj.isValid ());
 		try
 		{
@@ -537,6 +537,10 @@ void cParameterList::unitTest ()
 			assert (e.value ());
 		}
 		assert (catched);
+		{
+			cParameterList obj (".dk.fjsdf=12");
+			assert (!obj.isValid ());
+		}
 	}
 }
 #endif
