@@ -81,6 +81,7 @@ SET (sourcefiles
      libnetnag/parameterlist.cpp
      ${os_specific}/interface.cpp
      ${os_specific}/sleep.cpp
+     ${os_specific}/getch.cpp
      )
 
 

@@ -24,6 +24,7 @@
 
 #include "tcppump.hpp"
 #include "sleep.hpp"
+#include "getch.hpp"
 #include "interface.hpp"
 #include "dissector.hpp"
 #include "libnetnag/converter.hpp"
@@ -96,17 +97,18 @@ int cTcpPump::execute (int argc, char* argv[])
 	}
 	else
 	{
-		/* testcode for win32
+		// proof-of-concept for interactive-mode
+		Console::PrintError ("Interactiv-mode is not yet implemented!.\n");
 		int key;
 		do
 		{
-			key = getch ();
+			key = tcppump::getch ();
 
 			if (key == '1') sendPacket (ifc, packets.front());
 			if (key == '2') sendPacket (ifc, packets.back());
 
-		}while (key != 'x');
-*/
+		}while (key != EOF);
+
 	}
 
 	return 0;
