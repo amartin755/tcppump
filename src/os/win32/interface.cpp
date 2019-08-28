@@ -28,7 +28,13 @@
 #include "interface.hpp"
 #include "console.hpp"
 
-
+/*
+ * note: Because WINPCAPSs interface naming is weired, I try a more user friendly approach.
+ * On windows, ifname can either be the not changeable AdapterName (GUID), or the so-called FriendlyName, which is changeable by the user.
+ * Both will be checked case-sensitive!
+ * Examples: FriendlyName "WiFi" or "Local Area Connection 1."
+ *           AdapterName "{3F4A136A-2ED5-4226-9CB2-7A511E93CD48}"
+ */
 cInterface::cInterface(const char* ifname)
 : name (ifname)
 {
@@ -47,55 +53,32 @@ bool cInterface::open ()
 	if (ifcHandle)
 		return true;
 
+	winNetAdapters = getAdapterAddresses ();
+	if (!winNetAdapters)
+		return false;
+
+	// find selected adapter
+	PIP_ADAPTER_ADDRESSES adapter = getAdapterInfo ();
+	if (!adapter)
+	{
+		nn::Console::PrintError ("Unknown network interface '%s'\n", name.c_str());
+		return false;
+	}
+
+	// convert windows' AdapterName to pcap known interface name
+	std::string pcapIfName("\\Device\\NPF_");
+	pcapIfName += adapter->AdapterName;
+
 	char errbuf[PCAP_ERRBUF_SIZE] = {0};
-	ifcHandle = pcap_open_live(name.c_str(), 65536,	1, 1000, errbuf);
+	ifcHandle = pcap_open_live(pcapIfName.c_str(), 65536,	1, 1000, errbuf);
 
 	if (!ifcHandle)
 	{
-		nn::Console::PrintError ("Unable to open the adapter. %s is not supported by WinPcap\n", name.c_str());
+		nn::Console::PrintError ("Unable to open the network interface. %s(%s) is not supported by WinPcap\n", name.c_str(), pcapIfName.c_str());
 		nn::Console::PrintError ("pcap error: %s\n", errbuf);
 	}
-	else
-	{
-		bool error = true;
-		ULONG ret;
-		ULONG size = 0;
 
-		ret = GetAdaptersAddresses (AF_UNSPEC, 0, NULL, NULL, &size);
-		if (!size)
-		{
-			nn::Console::PrintError ("Could not determine size of adapter data\n");
-		}
-		else
-		{
-			winNetAdapters = (IP_ADAPTER_ADDRESSES *)malloc (size);
-			if (!winNetAdapters)
-			{
-				nn::Console::PrintError ("Not enough memory\n");
-			}
-			else
-			{
-				memset (winNetAdapters, 0, size);
-
-				ret = GetAdaptersAddresses (AF_UNSPEC, 0, NULL, winNetAdapters, &size);
-				if (ret != NO_ERROR)
-				{
-					nn::Console::PrintError ("Call to GetAdaptersAddresses failed with error\n");
-				}
-				else
-				{
-					error = false;
-				}
-			}
-		}
-		if (error)
-		{
-			close ();
-			ifcHandle = NULL;
-		}
-	}
-
-	return (ifcHandle != NULL);
+	return ifcHandle != NULL;
 }
 
 bool cInterface::close ()
@@ -137,20 +120,57 @@ bool cInterface::getMAC (mac_t *mac)
 	return true;
 }
 
+PIP_ADAPTER_ADDRESSES cInterface::getAdapterAddresses ()
+{
+	ULONG ret;
+	ULONG size = 0;
+	PIP_ADAPTER_ADDRESSES addresses = NULL;
+
+	ret = GetAdaptersAddresses (AF_UNSPEC, 0, NULL, NULL, &size);
+	if (!size)
+	{
+		nn::Console::PrintError ("Could not determine size of adapter data\n");
+	}
+	else
+	{
+		addresses = (IP_ADAPTER_ADDRESSES *)malloc (size);
+		if (!addresses)
+		{
+			nn::Console::PrintError ("Not enough memory\n");
+		}
+		else
+		{
+			memset (addresses, 0, size);
+
+			ret = GetAdaptersAddresses (AF_UNSPEC, 0, NULL, addresses, &size);
+			if (ret != NO_ERROR)
+			{
+				nn::Console::PrintError ("Call to GetAdaptersAddresses failed with error\n");
+				free (addresses);
+				addresses = NULL;
+			}
+		}
+	}
+	return addresses;
+}
 
 PIP_ADAPTER_ADDRESSES cInterface::getAdapterInfo ()
 {
 	PIP_ADAPTER_ADDRESSES pCurr = winNetAdapters;
 
-	if (ifcHandle)
+	while (pCurr)
 	{
-		while (pCurr)
+		if (!name.compare (pCurr->AdapterName))
+			return pCurr;
+		else
 		{
-			if (strstr (name.c_str(), pCurr->AdapterName))
+			// FriendlyName is a wide string. Therefore we have to convert our interface name
+			std::wstring wname(name.begin(), name.end());
+			if (!wname.compare (pCurr->FriendlyName))
 				return pCurr;
-
-			pCurr = pCurr->Next;
 		}
+
+		pCurr = pCurr->Next;
 	}
 	return NULL;
 }

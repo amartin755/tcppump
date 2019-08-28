@@ -43,6 +43,7 @@ public:
 
 private:
 	PIP_ADAPTER_ADDRESSES getAdapterInfo ();
+	PIP_ADAPTER_ADDRESSES getAdapterAddresses ();
 
 	std::string name;
 	pcap_t *ifcHandle;
