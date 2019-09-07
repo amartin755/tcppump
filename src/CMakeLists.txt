@@ -6,7 +6,6 @@ PROJECT (tcppump VERSION 0.0.1.0)
 ###############################################################################
 
 
-INCLUDE (CheckSymbolExists)
 
 
 # set output directories to "bin"
@@ -16,24 +15,63 @@ SET (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
 
 # check environment
 ###############################################################################
+INCLUDE (CheckLibraryExists)
+INCLUDE (CheckSymbolExists)
+INCLUDE (CheckFunctionExists)
+INCLUDE (CheckIncludeFiles)
+
+# try to find pcap library; can be set via PCAP_INCLUDE_DIR and PCAP_LIBRARY
+IF (NOT PCAP_INCLUDE_DIR)
+	SET (PCAPDIR ${PROJECT_SOURCE_DIR}/../pcap/include)
+	FIND_PATH (PCAP_INCLUDE_DIR NAMES pcap/pcap.h pcap.h PATHS ${PCAPDIR} NO_DEFAULT_PATH)
+ENDIF (NOT PCAP_INCLUDE_DIR)
+IF (NOT PCAP_LIBRARY)
+	SET (PCAPDIR ${PROJECT_SOURCE_DIR}/../pcap/lib)
+	FIND_LIBRARY (PCAP_LIBRARY NAMES wpcap pcap PATHS ${PCAPDIR} NO_DEFAULT_PATH)
+ENDIF (NOT PCAP_LIBRARY)
+IF (NOT PCAP_LIBRARY)
+	FIND_LIBRARY (PCAP_LIBRARY NAMES wpcap pcap)
+ENDIF (NOT PCAP_LIBRARY)
+
+MESSAGE (STATUS "PCAP_INCLUDE_DIR = ${PCAP_INCLUDE_DIR}")
+MESSAGE (STATUS "PCAP_LIBRARY = ${PCAP_LIBRARY}")
+SET (CMAKE_REQUIRED_LIBRARIES ${PCAP_LIBRARY})
+CHECK_FUNCTION_EXISTS (pcap_open_offline HAVE_PCAP)
+SET (CMAKE_REQUIRED_LIBRARIES "")
+
 
 # commandline parsing is based on GNUs getopt_long()
 CHECK_SYMBOL_EXISTS (getopt_long getopt.h HAVE_GETOPT_LONG)
 IF (NOT HAVE_GETOPT_LONG)
-MESSAGE (FATAL_ERROR "Symbol getopt_long not found!")
+	MESSAGE (FATAL_ERROR "Symbol getopt_long not found!")
 ENDIF (NOT HAVE_GETOPT_LONG)
 
-# getch() is needed for unbuffered stdin on Windows
-CHECK_SYMBOL_EXISTS (getch conio.h HAVE_GETCH)
+# on windows winsock, winpcap, conio and iphlpapi is needed
+IF (WIN32)
+	CHECK_INCLUDE_FILES("winsock.h;iphlpapi.h;winerror.h" HAVE_WS2)
+	# getch() is needed for unbuffered stdin on Windows
+	CHECK_SYMBOL_EXISTS (getch conio.h HAVE_GETCH)
+
+	IF (NOT HAVE_GETCH)
+		MESSAGE (FATAL_ERROR "Function getch() not found!")
+	ENDIF (NOT HAVE_GETCH)
+	IF (NOT HAVE_WS2)
+		MESSAGE (FATAL_ERROR "Winsock and ip helper headers not found!")
+	ENDIF (NOT HAVE_WS2)
+	IF (NOT HAVE_PCAP)
+		MESSAGE (FATAL_ERROR "Library wpcap not found!")
+	ENDIF (NOT HAVE_PCAP)
+ENDIF (WIN32)
 
 
 # definitions
 ###############################################################################
-ADD_DEFINITIONS(-DAPP_VERSION="${PROJECT_VERSION}")
+ADD_DEFINITIONS (-DAPP_VERSION="${PROJECT_VERSION}")
+ADD_DEFINITIONS (-DHAVE_PCAP="${HAVE_PCAP}")
 IF (WIN32)
     # min. supported version is Windows 7
-    ADD_DEFINITIONS(-D_WIN32_WINNT=0x0601)
-    ADD_DEFINITIONS(-DWINVER=0x0601)
+    ADD_DEFINITIONS (-D_WIN32_WINNT=0x0601)
+    ADD_DEFINITIONS (-DWINVER=0x0601)
 ENDIF (WIN32)
 
 
@@ -53,20 +91,22 @@ ENDIF (MINGW)
 
 # platform specific libs and files
 IF (WIN32)
-	# on windows we need winpcap
-	FIND_PATH (WINPCAP_INCLUDE_DIR pcap.h "${PROJECT_SOURCE_DIR}/../pcap/*")
-	INCLUDE_DIRECTORIES (${WINPCAP_INCLUDE_DIR})
-	FIND_LIBRARY (WINPCAP_LIBRARY NAMES "wpcap" PATHS "${PROJECT_SOURCE_DIR}/../pcap/*")
-	
 	SET (os_specific os/win32)
 	SET (libs 
 	     ws2_32 
-	     IPHLPAPI 
-	     ${WINPCAP_LIBRARY})
+	     IPHLPAPI)
 ENDIF (WIN32)
 IF (UNIX)
 	SET (os_specific os/posix)
 ENDIF (UNIX)
+
+# includes and libs
+IF (HAVE_PCAP)
+	SET (libs ${libs} ${PCAP_LIBRARY})
+	IF (PCAP_INCLUDE_DIR)
+		INCLUDE_DIRECTORIES (${PCAP_INCLUDE_DIR})
+	ENDIF (PCAP_INCLUDE_DIR)
+ENDIF (HAVE_PCAP)
 
 
 SET (sourcefiles
