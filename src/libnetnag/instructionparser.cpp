@@ -221,7 +221,7 @@ int cInstructionParser::compileETH (cParameterList& params, cEthernetPacket& eth
 }
 
 
-int cInstructionParser::compileARP (cParameterList& params, cEthernetPacket& packet)
+int cInstructionParser::compileARP (cParameterList&, cEthernetPacket&)
 {
 #if 0
 	ethernet_t* e = (ethernet_t*)frame;
@@ -259,7 +259,7 @@ int cInstructionParser::compileARP (cParameterList& params, cEthernetPacket& pac
 }
 
 
-int cInstructionParser::compileIPv4 (cParameterList& params, cEthernetPacket& packet)
+int cInstructionParser::compileIPv4 (cParameterList&, cEthernetPacket&)
 {
 #if 0
 	int i = -1;

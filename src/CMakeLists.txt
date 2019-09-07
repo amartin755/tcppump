@@ -39,7 +39,7 @@ ENDIF (WIN32)
 
 # warning level
 ###############################################################################
-SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 
 # on mingw we link the std library statically
 IF (MINGW)

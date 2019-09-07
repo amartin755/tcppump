@@ -37,7 +37,7 @@ cEthernetPacket::cEthernetPacket (size_t maxLength)
 
 	/*
 	 * note: We use an array of uint32_t here to force 32bit aligment of our packet data.
-	 * Yes, that paranoid. I know that new always aligns to __STDCPP_DEFAULT_NEW_ALIGNMENT__, which is
+	 * Yes, that's paranoid. I know that 'new' always aligns to __STDCPP_DEFAULT_NEW_ALIGNMENT__, which is
 	 * typically 8 or 16 bytes, but you never know ;-)
 	 */
 	data = new uint32_t[(maxLength + sizeof (uint32_t) - 1) / sizeof (uint32_t)];

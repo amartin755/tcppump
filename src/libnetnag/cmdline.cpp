@@ -219,7 +219,8 @@ bool cCmdline::addOption (char shortname, const char* longname, const char* argn
 	if (len <= 1)
 		return false;
 
-	argument a = {0};
+	argument a;
+	memset (&a, 0, sizeof (a));
 
 	a.shortname   = shortname;
 	a.longname    = longname;
