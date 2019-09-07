@@ -23,7 +23,9 @@
 #ifndef TCPPUMP_HPP
 #define TCPPUMP_HPP
 
+
 #include <list>
+#include <map>
 #include <cstddef>
 #include "libnetnag/protocoltypes.hpp"
 #include "libnetnag/cmdlineapp.hpp"
@@ -59,6 +61,7 @@ private:
 
 	appOptions options;
 	std::list <cEthernetPacket> packets;
+	std::map <int, cEthernetPacket&> keyBindings;
 };
 
 #endif /* TCPPUMP_HPP */

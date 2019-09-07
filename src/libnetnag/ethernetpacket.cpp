@@ -48,10 +48,56 @@ cEthernetPacket::cEthernetPacket (size_t maxLength)
 	reset ();
 }
 
+cEthernetPacket::cEthernetPacket (cEthernetPacket&& other)
+{
+	data             = other.data;
+	packet           = other.packet;
+	packetMaxLength  = other.packetMaxLength;
+	pPayload         = other.pPayload;
+	pEthertypeLength = other.pEthertypeLength;
+	payloadLength    = other.payloadLength;
+	llcHeaderLength  = other.llcHeaderLength;
+
+	other.data             = nullptr;
+	other.packet           = nullptr;
+	other.packetMaxLength  = 0;
+	other.pPayload         = nullptr;
+	other.pEthertypeLength = nullptr;
+	other.payloadLength    = 0;
+	other.llcHeaderLength  = 0;
+}
+
 
 cEthernetPacket::~cEthernetPacket ()
 {
 	delete[] data;
+}
+
+
+cEthernetPacket& cEthernetPacket::operator=(cEthernetPacket&& other)
+{
+	if (this != &other)
+	{
+		delete[] data;
+
+		data             = other.data;
+		packet           = other.packet;
+		packetMaxLength  = other.packetMaxLength;
+		pPayload         = other.pPayload;
+		pEthertypeLength = other.pEthertypeLength;
+		payloadLength    = other.payloadLength;
+		llcHeaderLength  = other.llcHeaderLength;
+
+		other.data             = nullptr;
+		other.packet           = nullptr;
+		other.packetMaxLength  = 0;
+		other.pPayload         = nullptr;
+		other.pEthertypeLength = nullptr;
+		other.payloadLength    = 0;
+		other.llcHeaderLength  = 0;
+	}
+
+	return *this;
 }
 
 

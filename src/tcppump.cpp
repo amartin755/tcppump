@@ -88,27 +88,36 @@ int cTcpPump::execute (int argc, char* argv[])
 			for (cEthernetPacket& p : packets)
 			{
 				if (!sendPacket (ifc, p))
-				{
-					Console::PrintError ("Could not send packet.\n");
 					return -4;
-				}
 			}
 		}
 	}
 	else
 	{
+		// TODO
 		// proof-of-concept for interactive-mode
-		Console::PrintError ("Interactiv-mode is not yet implemented!.\n");
-		int key;
-		do
+		int defaultKeys[] = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '0'};
+		int n = 0;
+		for (cEthernetPacket& p : packets)
 		{
-			key = tcppump::getch ();
+			keyBindings.insert (std::pair<int, cEthernetPacket&>(defaultKeys[n++], p));
+		}
 
-			if (key == '1') sendPacket (ifc, packets.front());
-			if (key == '2') sendPacket (ifc, packets.back());
+		int key;
 
-		}while (key != EOF);
-
+		while ((key = tcppump::getch ()) != EOF)
+		{
+			try
+			{
+				cEthernetPacket& p = keyBindings.at (key);
+				if (!sendPacket (ifc, p))
+					return -4;
+			}
+			catch (const std::out_of_range& e)
+			{
+				// key not found --> nothing to do
+			}
+		}
 	}
 
 	return 0;
@@ -117,24 +126,18 @@ int cTcpPump::execute (int argc, char* argv[])
 
 bool cTcpPump::parsePackets (mac_t ownMac, int argc, char* argv[])
 {
+
 	for (int n = 0; n < argc; n++)
 	{
 		try
 		{
-			packets.emplace_back();
-		}
-		catch (...)
-		{
-			Console::PrintError ("Not enough memory\n");
-			return false;
-		}
-
-		try
-		{
+			cEthernetPacket packet;
 			if (!options.raw)
-				cInstructionParser (ownMac, 0).parse (argv[n], packets.back());
+				cInstructionParser (ownMac, 0).parse (argv[n], packet);
 			else
-				packets.back().setRaw (argv[n], strlen (argv[n]));
+				packet.setRaw (argv[n], strlen (argv[n]));
+
+			packets.push_back (std::move(packet));
 		}
 		catch (ParseException &e)
 		{
@@ -172,7 +175,10 @@ bool cTcpPump::parseScripts (mac_t ownMac, int scriptsCnt, char* scripts[])
 			// allocate a new packet
 			try
 			{
-				packets.emplace_back();
+				cEthernetPacket packet;
+				len = parser.parse (packet);
+				if (len > 0)
+					packets.push_back (std::move(packet));
 			}
 			catch (...)
 			{
@@ -180,15 +186,12 @@ bool cTcpPump::parseScripts (mac_t ownMac, int scriptsCnt, char* scripts[])
 				return false;
 			}
 
-		}while ((len = parser.parse (packets.back())) > 0);
-
-		packets.pop_back();
-
-		if (len == PARSE_ERROR)
-			Console::PrintError ("%s %s\n", *scripts, parser.getLastError ());
+		}while (len > 0);
 
 		fclose (fp);
 
+		if (len == PARSE_ERROR)
+			Console::PrintError ("%s %s\n", *scripts, parser.getLastError ());
 		if (len != EOF)
 			return false;
 
@@ -199,6 +202,7 @@ bool cTcpPump::parseScripts (mac_t ownMac, int scriptsCnt, char* scripts[])
 	return true;
 }
 
+
 bool cTcpPump::sendPacket (cInterface &ifc, cEthernetPacket &p)
 {
 	if (options.delay)
@@ -206,12 +210,14 @@ bool cTcpPump::sendPacket (cInterface &ifc, cEthernetPacket &p)
 	tcppump::Sleep (options.delay);
 	if(!ifc.sendPacket (p.get(), p.getLength()))
 	{
+		Console::PrintError ("Could not send packet.\n");
 		return false;
 	}
 	cDissector(p).dissect();
 
 	return true;
 }
+
 
 int main(int argc, char* argv[])
 {
