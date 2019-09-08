@@ -48,7 +48,7 @@ ENDIF (NOT HAVE_GETOPT_LONG)
 
 # on windows winsock, winpcap, conio and iphlpapi is needed
 IF (WIN32)
-	CHECK_INCLUDE_FILES("winsock.h;iphlpapi.h;winerror.h" HAVE_WS2)
+	CHECK_INCLUDE_FILES("winsock2.h;iphlpapi.h;winerror.h" HAVE_WS2)
 	# getch() is needed for unbuffered stdin on Windows
 	CHECK_SYMBOL_EXISTS (getch conio.h HAVE_GETCH)
 
@@ -63,11 +63,25 @@ IF (WIN32)
 	ENDIF (NOT HAVE_PCAP)
 ENDIF (WIN32)
 
+CHECK_INCLUDE_FILES("sys/time.h" HAVE_SYSTIME_H)
+CHECK_INCLUDE_FILES("arpa/inet.h" HAVE_ARPAINET_H)
+
 
 # definitions
 ###############################################################################
 ADD_DEFINITIONS (-DAPP_VERSION="${PROJECT_VERSION}")
-ADD_DEFINITIONS (-DHAVE_PCAP="${HAVE_PCAP}")
+IF (HAVE_WS2)
+	ADD_DEFINITIONS (-DHAVE_WS2)
+ENDIF (HAVE_WS2)
+IF (HAVE_SYSTIME_H)
+	ADD_DEFINITIONS (-DHAVE_SYSTIME_H)
+ENDIF (HAVE_SYSTIME_H)
+IF (HAVE_ARPAINET_H)
+	ADD_DEFINITIONS (-DHAVE_ARPAINET_H)
+ENDIF (HAVE_ARPAINET_H)
+IF (HAVE_PCAP)
+	ADD_DEFINITIONS (-DHAVE_PCAP)
+ENDIF (HAVE_PCAP)
 IF (WIN32)
     # min. supported version is Windows 7
     ADD_DEFINITIONS (-D_WIN32_WINNT=0x0601)

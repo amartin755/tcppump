@@ -16,20 +16,26 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef INET_H_
-#define INET_H_
+#ifndef TIMEVAL_H_
+#define TIMEVAL_H_
 
 /*
- * portable replacement for arpa/inet.h
+ * This header provides the definition of 'struct timeval'.
+ * According to POSIX it is defined in sys/time.h, but not all windows compiler
+ * provide this header. On the other hand this struct is part of winsock and thefore
+ * a suitable fallback.
+ *
+ * Note: It's all about 'struct timeval'. All other symbols of sys/time.h
+ *       are NOT the purpose of this header.
  */
 
-#if HAVE_ARPAINET_H
-# include <arpa/inet.h> /* that's the posix way */
+#if HAVE_SYSTIME_H
+# include <sys/time.h>
 #elif HAVE_WS2
-# include <winsock2.h> /* on windows those symbols are defined here */
+# include <winsock2.h>
 #else
-# error "no suitable header for htonl and friends found"
+# error "no suitable header 'struct timeval' found"
 #endif
 
 
-#endif /* INET_H_ */
+#endif /* TIMEVAL_H_ */

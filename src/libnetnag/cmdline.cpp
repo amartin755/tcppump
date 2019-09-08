@@ -194,9 +194,12 @@ void cCmdline::printOptions ()
 	//FIXME still incomplete
 	for (unsigned n = 0; n < options.size (); n++)
 	{
-		nn::Console::Print ("-%c ", options.at (n).shortname);
-		if (options.at (n).hasArg)
-			nn::Console::Print ("%s ", options.at (n).argname);
+		if (options.at (n).shortname)
+		{
+			nn::Console::Print ("-%c ", options.at (n).shortname);
+			if (options.at (n).hasArg)
+				nn::Console::Print ("%s ", options.at (n).argname);
+		}
 		if (options.at (n).longname)
 		{
 			nn::Console::Print ("--%s", options.at (n).longname);
@@ -500,6 +503,30 @@ void cCmdline::unitTest ()
 		assert (obj.addOption ('a', "arga", "ARG", "optional option with args", &intarg1, true));
 		assert (obj.addOption ('b', "argb", "ARG", "optional option with args", &intarg2, true));
 		assert (obj.addOption ('c', "argc", "ARG", "optional option with args", &stringarg1, true));
+		assert (obj.addOption ('d', "argd", "ARG", "optional option with args", &stringarg2, true));
+
+		assert (obj.parse (&index));
+		assert (intarg1 == 10);
+		assert (intarg2 == 10);
+		assert (stringarg1);
+		assert (!strcmp ("CCC", stringarg1));
+		assert (stringarg2);
+		assert (!strcmp ("DDD", stringarg2));
+		assert (index == 7);
+    }
+    {
+		char* argv[] = {"unittest14", "--arga=0xa", "--argb", "10", "--argc=CCC", "--argd", "DDD", "ABCD", "EFGH"};
+		int argc = 9;
+		boolarg1 = boolarg2 = false;
+		stringarg1 = stringarg2 = NULL;
+		intarg1 = intarg2 = -1;
+		int index = 0;
+
+		cCmdline obj(argc, (char**)argv);
+
+		assert (obj.addOption ('a', "arga", "ARG", "optional option with args", &intarg1, true));
+		assert (obj.addOption ('b', "argb", "ARG", "optional option with args", &intarg2, true));
+		assert (obj.addOption (0, "argc", "ARG", "optional option with args", &stringarg1, true));
 		assert (obj.addOption ('d', "argd", "ARG", "optional option with args", &stringarg2, true));
 
 		assert (obj.parse (&index));

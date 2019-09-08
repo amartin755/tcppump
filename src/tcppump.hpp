@@ -41,6 +41,8 @@ typedef struct
 	bool         interactive;
 	bool         raw;
 	bool         script;
+	bool		 pcap;
+	const char*  inputmode; // raw, token, script, pcap
 }appOptions;
 
 class cInterface;
