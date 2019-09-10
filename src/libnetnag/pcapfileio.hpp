@@ -55,7 +55,7 @@ private:
 	const char* path;
 	bool fileError;
 	bool eof;
-	struct timeval offset;
+	cTimeval offset;
 };
 
 #endif /* HAVE_PCAP */

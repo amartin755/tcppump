@@ -62,11 +62,7 @@ void cFileParser::init (FILE* fp, int defaultDelay, mac_t ownMac, ipv4_t ownIPv4
 }
 
 // each call delivers exactly one parsed Ethernet frame
-#ifdef WITH_TIMESTAMP
 int cFileParser::parse (cTimeval& timestamp, bool& isAbsolute, cEthernetPacket& packet)
-#else
-int cFileParser::parse (cEthernetPacket& packet)
-#endif
 {
 	int offset = 0;
 	int c;
@@ -115,19 +111,12 @@ int cFileParser::parse (cEthernetPacket& packet)
 					if (c == ';')
 					{
 						instructionBuffer[offset++] = '\0';
-#ifdef WITH_TIMESTAMP
 						isAbsolute = false;
-						timestamp.set ((long long)delay);
-#endif
+						timestamp.setUs ((uint64_t)delay);
 						try
 						{
-#ifdef WITH_TIMESTAMP
 							return cInstructionParser (ownMac, ownIPv4)
 									.parse (instructionBuffer, timestamp, isAbsolute, packet);
-#else
-							return cInstructionParser (ownMac, ownIPv4)
-									.parse (instructionBuffer, packet);
-#endif
 						}
 						catch (ParseException &e)
 						{

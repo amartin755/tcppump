@@ -87,7 +87,7 @@ bool cPcapFileIO::open (const char* path, bool write)
 	modeWrite  = write;
 	this->path = path;
 	eof        = false;
-	memset (&offset, 0, sizeof (offset));
+	offset.clear ();
 
 	return true;
 }
@@ -124,11 +124,11 @@ bool cPcapFileIO::read (struct pcap_pkthdr **header, const u_char **data)
 			nn::Console::PrintError ("Could not read file %s.\n", path);
 			printError (pcap_geterr (fileHandle));
 		}
-		if (!offset.tv_sec && !offset.tv_usec)
+		if (offset.isNull ())
 		{
 			offset = (*header)->ts;
 		}
-		cTimeval::sub (&(*header)->ts, &(*header)->ts, &offset);
+		(*header)->ts = cTimeval ((*header)->ts).sub(offset).timeval();
 	}
 	return !(fileError || eof);
 }
@@ -141,7 +141,7 @@ uint8_t* cPcapFileIO::read (cTimeval* timestamp, int* len)
 
 	if (read (&header, &pkt_data))
 	{
-		timestamp->set (&header->ts);
+		timestamp->set (header->ts);
 		*len = (int)header->len;
 
 		return (uint8_t*)pkt_data;
@@ -162,7 +162,7 @@ bool cPcapFileIO::write (cTimeval& timestamp, const uint8_t* frame, int len)
 	{
 		struct pcap_pkthdr hdr;
 
-		hdr.ts  = *timestamp.get();
+		hdr.ts  = timestamp.timeval();
 		hdr.len = hdr.caplen = len;
 
 		pcap_dump ((u_char*)dumper, &hdr, (u_char*)frame);
@@ -214,7 +214,7 @@ void cPcapFileIO::unitTest ()
 
 	typedef struct
 	{
-		long long t;
+		uint64_t t;
 		const uint8_t* bin;
 		int binlen;
 		const char* txt;
@@ -246,11 +246,11 @@ void cPcapFileIO::unitTest ()
 	assert (obj.path);
 	assert (!obj.fileError);
 	assert (!obj.eof);
-	assert (!obj.offset.tv_sec && !obj.offset.tv_usec);
+	assert (obj.offset.isNull());
 
 	while ((f = obj.read (&t, &len)) != NULL)
 	{
-		assert (t == indata[n].t);
+		assert (t.us() == indata[n].t);
 		assert (len == indata[n].binlen);
 		assert (!memcmp (f, indata[n].bin, indata[n].binlen));
 		n++;

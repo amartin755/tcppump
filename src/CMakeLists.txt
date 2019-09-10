@@ -133,6 +133,7 @@ SET (sourcefiles
      libnetnag/instructionparser.cpp
      libnetnag/fileparser.cpp
      libnetnag/parameterlist.cpp
+     libnetnag/pcapfileio.cpp
      ${os_specific}/interface.cpp
      ${os_specific}/sleep.cpp
      ${os_specific}/getch.cpp

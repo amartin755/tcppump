@@ -41,11 +41,7 @@ cInstructionParser::~cInstructionParser ()
 }
 
 
-#ifdef WITH_TIMESTAMP
 int cInstructionParser::parse (const char* instruction, cTimeval& timestamp, bool& isAbsolute, cEthernetPacket& packet)
-#else
-int cInstructionParser::parse (const char* instruction, cEthernetPacket& packet)
-#endif
 {
 	const char* p = instruction;
 
@@ -69,7 +65,7 @@ int cInstructionParser::parse (const char* instruction, cEthernetPacket& packet)
 			isAbsolute = true;
 		}
 
-		timestamp.set (strtoull (p, &end, 10));
+		timestamp.setUs ((uint64_t)strtoull (p, &end, 10));
 		// check if timestamp is followed by whitespace
 		if (!isspace (*end) && *end != '\0')
 		{
@@ -77,6 +73,9 @@ int cInstructionParser::parse (const char* instruction, cEthernetPacket& packet)
 		}
 		p = end;
 	}
+#else
+	timestamp.clear();
+	isAbsolute = true;
 #endif
 	const char* keyword = NULL;
 	const char* keywordEnd = NULL;

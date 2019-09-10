@@ -23,34 +23,156 @@
 #ifndef TIMEVAL_HPP_
 #define TIMEVAL_HPP_
 
+#include <cstdint>
 #include "timeval.h" // struct timeval
+#ifdef WITH_UNITTESTS
+#include <cassert>
+#endif
 
 class cTimeval
 {
 public:
-	cTimeval ();
-	cTimeval (struct timeval *);
-	cTimeval (long long);
-	~cTimeval ();
-	const struct timeval* get ();
-	operator long long ();
-	void set (struct timeval *);
-	void set (long long);
-	void set (cTimeval&);
-	const struct timeval* add (const struct timeval *);
-	void add (cTimeval&);
-	const struct timeval* sub (const struct timeval *);
-	static int sub(struct timeval *result, const struct timeval *x,
-			const struct timeval *y);
-	static void add(struct timeval *result, const struct timeval *time1,
-			const struct timeval *time2);
+	cTimeval ()
+	{
+		value = 0;
+	}
+	cTimeval (const struct timeval& tv)
+	{
+		set (tv);
+	}
+	void clear ()
+	{
+		value = 0;
+	}
+	bool isNull () const
+	{
+		return value == 0;
+	}
+	struct timeval timeval() const
+	{
+		struct timeval tv;
+		tv.tv_sec  = decltype(tv.tv_sec)(this->s());
+		tv.tv_usec = decltype(tv.tv_usec)(this->us() % 1000000ULL);
 
-#ifdef WITH_UNITTESTS
-	static void unitTest ();
-#endif
+		return tv;
+	}
+	uint64_t us() const
+	{
+		return value;
+	}
+	void setUs (uint64_t us)
+	{
+		value = us;
+	}
+	uint64_t ms() const
+	{
+		return value / 1000;
+	}
+	void setMs (uint64_t ms)
+	{
+		value = ms * 1000;
+	}
+	uint64_t s() const
+	{
+		return value / 1000000;
+	}
+	void setS (uint64_t s)
+	{
+		value = s * 1000000;
+	}
+	void set (const cTimeval& val)
+	{
+		this->value = val.value;
+	}
+	void set (const struct timeval &tv)
+	{
+		value = (uint64_t)(tv.tv_sec * 1000000) + (uint64_t)tv.tv_usec;
+	}
+	cTimeval& add (const cTimeval& val)
+	{
+		value += val.value;
+		return *this;
+	}
+	cTimeval& add (const struct timeval &tv)
+	{
+		add (cTimeval (tv));
+		return *this;
+	}
+	cTimeval& sub (const cTimeval& val)
+	{
+		value -= val.value;
+		return *this;
+	}
+	cTimeval& sub (const struct timeval &tv)
+	{
+		sub (cTimeval (tv));
+		return *this;
+	}
+	bool operator== (const cTimeval &val) const
+	{
+		return value == val.value;
+	}
+	bool operator!= (const cTimeval &val) const
+	{
+		return value != val.value;
+	}
 
 private:
-	struct timeval value;
+	uint64_t value;
+
+
+#ifdef WITH_UNITTESTS
+public:
+	static void unitTest ()
+	{
+		struct timeval tv1;
+		tv1.tv_sec = 0;
+		tv1.tv_usec = 999999;
+		struct timeval tv2;
+		tv2.tv_sec = 0;
+		tv2.tv_usec = 1;
+
+		assert (cTimeval (tv1).s() == 0);
+		assert (cTimeval (tv2).s() == 0);
+		assert (cTimeval (tv1).ms() == 999);
+		assert (cTimeval (tv2).ms() == 0);
+		assert (cTimeval (tv1).us() == 999999);
+		assert (cTimeval (tv2).us() == 1);
+
+		cTimeval v;
+		assert (v.s() == 0);
+		assert (v.ms() == 0);
+		assert (v.us() == 0);
+		v.set (tv1);
+		assert (v.s() == 0);
+		assert (v.ms() == 999);
+		assert (v.us() == 999999);
+		v.add(tv2);
+		assert (v.s() == 1);
+		assert (v.ms() == 1000);
+		assert (v.us() == 1000000);
+		v.add(v).sub(tv2);
+		assert (v.s() == 1);
+		assert (v.ms() == 1999);
+		assert (v.us() == 1999999);
+		v.sub(tv2);
+		struct timeval tv3 = v.timeval();
+		assert (tv3.tv_sec == 1);
+		assert (tv3.tv_usec == 999998);
+		v.sub(v);
+		assert (v.s() == 0);
+		assert (v.ms() == 0);
+		assert (v.us() == 0);
+		struct timeval tv4 = v.timeval();
+		assert (tv4.tv_sec == 0);
+		assert (tv4.tv_usec == 0);
+
+		assert (cTimeval() == v);
+		assert (!(cTimeval() != v));
+		assert (!(cTimeval(tv1) == cTimeval(tv2)));
+		assert (cTimeval(tv1) != cTimeval(tv2));
+	}
+#endif
 };
 
 #endif /* TIMEVAL_HPP_ */

@@ -168,6 +168,8 @@ int cTcpPump::execute (int argc, char* argv[])
 
 bool cTcpPump::parsePackets (mac_t ownMac, int argc, char* argv[])
 {
+	cTimeval timestamp;
+	bool isAbsolute;
 
 	for (int n = 0; n < argc; n++)
 	{
@@ -175,7 +177,7 @@ bool cTcpPump::parsePackets (mac_t ownMac, int argc, char* argv[])
 		{
 			cEthernetPacket packet;
 			if (!options.raw)
-				cInstructionParser (ownMac, 0).parse (argv[n], packet);
+				cInstructionParser (ownMac, 0).parse (argv[n], timestamp, isAbsolute, packet);
 			else
 				packet.setRaw (argv[n], strlen (argv[n]));
 
@@ -201,6 +203,8 @@ bool cTcpPump::parseScripts (mac_t ownMac, int scriptsCnt, char* scripts[])
 	FILE *fp;
 	int len;
 	cFileParser parser;
+	cTimeval timestamp;
+	bool isAbsolute;
 
 	do
 	{
@@ -218,7 +222,7 @@ bool cTcpPump::parseScripts (mac_t ownMac, int scriptsCnt, char* scripts[])
 			try
 			{
 				cEthernetPacket packet;
-				len = parser.parse (packet);
+				len = parser.parse (timestamp, isAbsolute, packet);
 				if (len > 0)
 					packets.push_back (std::move(packet));
 			}
