@@ -106,16 +106,19 @@ int cTcpPump::execute (int argc, char* argv[])
 		return -1;
 	}
 
-	if (!strcmp ("raw", options.inputmode))
-		options.raw = true;
-	else if (!strcmp ("script", options.inputmode))
-		options.script = true;
-	else if (!strcmp ("pcap", options.inputmode))
-		options.pcap = true;
-	else
+	if (strcmp ("token", options.inputmode))
 	{
-		Console::PrintError ("Unknown --input=%s.\n");
-		return -1;
+		if (!strcmp ("raw", options.inputmode))
+			options.raw = true;
+		else if (!strcmp ("script", options.inputmode))
+			options.script = true;
+		else if (!strcmp ("pcap", options.inputmode))
+			options.pcap = true;
+		else
+		{
+			Console::PrintError ("Unknown --input=%s.\n", options.inputmode);
+			return -1;
+		}
 	}
 
 	bool ok = options.script ? parseScripts (ownMac, argc, argv) : parsePackets (ownMac, argc, argv);
