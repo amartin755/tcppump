@@ -36,9 +36,11 @@ namespace nn
 		static bool PrintError (const char* format, ...);
 		static bool Print (const char* format, ...);
 		static bool PrintVerbose (const char* format, ...);
+		static bool PrintMoreVerbose (const char* format, ...);
+		static bool PrintMostVerbose (const char* format, ...);
 		static bool PrintDebug (const char* format, ...);
 
-		enum out_level {Silent = 1, Error = 2, Normal = 3, Verbose = 4, Debug = 5};
+		enum out_level {Silent = 1, Error = 2, Normal = 3, Verbose = 4, MoreVerbose = 5, MostVerbose = 6, Debug = 7};
 		static void SetPrintLevel (out_level lvl);
 
 	private:

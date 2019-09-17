@@ -22,7 +22,8 @@
 #include <cassert>
 #include <cstring>
 #include <cstdlib>
-#include <getopt.h>
+
+#include "ketopt.h"
 
 #include "cmdline.hpp"
 #include "console.hpp"
@@ -45,6 +46,7 @@ cCmdline::~cCmdline ()
 	// TODO Auto-generated destructor stub
 }
 
+
 bool cCmdline::addOption (char shortname, const char* longname, const char* argname, const char* description, int* arg, bool optional)
 {
 	return addOption (shortname, longname, argname, description, ARG_INT, (void*)arg, true, optional);
@@ -63,6 +65,12 @@ bool cCmdline::addOption (char shortname, const char* longname, const char* desc
 }
 
 
+bool cCmdline::addOption (char shortname, const char* longname, const char* description, int* argSet, bool optional)
+{
+	return addOption (shortname, longname, NULL, description, ARG_INT, (void*)argSet, false, optional);
+}
+
+
 bool cCmdline::parse (int argc, char* argv[], int* optind)
 {
 	this->argc = argc;
@@ -74,6 +82,7 @@ bool cCmdline::parse (int argc, char* argv[], int* optind)
 
 bool cCmdline::parse (int* optind)
 {
+	ketopt_t opt = KETOPT_INIT;
 	bool ret = true;
 	char* shortopts = new (std::nothrow) char[options.size() * 2 + 1];
 	char* pShort = shortopts;
@@ -83,8 +92,8 @@ bool cCmdline::parse (int* optind)
 		return false;
 	}
 
-	struct option *longopts = new (std::nothrow) struct option[options.size() + 1];
-	struct option *pLong = longopts;
+	ko_longopt_t *longopts = new (std::nothrow) ko_longopt_t[options.size() + 1];
+	ko_longopt_t *pLong = longopts;
 	if (!longopts)
 	{
 		delete[] shortopts;
@@ -104,58 +113,51 @@ bool cCmdline::parse (int* optind)
 		}
 		if (options.at (n).longname)
 		{
-			pLong->name    = options.at (n).longname;
-			pLong->has_arg = options.at (n).hasArg ? required_argument : no_argument;
-			pLong->flag    = NULL;
+			pLong->name    = (char*)options.at (n).longname;
+			pLong->has_arg = options.at (n).hasArg ? ko_required_argument : ko_no_argument;
 			pLong->val     = options.at (n).shortname;
 			pLong++;
 		}
 	}
 
-	pShort         = NULL;
+	*pShort        = '\0';
 	pLong->name    = NULL;
 	pLong->has_arg = 0;
-	pLong->flag    = NULL;
 	pLong->val     = 0;
 
-	::optind = 1;
 
-	while (::optind < argc && ret)
+	int result;
+	while ((result = ketopt (&opt, argc, argv, 1, shortopts, longopts)) >= 0 && ret)
 	{
-		int index = 0;
-		int result = getopt_long (argc, argv, shortopts, longopts, &index);
-
-		if (result == -1)
-			break;
-		else if (result == '?')
+		if (result == '?')
 		{
-			int option = findOption (optopt);
-			if (option >= 0)
-			{
-				nn::Console::PrintError ("Option -%c requires an argument.\n", optopt);
-			}
-			else
-			{
-				nn::Console::PrintError ("Unknown option `-%c'.\n", optopt);
-			}
+			nn::Console::PrintError ("Unknown option `%s'.\n", opt.ind - 1 <= argc ? argv[opt.ind - 1] : "???");
+			ret = false;
+		}
+		else if (result == ':')
+		{
+			nn::Console::PrintError ("Option %s requires an argument.\n", opt.ind - 1 <= argc ? argv[opt.ind - 1] : "???");
 			ret = false;
 		}
 		else
 		{
-			int option = findOption (result);
+			int option = findOption (opt.opt);
 			if (option >= 0)
 			{
 				switch (options.at (option).type)
 				{
 				case ARG_STRING:
-					*((char**)options.at (option).arg) = optarg;
+					*((char**)options.at (option).arg) = opt.arg;
 					break;
 				case ARG_INT:
-					*((int*)options.at (option).arg) = (int)strtol (optarg, NULL, 0);
+					if (options.at (option).hasArg)
+						*((int*)options.at (option).arg) = (int)strtol (opt.arg, NULL, 0);
+					else
+						*((int*)options.at (option).arg) += 1;
 					break;
 				case ARG_BOOL:
 					if (options.at (option).hasArg)
-						*((bool*)options.at (option).arg) = strtol (optarg, NULL, 0) ? true : false;
+						*((bool*)options.at (option).arg) = strtol (opt.arg, NULL, 0) ? true : false;
 					else
 						*((bool*)options.at (option).arg) = true;
 					break;
@@ -183,7 +185,7 @@ bool cCmdline::parse (int* optind)
 	delete[] longopts;
 
 	if (optind)
-		*optind = ::optind;
+		*optind = opt.ind;
 
 	return ret;
 }
@@ -214,18 +216,24 @@ void cCmdline::printOptions ()
 }
 
 
+// NOTE 'longname', 'description' and 'argname' are assumed to be static!
 bool cCmdline::addOption (char shortname, const char* longname, const char* argname, const char* description, arg_type type, void* arg, bool hasArg, bool optional)
 {
-	// NOTE 'longname', 'description' and 'argname' are assumed to be static!
 
-	int len = strlen (longname);
-	if (len <= 1)
-		return false;
+	if (!shortname && !longname)
+		assert ("either shortname or longname must be != null" == 0);
+
+	if (longname)
+	{
+		int len = strlen (longname);
+		if (len <= 1)
+			return false;
+	}
 
 	argument a;
 	memset (&a, 0, sizeof (a));
 
-	a.shortname   = shortname;
+	a.shortname   = shortname ? shortname : options.size() + 0x100;
 	a.longname    = longname;
 	a.argname     = argname;
 	a.description = description;
@@ -537,6 +545,104 @@ void cCmdline::unitTest ()
 		assert (stringarg2);
 		assert (!strcmp ("DDD", stringarg2));
 		assert (index == 7);
+    }
+    {
+		char* argv[] = {"unittest15", "-vvv"};
+		int argc = 2;
+		intarg1 = intarg2 = 0;
+		int index = 0;
+
+		cCmdline obj(argc, (char**)argv);
+
+		assert (obj.addOption ('v', "arga", "optional option without args", &intarg1, true));
+
+		assert (obj.parse (&index));
+		assert (intarg1 == 3);
+    }
+    {
+		char* argv[] = {"unittest16", "-vv", "--arga"};
+		int argc = 3;
+		boolarg1 = boolarg2 = false;
+		int index = 0;
+
+		cCmdline obj(argc, (char**)argv);
+
+		assert (obj.addOption ('v', NULL, "optional short-only option without args", &boolarg1, true));
+		assert (obj.addOption (0, "arga", "optional long-only option without args", &boolarg2, true));
+
+		assert (obj.parse (&index));
+		assert (boolarg1 == true);
+		assert (boolarg2 == true);
+    }
+    {
+		char* argv[] = {"unittest17", "-a"};
+		int argc = 2;
+		intarg1 = intarg2 = -2;
+		boolarg1 = boolarg2 = false;
+		int index = 0;
+
+		cCmdline obj(argc, (char**)argv);
+
+		assert (obj.addOption ('a', "arga", "ARG", "optional option without args", &intarg1, true));
+
+		assert (!obj.parse (&index));
+		assert (intarg1 == -2);
+    }
+    {
+		char* argv[] = {"unittest18", "-a"};
+		int argc = 2;
+		intarg1 = intarg2 = -2;
+		boolarg1 = boolarg2 = false;
+		int index = 0;
+
+		cCmdline obj(argc, (char**)argv);
+
+		assert (obj.addOption ('a', NULL, "ARG", "optional short-only option with args", &intarg1, true));
+
+		assert (!obj.parse (&index));
+		assert (intarg1 == -2);
+    }
+    {
+		char* argv[] = {"unittest19", "--arga"};
+		int argc = 2;
+		intarg1 = intarg2 = -2;
+		boolarg1 = boolarg2 = false;
+		int index = 0;
+
+		cCmdline obj(argc, (char**)argv);
+
+		assert (obj.addOption (0, "arga", "ARG", "optional long-only option with args", &intarg1, true));
+
+		assert (!obj.parse (&index));
+		assert (intarg1 == -2);
+    }
+    {
+		char* argv[] = {"unittest20", "-a", "-b"};
+		int argc = 3;
+		intarg1 = intarg2 = 0;
+		boolarg1 = boolarg2 = false;
+		int index = 0;
+
+		cCmdline obj(argc, (char**)argv);
+
+		assert (obj.addOption ('a', "arga", "optional option without args", &intarg1, true));
+
+		assert (!obj.parse (&index));
+		assert (intarg1 == 1);
+    }
+    {
+		char* argv[] = {"unittest21", "-a", "--berta"};
+		int argc = 3;
+		intarg1 = intarg2 = 0;
+		boolarg1 = boolarg2 = false;
+		int index = 0;
+
+		cCmdline obj(argc, (char**)argv);
+
+		assert (obj.addOption ('a', "arga", "optional option without args", &intarg1, true));
+
+		assert (!obj.parse (&index));
+		assert (intarg1 == 1);
     }
 }
 #endif

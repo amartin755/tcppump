@@ -74,7 +74,27 @@ protected:
 		cmdline.printOptions ();
 		nn::Console::Print ("\n%s\n\n", description);
 	}
-	cCmdline cmdline;
+
+	// adds integer option with argument
+	bool addCmdLineOption (char shortname, const char* longname, const char* argname, const char* description, int* arg, bool optional = false)
+	{
+		return cmdline.addOption (shortname, longname, argname, description, arg, optional);
+	}
+	// adds string option with argument
+	bool addCmdLineOption (char shortname, const char* longname, const char* argname, const char* description, const char** arg, bool optional = false)
+	{
+		return cmdline.addOption (shortname, longname, argname, description, arg, optional);
+	}
+	// adds boolean option without argument
+	bool addCmdLineOption (char shortname, const char* longname, const char* description, bool* optSet, bool optional = false)
+	{
+		return cmdline.addOption (shortname, longname, description, optSet, optional);
+	}
+	// adds boolean option without argument, returns how often a option was set (e.g. -vvv --> optSet = 3)
+	bool addCmdLineOption (char shortname, const char* longname, const char* description, int* optSet, bool optional)
+	{
+		return cmdline.addOption (shortname, longname, description, optSet, optional);
+	}
 
 private:
 	const char* name;
@@ -82,6 +102,7 @@ private:
 	const char* usage;
 	const char* description;
 	bool help;
+	cCmdline cmdline;
 };
 
 #endif /* CMDLINE_HPP_ */

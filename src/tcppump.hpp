@@ -36,7 +36,7 @@ typedef struct
 	const char*  ifc;
 	int          repeat;
 	bool         help;
-	bool         verbose;
+	int          verbosity;
 	int          delay;
 	bool         interactive;
 	bool         raw;

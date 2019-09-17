@@ -40,12 +40,6 @@ CHECK_FUNCTION_EXISTS (pcap_open_offline HAVE_PCAP)
 SET (CMAKE_REQUIRED_LIBRARIES "")
 
 
-# commandline parsing is based on GNUs getopt_long()
-CHECK_SYMBOL_EXISTS (getopt_long getopt.h HAVE_GETOPT_LONG)
-IF (NOT HAVE_GETOPT_LONG)
-	MESSAGE (FATAL_ERROR "Symbol getopt_long not found!")
-ENDIF (NOT HAVE_GETOPT_LONG)
-
 # on windows winsock, winpcap, conio and iphlpapi is needed
 IF (WIN32)
 	CHECK_INCLUDE_FILES("winsock2.h;iphlpapi.h;winerror.h" HAVE_WS2)

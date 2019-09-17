@@ -69,6 +69,28 @@ namespace nn
 		va_end (args);
 		return ret;
 	}
+	bool Console::PrintMoreVerbose (const char* format, ...)
+	{
+		bool ret;
+		va_list args;
+		va_start (args, format);
+
+		ret = Console::print (Console::MoreVerbose, format, args);
+
+		va_end (args);
+		return ret;
+	}
+	bool Console::PrintMostVerbose (const char* format, ...)
+	{
+		bool ret;
+		va_list args;
+		va_start (args, format);
+
+		ret = Console::print (Console::MostVerbose, format, args);
+
+		va_end (args);
+		return ret;
+	}
 	bool Console::PrintDebug (const char* format, ...)
 	{
 		bool ret;

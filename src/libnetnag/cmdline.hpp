@@ -52,10 +52,14 @@ public:
 	static void unitTest ();
 #endif
 
-	// adds a options without arguments
+	// adds integer option with argument
 	bool addOption (char shortname, const char* longname, const char* argname, const char* description, int* arg, bool optional = false);
+	// adds string option with argument
 	bool addOption (char shortname, const char* longname, const char* argname, const char* description, const char** arg, bool optional = false);
+	// adds boolean option without argument
 	bool addOption (char shortname, const char* longname, const char* description, bool* optSet, bool optional = false);
+	// adds boolean option without argument, returns how often a option was set (e.g. -vvv --> argSet = 3)
+	bool addOption (char shortname, const char* longname, const char* description, int* argSet, bool optional);
 	bool parse (int* optind = 0);
 	bool parse (int argc, char* argv[], int* optind = 0);
 	void printOptions ();
