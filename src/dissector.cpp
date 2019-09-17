@@ -41,6 +41,7 @@ bool cDissector::dissect () const
 {
 	mac_header_t* header = (mac_header_t*)packet;
 	const void* payload = NULL;
+	bool ok = true;
 
 	try
 	{
@@ -84,6 +85,7 @@ bool cDissector::dissect () const
 	catch (const char *malformed)	// malformed packet?
 	{
 		nn::Console::Print ("%s\n  ", malformed);
+		ok = false;
 	}
 	catch (...)
 	{
@@ -93,7 +95,7 @@ bool cDissector::dissect () const
 	dump (packet, packetLength);
 	nn::Console::PrintVerbose("\n");
 
-	return true;
+	return ok;
 }
 
 
@@ -270,14 +272,14 @@ void cDissector::dump (const void* p, size_t length) const
         {
             // Just don't print ASCII for the zeroth line.
             if (i != 0)
-                Console::PrintVerbose ("  %s\n", buff);
+                Console::PrintMoreVerbose ("  %s\n", buff);
 
             // Output the offset.
-            Console::PrintVerbose ("  %04x ", i);
+            Console::PrintMoreVerbose ("  %04x ", i);
         }
 
         // Now the hex code for the specific character.
-        Console::PrintVerbose (" %02x", pc[i]);
+        Console::PrintMoreVerbose (" %02x", pc[i]);
 
         // And store a printable ASCII character for later.
         if ((pc[i] < 0x20) || (pc[i] > 0x7e))
@@ -290,12 +292,12 @@ void cDissector::dump (const void* p, size_t length) const
     // Pad out last line if not exactly 16 characters.
     while ((i % 16) != 0)
     {
-        Console::PrintVerbose ("   ");
+        Console::PrintMoreVerbose ("   ");
         i++;
     }
 
     // And print the final ASCII bit.
-    Console::PrintVerbose ("  %s\n", buff);
+    Console::PrintMoreVerbose ("  %s\n", buff);
 }
 
 

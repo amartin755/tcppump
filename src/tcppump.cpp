@@ -44,9 +44,12 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
 	options.repeat    = 1;
 	options.delay     = 0;
 	options.inputmode = "token";
+	triedToSendPackets= 0;
+	sentPackets       = 0;
+	malformedPackets  = 0;
 
 	addCmdLineOption ('i', "interface", "IFC",
-			"Name of the network interface via which the packets are sent. On Linux this can be on of\n\t"
+			"Name of the network interface via which the packets are sent. On Linux this can be one of\n\t"
 			"the interfaces that are printed by \"ip link\" or \"ifconfig\", for example \"eth0\".\n\t"
 			"On Windows it can either be the AdapterName (GUID) like \"{3F4A136A-2ED5-4226-9CB2-7A511E93CD48}\", \n\t"
 			"or the so-called FriendlyName, which is changeable by the user.\n\t"
@@ -140,12 +143,12 @@ int cTcpPump::execute (int argc, char* argv[])
 
 	if (!options.interactive)
 	{
-		Console::PrintVerbose ("Sending %d packets, each delayed by %d seconds. Repeating %d times.\n\n", packets.size(), options.delay, options.repeat);
+		Console::PrintMoreVerbose ("Sending %d packets, each delayed by %d seconds. Repeating %d times.\n\n", packets.size(), options.delay, options.repeat);
 		while (options.repeat--)
 		{
 			for (cEthernetPacket& p : packets)
 			{
-				if (!sendPacket (ifc, p))
+				if (!sendPacket (ifc, options.delay, p))
 					return -4;
 			}
 		}
@@ -168,7 +171,7 @@ int cTcpPump::execute (int argc, char* argv[])
 			try
 			{
 				cEthernetPacket& p = keyBindings.at (key);
-				if (!sendPacket (ifc, p))
+				if (!sendPacket (ifc, options.delay, p))
 					return -4;
 			}
 			catch (const std::out_of_range& e)
@@ -178,6 +181,7 @@ int cTcpPump::execute (int argc, char* argv[])
 		}
 	}
 
+	Console::PrintVerbose ("Successfully sent %u of %u packets. %u of them where malformed\n", sentPackets, triedToSendPackets, malformedPackets);
 	return 0;
 }
 
@@ -265,17 +269,22 @@ bool cTcpPump::parseScripts (mac_t ownMac, int scriptsCnt, char* scripts[])
 }
 
 
-bool cTcpPump::sendPacket (cInterface &ifc, cEthernetPacket &p)
+bool cTcpPump::sendPacket (cInterface &ifc, unsigned delay, cEthernetPacket &p)
 {
-	if (options.delay)
+	if (delay)
+	{
 		Console::PrintVerbose ("Waiting %d seconds\n", options.delay);
-	tcppump::Sleep (options.delay);
+		tcppump::Sleep (options.delay);
+	}
+	triedToSendPackets++;
 	if(!ifc.sendPacket (p.get(), p.getLength()))
 	{
 		Console::PrintError ("Could not send packet.\n");
 		return false;
 	}
-	cDissector(p).dissect();
+	sentPackets++;
+	if (!cDissector(p).dissect())
+		malformedPackets++;
 
 	return true;
 }

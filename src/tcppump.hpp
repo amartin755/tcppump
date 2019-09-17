@@ -59,11 +59,14 @@ public:
 private:
 	bool parsePackets (mac_t ownMac, int cnt, char* packets[]);
 	bool parseScripts (mac_t ownMac, int cnt, char* packets[]);
-	bool sendPacket (cInterface &ifc, cEthernetPacket& p);
+	bool sendPacket (cInterface &ifc, unsigned delay, cEthernetPacket& p);
 
 	appOptions options;
 	std::list <cEthernetPacket> packets;
 	std::map <int, cEthernetPacket&> keyBindings;
+	unsigned triedToSendPackets;
+	unsigned sentPackets;
+	unsigned malformedPackets;
 };
 
 #endif /* TCPPUMP_HPP */
