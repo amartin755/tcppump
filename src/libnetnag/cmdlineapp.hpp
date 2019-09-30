@@ -35,9 +35,9 @@ public:
 			this->brief = brief;
 			this->usage = usage;
 			this->description = description;
-			this->help = false;
+			this->help = 0;
 
-			cmdline.addOption ('h', "help", "Display this text", &help, true);
+			addCmdLineOption (true, 'h', "help", "Display this text", &help);
 	}
 	virtual ~cCmdlineApp ()
 	{
@@ -75,25 +75,34 @@ protected:
 		nn::Console::Print ("\n%s\n\n", description);
 	}
 
-	// adds integer option with argument
-	bool addCmdLineOption (char shortname, const char* longname, const char* argname, const char* description, int* arg, bool optional = false)
+	// adds (optional) integer option with argument
+	bool addCmdLineOption (bool optional, char shortname, const char* longname, const char* argname, const char* description,
+			int* arg)
 	{
-		return cmdline.addOption (shortname, longname, argname, description, arg, optional);
+		return cmdline.addOption (optional, shortname, longname, description, nullptr, argname, ARG_INT, (void*)arg, false);
 	}
-	// adds string option with argument
-	bool addCmdLineOption (char shortname, const char* longname, const char* argname, const char* description, const char** arg, bool optional = false)
+	// adds (optional) integer long-only-option with optional argument
+	bool addCmdLineOption (bool optional, const char* longname, const char* argname, const char* description,
+			int* optSet, int* arg)
 	{
-		return cmdline.addOption (shortname, longname, argname, description, arg, optional);
+		return cmdline.addOption (optional, 0, longname, description, optSet, argname, ARG_INT, (void*)arg, true);
 	}
-	// adds boolean option without argument
-	bool addCmdLineOption (char shortname, const char* longname, const char* description, bool* optSet, bool optional = false)
+	// adds (optional) string option with argument
+	bool addCmdLineOption (bool optional, char shortname, const char* longname, const char* argname, const char* description,
+			const char** arg)
 	{
-		return cmdline.addOption (shortname, longname, description, optSet, optional);
+		return cmdline.addOption (optional, shortname, longname, description, nullptr, argname, ARG_STRING, (void*)arg, false);
 	}
-	// adds boolean option without argument, returns how often a option was set (e.g. -vvv --> optSet = 3)
-	bool addCmdLineOption (char shortname, const char* longname, const char* description, int* optSet, bool optional)
+	// adds (optional) string long-only-option with optional argument
+	bool addCmdLineOption (bool optional, const char* longname, const char* argname, const char* description,
+			int* optSet, const char** arg)
 	{
-		return cmdline.addOption (shortname, longname, description, optSet, optional);
+		return cmdline.addOption (optional, 0, longname, description, optSet, argname, ARG_STRING, (void*)arg, true);
+	}
+	// adds boolean (optional) option without argument
+	bool addCmdLineOption (bool optional, char shortname, const char* longname, const char* description, int* optSet)
+	{
+		return cmdline.addOption (optional, shortname, longname, description, optSet);
 	}
 
 private:
@@ -101,7 +110,7 @@ private:
 	const char* brief;
 	const char* usage;
 	const char* description;
-	bool help;
+	int help;
 	cCmdline cmdline;
 };
 

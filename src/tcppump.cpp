@@ -44,21 +44,23 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
 	options.repeat    = 1;
 	options.delay     = 0;
 	options.inputmode = "token";
-	triedToSendPackets= 0;
-	sentPackets       = 0;
-	malformedPackets  = 0;
+	options.keys      = "1234567890";
 
-	addCmdLineOption ('i', "interface", "IFC",
+	triedToSendPackets = 0;
+	sentPackets        = 0;
+	malformedPackets   = 0;
+
+	addCmdLineOption (false, 'i', "interface", "IFC",
 			"Name of the network interface via which the packets are sent. On Linux this can be one of\n\t"
 			"the interfaces that are printed by \"ip link\" or \"ifconfig\", for example \"eth0\".\n\t"
 			"On Windows it can either be the AdapterName (GUID) like \"{3F4A136A-2ED5-4226-9CB2-7A511E93CD48}\", \n\t"
 			"or the so-called FriendlyName, which is changeable by the user.\n\t"
 			"For example \"WiFi\" or \"Local Area Connection 1\"."
 			, &options.ifc);
-	addCmdLineOption ('v', "verbose",
+	addCmdLineOption (true, 'v', "verbose",
 			"When parsing and printing, produce verbose output."
-			, &options.verbosity, true);
-	addCmdLineOption (0, "input", "TYPE",
+			, &options.verbosity);
+	addCmdLineOption (true, 0, "input", "TYPE",
 			"Input format of the packets to be sent. Possible values for TYPE (default is \"token\") are:\n\t"
 			"raw     Packets are defined as hex-ascii string, and will not be interpretet.\n\t"
 			"        example: 0123456789ABCDEF001122334455667788\n\t"
@@ -70,17 +72,17 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
 			"\n\t"
 			"pcap    pcap file of captured packets (e.g via wireshark or tcpdump) will be replayed."
 #endif
-			, &options.inputmode, true);
-	addCmdLineOption ('r', "raw", "Short for --input=raw", &options.raw, true);
-	addCmdLineOption ('s', "script", "Short for --input=script", &options.script, true);
-	addCmdLineOption ('p', "pcap", "Short for --input=pcap", &options.pcap, true);
-	addCmdLineOption ('l', "loop", "N", "Send all files/packets N times. Default: N = 1", &options.repeat, true);
-	addCmdLineOption ('d', "delay", "SECONDS", "Packet transmission is delayed SECONDS. Default is no delay", &options.delay, true);
-	addCmdLineOption ('a', "interactive",
+			, &options.inputmode);
+	addCmdLineOption (true, 'r', "raw", "Short for --input=raw", &options.raw);
+	addCmdLineOption (true, 's', "script", "Short for --input=script", &options.script);
+	addCmdLineOption (true, 'p', "pcap", "Short for --input=pcap", &options.pcap);
+	addCmdLineOption (true, 'l', "loop", "N", "Send all files/packets N times. Default: N = 1", &options.repeat);
+	addCmdLineOption (true, 'd', "delay", "SECONDS", "Packet transmission is delayed SECONDS. Default is no delay", &options.delay);
+	addCmdLineOption (true, "interactive", "KEYLIST",
 			"Enable interactive mode (EXPERIMENTAL). In interactive mode no packets are sent automatically.\n\t"
 			"Instead the packets are bound to keys and only sent when the corresponding key\n\t"
 			"is pressed. The current implementation binds the first 10 packets to the key 1, 2, ... 0."
-			, &options.interactive, true);
+			, &options.interactive, &options.keys);
 }
 
 cTcpPump::~cTcpPump()
@@ -155,30 +157,7 @@ int cTcpPump::execute (int argc, char* argv[])
 	}
 	else
 	{
-		// TODO
-		// proof-of-concept for interactive-mode
-		int defaultKeys[] = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '0'};
-		int n = 0;
-		for (cEthernetPacket& p : packets)
-		{
-			keyBindings.insert (std::pair<int, cEthernetPacket&>(defaultKeys[n++], p));
-		}
-
-		int key;
-
-		while ((key = tcppump::getch ()) != EOF)
-		{
-			try
-			{
-				cEthernetPacket& p = keyBindings.at (key);
-				if (!sendPacket (ifc, options.delay, p))
-					return -4;
-			}
-			catch (const std::out_of_range& e)
-			{
-				// key not found --> nothing to do
-			}
-		}
+		interactiveMode(ifc);
 	}
 
 	Console::PrintVerbose ("Successfully sent %u of %u packets. %u of them where malformed\n", sentPackets, triedToSendPackets, malformedPackets);
@@ -289,6 +268,36 @@ bool cTcpPump::sendPacket (cInterface &ifc, unsigned delay, cEthernetPacket &p)
 	return true;
 }
 
+
+bool cTcpPump::interactiveMode (cInterface &ifc)
+{
+	int n = 0;
+	for (cEthernetPacket& p : packets)
+	{
+		if (options.keys[n] == '\0')
+			break;
+
+		keyBindings.insert (std::pair<int, cEthernetPacket&>((int)options.keys[n++], p));
+	}
+
+	int key;
+
+	while ((key = tcppump::getch ()) != EOF)
+	{
+		try
+		{
+			cEthernetPacket& p = keyBindings.at (key);
+			if (!sendPacket (ifc, options.delay, p))
+				return false;
+		}
+		catch (const std::out_of_range& e)
+		{
+			// key not found --> nothing to do
+		}
+	}
+
+	return true;
+}
 
 int main(int argc, char* argv[])
 {

@@ -25,20 +25,22 @@
 
 #include <vector>
 
-typedef enum {ARG_STRING, ARG_BOOL, ARG_INT}arg_type;
+typedef enum {ARG_NO, ARG_STRING, ARG_INT}arg_type;
 
 typedef struct
 {
-	char        shortname;
+	int         isSet;
+	int         shortname;
 	const char* longname;
 	const char* argname;
 	const char* description;
 	bool        optional;
 	bool        hasArg;
+	bool        hasOptionalArg;
 	arg_type type;
 	// usage depends on the type
 	void* arg;
-	bool		isSet;
+	int*		pOptSet;
 }argument;
 
 class cCmdline
@@ -52,14 +54,9 @@ public:
 	static void unitTest ();
 #endif
 
-	// adds integer option with argument
-	bool addOption (char shortname, const char* longname, const char* argname, const char* description, int* arg, bool optional = false);
-	// adds string option with argument
-	bool addOption (char shortname, const char* longname, const char* argname, const char* description, const char** arg, bool optional = false);
-	// adds boolean option without argument
-	bool addOption (char shortname, const char* longname, const char* description, bool* optSet, bool optional = false);
-	// adds boolean option without argument, returns how often a option was set (e.g. -vvv --> argSet = 3)
-	bool addOption (char shortname, const char* longname, const char* description, int* argSet, bool optional);
+	bool addOption (bool optional, char shortname, const char* longname, const char* description, int* isOptionSet,
+			const char* argname = nullptr, arg_type type = ARG_NO, void* arg = nullptr, bool hasOptionalArg = false);
+
 	bool parse (int* optind = 0);
 	bool parse (int argc, char* argv[], int* optind = 0);
 	void printOptions ();
@@ -69,8 +66,7 @@ private:
 	char** argv;
 	std::vector<argument> options;
 
-	bool addOption (char shortname, const char* longname, const char* argname, const char* description, arg_type type, void* arg, bool hasArg, bool optional = false);
-	int findOption (char shortname);
+	int findOption (int shortname);
 };
 
 #endif /* CMDLINE_HPP_ */

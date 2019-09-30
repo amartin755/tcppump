@@ -35,14 +35,14 @@ typedef struct
 {
 	const char*  ifc;
 	int          repeat;
-	bool         help;
 	int          verbosity;
 	int          delay;
-	bool         interactive;
-	bool         raw;
-	bool         script;
-	bool		 pcap;
+	int          interactive;
+	int          raw;
+	int          script;
+	int 		 pcap;
 	const char*  inputmode; // raw, token, script, pcap
+	const char*  keys;      // key bindings for interactive mode
 }appOptions;
 
 class cInterface;
@@ -60,6 +60,7 @@ private:
 	bool parsePackets (mac_t ownMac, int cnt, char* packets[]);
 	bool parseScripts (mac_t ownMac, int cnt, char* packets[]);
 	bool sendPacket (cInterface &ifc, unsigned delay, cEthernetPacket& p);
+	bool interactiveMode (cInterface &ifc);
 
 	appOptions options;
 	std::list <cEthernetPacket> packets;
