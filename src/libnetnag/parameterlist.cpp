@@ -34,6 +34,7 @@ cParameter::cParameter ()
 	parLen    = 0;
 	value     = NULL;
 	valLen    = 0;
+	index     = -1;
 }
 
 
@@ -43,6 +44,7 @@ cParameter::cParameter (const cParameter& obj)
 	parLen    = obj.parLen;
 	value     = obj.value;
 	valLen    = obj.valLen;
+	index     = obj.index;
 }
 
 
@@ -133,15 +135,27 @@ const char* cParameterList::getParseError ()
 	return parseError;
 }
 
-
-const cParameter* cParameterList::findParameter (const char* parameter, bool isOptional)
+//FIXME there's a lot of room for improvement; too many string compares
+const cParameter* cParameterList::findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, bool isOptional)
 {
+	unsigned n = 0;
+
+	if (startAfter)
+		n = startAfter->index >= 0 ? startAfter->index + 1 : list.size();
 	size_t len = strlen (parameter);
-	for (unsigned n = 0; n < list.size (); n++)
+	size_t len2 = stopAt ? strlen (stopAt) : 0;
+
+	for (; n < list.size (); n++)
 	{
-		if (len == list.at (n).parLen && !strncmp (parameter, list.at (n).parameter, list.at (n).parLen))
+		cParameter &par = list.at (n);
+
+		if (len2 == par.parLen && !strncmp (stopAt, par.parameter, par.parLen))
 		{
-			return &list[n];
+			break;
+		}
+		if (len == par.parLen && !strncmp (parameter, par.parameter, par.parLen))
+		{
+			return &par;
 		}
 	}
 
@@ -151,10 +165,15 @@ const cParameter* cParameterList::findParameter (const char* parameter, bool isO
 	return NULL;
 }
 
-
-const cParameter* cParameterList::findParameter (const char* parameter, uint32_t optionalValue)
+const cParameter* cParameterList::findParameter (const char* parameter, bool isOptional)
 {
-	const cParameter* p = findParameter (parameter, true);
+	return findParameter (nullptr, nullptr, parameter, isOptional);
+}
+
+
+const cParameter* cParameterList::findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, uint32_t optionalValue)
+{
+	const cParameter* p = findParameter (startAfter, stopAt, parameter, true);
 	if (p)
 	{
 		return p;
@@ -167,9 +186,9 @@ const cParameter* cParameterList::findParameter (const char* parameter, uint32_t
 }
 
 
-const cParameter* cParameterList::findParameter (const char* parameter, mac_t& optionalValue)
+const cParameter* cParameterList::findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, mac_t& optionalValue)
 {
-	const cParameter* p = findParameter (parameter, true);
+	const cParameter* p = findParameter (startAfter, stopAt, parameter, true);
 	if (p)
 	{
 		return p;
@@ -179,6 +198,18 @@ const cParameter* cParameterList::findParameter (const char* parameter, mac_t& o
 		defaultParameter.mac = optionalValue;
 		return &defaultParameter;
 	}
+}
+
+
+const cParameter* cParameterList::findParameter (const char* parameter, uint32_t optionalValue)
+{
+	return findParameter (nullptr, nullptr, parameter, optionalValue);
+}
+
+
+const cParameter* cParameterList::findParameter (const char* parameter, mac_t& optionalValue)
+{
+	return findParameter (nullptr, nullptr, parameter, optionalValue);
 }
 
 
@@ -287,6 +318,7 @@ const char* cParameterList::parseParameters (const char* parameters)
 			}
 			else if (isspace (*p))
 			{
+				v.index = list.size ();
 				list.push_back (v);
 				state = FIND_PARAMETER;
 				v.parameter = v.value = NULL;
@@ -303,6 +335,7 @@ const char* cParameterList::parseParameters (const char* parameters)
 
 	if (state == VAL_END)
 	{
+		v.index = list.size ();
 		list.push_back (v);
 		state = FIND_PARAMETER;
 		v.parameter = v.value = NULL;
@@ -540,6 +573,83 @@ void cParameterList::unitTest ()
 		{
 			cParameterList obj (".dk.fjsdf=12");
 			assert (!obj.isValid ());
+		}
+	}
+	{
+		cParameterList obj (".first=0x1 .first=0x2 .first=0x3 ");
+		assert (obj.isValid ());
+		try
+		{
+			const cParameter* par = nullptr;
+			assert (obj.findParameter("first")->asInt32()  == (uint32_t)1);
+
+			par = obj.findParameter("first");
+			assert (par->asInt32()  == (uint32_t)1);
+			par = obj.findParameter(par, nullptr, "first");
+			assert (par->asInt32()  == (uint32_t)2);
+			par = obj.findParameter(par, nullptr, "first");
+			assert (par->asInt32()  == (uint32_t)3);
+			par = obj.findParameter(par, nullptr, "first", true);
+			assert (!par);
+		}
+		catch (FormatException& e)
+		{
+			assert (0);
+		}
+	}
+	{
+		cParameterList obj (".second=0x10 .first=0x1 .second=0x10 .first=0x2 .second=0x20 .first=0x3 .second=0x30");
+		assert (obj.isValid ());
+		try
+		{
+			const cParameter* par = nullptr;
+			assert (obj.findParameter("first")->asInt32()  == (uint32_t)1);
+
+			par = obj.findParameter("first");
+			assert (par->asInt32()  == (uint32_t)1);
+			assert (obj.findParameter(par, nullptr, "second")->asInt32()  == (uint32_t)0x10);
+
+			par = obj.findParameter(par, nullptr, "first");
+			assert (par->asInt32()  == (uint32_t)2);
+			assert (obj.findParameter(par, nullptr, "second")->asInt32()  == (uint32_t)0x20);
+
+			par = obj.findParameter(par, nullptr, "first");
+			assert (par->asInt32()  == (uint32_t)3);
+			assert (obj.findParameter(par, nullptr, "second")->asInt32()  == (uint32_t)0x30);
+
+			par = obj.findParameter(par, nullptr, "first", true);
+			assert (!par);
+		}
+		catch (FormatException& e)
+		{
+			assert (0);
+		}
+	}
+	{
+		cParameterList obj (".second=0x10 .first=0x1 .first=0x2 .second=0x20 .first=0x3 .second=0x30");
+		assert (obj.isValid ());
+		try
+		{
+			const cParameter* par = nullptr;
+
+			par = obj.findParameter("first");
+			assert (par->asInt32()  == (uint32_t)1);
+			assert (!obj.findParameter(par, "first", "second", true));
+
+			par = obj.findParameter(par, nullptr, "first");
+			assert (par->asInt32()  == (uint32_t)2);
+			assert (obj.findParameter(par, "first", "second")->asInt32()  == (uint32_t)0x20);
+
+			par = obj.findParameter(par, nullptr, "first");
+			assert (par->asInt32()  == (uint32_t)3);
+			assert (obj.findParameter(par, nullptr, "second")->asInt32()  == (uint32_t)0x30);
+
+			par = obj.findParameter(par, nullptr, "first", true);
+			assert (!par);
+		}
+		catch (FormatException& e)
+		{
+			assert (0);
 		}
 	}
 }

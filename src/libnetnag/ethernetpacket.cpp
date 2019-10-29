@@ -57,6 +57,7 @@ cEthernetPacket::cEthernetPacket (cEthernetPacket&& other)
 	pEthertypeLength = other.pEthertypeLength;
 	payloadLength    = other.payloadLength;
 	llcHeaderLength  = other.llcHeaderLength;
+	vlanTags         = other.vlanTags;
 
 	other.data             = nullptr;
 	other.packet           = nullptr;
@@ -87,6 +88,7 @@ cEthernetPacket& cEthernetPacket::operator=(cEthernetPacket&& other)
 		pEthertypeLength = other.pEthertypeLength;
 		payloadLength    = other.payloadLength;
 		llcHeaderLength  = other.llcHeaderLength;
+		vlanTags         = other.vlanTags;
 
 		other.data             = nullptr;
 		other.packet           = nullptr;
@@ -108,6 +110,7 @@ void cEthernetPacket::reset ()
 	pEthertypeLength  = (uint16_t*)(&((mac_header_t*)packet)->ethertypeLength);
 	payloadLength     = 0;
 	llcHeaderLength   = 0;
+	vlanTags          = 0;
 	*pEthertypeLength = 0;
 }
 
@@ -208,6 +211,7 @@ void cEthernetPacket::addVlanTag (bool isCTag, int id, int prio, int dei)
 	memmove ((uint8_t*)pEthertypeLength + sizeof (vlan_t), pEthertypeLength, 2 + payloadLength);
 	isCTag ? tag->setCTag (id, prio, dei) : tag->setSTag (id, prio, dei);
 	updatePosition (sizeof (vlan_t));
+	vlanTags++;
 }
 
 
@@ -220,6 +224,14 @@ void cEthernetPacket::setPayload (const char* payloadAsHexStr, size_t len)
 		throw FormatException (exParFormat, payloadAsHexStr);
 
 	payloadLength += copiedLen;
+}
+
+
+void cEthernetPacket::setPayload (const uint8_t* payload, size_t len)
+{
+	checkPacketLength (len);
+	memcpy (pPayload, payload, len);
+	payloadLength += len;
 }
 
 

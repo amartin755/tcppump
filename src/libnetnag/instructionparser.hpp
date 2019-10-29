@@ -32,43 +32,44 @@ class cParameterList;
 class cInstructionParser
 {
 public:
-	cInstructionParser (mac_t ownMac, ipv4_t ownIPv4);
-	~cInstructionParser ();
-	int parse (const char* instruction, cTimeval& timestamp, bool& isAbsolute, cEthernetPacket& packet);
+    cInstructionParser (mac_t ownMac, ipv4_t ownIPv4);
+    ~cInstructionParser ();
+    int parse (const char* instruction, cTimeval& timestamp, bool& isAbsolute, cEthernetPacket& packet);
 
 private:
-	int compileRAW (cParameterList& params, cEthernetPacket& packet);
-	int compileETH (cParameterList& params, cEthernetPacket& packet);
-	int compileARP (cParameterList& params, cEthernetPacket& packet);
-	int compileSNAP (cParameterList& params, cEthernetPacket& packet);
-	int compileIPv4 (cParameterList& params, cEthernetPacket& packet);
+    int compileRAW (cParameterList& params, cEthernetPacket& packet);
+    int compileETH (cParameterList& params, cEthernetPacket& packet);
+    int compileVLAN (cParameterList& params, cEthernetPacket& packet);
+    int compileARP (cParameterList& params, cEthernetPacket& packet, bool isProbe = false, bool isGratuitous = false);
+    int compileSNAP (cParameterList& params, cEthernetPacket& packet);
+    int compileIPv4 (cParameterList& params, cEthernetPacket& packet);
 
-	mac_t  ownMac;
-	ipv4_t ownIPv4;
+    mac_t  ownMac;
+    ipv4_t ownIPv4;
 };
 
 class ParseException
 {
 public:
-	ParseException (const char* msg, const char* val)
-	{
-		this->msg = msg;
-		this->val = val;
-	}
+    ParseException (const char* msg, const char* val)
+    {
+        this->msg = msg;
+        this->val = val;
+    }
 
-	const char* what ()
-	{
-		return msg;
-	}
+    const char* what ()
+    {
+        return msg;
+    }
 
-	const char* value ()
-	{
-		return val;
-	}
+    const char* value ()
+    {
+        return val;
+    }
 
 private:
-	const char* msg;
-	const char* val;
+    const char* msg;
+    const char* val;
 };
 
 

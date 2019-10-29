@@ -44,11 +44,14 @@ public:
 	void addVlanTag (bool isCTag, int id, int prio, int dei);
 	void setTypeLength (uint16_t ethertypeLenth);
 	void setLength ();
-	void setPayload (const char* payload, size_t len);
-	void setRaw (const char* payload, size_t len);
+	void setPayload (const char* payloadAsHexStr, size_t len);
+	void setPayload (const uint8_t* payload, size_t len);
+	void setRaw (const char* payloadAsHexStr, size_t len);
 	const uint8_t* get ();
 	inline size_t getLength () const {return pPayload - packet + payloadLength;}
 	inline void clear () {reset ();};
+	inline bool hasLlcHeader () {return llcHeaderLength != 0;};
+	inline bool hasPayload () {return payloadLength != 0;};
 
 	static const size_t   MAX_ETHERNET_PAYLOAD     = 1500;
 	static const size_t   MAX_PACKET               = 6+6+2+MAX_ETHERNET_PAYLOAD;
@@ -76,7 +79,7 @@ private:
 	uint16_t* pEthertypeLength; // points at ethertype/length field (will be moved in case of tagging)
 	size_t    payloadLength;
 	size_t    llcHeaderLength;
-
+	int       vlanTags;
 };
 
 enum ethertypes_t

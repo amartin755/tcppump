@@ -43,6 +43,7 @@ private:
 	size_t      parLen;
 	const char* value;
 	size_t      valLen;
+	int         index;
 
 	friend class cParameterList;
 };
@@ -76,9 +77,12 @@ public:
 	cParameterList (const char*);
 	bool isValid ();
 	const char* getParseError ();
+	const cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, bool isOptional = false);
 	const cParameter* findParameter (const char* parameter, bool isOptional = false);
 	const cParameter* findParameter (const char* parameter, uint32_t optionalValue);
 	const cParameter* findParameter (const char* parameter, mac_t& optionalValue);
+	const cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, uint32_t optionalValue);
+	const cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, mac_t& optionalValue);
 
 #ifdef WITH_UNITTESTS
 	static void unitTest ();

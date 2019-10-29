@@ -40,15 +40,15 @@ typedef struct
 	uint8_t e;
 	uint8_t f;
 
-	bool isNull ()
+	bool isNull () const
 	{
 		return !a && !b && !c && !d && !e && !f;
 	}
-	bool isBroadcast ()
+	bool isBroadcast () const
 	{
 		return a == 0xffu && b == 0xffu && c == 0xffu && d == 0xffu && e == 0xffu && f == 0xffu;
 	}
-	bool isMulticast ()
+	bool isMulticast () const
 	{
 		return a != 0xffu && (a & 1);
 	}
@@ -76,20 +76,6 @@ typedef struct
 	uint8_t c;
 }oui_t;
 
-
-typedef struct
-{
-	uint16_t hwType;
-	uint16_t protType;
-	uint8_t  hwAddrSize;
-	uint8_t  protAddrSize;
-	uint16_t opcode;
-	mac_t    srcMac;
-	ipv4_t   srcIp;
-	mac_t    dstMac;
-	ipv4_t   dstIp;
-
-}arp_t;
 
 
 typedef struct
