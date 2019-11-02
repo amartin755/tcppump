@@ -34,20 +34,21 @@ typedef struct _IP_ADAPTER_ADDRESSES *PIP_ADAPTER_ADDRESSES;
 class cInterface
 {
 public:
-	cInterface(const char* ifname);
-	virtual ~cInterface();
-	bool open ();
-	bool close ();
-	bool sendPacket (const uint8_t* payload, size_t length);
-	bool getMAC (mac_t*);
+    cInterface(const char* ifname);
+    virtual ~cInterface();
+    bool open ();
+    bool close ();
+    bool sendPacket (const uint8_t* payload, size_t length);
+    bool getMAC (mac_t*);
+    bool getIPv4 (ipv4_t*);
 
 private:
-	PIP_ADAPTER_ADDRESSES getAdapterInfo ();
-	PIP_ADAPTER_ADDRESSES getAdapterAddresses ();
+    PIP_ADAPTER_ADDRESSES getAdapterInfo ();
+    PIP_ADAPTER_ADDRESSES getAdapterAddresses ();
 
-	std::string name;
-	pcap_t *ifcHandle;
-	PIP_ADAPTER_ADDRESSES winNetAdapters;
+    std::string name;
+    pcap_t *ifcHandle;
+    PIP_ADAPTER_ADDRESSES winNetAdapters;
 
 };
 

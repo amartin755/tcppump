@@ -39,109 +39,147 @@
 cInterface::cInterface(const char* ifname)
 : name (ifname)
 {
-	ifcHandle  = -1;
-	ifIndex    = 0;
-	myMac.set (0);
+    ifcHandle  = -1;
+    ifIndex    = 0;
+    myMac.set (0);
+    myIP = 0;
 }
 
 cInterface::~cInterface()
 {
-	close ();
+    close ();
 }
 
 bool cInterface::open ()
 {
-	// aleady open
-	if (ifcHandle != -1)
-		return true;
+    // aleady open
+    if (ifcHandle != -1)
+        return true;
 
-	ifIndex = if_nametoindex (name.c_str ());
-	if (!ifIndex)
-	{
-		nn::Console::PrintError ("Unknown interface %s\n", name.c_str());
-		close ();
-	}
-	errno = 0;
-	if ((ifcHandle = socket (PF_PACKET, SOCK_RAW, htons (ETH_P_ALL))) < 0) 
-	{
-		nn::Console::PrintError ("Unable to open raw socket. %s.\n", strerror(errno));
-		ifIndex = 0;
-	}
-	getMAC (&myMac);
+    ifIndex = if_nametoindex (name.c_str ());
+    if (!ifIndex)
+    {
+        nn::Console::PrintError ("Unknown interface %s\n", name.c_str());
+        close ();
+    }
+    errno = 0;
+    if ((ifcHandle = socket (PF_PACKET, SOCK_RAW, htons (ETH_P_ALL))) < 0)
+    {
+        nn::Console::PrintError ("Unable to open raw socket. %s.\n", strerror(errno));
+        ifIndex = 0;
+    }
+    getMAC (&myMac);
+    getIPv4 (&myIP);
 
-	nn::Console::PrintDebug ("Successfully openend %s mac=%02x:%02x:%02x:%02x:%02x:%02x\n", 
-		name.c_str(), myMac.a, myMac.b, myMac.c, myMac.d, myMac.e, myMac.f);
+    nn::Console::PrintDebug ("Successfully openend %s mac=%02x:%02x:%02x:%02x:%02x:%02x\n",
+        name.c_str(), myMac.a, myMac.b, myMac.c, myMac.d, myMac.e, myMac.f);
 
-	return (ifcHandle != -1);
+    return (ifcHandle != -1);
 }
 
 bool cInterface::close ()
 {
-	// aleady closed
-	if (!ifcHandle)
-		return true;
+    // aleady closed
+    if (!ifcHandle)
+        return true;
 
-	::close (ifcHandle);
-	ifcHandle = -1;
-	ifIndex = 0;
-	myMac.set (0);
+    ::close (ifcHandle);
+    ifcHandle = -1;
+    ifIndex = 0;
+    myMac.set (0);
 
-	return true;
+    return true;
 }
 
 bool cInterface::sendPacket (const uint8_t* payload, size_t length) const
 {
-	struct sockaddr_ll device;
+    struct sockaddr_ll device;
 
-	device.sll_ifindex = ifIndex;
-	device.sll_family  = AF_PACKET;
-	device.sll_halen   = htons (sizeof (myMac));
-	memcpy (device.sll_addr, &myMac, sizeof (myMac));
+    device.sll_ifindex = ifIndex;
+    device.sll_family  = AF_PACKET;
+    device.sll_halen   = htons (sizeof (myMac));
+    memcpy (device.sll_addr, &myMac, sizeof (myMac));
 
-	errno = 0;
-	if (sendto (ifcHandle, payload, length, 0, (struct sockaddr *) &device, sizeof (device)) != (ssize_t)length)
-	{
-		nn::Console::PrintError ("error: %s\n", strerror (errno));
-		return false;
-	}
+    errno = 0;
+    if (sendto (ifcHandle, payload, length, 0, (struct sockaddr *) &device, sizeof (device)) != (ssize_t)length)
+    {
+        nn::Console::PrintError ("error: %s\n", strerror (errno));
+        return false;
+    }
 
-	nn::Console::PrintDebug ("sent %zu bytes\n", length);
+    nn::Console::PrintDebug ("sent %zu bytes\n", length);
 
-	return true;
+    return true;
 }
 
 bool cInterface::getMAC (mac_t *mac)
 {
-	if (myMac.isNull ())
-	{
-		struct ifreq ifr;
-		int s;
+    if (myMac.isNull ())
+    {
+        struct ifreq ifr;
+        int s;
 
-		errno = 0;
-		if ((s = socket (AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0) 
-		{
-			nn::Console::PrintError ("error: %s\n", strerror (errno));
-			return false;
-		}
+        errno = 0;
+        if ((s = socket (AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0)
+        {
+            nn::Console::PrintError ("error: %s\n", strerror (errno));
+            return false;
+        }
 
-		// Use ioctl() to look up interface name and get its MAC address.
-		errno = 0;
-		memset (&ifr, 0, sizeof (ifr));
-		snprintf (ifr.ifr_name, sizeof (ifr.ifr_name), "%s", name.c_str());
-		if (ioctl (s, SIOCGIFHWADDR, &ifr) < 0)
-		{
-			nn::Console::PrintError ("error: %s\n", strerror (errno));
-			return false;
-	   	}
+        // Use ioctl() to look up interface name and get its MAC address.
+        errno = 0;
+        memset (&ifr, 0, sizeof (ifr));
+        snprintf (ifr.ifr_name, sizeof (ifr.ifr_name), "%s", name.c_str());
+        if (ioctl (s, SIOCGIFHWADDR, &ifr) < 0)
+        {
+            nn::Console::PrintError ("error: %s\n", strerror (errno));
+            return false;
+           }
 
-		// Copy source MAC address.
-		memcpy (mac, ifr.ifr_hwaddr.sa_data, sizeof (*mac));
+        // Copy source MAC address.
+        memcpy (mac, ifr.ifr_hwaddr.sa_data, sizeof (*mac));
 
-		::close (s);
-	}
-	else
-	{
-		*mac = myMac;
-	}
-	return true;
+        ::close (s);
+    }
+    else
+    {
+        *mac = myMac;
+    }
+    return true;
+}
+
+bool cInterface::getIPv4 (ipv4_t *ip)
+{
+    if (!myIP)
+    {
+        struct ifreq ifr;
+        int s;
+
+        errno = 0;
+        if ((s = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+        {
+            nn::Console::PrintError ("error: %s\n", strerror (errno));
+            return false;
+        }
+
+        // Use ioctl() to look up interface name and get its IPv4 address.
+        errno = 0;
+        memset (&ifr, 0, sizeof (ifr));
+        ifr.ifr_addr.sa_family = AF_INET;
+        snprintf (ifr.ifr_name, sizeof (ifr.ifr_name), "%s", name.c_str());
+        if (ioctl (s, SIOCGIFADDR, &ifr) < 0)
+        {
+            nn::Console::PrintError ("error: %s\n", strerror (errno));
+            return false;
+           }
+
+        *ip = (ipv4_t)((struct sockaddr_in *)&(ifr.ifr_addr))->sin_addr;
+
+        ::close (s);
+    }
+    else
+    {
+        *ip = myIP;
+    }
+    return true;
 }

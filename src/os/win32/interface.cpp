@@ -38,139 +38,163 @@
 cInterface::cInterface(const char* ifname)
 : name (ifname)
 {
-	ifcHandle  = NULL;
-	winNetAdapters = NULL;
+    ifcHandle  = NULL;
+    winNetAdapters = NULL;
 }
 
 cInterface::~cInterface()
 {
-	close ();
+    close ();
 }
 
 bool cInterface::open ()
 {
-	// aleady open
-	if (ifcHandle)
-		return true;
+    // aleady open
+    if (ifcHandle)
+        return true;
 
-	winNetAdapters = getAdapterAddresses ();
-	if (!winNetAdapters)
-		return false;
+    winNetAdapters = getAdapterAddresses ();
+    if (!winNetAdapters)
+        return false;
 
-	// find selected adapter
-	PIP_ADAPTER_ADDRESSES adapter = getAdapterInfo ();
-	if (!adapter)
-	{
-		nn::Console::PrintError ("Unknown network interface '%s'\n", name.c_str());
-		return false;
-	}
+    // find selected adapter
+    PIP_ADAPTER_ADDRESSES adapter = getAdapterInfo ();
+    if (!adapter)
+    {
+        nn::Console::PrintError ("Unknown network interface '%s'\n", name.c_str());
+        return false;
+    }
 
-	// convert windows' AdapterName to pcap known interface name
-	std::string pcapIfName("\\Device\\NPF_");
-	pcapIfName += adapter->AdapterName;
+    // convert windows' AdapterName to pcap known interface name
+    std::string pcapIfName("\\Device\\NPF_");
+    pcapIfName += adapter->AdapterName;
 
-	char errbuf[PCAP_ERRBUF_SIZE] = {0};
-	ifcHandle = pcap_open_live(pcapIfName.c_str(), 65536,	1, 1000, errbuf);
+    char errbuf[PCAP_ERRBUF_SIZE] = {0};
+    ifcHandle = pcap_open_live(pcapIfName.c_str(), 65536,	1, 1000, errbuf);
 
-	if (!ifcHandle)
-	{
-		nn::Console::PrintError ("Unable to open the network interface. %s(%s) is not supported by WinPcap\n", name.c_str(), pcapIfName.c_str());
-		nn::Console::PrintError ("pcap error: %s\n", errbuf);
-	}
+    if (!ifcHandle)
+    {
+        nn::Console::PrintError ("Unable to open the network interface. %s(%s) is not supported by WinPcap\n", name.c_str(), pcapIfName.c_str());
+        nn::Console::PrintError ("pcap error: %s\n", errbuf);
+    }
 
-	return ifcHandle != NULL;
+    return ifcHandle != NULL;
 }
 
 bool cInterface::close ()
 {
-	// aleady closed
-	if (!ifcHandle)
-		return true;
+    // aleady closed
+    if (!ifcHandle)
+        return true;
 
-	pcap_close(ifcHandle);
-	ifcHandle = NULL;
+    pcap_close(ifcHandle);
+    ifcHandle = NULL;
 
-	// free windows network adapter list
-	if (winNetAdapters)
-		free (winNetAdapters);
-	winNetAdapters = NULL;
+    // free windows network adapter list
+    if (winNetAdapters)
+        free (winNetAdapters);
+    winNetAdapters = NULL;
 
-	return true;
+    return true;
 }
 
 bool cInterface::sendPacket (const uint8_t* payload, size_t length)
 {
-	int ret = pcap_sendpacket (ifcHandle, (u_char*)payload, length);
+    int ret = pcap_sendpacket (ifcHandle, (u_char*)payload, length);
 
-	if (ret == -1)
-		nn::Console::PrintError ("pcap error: %s\n", pcap_geterr (ifcHandle));
+    if (ret == -1)
+        nn::Console::PrintError ("pcap error: %s\n", pcap_geterr (ifcHandle));
 
-	return ret == 0;
+    return ret == 0;
 }
 
 bool cInterface::getMAC (mac_t *mac)
 {
-	PIP_ADAPTER_ADDRESSES pAdapterInfo = getAdapterInfo ();
-	if (!pAdapterInfo)
-		return false;
+    PIP_ADAPTER_ADDRESSES pAdapterInfo = getAdapterInfo ();
+    if (!pAdapterInfo)
+        return false;
 
-	assert (pAdapterInfo->PhysicalAddressLength == sizeof (mac_t));
-	memcpy (mac, pAdapterInfo->PhysicalAddress, sizeof (mac_t));
+    assert (pAdapterInfo->PhysicalAddressLength == sizeof (mac_t));
+    memcpy (mac, pAdapterInfo->PhysicalAddress, sizeof (mac_t));
 
-	return true;
+    return true;
+}
+
+bool cInterface::getIPv4 (ipv4_t *ip)
+{
+    PIP_ADAPTER_ADDRESSES pAdapterInfo = getAdapterInfo ();
+    if (!pAdapterInfo)
+        return false;
+
+    PIP_ADAPTER_UNICAST_ADDRESS pUnicast = pAdapterInfo->FirstUnicastAddress;
+    while (pUnicast)
+    {
+         if (pUnicast->Address.lpSockaddr && pUnicast->Address.lpSockaddr->sa_family == AF_INET)
+         {
+             struct sockaddr_in* addr = (struct sockaddr_in*)pUnicast->Address.lpSockaddr;
+             // filter Zeroconf addresses
+             if ((ntohl ((u_long)addr->sin_addr.s_addr) & 0xFFFF0000) != 0xA9FE0000)
+             {
+                 *ip = (ipv4_t)addr->sin_addr.s_addr;
+                 return true;
+             }
+         }
+         pUnicast = pUnicast->Next;
+    }
+    return false;
 }
 
 PIP_ADAPTER_ADDRESSES cInterface::getAdapterAddresses ()
 {
-	ULONG ret;
-	ULONG size = 0;
-	PIP_ADAPTER_ADDRESSES addresses = NULL;
+    ULONG ret;
+    ULONG size = 0;
+    PIP_ADAPTER_ADDRESSES addresses = NULL;
 
-	ret = GetAdaptersAddresses (AF_UNSPEC, 0, NULL, NULL, &size);
-	if (!size)
-	{
-		nn::Console::PrintError ("Could not determine size of adapter data\n");
-	}
-	else
-	{
-		addresses = (IP_ADAPTER_ADDRESSES *)malloc (size);
-		if (!addresses)
-		{
-			nn::Console::PrintError ("Not enough memory\n");
-		}
-		else
-		{
-			memset (addresses, 0, size);
+    ret = GetAdaptersAddresses (AF_UNSPEC, 0, NULL, NULL, &size);
+    if (!size)
+    {
+        nn::Console::PrintError ("Could not determine size of adapter data\n");
+    }
+    else
+    {
+        addresses = (IP_ADAPTER_ADDRESSES *)malloc (size);
+        if (!addresses)
+        {
+            nn::Console::PrintError ("Not enough memory\n");
+        }
+        else
+        {
+            memset (addresses, 0, size);
 
-			ret = GetAdaptersAddresses (AF_UNSPEC, 0, NULL, addresses, &size);
-			if (ret != NO_ERROR)
-			{
-				nn::Console::PrintError ("Call to GetAdaptersAddresses failed with error\n");
-				free (addresses);
-				addresses = NULL;
-			}
-		}
-	}
-	return addresses;
+            ret = GetAdaptersAddresses (AF_UNSPEC, 0, NULL, addresses, &size);
+            if (ret != NO_ERROR)
+            {
+                nn::Console::PrintError ("Call to GetAdaptersAddresses failed with error\n");
+                free (addresses);
+                addresses = NULL;
+            }
+        }
+    }
+    return addresses;
 }
 
 PIP_ADAPTER_ADDRESSES cInterface::getAdapterInfo ()
 {
-	PIP_ADAPTER_ADDRESSES pCurr = winNetAdapters;
+    PIP_ADAPTER_ADDRESSES pCurr = winNetAdapters;
 
-	while (pCurr)
-	{
-		if (!name.compare (pCurr->AdapterName))
-			return pCurr;
-		else
-		{
-			// FriendlyName is a wide string. Therefore we have to convert our interface name
-			std::wstring wname(name.begin(), name.end());
-			if (!wname.compare (pCurr->FriendlyName))
-				return pCurr;
-		}
+    while (pCurr)
+    {
+        if (!name.compare (pCurr->AdapterName))
+            return pCurr;
+        else
+        {
+            // FriendlyName is a wide string. Therefore we have to convert our interface name
+            std::wstring wname(name.begin(), name.end());
+            if (!wname.compare (pCurr->FriendlyName))
+                return pCurr;
+        }
 
-		pCurr = pCurr->Next;
-	}
-	return NULL;
+        pCurr = pCurr->Next;
+    }
+    return NULL;
 }

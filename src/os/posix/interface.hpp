@@ -32,19 +32,21 @@
 class cInterface
 {
 public:
-	cInterface(const char* ifname);
-	virtual ~cInterface();
-	bool open ();
-	bool close ();
-	bool sendPacket (const uint8_t* payload, size_t length) const;
-	bool getMAC (mac_t*);
+    cInterface(const char* ifname);
+    virtual ~cInterface();
+    bool open ();
+    bool close ();
+    bool sendPacket (const uint8_t* payload, size_t length) const;
+    bool getMAC (mac_t*);
+    bool getIPv4 (ipv4_t*);
 
 private:
 
-	std::string name;
-	int ifcHandle;
-	int ifIndex;
-	mac_t myMac;
+    std::string name;
+    int ifcHandle;
+    int ifIndex;
+    mac_t myMac;
+    ipv4_t myIP;
 };
 
 #endif /* INTERFACE_H_ */

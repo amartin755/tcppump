@@ -33,16 +33,16 @@
 
 typedef struct
 {
-	const char*  ifc;
-	int          repeat;
-	int          verbosity;
-	int          delay;
-	int          interactive;
-	int          raw;
-	int          script;
-	int 		 pcap;
-	const char*  inputmode; // raw, token, script, pcap
-	const char*  keys;      // key bindings for interactive mode
+    const char*  ifc;
+    int          repeat;
+    int          verbosity;
+    int          delay;
+    int          interactive;
+    int          raw;
+    int          script;
+    int 		 pcap;
+    const char*  inputmode; // raw, token, script, pcap
+    const char*  keys;      // key bindings for interactive mode
 }appOptions;
 
 class cInterface;
@@ -51,23 +51,23 @@ class cInterface;
 class cTcpPump : public cCmdlineApp
 {
 public:
-	cTcpPump (const char* name, const char* brief, const char* usage, const char* description);
-	virtual ~cTcpPump();
+    cTcpPump (const char* name, const char* brief, const char* usage, const char* description);
+    virtual ~cTcpPump();
 
-	int execute (int argc, char* argv[]);
+    int execute (int argc, char* argv[]);
 
 private:
-	bool parsePackets (mac_t ownMac, int cnt, char* packets[]);
-	bool parseScripts (mac_t ownMac, int cnt, char* packets[]);
-	bool sendPacket (cInterface &ifc, unsigned delay, cEthernetPacket& p);
-	bool interactiveMode (cInterface &ifc);
+    bool parsePackets (mac_t ownMac, ipv4_t ownIP, int cnt, char* packets[]);
+    bool parseScripts (mac_t ownMac, ipv4_t ownIP , int cnt, char* packets[]);
+    bool sendPacket (cInterface &ifc, unsigned delay, cEthernetPacket& p);
+    bool interactiveMode (cInterface &ifc);
 
-	appOptions options;
-	std::list <cEthernetPacket> packets;
-	std::map <int, cEthernetPacket&> keyBindings;
-	unsigned triedToSendPackets;
-	unsigned sentPackets;
-	unsigned malformedPackets;
+    appOptions options;
+    std::list <cEthernetPacket> packets;
+    std::map <int, cEthernetPacket&> keyBindings;
+    unsigned triedToSendPackets;
+    unsigned sentPackets;
+    unsigned malformedPackets;
 };
 
 #endif /* TCPPUMP_HPP */
