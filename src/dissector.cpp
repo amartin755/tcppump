@@ -22,6 +22,7 @@
 
 #include "libnetnag/inet.h"
 #include "libnetnag/console.hpp"
+#include "libnetnag/ipv4packet.hpp"
 
 
 using namespace nn;

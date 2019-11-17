@@ -125,6 +125,7 @@ SET (sourcefiles
      libnetnag/converter.cpp
      libnetnag/ethernetpacket.cpp
      libnetnag/arppacket.cpp
+     libnetnag/ipv4packet.cpp
      libnetnag/instructionparser.cpp
      libnetnag/fileparser.cpp
      libnetnag/parameterlist.cpp

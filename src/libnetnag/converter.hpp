@@ -26,22 +26,21 @@
 namespace nn
 {
 
-	class Converter
-	{
-	public:
-		static uint8_t* hexStringToBin (const char* hexString, int* binLength);
-		static bool hexStringToBin (const char* hexString, int hexStringLen, uint8_t* bin, int* binLength);
-		static bool stringToMac (const char* str, mac_t& mac, int len = 0);
-		static uint16_t getIPv4Chksum (const uint16_t* ipheader, int headerLen);
-		static bool stringToIpv4 (const char* str, ipv4_t& ip, int len = 0);
+    class Converter
+    {
+    public:
+        static uint8_t* hexStringToBin (const char* hexString, int* binLength);
+        static bool hexStringToBin (const char* hexString, int hexStringLen, uint8_t* bin, int* binLength);
+        static bool stringToMac (const char* str, mac_t& mac, int len = 0);
+        static bool stringToIpv4 (const char* str, ipv4_t& ip, int len = 0);
 
 #ifdef WITH_UNITTESTS
-		static void unitTest ();
+        static void unitTest ();
 #endif
 
-	private:
-		static bool checkMacString (const char* mac, size_t len = 0);
-	};
+    private:
+        static bool checkMacString (const char* mac, size_t len = 0);
+    };
 
 }
 #endif /* TOOLS_HPP_ */

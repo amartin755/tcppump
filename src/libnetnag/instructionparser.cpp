@@ -28,6 +28,7 @@
 #include "protocoltypes.hpp"
 #include "ethernetpacket.hpp"
 #include "arppacket.hpp"
+#include "ipv4packet.hpp"
 
 
 cInstructionParser::cInstructionParser (mac_t ownMac, ipv4_t ownIPv4)
@@ -119,7 +120,7 @@ int cInstructionParser::parse (const char* instruction, cTimeval& timestamp, boo
     // compile frames
     try
     {
-        //TODO find better way for protocol selection
+        //TODO find better way for protocol selection (e.g. hash table)
         if (!strncmp ("raw", keyword, keywordEnd - keyword))
             return compileRAW (params, packet);
         if (!strncmp ("eth", keyword, keywordEnd - keyword))
@@ -130,6 +131,8 @@ int cInstructionParser::parse (const char* instruction, cTimeval& timestamp, boo
             return compileARP (params, packet, true);
         if (!strncmp ("arp-announce", keyword, keywordEnd - keyword))
             return compileARP (params, packet, false, true);
+        if (!strncmp ("ipv4", keyword, keywordEnd - keyword))
+            return compileIPv4 (params, packet);
 
         throw ParseException ("Unknown protocol type", keyword);
     }
@@ -264,87 +267,26 @@ int cInstructionParser::compileARP (cParameterList& params, cEthernetPacket& eth
 }
 
 
-int cInstructionParser::compileIPv4 (cParameterList&, cEthernetPacket&)
+int cInstructionParser::compileIPv4 (cParameterList& params, cEthernetPacket& eth)
 {
-#if 0
-    int i = -1;
-    ethernet_t*    e = (ethernet_t*)frame;
-    ipv4_header_t* h = (ipv4_header_t*)e->payload;
-    char* pEnd;
+    cIPv4Packet packet (eth);
 
-    // TODO handling of optional parameters
+    eth.setMacHeader (params.findParameter ("source_mac", ownMac)->asMac (),
+                      params.findParameter ("dest_mac")->asMac ());
 
-    if (tokenCnt != 11)
-    {
-        return parseError ("Invalid argument count");
-    }
+    packet.setDSCP         (params.findParameter ("dscp", (uint32_t)0)->asInt8(0, 0x1f));
+    packet.setECN          (params.findParameter ("ecn", (uint32_t)0)->asInt8(0, 1));
+    packet.setTimeToLive   (params.findParameter ("ttl", (uint32_t)64)->asInt8());
+    packet.setDontFragment (params.findParameter ("df", (uint32_t)0)->asInt8(0, 1));
+    packet.setDestination  (params.findParameter ("dest")->asIPv4());
+    packet.setSource       (params.findParameter ("source", ownIPv4)->asIPv4());
 
-    if (!cTools::macStringToBin (tokens[++i], &e->header.dest))
-    {
-        return parseError ("Invalid destination mac address", tokens[i]);
-    }
-    if (!cTools::macStringToBin (tokens[++i], &e->header.src))
-    {
-        return parseError ("Invalid source mac address", tokens[i]);
-    }
+    size_t len;
+    const char* payload = params.findParameter ("payload")->asRaw(len);
+    packet.setPayload (params.findParameter ("protocol")->asInt8(), payload, len);
 
-    e->header.typeOrLength = htons(ETHERTYPE_IPV4);
 
-    h->vers_ihl = (20 / 4) | (4 << 4);
-    h->tos = (uint8_t)strtoul (tokens[++i], &pEnd, 0);
-    if (*pEnd != '\0')
-    {
-        return parseError ("Invalid TOS", tokens[i]);
-    }
-    h->len = htons (sizeof (*h));
-    h->ident = htons ((uint16_t)strtoul (tokens[++i], &pEnd, 0));
-    if (*pEnd != '\0')
-    {
-        return parseError ("Invalid TOS", tokens[i]);
-    }
-
-    uint16_t flags = (uint16_t)strtoul (tokens[++i], &pEnd, 0);
-    if (*pEnd != '\0' || (flags & ~7))
-    {
-        return parseError ("Invalid flags", tokens[i]);
-    }
-    uint16_t offset = (uint16_t)strtoul (tokens[++i], &pEnd, 0);
-    if (*pEnd != '\0' || (offset & ~0x1FFF))
-    {
-        return parseError ("Invalid offset", tokens[i]);
-    }
-    h->flags_offset = htons (offset | (flags << 13));
-    h->ttl = (uint8_t)strtoul (tokens[++i], &pEnd, 0);
-    if (*pEnd != '\0')
-    {
-        return parseError ("Invalid TTL", tokens[i]);
-    }
-    h->protocol = (uint8_t)strtoul (tokens[++i], &pEnd, 0);
-    if (*pEnd != '\0')
-    {
-        return parseError ("Invalid protocol", tokens[i]);
-    }
-    h->srcIp = inet_addr (tokens[++i]);
-    if (h->srcIp == INADDR_NONE)
-    {
-        return parseError ("Invalid source IP address", tokens[i]);
-    }
-    h->dstIp = inet_addr (tokens[++i]);
-    if (h->dstIp == INADDR_NONE)
-    {
-        return parseError ("Invalid destination IP address", tokens[i]);
-    }
-
-    int length = MAX_ETHERNET_FRAME_LEN - sizeof (e->header) - sizeof (*h);
-    if (!cTools::hexStringToBin (tokens[++i], &length, frame + sizeof (e->header) + sizeof (*h)))
-        length = 0;
-
-    h->len = htons (length + sizeof (*h));
-    h->chksum = 0;
-    h->chksum = htons(cTools::getIPv4Chksum ((uint16_t*)h, sizeof (*h)));
-
-    return length + sizeof (e->header) + sizeof (*h);
-#endif
-    return 0;
+    // compile VLAN tags
+    return compileVLAN (params, eth);
 }
 

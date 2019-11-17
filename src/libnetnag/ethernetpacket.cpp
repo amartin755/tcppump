@@ -217,21 +217,37 @@ void cEthernetPacket::addVlanTag (bool isCTag, int id, int prio, int dei)
 
 void cEthernetPacket::setPayload (const char* payloadAsHexStr, size_t len)
 {
+	payloadLength = 0;
 	checkPacketLength ((len + 1)/2);
 
 	int copiedLen = packet + packetMaxLength - pPayload;
 	if (!nn::Converter::hexStringToBin (payloadAsHexStr, len, pPayload, &copiedLen))
 		throw FormatException (exParFormat, payloadAsHexStr);
 
-	payloadLength += copiedLen;
+	payloadLength = copiedLen;
 }
 
 
 void cEthernetPacket::setPayload (const uint8_t* payload, size_t len)
 {
+	payloadLength = 0;
 	checkPacketLength (len);
 	memcpy (pPayload, payload, len);
-	payloadLength += len;
+	payloadLength = len;
+}
+
+
+void cEthernetPacket::appendPayload (const char* payloadAsHexStr, size_t len)
+{
+	checkPacketLength ((len + 1)/2);
+
+	uint8_t* p = pPayload + payloadLength;
+
+	int copiedLen = packet + packetMaxLength - p;
+	if (!nn::Converter::hexStringToBin (payloadAsHexStr, len, p, &copiedLen))
+		throw FormatException (exParFormat, payloadAsHexStr);
+
+	payloadLength += copiedLen;
 }
 
 
