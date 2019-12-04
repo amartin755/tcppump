@@ -91,7 +91,7 @@ If cmake can not detect your mingw installation on windows, the following can he
 	        Instead the packets are bound to keys and only sent when the corresponding key
 	        is pressed. The default implementation binds the first 10 packets to the keys 1, 2, ... 0.
 
-###Examples
+### Examples
 
 Raw packet
 
