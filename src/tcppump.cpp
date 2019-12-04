@@ -58,13 +58,14 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
             "For example \"WiFi\" or \"Local Area Connection 1\"."
             , &options.ifc);
     addCmdLineOption (true, 'v', "verbose",
-            "When parsing and printing, produce verbose output."
+            "When parsing and printing, produce verbose output. This option can be supplied multiple times\n\t"
+    		"(max. 4 times, i.e. -vvvv) for even more debug output. "
             , &options.verbosity);
     addCmdLineOption (true, 0, "input", "TYPE",
             "Input format of the packets to be sent. Possible values for TYPE (default is \"token\") are:\n\t"
-            "raw     Packets are defined as hex-ascii string, and will not be interpretet.\n\t"
+            "raw     Packets are defined as hex-ascii string, and will not be interpreted.\n\t"
             "        example: 0123456789ABCDEF001122334455667788\n\t"
-            "token   Token based definition of packets. tcppump will compile it to ethernet packets.\n\t"
+            "token   Token based definition of packets. tcppump will compile it to Ethernet packets.\n\t"
             "        example: eth: .dest=44:22:33:44:55:66 .payload=1234567890abcdef\n\t"
             "        For complete description of the syntax, see documentation.\n\t"
             "script  Packets are defined in script files, that contain token based packets."
@@ -146,7 +147,8 @@ int cTcpPump::execute (int argc, char* argv[])
     }
 
     bool ok = options.script ? parseScripts (ownMac, ownIP, argc, argv) :
-    		  options.pcap   ? parsePcapFiles (argc, argv) : parsePackets (ownMac, ownIP, argc, argv);
+    		  options.pcap   ? parsePcapFiles (argc, argv)              :
+    				           parsePackets (ownMac, ownIP, argc, argv);
     if (!ok)
         return -2;
 
@@ -327,6 +329,8 @@ bool cTcpPump::sendPacket (cInterface &ifc, unsigned delay, cEthernetPacket &p)
 
 bool cTcpPump::interactiveMode (cInterface &ifc)
 {
+	//TODO add some useful output to guide the user
+
     int n = 0;
     for (cEthernetPacket& p : packets)
     {
@@ -354,6 +358,7 @@ bool cTcpPump::interactiveMode (cInterface &ifc)
 
     return true;
 }
+
 
 int main(int argc, char* argv[])
 {
