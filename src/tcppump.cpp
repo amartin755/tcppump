@@ -81,7 +81,7 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
     addCmdLineOption (true, "interactive", "KEYLIST",
             "Enable interactive mode (EXPERIMENTAL). In interactive mode no packets are sent automatically.\n\t"
             "Instead the packets are bound to keys and only sent when the corresponding key\n\t"
-            "is pressed. The current implementation binds the first 10 packets to the key 1, 2, ... 0."
+            "is pressed. The default implementation binds the first 10 packets to the keys 1, 2, ... 0."
             , &options.interactive, &options.keys);
 }
 
@@ -145,7 +145,8 @@ int cTcpPump::execute (int argc, char* argv[])
         }
     }
 
-    bool ok = options.script ? parseScripts (ownMac, ownIP, argc, argv) : parsePackets (ownMac, ownIP, argc, argv);
+    bool ok = options.script ? parseScripts (ownMac, ownIP, argc, argv) :
+    		  options.pcap   ? parsePcapFiles (argc, argv) : parsePackets (ownMac, ownIP, argc, argv);
     if (!ok)
         return -2;
 
@@ -178,6 +179,7 @@ bool cTcpPump::parsePackets (mac_t ownMac, ipv4_t ownIP, int argc, char* argv[])
 
     for (int n = 0; n < argc; n++)
     {
+    	Console::PrintDebug ("Parsing %d packets (format='%s') ...\n", argc, options.raw ? "raw" : "tokens");
         try
         {
             cEthernetPacket packet;
@@ -211,9 +213,13 @@ bool cTcpPump::parseScripts (mac_t ownMac, ipv4_t ownIP, int scriptsCnt, char* s
     cTimeval timestamp;
     bool isAbsolute;
 
+	Console::PrintDebug ("Parsing %d script files ...\n", scriptsCnt);
+
     do
     {
-        if (scriptsCnt && ((fp = fopen (*scripts, "rt")) == NULL))
+    	Console::PrintDebug ("Open '%s'\n", *scripts);
+
+    	if (scriptsCnt && ((fp = fopen (*scripts, "rt")) == NULL))
         {
             Console::PrintError ("Unable to open the script file %s.\n", *scripts);
             return false;
@@ -249,6 +255,50 @@ bool cTcpPump::parseScripts (mac_t ownMac, ipv4_t ownIP, int scriptsCnt, char* s
         scripts++;
 
     }while (--scriptsCnt > 0);
+
+    return true;
+}
+
+
+bool cTcpPump::parsePcapFiles (int pcapCnt, char* pcaps[])
+{
+	Console::PrintDebug ("Parsing %d PCAP files ...\n", pcapCnt);
+
+	do
+    {
+    	cPcapFileIO pcap;
+    	cTimeval t;
+    	int len;
+
+    	Console::PrintDebug ("Open '%s'\n", *pcaps);
+
+    	if (pcapCnt && !pcap.open (*pcaps, false))
+        {
+            Console::PrintError ("Unable to open the pcap file %s.\n", *pcaps);
+            return false;
+        }
+
+    	uint8_t* data;
+
+    	while ((data = pcap.read(&t, &len)) != nullptr)
+    	{
+    		try
+    		{
+                cEthernetPacket packet;
+				packet.setRaw (data, len);
+
+                packets.push_back (std::move(packet));
+    		}
+    		catch (...)
+    		{
+                Console::PrintError ("Not enough memory\n");
+                return false;
+    		}
+    	}
+
+    	pcap.close ();
+
+    }while (--pcapCnt > 0);
 
     return true;
 }

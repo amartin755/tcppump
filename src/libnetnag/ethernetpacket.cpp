@@ -266,6 +266,15 @@ void cEthernetPacket::setRaw (const char* payloadAsHexStr, size_t len)
 }
 
 
+void cEthernetPacket::setRaw (const uint8_t* payload, size_t len)
+{
+	reset ();
+	checkPacketLength (len);
+	memcpy (packet, payload, len);
+	payloadLength = len - sizeof (mac_header_t);
+}
+
+
 const uint8_t* cEthernetPacket::get ()
 {
 	return packet;

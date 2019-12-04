@@ -58,7 +58,8 @@ public:
 
 private:
     bool parsePackets (mac_t ownMac, ipv4_t ownIP, int cnt, char* packets[]);
-    bool parseScripts (mac_t ownMac, ipv4_t ownIP , int cnt, char* packets[]);
+    bool parseScripts (mac_t ownMac, ipv4_t ownIP , int cnt, char* scripts[]);
+    bool parsePcapFiles (int cnt, char* pcaps[]);
     bool sendPacket (cInterface &ifc, unsigned delay, cEthernetPacket& p);
     bool interactiveMode (cInterface &ifc);
 
