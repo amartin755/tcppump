@@ -76,7 +76,9 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
             , &options.inputmode);
     addCmdLineOption (true, 'r', "raw", "Short for --input=raw", &options.raw);
     addCmdLineOption (true, 's', "script", "Short for --input=script", &options.script);
+#if HAVE_PCAP
     addCmdLineOption (true, 'p', "pcap", "Short for --input=pcap", &options.pcap);
+#endif
     addCmdLineOption (true, 'l', "loop", "N", "Send all files/packets N times. Default: N = 1", &options.repeat);
     addCmdLineOption (true, 'd', "delay", "SECONDS", "Packet transmission is delayed SECONDS. Default is no delay", &options.delay);
     addCmdLineOption (true, "interactive", "KEYLIST",
@@ -147,8 +149,10 @@ int cTcpPump::execute (int argc, char* argv[])
     }
 
     bool ok = options.script ? parseScripts (ownMac, ownIP, argc, argv) :
-    		  options.pcap   ? parsePcapFiles (argc, argv)              :
-    				           parsePackets (ownMac, ownIP, argc, argv);
+#if HAVE_PCAP
+              options.pcap   ? parsePcapFiles (argc, argv)              :
+#endif
+	                           parsePackets (ownMac, ownIP, argc, argv);
     if (!ok)
         return -2;
 
@@ -260,6 +264,7 @@ bool cTcpPump::parseScripts (mac_t ownMac, ipv4_t ownIP, int scriptsCnt, char* s
 }
 
 
+#if HAVE_PCAP
 bool cTcpPump::parsePcapFiles (int pcapCnt, char* pcaps[])
 {
 	Console::PrintDebug ("Parsing %d PCAP files ...\n", pcapCnt);
@@ -302,6 +307,7 @@ bool cTcpPump::parsePcapFiles (int pcapCnt, char* pcaps[])
 
     return true;
 }
+#endif
 
 
 bool cTcpPump::sendPacket (cInterface &ifc, unsigned delay, cEthernetPacket &p)

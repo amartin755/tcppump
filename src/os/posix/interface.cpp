@@ -173,7 +173,7 @@ bool cInterface::getIPv4 (ipv4_t *ip)
             return false;
            }
 
-        *ip = (ipv4_t)((struct sockaddr_in *)&(ifr.ifr_addr))->sin_addr;
+        *ip = (ipv4_t)((struct sockaddr_in *)&(ifr.ifr_addr))->sin_addr.s_addr;
 
         ::close (s);
     }
