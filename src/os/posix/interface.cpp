@@ -95,6 +95,8 @@ bool cInterface::sendPacket (const uint8_t* payload, size_t length) const
 {
     struct sockaddr_ll device;
 
+    memset (&device, 0, sizeof(device));
+
     device.sll_ifindex = ifIndex;
     device.sll_family  = AF_PACKET;
     device.sll_halen   = htons (sizeof (myMac));
