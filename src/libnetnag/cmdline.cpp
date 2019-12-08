@@ -249,6 +249,8 @@ int cCmdline::findOption (int shortname)
 #ifdef WITH_UNITTESTS
 void cCmdline::unitTest ()
 {
+	nn::Console::PrintDebug("-- " __FILE__ " --\n");
+
 	// parsing rules:
 	// - short options without args -a -b -c == -abc
 	// - short options with args -aARG == -a ARG

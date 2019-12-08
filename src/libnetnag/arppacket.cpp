@@ -69,7 +69,10 @@ void cArpPacket::set (uint16_t opcode, mac_t srcMac, ipv4_t srcIp, mac_t dstMac,
 
 
 #ifdef WITH_UNITTESTS
+#include "console.hpp"
 void cArpPacket::unitTest ()
 {
+	nn::Console::PrintDebug("-- " __FILE__ " --\n");
+
 }
 #endif

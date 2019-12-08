@@ -347,8 +347,11 @@ const char* cParameterList::parseParameters (const char* parameters)
 
 
 #ifdef WITH_UNITTESTS
+#include "console.hpp"
 void cParameterList::unitTest ()
 {
+	nn::Console::PrintDebug("-- " __FILE__ " --\n");
+
 	bool catched = false;
 
 	try

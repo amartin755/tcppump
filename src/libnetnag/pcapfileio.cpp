@@ -185,8 +185,10 @@ void cPcapFileIO::printError (const char* err)
 
 #ifdef WITH_UNITTESTS
 #include "converter.hpp"
-void cPcapFileIO::unitTest ()
+void cPcapFileIO::unitTest (const char* file)
 {
+	nn::Console::PrintDebug("-- " __FILE__ " --\n");
+
 	cPcapFileIO obj;
 
 	assert (!obj.modeWrite);
@@ -239,7 +241,7 @@ void cPcapFileIO::unitTest ()
 	cTimeval t;
 	int n = 0;
 
-	assert (obj.open("../testfiles/readtest.pcap", false));
+	assert (obj.open(file, false));
 	assert (!obj.modeWrite);
 	assert (obj.fileHandle);
 	assert (!obj.dumper);

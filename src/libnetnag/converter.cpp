@@ -190,6 +190,8 @@ bool Converter::stringToIpv4 (const char* str, ipv4_t& ip, int len)
 #ifdef WITH_UNITTESTS
 void Converter::unitTest ()
 {
+	nn::Console::PrintDebug("-- " __FILE__ " --\n");
+
     assert (!checkMacString(""));
     assert (!checkMacString("11:22:33:44:55:66:77"));
     assert (checkMacString("11:22:33:44:55:66"));

@@ -62,7 +62,7 @@ void cFileParser::init (FILE* fp, int defaultDelay, mac_t ownMac, ipv4_t ownIPv4
 }
 
 // each call delivers exactly one parsed Ethernet frame
-int cFileParser::parse (cTimeval& timestamp, bool& isAbsolute, cEthernetPacket& packet)
+int cFileParser::parse (cTimeval& timestamp, bool& isAbsolute, std::list <cEthernetPacket> &packets)
 {
 	int offset = 0;
 	int c;
@@ -116,7 +116,7 @@ int cFileParser::parse (cTimeval& timestamp, bool& isAbsolute, cEthernetPacket& 
 						try
 						{
 							return cInstructionParser (ownMac, ownIPv4)
-									.parse (instructionBuffer, timestamp, isAbsolute, packet);
+									.parse (instructionBuffer, timestamp, isAbsolute, packets);
 						}
 						catch (ParseException &e)
 						{

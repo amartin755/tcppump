@@ -1,0 +1,52 @@
+
+# timestamp tests
+####
+
+        raw: .payload = 1111111111111111111111111111111111111111;
+        raw: .payload = 2222222222222222222222222222222222222222;
++1234   raw: .payload = 3333333333333333333333333333333333333333;
+1000000 raw: .payload = 4444444444444444444444444444444444444444;
++100    raw: .payload = 5555555555555555555555555555555555555555;
+2000000 raw: .payload = 6666666666666666666666666666666666666666;
+
+
+# protocol tests
+####
+
+eth: .dest=11:22:33:44:55:66 .src=aa:bb:cc:dd:ee:ff .ethertype=0x8123 .payload=1234567890abcdef;
+eth: .dest=11:22:33:44:55:66 .ethertype=0x8123 .payload=1234567890abcdef;
+eth: .dest=11:22:33:44:55:66 .src=aa:bb:cc:dd:ee:ff .payload=1234567890abcdef;
+eth: .dest=11:22:33:44:55:66 .payload=1234567890abcdef;
+raw: .payload = 112233445566aabbccddeeff81231234567890abcdef;
+    # VLAN tagged packet (default tag values)
+    eth: .dest=11:22:33:44:55:66 .src=aa:bb:cc:dd:ee:ff .vid=1 .ethertype=0x8123 .payload=1234567890abcdef;
+    # VLAN tagged packet
+    eth: .dest=11:22:33:44:55:66 .src=aa:bb:cc:dd:ee:ff .vid=42 .prio=3 .ethertype=0x8123 .payload=1234567890abcdef;
+    # IEEE802.3 packet with LLC header
+    eth: .dest=11:22:33:44:55:66 .src=aa:bb:cc:dd:ee:ff .dsap = 0x12 .ssap = 0x34 .control = 0x11 .payload = 1122;
+    # IEEE802.3 packet with LLC header and VLAN tag
+    eth: .dest=11:22:33:44:55:66 .src=aa:bb:cc:dd:ee:ff .vlan=1 .vid=42 .prio=3 .dsap = 0x12 .ssap = 0x34 .control = 0x11 .payload = 1122;
+    # SNAP packet (IEEE802.3 packet with LLC header and SNAP extension)
+    eth: .dest=11:22:33:44:55:66 .src=aa:bb:cc:dd:ee:ff .oui = 0x808182 .protocol = 0x34 .payload = 1234567890abcdef;
+    # VLAN double tagged packet
+    eth: .dest=11:22:33:44:55:66 .src=aa:bb:cc:dd:ee:ff .vid=100 .vtype=2 .vid=42 .prio=3 .ethertype=0x8123 .payload=1234567890abcdef;
+
+arp: .op=1
+     .sender_mac=10:22:33:44:55:66
+     .sender_ip=192.168.0.166
+     .target_mac=01:02:03:04:05:06
+     .target_ip=1.2.3.4;
+arp: .op=1
+     .sender_mac=10:22:33:44:55:66
+     .sender_ip=192.168.0.166
+     .target_ip=1.2.3.4;
+arp: .target_ip=11.22.33.44;
+arp: .op=2 .target_ip=11.22.33.44;
+arp: .vid=12 .target_ip=11.22.33.44;
+arp-probe: .target_ip=11.22.33.44;
+arp-announce: .target_ip=11.22.33.44;
+arp-announce: ;
+
+ipv4: .dest_mac = 11:22:33:44:55:66 .dest=1.2.3.4 .protocol=254 .payload=12345678;
+ipv4: .vid=42 .dest_mac = 11:22:33:44:55:66 .dest=1.2.3.4 .protocol=254 .payload=12345678;
+ipv4: .source_mac=80:12:34:45:67:89 .dest_mac = 11:22:33:44:55:66 .source=192.168.0.1 .dest=172.16.1.2 .ttl=200 .dscp=16 .ecn=1 .df=1 .protocol=254 .payload=12345678;

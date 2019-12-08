@@ -282,8 +282,12 @@ const uint8_t* cEthernetPacket::get ()
 
 
 #ifdef WITH_UNITTESTS
+#include "console.hpp"
+
 void cEthernetPacket::unitTest ()
 {
+	nn::Console::PrintDebug("-- " __FILE__ " --\n");
+
 	mac_t src = {0x12,0x34,0x56,0x78,0x9a,0xbc};
 	mac_t dst = {0x11,0x22,0x33,0x44,0x55,0x66};
 

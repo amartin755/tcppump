@@ -22,6 +22,7 @@
 
 #include <cstdint>
 #include <cstdio>
+#include <list>
 
 #include "protocoltypes.hpp"
 #include "ethernetpacket.hpp"
@@ -37,7 +38,7 @@ public:
 	cFileParser ();
 	~cFileParser ();
 	void init (FILE* fp, int defaultDelay, mac_t ownMac, ipv4_t ownIPv4);
-	int parse (cTimeval&, bool&, cEthernetPacket& packet);
+	int parse (cTimeval&, bool&, std::list <cEthernetPacket> &packets);
 	const char* getLastError ();
 
 

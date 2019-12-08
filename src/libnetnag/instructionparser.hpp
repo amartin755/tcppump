@@ -22,6 +22,7 @@
 
 #include <cstdint>
 #include <cstdio>
+#include <list>
 
 #include "protocoltypes.hpp"
 #include "ethernetpacket.hpp"
@@ -34,15 +35,19 @@ class cInstructionParser
 public:
     cInstructionParser (mac_t ownMac, ipv4_t ownIPv4);
     ~cInstructionParser ();
-    int parse (const char* instruction, cTimeval& timestamp, bool& isAbsolute, cEthernetPacket& packet);
+    int parse (const char* instruction, cTimeval& timestamp, bool& isAbsolute, std::list <cEthernetPacket> &packets);
+
+#ifdef WITH_UNITTESTS
+        static void unitTest ();
+#endif
 
 private:
-    int compileRAW (cParameterList& params, cEthernetPacket& packet);
-    int compileETH (cParameterList& params, cEthernetPacket& packet);
+    int compileRAW (cParameterList& params, std::list <cEthernetPacket> &packets);
+    int compileETH (cParameterList& params, std::list <cEthernetPacket> &packets);
     int compileVLAN (cParameterList& params, cEthernetPacket& packet);
-    int compileARP (cParameterList& params, cEthernetPacket& packet, bool isProbe = false, bool isGratuitous = false);
-    int compileSNAP (cParameterList& params, cEthernetPacket& packet);
-    int compileIPv4 (cParameterList& params, cEthernetPacket& packet);
+    int compileARP (cParameterList& params, std::list <cEthernetPacket> &packets, bool isProbe = false, bool isGratuitous = false);
+    int compileSNAP (cParameterList& params, std::list <cEthernetPacket> &packets);
+    int compileIPv4 (cParameterList& params, std::list <cEthernetPacket> &packets);
 
     mac_t  ownMac;
     ipv4_t ownIPv4;

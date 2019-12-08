@@ -184,13 +184,14 @@ bool cTcpPump::parsePackets (mac_t ownMac, ipv4_t ownIP, int argc, char* argv[])
     	Console::PrintDebug ("Parsing %d packets (format='%s') ...\n", argc, options.raw ? "raw" : "tokens");
         try
         {
-            cEthernetPacket packet;
             if (!options.raw)
-                cInstructionParser (ownMac, ownIP).parse (argv[n], timestamp, isAbsolute, packet);
+                cInstructionParser (ownMac, ownIP).parse (argv[n], timestamp, isAbsolute, packets);
             else
+            {
+				cEthernetPacket packet;
                 packet.setRaw (argv[n], strlen (argv[n]));
-
-            packets.push_back (std::move(packet));
+                packets.push_back (std::move(packet));
+            }
         }
         catch (ParseException &e)
         {
@@ -234,10 +235,7 @@ bool cTcpPump::parseScripts (mac_t ownMac, ipv4_t ownIP, int scriptsCnt, char* s
             // allocate a new packet
             try
             {
-                cEthernetPacket packet;
-                len = parser.parse (timestamp, isAbsolute, packet);
-                if (len > 0)
-                    packets.push_back (std::move(packet));
+                len = parser.parse (timestamp, isAbsolute, packets);
             }
             catch (...)
             {

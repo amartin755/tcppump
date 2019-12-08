@@ -131,9 +131,8 @@ IF (HAVE_PCAP)
     ENDIF (PCAP_INCLUDE_DIR)
 ENDIF (HAVE_PCAP)
 
-
+# note: include only source files here, that are used by all targets
 SET (sourcefiles
-     tcppump.cpp
      dissector.cpp
      libnetnag/cmdline.cpp
      libnetnag/console.cpp
@@ -151,10 +150,22 @@ SET (sourcefiles
      )
 
 
-ADD_EXECUTABLE (tcppump ${sourcefiles})
+ADD_EXECUTABLE (tcppump tcppump.cpp ${sourcefiles})
 TARGET_LINK_LIBRARIES (tcppump LINK_PUBLIC ${libs})
 
 TARGET_INCLUDE_DIRECTORIES (tcppump PUBLIC ${os_specific})
 TARGET_INCLUDE_DIRECTORIES (tcppump PUBLIC os)
 TARGET_INCLUDE_DIRECTORIES (tcppump PUBLIC libnetnag)
 
+# unit test code
+###############################################################################
+IF (WITH_UNITTESTS)
+	ADD_EXECUTABLE (unittest test/unittest.cpp ${sourcefiles})
+	TARGET_LINK_LIBRARIES (unittest LINK_PUBLIC ${libs})
+	TARGET_COMPILE_DEFINITIONS (unittest PRIVATE -DWITH_UNITTESTS)
+	TARGET_COMPILE_OPTIONS (unittest PRIVATE -Wno-write-strings)
+
+	TARGET_INCLUDE_DIRECTORIES (unittest PUBLIC ${os_specific})
+	TARGET_INCLUDE_DIRECTORIES (unittest PUBLIC os)
+	TARGET_INCLUDE_DIRECTORIES (unittest PUBLIC libnetnag)
+ENDIF (WITH_UNITTESTS)

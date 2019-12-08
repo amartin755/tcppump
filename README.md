@@ -44,12 +44,20 @@ Linux
 	cd tcpdump
 	mkdir build
 	cd build
-	cmake -G ../src
+	cmake ../src
 	make
 
-If cmake can not detect your mingw installation on windows, the following can help:
+If cmake can not detect your mingw installation on windows, this cmake parameter can help:
 
-	cmake -G "MinGW Makefiles" ../src
+	-G "MinGW Makefiles"
+
+To enable unit test targets add the following cmake paramaters:
+
+	-DWITH_UNITTESTS=1
+
+For debugging add:
+
+	-DCMAKE_BUILD_TYPE=Debug
 
 ## How to use
 ### Command-line interface

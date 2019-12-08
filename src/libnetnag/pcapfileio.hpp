@@ -36,7 +36,7 @@ public:
 	cPcapFileIO ();
 	~cPcapFileIO ();
 #ifdef WITH_UNITTESTS
-	static void unitTest ();
+	static void unitTest (const char* file);
 #endif
 
 	bool open (const char* path, bool write = false);
