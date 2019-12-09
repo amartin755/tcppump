@@ -24,6 +24,10 @@
 #include "timeval.hpp"
 #include "cmdline.hpp"
 #include "pcapfileio.hpp"
+#include "ethernetpacket.hpp"
+#include "arppacket.hpp"
+#include "ipv4packet.hpp"
+#include "parameterlist.hpp"
 #include "instructionparser.hpp"
 
 
@@ -35,10 +39,15 @@ int main (void)
 		nn::Converter::unitTest ();
 		cTimeval::unitTest ();
 		cCmdline::unitTest ();
+		cEthernetPacket::unitTest ();
+		cArpPacket::unitTest ();
+		cIPv4Packet::unitTest ();
+		cParameterList::unitTest ();
+		cInstructionParser::unitTest ();
+
 #if HAVE_PCAP
 		cPcapFileIO::unitTest ("../src/test/readtest.pcap");
 #endif
-		cInstructionParser::unitTest ();
 	}
 	catch (...)
 	{
