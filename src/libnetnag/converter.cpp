@@ -199,7 +199,7 @@ void Converter::unitTest ()
     assert (checkMacString("11:a2:33:44:55:66"));
     assert (!checkMacString("11:a2:3g:44:55:66"));
     assert (!checkMacString("11:a2:g3:44:55:66"));
-    mac_t mac1 = {0};
+    mac_t mac1 = {0, 0, 0, 0, 0, 0};
     mac_t mac2 = {0xab,0x22,0x33,0x44,0x55,0x66};
     stringToMac ("ab:22:33:44:55:66", mac1);
     assert (!memcmp (&mac1, &mac2, sizeof (mac1)));
