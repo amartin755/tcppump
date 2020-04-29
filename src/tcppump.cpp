@@ -232,7 +232,7 @@ bool cTcpPump::parseScripts (mac_t ownMac, ipv4_t ownIP, int scriptsCnt, char* s
             return false;
         }
 
-        parser.init (fp, ownIP, ownMac, 0);
+        parser.init (fp, options.delay, ownMac, ownIP);
 
         do
         {

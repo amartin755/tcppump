@@ -24,7 +24,7 @@
 
 
 
-cArpPacket::cArpPacket (cEthernetPacket& p) : packet (p)
+cArpPacket::cArpPacket ()
 {
 
 }
@@ -34,7 +34,7 @@ void cArpPacket::probe (mac_t srcMac, ipv4_t ip)
 {
 	mac_t dstMac;
 	dstMac.set (0);
-	set (1, srcMac, (ipv4_t)0, dstMac, ip);
+	setAll (1, srcMac, (ipv4_t)0, dstMac, ip);
 }
 
 
@@ -42,11 +42,11 @@ void cArpPacket::announce (mac_t srcMac, ipv4_t ip)
 {
 	mac_t dstMac;
 	dstMac.set (0);
-	set (1, srcMac, ip, dstMac, ip);
+	setAll (1, srcMac, ip, dstMac, ip);
 }
 
 
-void cArpPacket::set (uint16_t opcode, mac_t srcMac, ipv4_t srcIp, mac_t dstMac, ipv4_t dstIp)
+void cArpPacket::setAll (uint16_t opcode, mac_t srcMac, ipv4_t srcIp, mac_t dstMac, ipv4_t dstIp)
 {
 	arp_t a;
 	a.hwType       = htons (1);
@@ -62,9 +62,9 @@ void cArpPacket::set (uint16_t opcode, mac_t srcMac, ipv4_t srcIp, mac_t dstMac,
 	if (dstMac.isNull())
 		dstMac.set (0xffu);
 
-	packet.setMacHeader (srcMac, dstMac);
-	packet.setTypeLength (ETHERTYPE_ARP);
-	packet.setPayload ((uint8_t*)&a, sizeof(a));
+	this->setMacHeader (srcMac, dstMac);
+	this->setTypeLength (ETHERTYPE_ARP);
+	this->setPayload ((uint8_t*)&a, sizeof(a));
 }
 
 

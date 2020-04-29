@@ -242,8 +242,7 @@ int cInstructionParser::compileVLAN (cParameterList& params, cEthernetPacket &pa
 
 int cInstructionParser::compileARP (cParameterList& params, std::list <cEthernetPacket> &packets, bool isProbe, bool isGratuitous)
 {
-	cEthernetPacket eth;
-    cArpPacket arp(eth);
+    cArpPacket arp;
     mac_t targetMac;
     targetMac.set (0);
 
@@ -259,17 +258,17 @@ int cInstructionParser::compileARP (cParameterList& params, std::list <cEthernet
     }
     else
     {
-        arp.set (params.findParameter ("op", (uint32_t)1)->asInt16(),
-                 params.findParameter ("sender_mac", ownMac)->asMac(),
-                 params.findParameter ("sender_ip", ownIPv4)->asIPv4(),
-                 params.findParameter ("target_mac", targetMac)->asMac(),
-                 params.findParameter ("target_ip")->asIPv4()
-                 );
+        arp.setAll (params.findParameter ("op", (uint32_t)1)->asInt16(),
+                    params.findParameter ("sender_mac", ownMac)->asMac(),
+                    params.findParameter ("sender_ip", ownIPv4)->asIPv4(),
+                    params.findParameter ("target_mac", targetMac)->asMac(),
+                    params.findParameter ("target_ip")->asIPv4()
+                    );
     }
 
     // compile VLAN tags
-    compileVLAN (params, eth);
-    packets.push_back (std::move(eth));
+    compileVLAN (params, arp);
+    packets.push_back (std::move(arp));
 
     return 1; // one packet was added to the list
 }
@@ -277,11 +276,10 @@ int cInstructionParser::compileARP (cParameterList& params, std::list <cEthernet
 
 int cInstructionParser::compileIPv4 (cParameterList& params, std::list <cEthernetPacket> &packets)
 {
-	cEthernetPacket eth;
-    cIPv4Packet packet (eth);
+    cIPv4Packet packet;
 
-    eth.setMacHeader (params.findParameter ("source_mac", ownMac)->asMac (),
-                      params.findParameter ("dest_mac")->asMac ());
+    packet.setMacHeader (params.findParameter ("source_mac", ownMac)->asMac (),
+                         params.findParameter ("dest_mac")->asMac ());
 
     packet.setDSCP         (params.findParameter ("dscp", (uint32_t)0)->asInt8(0, 0x1f));
     packet.setECN          (params.findParameter ("ecn", (uint32_t)0)->asInt8(0, 1));
@@ -296,8 +294,8 @@ int cInstructionParser::compileIPv4 (cParameterList& params, std::list <cEtherne
 
 
     // compile VLAN tags
-    compileVLAN (params, eth);
-    packets.push_back (std::move(eth));
+    compileVLAN (params, packet);
+    packets.push_back (std::move(packet));
 
     return 1; // one packet was added to the list
 }

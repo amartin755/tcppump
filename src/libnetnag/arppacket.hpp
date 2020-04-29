@@ -25,13 +25,13 @@
 #include "ethernetpacket.hpp"
 
 
-class cArpPacket
+class cArpPacket : public cEthernetPacket
 {
 public:
-	cArpPacket (cEthernetPacket&);
+	cArpPacket ();
 	void probe (mac_t srcMac, ipv4_t ip);
 	void announce (mac_t srcMac, ipv4_t ip);
-	void set (uint16_t opcode, mac_t srcMac, ipv4_t srcIp, mac_t dstMac, ipv4_t dstIp);
+	void setAll (uint16_t opcode, mac_t srcMac, ipv4_t srcIp, mac_t dstMac, ipv4_t dstIp);
 
 
 
@@ -41,7 +41,6 @@ public:
 
 private:
 
-	cEthernetPacket& packet;
 };
 
 #pragma pack(1)

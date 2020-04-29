@@ -72,10 +72,10 @@ typedef struct
 #pragma pack()
 
 
-class cIPv4Packet
+class cIPv4Packet : public cEthernetPacket
 {
 public:
-    cIPv4Packet (cEthernetPacket&);
+    cIPv4Packet ();
     void setDSCP (int dscp);
     void setECN (int ecn);
     void setTimeToLive (uint8_t ttl);
@@ -92,7 +92,6 @@ public:
 private:
     static uint16_t calcHeaderChecksum (const uint16_t* ipheader, int headerLen);
 
-    cEthernetPacket& packet;
     ipv4_header_t    header;
 };
 

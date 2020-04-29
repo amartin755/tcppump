@@ -60,10 +60,12 @@ public:
 	static const size_t   MAX_TAGGED_PACKET        = MAX_PACKET + 4;
 	static const size_t   MAX_DOUBLE_TAGGED_PACKET = MAX_TAGGED_PACKET + 4;
 
-
 #ifdef WITH_UNITTESTS
 	static void unitTest ();
 #endif
+
+protected:
+	inline size_t getMtu () const {return pPayload - packet + packetMaxLength;}
 
 private:
 	void reset ();

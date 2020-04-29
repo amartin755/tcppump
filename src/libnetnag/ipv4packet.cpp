@@ -25,13 +25,13 @@
 
 
 
-cIPv4Packet::cIPv4Packet (cEthernetPacket& p) : packet (p)
+cIPv4Packet::cIPv4Packet ()
 {
 	memset (&header, 0, sizeof (header));
 	header.setVersion (4);
 	header.setHeaderLenght (5);
 
-	packet.setTypeLength (ETHERTYPE_IPV4);
+	this->setTypeLength (ETHERTYPE_IPV4);
 }
 
 void cIPv4Packet::setDSCP (int dscp)
@@ -69,8 +69,8 @@ void cIPv4Packet::setPayload (uint8_t protocol, const char* payload, size_t len)
 	header.len = htons (header.getHeaderLenght() * 4 + len / 2);
 	header.protocol = protocol;
 	updateHeaderChecksum();
-	packet.setPayload ((uint8_t*)&header, sizeof (header));
-	packet.appendPayload (payload, len);
+	cEthernetPacket::setPayload ((uint8_t*)&header, sizeof (header));
+	cEthernetPacket::appendPayload (payload, len);
 
 	//TODO later when supporting fragmentation flags_offset and identification also have to be updated
 }
