@@ -50,7 +50,7 @@ typedef struct
     }
     bool isMulticast () const
     {
-        return a != 0xffu && (a & 1);
+        return (a & 1) && !isBroadcast ();
     }
     void set (uint8_t val)
     {

@@ -29,6 +29,7 @@
 #include "timeval.hpp"
 
 class cParameterList;
+class cIPv4Packet;
 
 class cInstructionParser
 {
@@ -44,10 +45,14 @@ public:
 private:
     int compileRAW (cParameterList& params, std::list <cEthernetPacket> &packets);
     int compileETH (cParameterList& params, std::list <cEthernetPacket> &packets);
-    int compileVLAN (cParameterList& params, cEthernetPacket& packet);
     int compileARP (cParameterList& params, std::list <cEthernetPacket> &packets, bool isProbe = false, bool isGratuitous = false);
     int compileSNAP (cParameterList& params, std::list <cEthernetPacket> &packets);
     int compileIPv4 (cParameterList& params, std::list <cEthernetPacket> &packets);
+    int compileUDP (cParameterList& params, std::list <cEthernetPacket> &packets);
+
+    void compileMacHeader (cParameterList& params, cEthernetPacket& packet);
+    int compileVLANTags (cParameterList& params, cEthernetPacket& packet);
+    int compileIPv4Header (cParameterList& params, cIPv4Packet& packet);
 
     mac_t  ownMac;
     ipv4_t ownIPv4;

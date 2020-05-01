@@ -144,6 +144,7 @@ SET (sourcefiles
      libnetnag/fileparser.cpp
      libnetnag/parameterlist.cpp
      libnetnag/pcapfileio.cpp
+     libnetnag/udppacket.cpp
      ${os_specific}/interface.cpp
      ${os_specific}/sleep.cpp
      ${os_specific}/getch.cpp

@@ -107,44 +107,44 @@ Raw packet
 
 VLAN tagged packet (default tag values)
 
-    tcppump -i eth0 --input=token "eth: .dest=11:22:33:44:55:66 .src=aa:bb:cc:dd:ee:ff .vid=1 .ethertype=0x8123 .payload=1234567890abcdef"
+    tcppump -i eth0 --input=token "eth: .dmac=11:22:33:44:55:66 .smac=aa:bb:cc:dd:ee:ff .vid=1 .ethertype=0x8123 .payload=1234567890abcdef"
 
 VLAN tagged packet
 
-    tcppump -i eth0 --input=token "eth: .dest=11:22:33:44:55:66 .src=aa:bb:cc:dd:ee:ff .vid=42 .prio=3 .ethertype=0x8123 .payload=1234567890abcdef"
+    tcppump -i eth0 --input=token "eth: .dmac=11:22:33:44:55:66 .smac=aa:bb:cc:dd:ee:ff .vid=42 .prio=3 .ethertype=0x8123 .payload=1234567890abcdef"
 
 IEEE802.3 packet with LLC header
 
-    tcppump -i eth0 --input=token "eth: .dest=11:22:33:44:55:66 .src=aa:bb:cc:dd:ee:ff .dsap = 0x12 .ssap = 0x34 .control = 0x11 .payload = 1122"
+    tcppump -i eth0 --input=token "eth: .dmac=11:22:33:44:55:66 .smac=aa:bb:cc:dd:ee:ff .dsap = 0x12 .ssap = 0x34 .control = 0x11 .payload = 1122"
 
 IEEE802.3 packet with LLC header and VLAN tag
 
-    tcppump -i eth0 --input=token "eth: .dest=11:22:33:44:55:66 .src=aa:bb:cc:dd:ee:ff .vlan=1 .vid=42 .prio=3 .dsap = 0x12 .ssap = 0x34 .control = 0x11 .payload = 1122"
+    tcppump -i eth0 --input=token "eth: .dmac=11:22:33:44:55:66 .smac=aa:bb:cc:dd:ee:ff .vlan=1 .vid=42 .prio=3 .dsap = 0x12 .ssap = 0x34 .control = 0x11 .payload = 1122"
 
 SNAP packet (IEEE802.3 packet with LLC header and SNAP extension)
 
-    tcppump -i eth0 --input=token "eth: .dest=11:22:33:44:55:66 .src=aa:bb:cc:dd:ee:ff .oui = 0x808182 .protocol = 0x34 .payload = 1234567890abcdef"
+    tcppump -i eth0 --input=token "eth: .dmac=11:22:33:44:55:66 .smac=aa:bb:cc:dd:ee:ff .oui = 0x808182 .protocol = 0x34 .payload = 1234567890abcdef"
 
 VLAN double tagged packet
 
-    tcppump -i eth0 --input=token "eth: .dest=11:22:33:44:55:66 .src=aa:bb:cc:dd:ee:ff .vid=100 .vtype=2 .vid=42 .prio=3 .ethertype=0x8123 .payload=1234567890abcdef"
+    tcppump -i eth0 --input=token "eth: .dmac=11:22:33:44:55:66 .smac=aa:bb:cc:dd:ee:ff .vid=100 .vtype=2 .vid=42 .prio=3 .ethertype=0x8123 .payload=1234567890abcdef"
 
 Simple ARP (who has IP 11.22.33.44?)
 
-	tcppump -i eth0 --input=token "arp: .target_ip=11.22.33.44"
+	tcppump -i eth0 --input=token "arp: .dip=11.22.33.44"
 
 Fully defined ARP packet
 
-	tcppump -i eth0 --input=token "arp: .op=1 .sender_mac=10:22:33:44:55:66 .sender_ip=192.168.0.166 .target_mac=01:02:03:04:05:06 .target_ip=1.2.3.4"
+	tcppump -i eth0 --input=token "arp: .op=1 .smac=10:22:33:44:55:66 .sip=192.168.0.166 .dmac=01:02:03:04:05:06 .dip=1.2.3.4"
 
 Simple ARP combined with VLAN tag
 
-	tcppump -i eth0 --input=token "arp: .vid=123 .target_ip=11.22.33.44"
+	tcppump -i eth0 --input=token "arp: .vid=123 .dip=11.22.33.44"
 
 Raw simple IPv4 packet
 
-	tcppump -i eth0 --input=token "ipv4: .dest_mac = 11:22:33:44:55:66 .dest=1.2.3.4 .protocol=254 .payload=12345678"
+	tcppump -i eth0 --input=token "ipv4: .dmac = 11:22:33:44:55:66 .dip=1.2.3.4 .protocol=254 .payload=12345678"
 
 Raw fully defined IPv4 packet
 
-	tcppump -i eth0 --input=token ".source_mac=80:12:34:45:67:89 .dest_mac = 11:22:33:44:55:66 .source=192.168.0.1 .dest=172.16.1.2 .ttl=200 .dscp=16 .ecn=1 .df=1 .protocol=254 .payload=12345678"
+	tcppump -i eth0 --input=token ".smac=80:12:34:45:67:89 .dmac = 11:22:33:44:55:66 .sip=192.168.0.1 .dip=172.16.1.2 .ttl=200 .dscp=16 .ecn=1 .df=1 .protocol=254 .payload=12345678"

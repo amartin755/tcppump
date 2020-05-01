@@ -29,6 +29,7 @@
 #include "ethernetpacket.hpp"
 #include "arppacket.hpp"
 #include "ipv4packet.hpp"
+#include "udppacket.hpp"
 
 
 cInstructionParser::cInstructionParser (mac_t ownMac, ipv4_t ownIPv4)
@@ -133,6 +134,8 @@ int cInstructionParser::parse (const char* instruction, cTimeval& timestamp, boo
             return compileARP (params, packets, false, true);
         if (!strncmp ("ipv4", keyword, keywordEnd - keyword))
             return compileIPv4 (params, packets);
+        if (!strncmp ("udp", keyword, keywordEnd - keyword))
+            return compileUDP (params, packets);
 
         throw ParseException ("Unknown protocol type", keyword);
     }
@@ -169,19 +172,24 @@ int cInstructionParser::compileRAW (cParameterList& params, std::list <cEthernet
 }
 
 
+void cInstructionParser::compileMacHeader (cParameterList& params, cEthernetPacket &packet)
+{
+    // default value of source mac is our own mac address
+    packet.setMacHeader (params.findParameter ("smac", ownMac)->asMac (),
+                         params.findParameter ("dmac")->asMac ());
+}
+
+
 int cInstructionParser::compileETH (cParameterList& params, std::list <cEthernetPacket> &packets)
 {
 	cEthernetPacket eth;
     const cParameter* optionalPar = nullptr;
 
     // MAC header
-    // default value of source mac is our own mac address
-    eth.setMacHeader (params.findParameter ("src", ownMac)->asMac (),
-                      params.findParameter ("dest")->asMac ());
-
+    compileMacHeader (params, eth);
 
     // compile VLAN tags
-    compileVLAN (params, eth);
+    compileVLANTags (params, eth);
 
     // LLC header
     // NOTE: dsap and ssap are mandatory parameters for llc header;
@@ -224,7 +232,7 @@ int cInstructionParser::compileETH (cParameterList& params, std::list <cEthernet
 }
 
 
-int cInstructionParser::compileVLAN (cParameterList& params, cEthernetPacket &packet)
+int cInstructionParser::compileVLANTags (cParameterList& params, cEthernetPacket &packet)
 {
     const cParameter* optionalPar = nullptr;
 
@@ -250,27 +258,40 @@ int cInstructionParser::compileARP (cParameterList& params, std::list <cEthernet
 
     if (isProbe)
     {
-        arp.probe (ownMac, params.findParameter ("target_ip")->asIPv4());
+        arp.probe (ownMac, params.findParameter ("dip")->asIPv4());
     }
     else if (isGratuitous)
     {
-        arp.announce (ownMac, params.findParameter ("target_ip", ownIPv4)->asIPv4());
+        arp.announce (ownMac, params.findParameter ("dip", ownIPv4)->asIPv4());
     }
     else
     {
         arp.setAll (params.findParameter ("op", (uint32_t)1)->asInt16(),
-                    params.findParameter ("sender_mac", ownMac)->asMac(),
-                    params.findParameter ("sender_ip", ownIPv4)->asIPv4(),
-                    params.findParameter ("target_mac", targetMac)->asMac(),
-                    params.findParameter ("target_ip")->asIPv4()
+                    params.findParameter ("smac", ownMac)->asMac(),
+                    params.findParameter ("sip", ownIPv4)->asIPv4(),
+                    params.findParameter ("dmac", targetMac)->asMac(),
+                    params.findParameter ("dip")->asIPv4()
                     );
     }
 
     // compile VLAN tags
-    compileVLAN (params, arp);
+    compileVLANTags (params, arp);
     packets.push_back (std::move(arp));
 
     return 1; // one packet was added to the list
+}
+
+
+int cInstructionParser::compileIPv4Header (cParameterList& params, cIPv4Packet& packet)
+{
+    packet.setDSCP         (params.findParameter ("dscp", (uint32_t)0)->asInt8(0, 0x1f));
+    packet.setECN          (params.findParameter ("ecn", (uint32_t)0)->asInt8(0, 2));
+    packet.setTimeToLive   (params.findParameter ("ttl", (uint32_t)64)->asInt8());
+    packet.setDontFragment (params.findParameter ("df", (uint32_t)0)->asInt8(0, 1));
+    packet.setDestination  (params.findParameter ("dip")->asIPv4());
+    packet.setSource       (params.findParameter ("sip", ownIPv4)->asIPv4());
+
+    return packet.getLength();
 }
 
 
@@ -278,27 +299,45 @@ int cInstructionParser::compileIPv4 (cParameterList& params, std::list <cEtherne
 {
     cIPv4Packet packet;
 
-    packet.setMacHeader (params.findParameter ("source_mac", ownMac)->asMac (),
-                         params.findParameter ("dest_mac")->asMac ());
-
-    packet.setDSCP         (params.findParameter ("dscp", (uint32_t)0)->asInt8(0, 0x1f));
-    packet.setECN          (params.findParameter ("ecn", (uint32_t)0)->asInt8(0, 1));
-    packet.setTimeToLive   (params.findParameter ("ttl", (uint32_t)64)->asInt8());
-    packet.setDontFragment (params.findParameter ("df", (uint32_t)0)->asInt8(0, 1));
-    packet.setDestination  (params.findParameter ("dest")->asIPv4());
-    packet.setSource       (params.findParameter ("source", ownIPv4)->asIPv4());
+    compileMacHeader  (params, packet);
+    compileVLANTags   (params, packet);
+    compileIPv4Header (params, packet);
 
     size_t len;
     const char* payload = params.findParameter ("payload")->asRaw(len);
     packet.setPayload (params.findParameter ("protocol")->asInt8(), payload, len);
 
-
-    // compile VLAN tags
-    compileVLAN (params, packet);
     packets.push_back (std::move(packet));
 
     return 1; // one packet was added to the list
 }
+
+
+int cInstructionParser::compileUDP (cParameterList& params, std::list <cEthernetPacket> &packets)
+{
+    cUdpPacket packet;
+
+    compileMacHeader  (params, packet);
+    compileVLANTags   (params, packet);
+    compileIPv4Header (params, packet);
+
+    packet.setSourcePort(params.findParameter ("sport")->asInt16());
+    packet.setDestinationPort(params.findParameter ("dport")->asInt16());
+
+    const cParameter* optionalPar = params.findParameter ("chksum", true);
+    if (optionalPar)
+    	packet.setChecksum(optionalPar->asInt16());
+
+    size_t len;
+    const char* payload = params.findParameter ("payload")->asRaw(len);
+    packet.setPayload (payload, len);
+
+    compileVLANTags (params, packet);
+    packets.push_back (std::move(packet));
+
+    return 1; // one packet was added to the list
+}
+
 
 #ifdef WITH_UNITTESTS
 
@@ -313,28 +352,28 @@ typedef struct
 
 static const testcase_t tests[] = {
 	{
-		"eth: .dest=11:22:33:44:55:66 .src=aa:bb:cc:dd:ee:ff .ethertype=0x8123 .payload=1234567890abcdef",
+		"eth: .dmac=11:22:33:44:55:66 .smac=aa:bb:cc:dd:ee:ff .ethertype=0x8123 .payload=1234567890abcdef",
 		{
 			0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x81, 0x23, 0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef
 		},
 		22,
 	},
 	{
-		"eth: .dest=11:22:33:44:55:66 .ethertype=0x8123 .payload=1234567890abcdef",
+		"eth: .dmac=11:22:33:44:55:66 .ethertype=0x8123 .payload=1234567890abcdef",
 		{
 			0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0xba, 0xba, 0xba, 0xba, 0xba, 0xba, 0x81, 0x23, 0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef
 		},
 		22,
 	},
 	{
-		"eth: .dest=11:22:33:44:55:66 .src=aa:bb:cc:dd:ee:ff .payload=1234567890abcdef",
+		"eth: .dmac=11:22:33:44:55:66 .smac=aa:bb:cc:dd:ee:ff .payload=1234567890abcdef",
 		{
 			0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x00, 0x08, 0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef
 		},
 		22,
 	},
 	{
-		"eth: .dest=11:22:33:44:55:66 .payload=1234567890abcdef",
+		"eth: .dmac=11:22:33:44:55:66 .payload=1234567890abcdef",
 		{
 			0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0xba, 0xba, 0xba, 0xba, 0xba, 0xba, 0x00, 0x08, 0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef
 		},
@@ -348,91 +387,91 @@ static const testcase_t tests[] = {
 		22,
 	},
 	{
-		"eth: .dest=11:22:33:44:55:66 .src=aa:bb:cc:dd:ee:ff .vid=1 .ethertype=0x8123 .payload=1234567890abcdef",
+		"eth: .dmac=11:22:33:44:55:66 .smac=aa:bb:cc:dd:ee:ff .vid=1 .ethertype=0x8123 .payload=1234567890abcdef",
 		{
 			0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x81, 0x00, 0x00, 0x01, 0x81, 0x23, 0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef
 		},
 		26,
 	},
 	{
-		"eth: .dest=11:22:33:44:55:66 .src=aa:bb:cc:dd:ee:ff .vid=42 .prio=3 .ethertype=0x8123 .payload=1234567890abcdef",
+		"eth: .dmac=11:22:33:44:55:66 .smac=aa:bb:cc:dd:ee:ff .vid=42 .prio=3 .ethertype=0x8123 .payload=1234567890abcdef",
 		{
 			0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x81, 0x00, 0x60, 0x2a, 0x81, 0x23, 0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef
 		},
 		26,
 	},
 	{
-		"eth: .dest=11:22:33:44:55:66 .src=aa:bb:cc:dd:ee:ff .dsap = 0x12 .ssap = 0x34 .control = 0x11 .payload = 1122",
+		"eth: .dmac=11:22:33:44:55:66 .smac=aa:bb:cc:dd:ee:ff .dsap = 0x12 .ssap = 0x34 .control = 0x11 .payload = 1122",
 		{
 			0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x00, 0x06, 0x12, 0x34, 0x00, 0x11, 0x11, 0x22
 		},
 		20,
 	},
 	{
-		"eth: .dest=11:22:33:44:55:66 .src=aa:bb:cc:dd:ee:ff .vlan=1 .vid=42 .prio=3 .dsap = 0x12 .ssap = 0x34 .control = 0x11 .payload = 1122",
+		"eth: .dmac=11:22:33:44:55:66 .smac=aa:bb:cc:dd:ee:ff .vlan=1 .vid=42 .prio=3 .dsap = 0x12 .ssap = 0x34 .control = 0x11 .payload = 1122",
 		{
 			0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x81, 0x00, 0x60, 0x2a, 0x00, 0x06, 0x12, 0x34, 0x00, 0x11, 0x11, 0x22
 		},
 		24,
 	},
 	{
-		"eth: .dest=11:22:33:44:55:66 .src=aa:bb:cc:dd:ee:ff .oui = 0x808182 .protocol = 0x34 .payload = 1234567890abcdef",
+		"eth: .dmac=11:22:33:44:55:66 .smac=aa:bb:cc:dd:ee:ff .oui = 0x808182 .protocol = 0x34 .payload = 1234567890abcdef",
 		{
 			0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x00, 0x10, 0xaa, 0xaa, 0x03, 0x80, 0x81, 0x82, 0x00, 0x34, 0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef
 		},
 		30,
 	},
 	{
-		"eth: .dest=11:22:33:44:55:66 .src=aa:bb:cc:dd:ee:ff .vid=100 .vtype=2 .vid=42 .prio=3 .ethertype=0x8123 .payload=1234567890abcdef",
+		"eth: .dmac=11:22:33:44:55:66 .smac=aa:bb:cc:dd:ee:ff .vid=100 .vtype=2 .vid=42 .prio=3 .ethertype=0x8123 .payload=1234567890abcdef",
 		{
 			0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x88, 0xa8, 0x00, 0x64, 0x81, 0x00, 0x60, 0x2a, 0x81, 0x23, 0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef
 		},
 		30,
 	},
 	{
-		"arp: .op=1 .sender_mac=10:22:33:44:55:66 .sender_ip=192.168.0.166 .target_mac=01:02:03:04:05:06 .target_ip=1.2.3.4",
+		"arp: .op=1 .smac=10:22:33:44:55:66 .sip=192.168.0.166 .dmac=01:02:03:04:05:06 .dip=1.2.3.4",
 		{
 			0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x10, 0x22, 0x33, 0x44, 0x55, 0x66, 0x08, 0x06, 0x00, 0x01, 0x08, 0x00, 0x06, 0x04, 0x00, 0x01, 0x10, 0x22, 0x33, 0x44, 0x55, 0x66, 0xc0, 0xa8, 0x00, 0xa6, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x01, 0x02, 0x03, 0x04
 		},
 		42,
 	},
 	{
-		"arp: .op=1 .sender_mac=10:22:33:44:55:66 .sender_ip=192.168.0.166 .target_ip=1.2.3.4",
+		"arp: .op=1 .smac=10:22:33:44:55:66 .sip=192.168.0.166 .dip=1.2.3.4",
 		{
 			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x10, 0x22, 0x33, 0x44, 0x55, 0x66, 0x08, 0x06, 0x00, 0x01, 0x08, 0x00, 0x06, 0x04, 0x00, 0x01, 0x10, 0x22, 0x33, 0x44, 0x55, 0x66, 0xc0, 0xa8, 0x00, 0xa6, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04
 		},
 		42,
 	},
 	{
-		"arp: .target_ip=11.22.33.44",
+		"arp: .dip=11.22.33.44",
 		{
 			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xba, 0xba, 0xba, 0xba, 0xba, 0xba, 0x08, 0x06, 0x00, 0x01, 0x08, 0x00, 0x06, 0x04, 0x00, 0x01, 0xba, 0xba, 0xba, 0xba, 0xba, 0xba, 0x0a, 0x0a, 0x0a, 0x0a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0b, 0x16, 0x21, 0x2c
 		},
 		42,
 	},
 	{
-		"arp: .op=2 .target_ip=11.22.33.44",
+		"arp: .op=2 .dip=11.22.33.44",
 		{
 			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xba, 0xba, 0xba, 0xba, 0xba, 0xba, 0x08, 0x06, 0x00, 0x01, 0x08, 0x00, 0x06, 0x04, 0x00, 0x02, 0xba, 0xba, 0xba, 0xba, 0xba, 0xba, 0x0a, 0x0a, 0x0a, 0x0a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0b, 0x16, 0x21, 0x2c
 		},
 		42,
 	},
 	{
-		"arp: .vid=12 .target_ip=11.22.33.44",
+		"arp: .vid=12 .dip=11.22.33.44",
 		{
 			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xba, 0xba, 0xba, 0xba, 0xba, 0xba, 0x81, 0x00, 0x00, 0x0c, 0x08, 0x06, 0x00, 0x01, 0x08, 0x00, 0x06, 0x04, 0x00, 0x01, 0xba, 0xba, 0xba, 0xba, 0xba, 0xba, 0x0a, 0x0a, 0x0a, 0x0a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0b, 0x16, 0x21, 0x2c
 		},
 		46,
 	},
 	{
-		"arp-probe: .target_ip=11.22.33.44",
+		"arp-probe: .dip=11.22.33.44",
 		{
 			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xba, 0xba, 0xba, 0xba, 0xba, 0xba, 0x08, 0x06, 0x00, 0x01, 0x08, 0x00, 0x06, 0x04, 0x00, 0x01, 0xba, 0xba, 0xba, 0xba, 0xba, 0xba, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0b, 0x16,	0x21, 0x2c
 		},
 		42,
 	},
 	{
-		"arp-announce: .target_ip=11.22.33.44",
+		"arp-announce: .dip=11.22.33.44",
 		{
 			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xba, 0xba, 0xba, 0xba, 0xba, 0xba, 0x08, 0x06, 0x00, 0x01, 0x08, 0x00, 0x06, 0x04, 0x00, 0x01, 0xba, 0xba, 0xba, 0xba, 0xba, 0xba, 0x0b, 0x16, 0x21, 0x2c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0b, 0x16, 0x21, 0x2c
 		},
@@ -446,21 +485,21 @@ static const testcase_t tests[] = {
 		42,
 	},
 	{
-		"ipv4: .dest_mac = 11:22:33:44:55:66 .dest=1.2.3.4 .protocol=254 .payload=12345678",
+		"ipv4: .dmac = 11:22:33:44:55:66 .dip=1.2.3.4 .protocol=254 .payload=12345678",
 		{
 			0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0xba, 0xba, 0xba, 0xba, 0xba, 0xba, 0x08, 0x00, 0x45, 0x00, 0x00, 0x18, 0x00, 0x00, 0x00, 0x00, 0x40, 0xfe, 0x61, 0xcf, 0x0a, 0x0a, 0x0a, 0x0a, 0x01, 0x02, 0x03, 0x04, 0x12, 0x34, 0x56, 0x78
 		},
 		38,
 	},
 	{
-		"ipv4: .vid=42 .dest_mac = 11:22:33:44:55:66 .dest=1.2.3.4 .protocol=254 .payload=12345678",
+		"ipv4: .vid=42 .dmac = 11:22:33:44:55:66 .dip=1.2.3.4 .protocol=254 .payload=12345678",
 		{
 			0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0xba, 0xba, 0xba, 0xba, 0xba, 0xba, 0x81, 0x00, 0x00, 0x2a, 0x08, 0x00, 0x45, 0x00, 0x00, 0x18, 0x00, 0x00, 0x00, 0x00, 0x40, 0xfe, 0x61, 0xcf, 0x0a, 0x0a, 0x0a, 0x0a, 0x01, 0x02, 0x03, 0x04, 0x12, 0x34, 0x56, 0x78
 		},
 		42,
 	},
 	{
-		"ipv4: .source_mac=80:12:34:45:67:89 .dest_mac = 11:22:33:44:55:66 .source=192.168.0.1 .dest=172.16.1.2 .ttl=200 .dscp=16 .ecn=1 .df=1 .protocol=254 .payload=12345678",
+		"ipv4: .smac=80:12:34:45:67:89 .dmac = 11:22:33:44:55:66 .sip=192.168.0.1 .dip=172.16.1.2 .ttl=200 .dscp=16 .ecn=1 .df=1 .protocol=254 .payload=12345678",
 		{
 			0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x80, 0x12, 0x34, 0x45, 0x67, 0x89, 0x08, 0x00, 0x45, 0x41, 0x00, 0x18, 0x00, 0x00, 0x40, 0x00, 0xc8, 0xfe, 0x43, 0xeb, 0xc0, 0xa8, 0x00, 0x01, 0xac, 0x10, 0x01, 0x02, 0x12, 0x34, 0x56, 0x78
 		},
