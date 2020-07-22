@@ -40,6 +40,10 @@ public:
 	{
 		set (tv);
 	}
+	cTimeval (uint64_t seconds)
+	{
+		setS (seconds);
+	}
 	void clear ()
 	{
 		value = 0;
@@ -116,6 +120,14 @@ public:
 	{
 		return value != val.value;
 	}
+	bool operator< (const cTimeval &val) const
+	{
+		return value < val.value;
+	}
+	bool operator> (const cTimeval &val) const
+	{
+		return value > val.value;
+	}
 
 private:
 	uint64_t value;
@@ -171,6 +183,9 @@ public:
 		assert (!(cTimeval() != v));
 		assert (!(cTimeval(tv1) == cTimeval(tv2)));
 		assert (cTimeval(tv1) != cTimeval(tv2));
+
+		assert (cTimeval(2) < cTimeval(3));
+		assert (cTimeval(1) > cTimeval(0));
 	}
 #endif
 };

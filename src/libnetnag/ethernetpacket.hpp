@@ -49,7 +49,7 @@ public:
 	void appendPayload (const char* payloadAsHexStr, size_t len);
 	void setRaw (const char* payloadAsHexStr, size_t len);
 	void setRaw (const uint8_t* payload, size_t len);
-	const uint8_t* get ();
+	const uint8_t* get () const;
 	inline size_t getLength () const {return pPayload - packet + payloadLength;}
 	inline void clear () {reset ();};
 	inline bool hasLlcHeader () {return llcHeaderLength != 0;};

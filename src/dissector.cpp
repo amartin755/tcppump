@@ -27,7 +27,7 @@
 
 using namespace nn;
 
-cDissector::cDissector (cEthernetPacket& p)
+cDissector::cDissector (const cEthernetPacket& p)
 	: packet (p.get()), packetLength(p.getLength())
 {
 }

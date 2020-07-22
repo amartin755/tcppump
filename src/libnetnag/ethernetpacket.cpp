@@ -275,7 +275,7 @@ void cEthernetPacket::setRaw (const uint8_t* payload, size_t len)
 }
 
 
-const uint8_t* cEthernetPacket::get ()
+const uint8_t* cEthernetPacket::get () const
 {
 	return packet;
 }

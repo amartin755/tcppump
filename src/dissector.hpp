@@ -26,7 +26,7 @@
 class cDissector
 {
 public:
-	cDissector (cEthernetPacket& packet);
+	cDissector (const cEthernetPacket& packet);
 	~cDissector();
 
 	bool dissect () const;

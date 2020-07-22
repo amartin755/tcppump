@@ -21,6 +21,7 @@
 
 #include <cstring>
 #include <cstdint>
+#include <cassert>
 
 #include "tcppump.hpp"
 #include "sleep.hpp"
@@ -158,13 +159,17 @@ int cTcpPump::execute (int argc, char* argv[])
 
     if (!options.interactive)
     {
+		assert (packets.size() == delays.size());
         Console::PrintMoreVerbose ("Sending %d packets, each delayed by %d seconds. Repeating %d times.\n\n", packets.size(), options.delay, options.repeat);
         while (options.repeat--)
         {
-            for (cEthernetPacket& p : packets)
+        	std::list<cTimeval>::const_iterator t = delays.cbegin();
+
+            for (const auto & p : packets)
             {
-                if (!sendPacket (ifc, options.delay, p))
+                if (!sendPacket (ifc, *t, p))
                     return -4;
+                t++;
             }
         }
     }
@@ -180,7 +185,7 @@ int cTcpPump::execute (int argc, char* argv[])
 
 bool cTcpPump::parsePackets (mac_t ownMac, ipv4_t ownIP, int argc, char* argv[])
 {
-    cTimeval timestamp;
+    cTimeval timestamp, currtime;
     bool isAbsolute;
 
     for (int n = 0; n < argc; n++)
@@ -189,7 +194,28 @@ bool cTcpPump::parsePackets (mac_t ownMac, ipv4_t ownIP, int argc, char* argv[])
         try
         {
             if (!options.raw)
-                cInstructionParser (ownMac, ownIP).parse (argv[n], timestamp, isAbsolute, packets);
+            {
+                int count = cInstructionParser (ownMac, ownIP).parse (argv[n], timestamp, isAbsolute, packets);
+
+                for (int n = 0; n < count; n++)
+                {
+                	if (!isAbsolute)
+                	{
+                		delays.push_back (timestamp);
+                		currtime.add (timestamp);
+                	}
+                	else
+                	{
+                		if (timestamp < currtime) // fixme Was tun wenn ein absoluter timestamp < currtime ist? delay = 0 oder Fehler melden?
+                			assert ("fixme" == 0);
+                		else
+                		{
+                			delays.push_back (timestamp.sub (currtime));
+                			currtime.set (timestamp);
+                		}
+                	}
+                }
+            }
             else
             {
 				cEthernetPacket packet;
@@ -215,9 +241,9 @@ bool cTcpPump::parsePackets (mac_t ownMac, ipv4_t ownIP, int argc, char* argv[])
 bool cTcpPump::parseScripts (mac_t ownMac, ipv4_t ownIP, int scriptsCnt, char* scripts[])
 {
     FILE *fp;
-    int len;
+    int count;
     cFileParser parser;
-    cTimeval timestamp;
+    cTimeval timestamp, currtime, scriptStartTime;
     bool isAbsolute;
 
 	Console::PrintDebug ("Parsing %d script files ...\n", scriptsCnt);
@@ -234,12 +260,35 @@ bool cTcpPump::parseScripts (mac_t ownMac, ipv4_t ownIP, int scriptsCnt, char* s
 
         parser.init (fp, options.delay, ownMac, ownIP);
 
+        scriptStartTime = currtime;
+
         do
         {
             // allocate a new packet
             try
             {
-                len = parser.parse (timestamp, isAbsolute, packets);
+                count = parser.parse (timestamp, isAbsolute, packets);
+
+                for (int n = 0; n < count; n++)
+                {
+                	if (!isAbsolute)
+                	{
+                		delays.push_back (timestamp);
+                		currtime.add (timestamp);
+                	}
+                	else
+                	{
+                		timestamp.add(scriptStartTime);
+
+                		if (timestamp < currtime) // fixme Was tun wenn ein absoluter timestamp < currtime ist? delay = 0 oder Fehler melden?
+                			assert ("fixme" == 0);
+                		else
+                		{
+                			delays.push_back (timestamp.sub (currtime));
+                			currtime.set (timestamp);
+                		}
+                	}
+                }
             }
             catch (...)
             {
@@ -247,13 +296,13 @@ bool cTcpPump::parseScripts (mac_t ownMac, ipv4_t ownIP, int scriptsCnt, char* s
                 return false;
             }
 
-        }while (len > 0);
+        }while (count > 0);
 
         fclose (fp);
 
-        if (len == PARSE_ERROR)
+        if (count == PARSE_ERROR)
             Console::PrintError ("%s %s\n", *scripts, parser.getLastError ());
-        if (len != EOF)
+        if (count != EOF)
             return false;
 
         scripts++;
@@ -310,12 +359,12 @@ bool cTcpPump::parsePcapFiles (int pcapCnt, char* pcaps[])
 #endif
 
 
-bool cTcpPump::sendPacket (cInterface &ifc, unsigned delay, cEthernetPacket &p)
+bool cTcpPump::sendPacket (cInterface &ifc, const cTimeval &delay, const cEthernetPacket &p)
 {
-    if (delay)
+    if (!delay.isNull())
     {
-        Console::PrintVerbose ("Waiting %d seconds\n", options.delay);
-        tcppump::Sleep (options.delay);
+        Console::PrintVerbose ("Waiting %d seconds\n", delay);
+        tcppump::Sleep (delay.s());
     }
     triedToSendPackets++;
     if(!ifc.sendPacket (p.get(), p.getLength()))
@@ -351,7 +400,7 @@ bool cTcpPump::interactiveMode (cInterface &ifc)
         try
         {
             cEthernetPacket& p = keyBindings.at (key);
-            if (!sendPacket (ifc, options.delay, p))
+            if (!sendPacket (ifc, cTimeval(options.delay), p))
                 return false;
         }
         catch (const std::out_of_range& e)

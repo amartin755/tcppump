@@ -46,7 +46,7 @@ typedef struct
 }appOptions;
 
 class cInterface;
-
+class cTimeval;
 
 class cTcpPump : public cCmdlineApp
 {
@@ -62,11 +62,12 @@ private:
 #if HAVE_PCAP
     bool parsePcapFiles (int cnt, char* pcaps[]);
 #endif
-    bool sendPacket (cInterface &ifc, unsigned delay, cEthernetPacket& p);
+    bool sendPacket (cInterface &ifc, const cTimeval &delay, const cEthernetPacket &p);
     bool interactiveMode (cInterface &ifc);
 
     appOptions options;
     std::list <cEthernetPacket> packets;
+    std::list <cTimeval> delays;
     std::map <int, cEthernetPacket&> keyBindings;
     unsigned triedToSendPackets;
     unsigned sentPackets;
