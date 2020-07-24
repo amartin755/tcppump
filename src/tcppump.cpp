@@ -43,7 +43,6 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
 {
     memset (&options, 0, sizeof(options));
     options.repeat    = 1;
-    options.delay     = 0;
     options.inputmode = "token";
     options.keys      = "1234567890";
 
@@ -82,11 +81,16 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
 #endif
     addCmdLineOption (true, 'l', "loop", "N", "Send all files/packets N times. Default: N = 1", &options.repeat);
     addCmdLineOption (true, 'd', "delay", "SECONDS", "Packet transmission is delayed SECONDS. Default is no delay", &options.delay);
+    addCmdLineOption (true, 'u', "udelay", "MICROSECONDS",
+    		"Packet transmission is delayed MICROSECONDS. Default is no delay. Overwrites parameter -d", &options.udelay);
     addCmdLineOption (true, "interactive", "KEYLIST",
             "Enable interactive mode (EXPERIMENTAL). In interactive mode no packets are sent automatically.\n\t"
             "Instead the packets are bound to keys and only sent when the corresponding key\n\t"
             "is pressed. The default implementation binds the first 10 packets to the keys 1, 2, ... 0."
             , &options.interactive, &options.keys);
+#if HAVE_PCAP
+    addCmdLineOption (true, 0, "write-to-pcap", "OUTFILE", "TODO", &options.outpcap);
+#endif
 }
 
 cTcpPump::~cTcpPump()
@@ -148,6 +152,13 @@ int cTcpPump::execute (int argc, char* argv[])
             return -1;
         }
     }
+    if (options.udelay)
+    	options.activeDelay.setUs (options.udelay);
+    else
+    	options.activeDelay.setS (options.delay);
+
+    cTimeval accuracy = tcppump::SleepInit ();
+    Console::PrintMostVerbose ("System timer accuracy is %u usec. For packet delays below that value we do busy waiting.\n", (unsigned)accuracy.us());
 
     bool ok = options.script ? parseScripts (ownMac, ownIP, argc, argv) :
 #if HAVE_PCAP
@@ -157,10 +168,18 @@ int cTcpPump::execute (int argc, char* argv[])
     if (!ok)
         return -2;
 
+#if HAVE_PCAP
+    if (options.outpcap)	// write output to pcap file?
+    {
+    	if (!outfile.open (options.outpcap, true))
+    		return -3;
+    }
+#endif
+
     if (!options.interactive)
     {
 		assert (packets.size() == delays.size());
-        Console::PrintMoreVerbose ("Sending %d packets, each delayed by %d seconds. Repeating %d times.\n\n", packets.size(), options.delay, options.repeat);
+        Console::PrintMoreVerbose ("Sending %d packets, each delayed by %" PRIu64 " usecs. Repeating %d times.\n\n", packets.size(), options.activeDelay, options.repeat);
         while (options.repeat--)
         {
         	std::list<cTimeval>::const_iterator t = delays.cbegin();
@@ -258,7 +277,7 @@ bool cTcpPump::parseScripts (mac_t ownMac, ipv4_t ownIP, int scriptsCnt, char* s
             return false;
         }
 
-        parser.init (fp, options.delay, ownMac, ownIP);
+        parser.init (fp, options.activeDelay, ownMac, ownIP);
 
         scriptStartTime = currtime;
 
@@ -361,18 +380,30 @@ bool cTcpPump::parsePcapFiles (int pcapCnt, char* pcaps[])
 
 bool cTcpPump::sendPacket (cInterface &ifc, const cTimeval &delay, const cEthernetPacket &p)
 {
-    if (!delay.isNull())
-    {
-        Console::PrintVerbose ("Waiting %d seconds\n", delay);
-        tcppump::Sleep (delay.s());
-    }
-    triedToSendPackets++;
-    if(!ifc.sendPacket (p.get(), p.getLength()))
-    {
-        Console::PrintError ("Could not send packet.\n");
-        return false;
-    }
-    sentPackets++;
+	triedToSendPackets++;
+
+	if (!options.outpcap)
+	{
+		if (!delay.isNull())
+		{
+			Console::PrintVerbose ("Waiting %u seconds\n", (unsigned)delay.s());
+			tcppump::Sleep (delay);
+		}
+		if(!ifc.sendPacket (p.get(), p.getLength()))
+		{
+			Console::PrintError ("Could not send packet.\n");
+			return false;
+		}
+	}
+#if HAVE_PCAP
+	else
+	{
+		if (!outfile.write (delay, p.get(), p.getLength(), false))
+			return false;
+	}
+#endif
+
+	sentPackets++;
     if (!cDissector(p).dissect())
         malformedPackets++;
 
@@ -400,7 +431,7 @@ bool cTcpPump::interactiveMode (cInterface &ifc)
         try
         {
             cEthernetPacket& p = keyBindings.at (key);
-            if (!sendPacket (ifc, cTimeval(options.delay), p))
+            if (!sendPacket (ifc, options.activeDelay, p))
                 return false;
         }
         catch (const std::out_of_range& e)

@@ -152,7 +152,7 @@ uint8_t* cPcapFileIO::read (cTimeval* timestamp, int* len)
 }
 
 
-bool cPcapFileIO::write (cTimeval& timestamp, const uint8_t* frame, int len)
+bool cPcapFileIO::write (const cTimeval& timestamp, const uint8_t* frame, int len, bool absoluteTimestamp)
 {
 	assert (fileHandle);
 	assert (dumper);
@@ -162,7 +162,11 @@ bool cPcapFileIO::write (cTimeval& timestamp, const uint8_t* frame, int len)
 	{
 		struct pcap_pkthdr hdr;
 
-		hdr.ts  = timestamp.timeval();
+		if (absoluteTimestamp)
+			offset.set (timestamp);
+		else
+			offset.add (timestamp);
+		hdr.ts  = offset.timeval();
 		hdr.len = hdr.caplen = len;
 
 		pcap_dump ((u_char*)dumper, &hdr, (u_char*)frame);

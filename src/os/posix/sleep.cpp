@@ -16,15 +16,16 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <unistd.h>
+#include <ctime>
 
+#include "timeval.hpp"
 
 namespace tcppump
 {
 
-void Sleep (unsigned seconds)
+void Sleep (const cTimeval& t)
 {
-	::sleep (seconds);
+	::nanosleep(&(struct timespec){t.us(), t.ns() % 1000000000U}, NULL);
 }
 
 }

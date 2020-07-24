@@ -60,6 +60,10 @@ public:
 
 		return tv;
 	}
+	uint64_t ns() const
+	{
+		return value * 1000;
+	}
 	uint64_t us() const
 	{
 		return value;

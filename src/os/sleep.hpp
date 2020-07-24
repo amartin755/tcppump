@@ -20,9 +20,11 @@
 #ifndef SLEEP_HPP_
 #define SLEEP_HPP_
 
+#include "timeval.hpp"
 
 namespace tcppump
 {
-	extern void Sleep (unsigned seconds);
+	extern cTimeval SleepInit ();
+	extern void Sleep (const cTimeval &t);
 }
 #endif /* SLEEP_HPP_ */

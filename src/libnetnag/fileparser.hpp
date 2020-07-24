@@ -37,7 +37,7 @@ class cFileParser
 public:
 	cFileParser ();
 	~cFileParser ();
-	void init (FILE* fp, int defaultDelay, mac_t ownMac, ipv4_t ownIPv4);
+	void init (FILE* fp, const cTimeval& defaultDelay, mac_t ownMac, ipv4_t ownIPv4);
 	int parse (cTimeval&, bool&, std::list <cEthernetPacket> &packets);
 	const char* getLastError ();
 
@@ -48,7 +48,7 @@ private:
 	char*  instructionBuffer;
 	int    instructionBufferSize;
 
-	int    delay;
+	cTimeval    delay;
 	mac_t  ownMac;
 	ipv4_t ownIPv4;
 	FILE*  fp;

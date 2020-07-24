@@ -17,14 +17,70 @@
  */
 
 #include <windows.h>
+#include <cassert>
 
+#include "timeval.hpp"
 
 namespace tcppump
 {
 
-void Sleep (unsigned seconds)
+static unsigned ticksPerUs;
+static cTimeval accuracy;
+
+static void busyWaitUs (uint64_t us)
 {
-	::Sleep (seconds * 1000);
+	LARGE_INTEGER t1, t2;
+	uint64_t ticks = us * ticksPerUs;
+
+	::QueryPerformanceCounter (&t1);
+
+	do
+	{
+		::QueryPerformanceCounter (&t2);
+	}
+	while ((uint64_t)(t2.QuadPart - t1.QuadPart) < ticks);
+}
+
+cTimeval SleepInit ()
+{
+	LARGE_INTEGER t1, t2, freq;
+	double elapsedTime = 0;
+	const int LOOPS = 50;
+
+	::QueryPerformanceFrequency (&freq);
+	ticksPerUs = unsigned(freq.QuadPart / 1000000.0);
+
+	// mearure the accuracy of Windows' Sleep function
+	for (int n = 0; n < LOOPS; n++)
+	{
+		::QueryPerformanceCounter (&t1);
+		::Sleep(1);
+		::QueryPerformanceCounter (&t2);
+
+		elapsedTime += (double)(t2.QuadPart-t1.QuadPart) / ticksPerUs;
+	}
+	accuracy.setUs (elapsedTime / LOOPS);
+	return accuracy;
+}
+
+void Sleep (const cTimeval& t)
+{
+	assert (!accuracy.isNull());
+
+	if (t < accuracy)
+	{
+		busyWaitUs (t.us ());
+	}
+	else
+	{
+		LARGE_INTEGER t1, t2;
+		::QueryPerformanceCounter (&t1);
+		::Sleep ((DWORD)t.ms());
+		::QueryPerformanceCounter (&t2);
+
+		uint64_t elapsedUs = (uint64_t)(t2.QuadPart - t1.QuadPart) / ticksPerUs;
+		busyWaitUs (t.us () - elapsedUs);
+	}
 }
 
 }

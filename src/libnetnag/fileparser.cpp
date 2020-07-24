@@ -47,7 +47,7 @@ cFileParser::~cFileParser ()
 	free (instructionBuffer);
 }
 
-void cFileParser::init (FILE* fp, int defaultDelay, mac_t ownMac, ipv4_t ownIPv4)
+void cFileParser::init (FILE* fp, const cTimeval& defaultDelay, mac_t ownMac, ipv4_t ownIPv4)
 {
 	assert (fp);
 
@@ -115,7 +115,7 @@ int cFileParser::parse (cTimeval& timestamp, bool& isAbsolute, std::list <cEther
 					{
 						instructionBuffer[offset++] = '\0';
 						isAbsolute = false;
-						timestamp.setUs ((uint64_t)delay);
+						timestamp  = delay;
 						try
 						{
 							return cInstructionParser (ownMac, ownIPv4)

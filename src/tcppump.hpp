@@ -30,6 +30,7 @@
 #include "libnetnag/protocoltypes.hpp"
 #include "libnetnag/cmdlineapp.hpp"
 #include "libnetnag/ethernetpacket.hpp"
+#include "libnetnag/pcapfileio.hpp"
 
 typedef struct
 {
@@ -37,12 +38,15 @@ typedef struct
     int          repeat;
     int          verbosity;
     int          delay;
+    int          udelay;
     int          interactive;
     int          raw;
     int          script;
     int 		 pcap;
     const char*  inputmode; // raw, token, script, pcap
     const char*  keys;      // key bindings for interactive mode
+    const char*  outpcap;
+	cTimeval     activeDelay;
 }appOptions;
 
 class cInterface;
@@ -72,6 +76,9 @@ private:
     unsigned triedToSendPackets;
     unsigned sentPackets;
     unsigned malformedPackets;
+#if HAVE_PCAP
+	cPcapFileIO outfile;
+#endif
 };
 
 #endif /* TCPPUMP_HPP */
