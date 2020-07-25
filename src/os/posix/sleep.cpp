@@ -16,17 +16,90 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <cassert>
 #include <ctime>
+#include <chrono>
+#include <limits>
 
 #include "timeval.hpp"
 
 namespace tcppump
 {
 
+static cTimeval resolution;
+
+
+static void busyWaitUs (uint64_t us)
+{
+	auto t1 = std::chrono::high_resolution_clock::now();
+	auto t2 = t1;
+
+	do
+	{
+		t2 = std::chrono::high_resolution_clock::now();
+	}
+	while ((uint64_t)(std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count()) < us);
+}
+
+cTimeval SleepInit ()
+{
+	const int LOOPS = 1000;
+	struct timespec clockres;
+	double totalTime = 0;
+
+
+	if (::clock_getres (CLOCK_MONOTONIC, &clockres))
+	{
+		// fallback, in case monotonic clock is not supported
+		clockres.tv_sec  = 0;
+		clockres.tv_nsec = 1000;
+	}
+
+	// measure the resolution of nanosleep function
+	for (int n = 0; n < LOOPS; n++)
+	{
+		auto t1 = std::chrono::high_resolution_clock::now();
+		if (::nanosleep(&clockres, NULL))
+			continue;
+		auto t2 = std::chrono::high_resolution_clock::now();
+
+		auto elapsedTime = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1);
+		totalTime += elapsedTime.count ();
+	}
+	totalTime /= 1000;
+	resolution.setUs (totalTime / LOOPS);
+
+	return resolution;
+}
+
 void Sleep (const cTimeval& t)
 {
-	::nanosleep(&(struct timespec){t.us(), t.ns() % 1000000000U}, NULL);
+	assert (!resolution.isNull());
+
+	if (t < resolution)
+	{
+		busyWaitUs (t.us ());
+	}
+	else
+	{
+		cTimeval tRounded(t);
+		tRounded.roundDown(resolution);
+
+		struct timespec sleeptime;
+		sleeptime.tv_sec = tRounded.s();
+		sleeptime.tv_nsec = tRounded.us()*1000;
+
+		auto t1 = std::chrono::high_resolution_clock::now();
+		::nanosleep (&sleeptime, NULL);
+		auto t2 = std::chrono::high_resolution_clock::now();
+		auto elapsedUs = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
+
+		if (t.us () > (uint64_t)elapsedUs.count())
+			busyWaitUs (t.us () - elapsedUs.count());
+	}
+
 }
+
 
 }
 

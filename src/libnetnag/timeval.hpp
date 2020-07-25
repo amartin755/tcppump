@@ -116,6 +116,11 @@ public:
 		sub (cTimeval (tv));
 		return *this;
 	}
+	cTimeval& roundDown (const cTimeval& div)
+	{
+		value = (value / div.value) * div.value;
+		return *this;
+	}
 	bool operator== (const cTimeval &val) const
 	{
 		return value == val.value;
