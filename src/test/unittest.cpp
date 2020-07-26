@@ -29,6 +29,7 @@
 #include "ipv4packet.hpp"
 #include "parameterlist.hpp"
 #include "instructionparser.hpp"
+#include "../sleep.hpp"
 
 
 int main (void)
@@ -36,6 +37,8 @@ int main (void)
 	nn::Console::SetPrintLevel(nn::Console::Debug);
 	try
 	{
+		tcppump::SleepInit ();
+		tcppump::SleepUnitTest ();
 		nn::Converter::unitTest ();
 		cTimeval::unitTest ();
 		cCmdline::unitTest ();

@@ -26,5 +26,9 @@ namespace tcppump
 {
 	extern cTimeval SleepInit ();
 	extern void Sleep (const cTimeval &t);
+
+#ifdef WITH_UNITTESTS
+	void SleepUnitTest (void);
+#endif
 }
 #endif /* SLEEP_HPP_ */

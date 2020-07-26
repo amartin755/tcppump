@@ -19,9 +19,17 @@
 #include <cassert>
 #include <ctime>
 #include <chrono>
-#include <limits>
+#include <thread>
 
 #include "timeval.hpp"
+#include "sleep.hpp"
+
+#ifdef WITH_UNITTESTS
+#include "console.hpp"
+#endif
+
+
+using namespace std;
 
 namespace tcppump
 {
@@ -31,14 +39,17 @@ static cTimeval resolution;
 
 static void busyWaitUs (uint64_t us)
 {
-	auto t1 = std::chrono::high_resolution_clock::now();
+	if (!us)
+		return;
+
+	auto t1 = chrono::high_resolution_clock::now();
 	auto t2 = t1;
 
 	do
 	{
-		t2 = std::chrono::high_resolution_clock::now();
+		t2 = chrono::high_resolution_clock::now();
 	}
-	while ((uint64_t)(std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count()) < us);
+	while ((uint64_t)(chrono::duration_cast<chrono::microseconds>(t2 - t1).count()) < us);
 }
 
 cTimeval SleepInit ()
@@ -58,12 +69,11 @@ cTimeval SleepInit ()
 	// measure the resolution of nanosleep function
 	for (int n = 0; n < LOOPS; n++)
 	{
-		auto t1 = std::chrono::high_resolution_clock::now();
-		if (::nanosleep(&clockres, NULL))
-			continue;
-		auto t2 = std::chrono::high_resolution_clock::now();
+		auto t1 = chrono::high_resolution_clock::now();
+		this_thread::sleep_for(chrono::nanoseconds(1));
+		auto t2 = chrono::high_resolution_clock::now();
 
-		auto elapsedTime = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1);
+		auto elapsedTime = chrono::duration_cast<chrono::nanoseconds>(t2 - t1);
 		totalTime += elapsedTime.count ();
 	}
 	totalTime /= 1000;
@@ -85,14 +95,10 @@ void Sleep (const cTimeval& t)
 		cTimeval tRounded(t);
 		tRounded.roundDown(resolution);
 
-		struct timespec sleeptime;
-		sleeptime.tv_sec = tRounded.s();
-		sleeptime.tv_nsec = tRounded.us()*1000;
-
-		auto t1 = std::chrono::high_resolution_clock::now();
-		::nanosleep (&sleeptime, NULL);
-		auto t2 = std::chrono::high_resolution_clock::now();
-		auto elapsedUs = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
+		auto t1 = chrono::high_resolution_clock::now();
+		this_thread::sleep_for(chrono::microseconds(tRounded.us()));
+		auto t2 = chrono::high_resolution_clock::now();
+		auto elapsedUs = chrono::duration_cast<chrono::microseconds>(t2 - t1);
 
 		if (t.us () > (uint64_t)elapsedUs.count())
 			busyWaitUs (t.us () - elapsedUs.count());
@@ -100,7 +106,44 @@ void Sleep (const cTimeval& t)
 
 }
 
+#ifdef WITH_UNITTESTS
 
+
+
+static double measure (uint64_t us)
+{
+	double deviation;
+	cTimeval t;
+	t.setUs(us);
+
+	auto t1 = chrono::high_resolution_clock::now();
+	Sleep (t);
+	auto t2 = chrono::high_resolution_clock::now();
+	auto elapsedUs = chrono::duration_cast<chrono::microseconds>(t2 - t1);
+
+	deviation = (((double)elapsedUs.count() - (double)us) / (double)us) * 100.0;
+
+	::nn::Console::PrintDebug ("measure %u = %.3f usec (error = %.1f%%)\n", (unsigned) us, (double)elapsedUs.count(), deviation);
+
+	return deviation;
+}
+
+void SleepUnitTest ()
+{
+	measure (0);
+	measure (1);
+	measure (10);
+	measure (50);
+	measure (60);
+	measure (70);
+	measure (100);
+	measure (200);
+	measure (1000);
+	measure (10000);
+	measure (12345);
+}
+
+#endif
 }
 
 
