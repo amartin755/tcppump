@@ -52,11 +52,11 @@ uint32_t cParameter::asInt32 (uint32_t rangeBegin, uint32_t rangeEnd) const
 {
 	assert (rangeEnd >= rangeBegin);
 
-	uint32_t v;
+	unsigned long v;
 
 	char* end;
 	errno = 0;
-	v = (uint32_t)strtoul (value, &end, 0);
+	v = strtoul (value, &end, 0);
 	if (end != (value + valLen))
 	{
 		throw FormatException (exParFormat, value);
@@ -66,7 +66,7 @@ uint32_t cParameter::asInt32 (uint32_t rangeBegin, uint32_t rangeEnd) const
 		throw FormatException (exParRange, value);
 	}
 
-	return v;
+	return (uint32_t)v;
 }
 
 
