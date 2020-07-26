@@ -188,6 +188,7 @@ void cPcapFileIO::printError (const char* err)
 }
 
 #ifdef WITH_UNITTESTS
+#include <cstring>
 #include "converter.hpp"
 void cPcapFileIO::unitTest (const char* file)
 {
