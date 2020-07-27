@@ -20,15 +20,21 @@
 #include <cassert>
 
 #include "timeval.hpp"
+#ifdef WITH_UNITTESTS
+#include "console.hpp"
+#endif
 
 namespace tcppump
 {
 
 static unsigned ticksPerUs;
-static cTimeval accuracy;
+static cTimeval resolution;
 
 static void busyWaitUs (uint64_t us)
 {
+	if (!us)
+		return;
+
 	LARGE_INTEGER t1, t2;
 	uint64_t ticks = us * ticksPerUs;
 
@@ -50,7 +56,7 @@ cTimeval SleepInit ()
 	::QueryPerformanceFrequency (&freq);
 	ticksPerUs = unsigned(freq.QuadPart / 1000000.0);
 
-	// mearure the accuracy of Windows' Sleep function
+	// mearure the resolution of Windows' Sleep function
 	for (int n = 0; n < LOOPS; n++)
 	{
 		::QueryPerformanceCounter (&t1);
@@ -59,29 +65,74 @@ cTimeval SleepInit ()
 
 		elapsedTime += (double)(t2.QuadPart-t1.QuadPart) / ticksPerUs;
 	}
-	accuracy.setUs (elapsedTime / LOOPS);
-	return accuracy;
+	resolution.setUs (elapsedTime / LOOPS);
+	return resolution;
 }
 
 void Sleep (const cTimeval& t)
 {
-	assert (!accuracy.isNull());
+	assert (!resolution.isNull());
 
-	if (t < accuracy)
+	if (t < resolution)
 	{
 		busyWaitUs (t.us ());
 	}
 	else
 	{
+		cTimeval tRounded(t);
+		tRounded.roundDown(resolution);
+
 		LARGE_INTEGER t1, t2;
 		::QueryPerformanceCounter (&t1);
 		::Sleep ((DWORD)t.ms());
 		::QueryPerformanceCounter (&t2);
 
 		uint64_t elapsedUs = (uint64_t)(t2.QuadPart - t1.QuadPart) / ticksPerUs;
-		busyWaitUs (t.us () - elapsedUs);
+		if (t.us () > elapsedUs)
+			busyWaitUs (t.us () - elapsedUs);
 	}
 }
+
+#ifdef WITH_UNITTESTS
+
+
+
+static double measure (uint64_t us)
+{
+	LARGE_INTEGER t1, t2;
+	double deviation;
+	cTimeval t;
+	t.setUs(us);
+
+	::QueryPerformanceCounter (&t1);
+	Sleep (t);
+	::QueryPerformanceCounter (&t2);
+	double elapsedUs = (double)(t2.QuadPart-t1.QuadPart) / ticksPerUs;
+
+	deviation = ((elapsedUs - (double)us) / (double)us) * 100.0;
+
+	::nn::Console::PrintDebug ("measure %u = %.3f usec (error = %.1f%%)\n", (unsigned) us, (double)elapsedUs, deviation);
+
+	return deviation;
+}
+
+void SleepUnitTest ()
+{
+	measure (0);
+	measure (1);
+	measure (10);
+	measure (50);
+	measure (60);
+	measure (70);
+	measure (100);
+	measure (200);
+	measure (1000);
+	measure (10000);
+	measure (12345);
+	measure (20000);
+}
+
+#endif
 
 }
 

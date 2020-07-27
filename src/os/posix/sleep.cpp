@@ -28,6 +28,15 @@
 #include "console.hpp"
 #endif
 
+/*
+ * NOTE: The following is 100% C++11 and therefore portable. In my tests on Windows
+ * the code was not really working, because sleep_for returns immediately when nanoseconds
+ * are used, which makes it impossible to measure the sleep resolution. In addition
+ * high_resolution_clock::now() seems to suspend the caller ~15ms. This makes it impossible
+ * to use it for busy-waiting loops.
+ *
+ * Tested on Win10 (64bit) gcc (x86_64-posix-seh-rev0, Built by MinGW-W64 project) 8.1.0
+ */
 
 using namespace std;
 
@@ -55,18 +64,9 @@ static void busyWaitUs (uint64_t us)
 cTimeval SleepInit ()
 {
 	const int LOOPS = 1000;
-	struct timespec clockres;
 	double totalTime = 0;
 
-
-	if (::clock_getres (CLOCK_MONOTONIC, &clockres))
-	{
-		// fallback, in case monotonic clock is not supported
-		clockres.tv_sec  = 0;
-		clockres.tv_nsec = 1000;
-	}
-
-	// measure the resolution of nanosleep function
+	// measure the resolution of sleep_for function
 	for (int n = 0; n < LOOPS; n++)
 	{
 		auto t1 = chrono::high_resolution_clock::now();
@@ -141,6 +141,7 @@ void SleepUnitTest ()
 	measure (1000);
 	measure (10000);
 	measure (12345);
+	measure (20000);
 }
 
 #endif

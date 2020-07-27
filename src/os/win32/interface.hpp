@@ -25,11 +25,12 @@
 #include <string>
 #include <cstdint>
 #include <cstddef>
+#include <iphlpapi.h>
 
 #include "protocoltypes.hpp"
 
 typedef struct pcap pcap_t;
-typedef struct _IP_ADAPTER_ADDRESSES *PIP_ADAPTER_ADDRESSES;
+//typedef struct _IP_ADAPTER_ADDRESSES *PIP_ADAPTER_ADDRESSES;
 
 class cInterface
 {

@@ -135,7 +135,6 @@ ENDIF (HAVE_PCAP)
 # note: include only source files here, that are used by all targets
 SET (sourcefiles
      dissector.cpp
-     sleep.cpp
      libnetnag/cmdline.cpp
      libnetnag/console.cpp
      libnetnag/converter.cpp
@@ -149,6 +148,7 @@ SET (sourcefiles
      libnetnag/udppacket.cpp
      ${os_specific}/interface.cpp
      ${os_specific}/getch.cpp
+     ${os_specific}/sleep.cpp
      )
 
 
