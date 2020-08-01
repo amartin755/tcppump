@@ -222,7 +222,7 @@ void cPcapFileIO::unitTest (const char* file)
 	typedef struct
 	{
 		uint64_t t;
-		const uint8_t* bin;
+		uint8_t* bin;
 		int binlen;
 		const char* txt;
 	}frame;
@@ -274,6 +274,11 @@ void cPcapFileIO::unitTest (const char* file)
 	assert (!obj.path);
 	assert (!obj.fileError);
 	assert (!obj.eof);
+
+	for (unsigned n = 0; n < sizeof (indata) / sizeof (indata[0]); n++)
+	{
+		free (indata[n].bin);
+	}
 
 	//TODO unit tests
 	// - open known pcap file
