@@ -38,7 +38,7 @@ typedef struct
     int          repeat;
     int          verbosity;
     int          delay;
-    int          udelay;
+    const char*  timeRes;
     int          interactive;
     int          raw;
     int          script;
@@ -46,7 +46,9 @@ typedef struct
     const char*  inputmode; // raw, token, script, pcap
     const char*  keys;      // key bindings for interactive mode
     const char*  outpcap;
-	cTimeval     activeDelay;
+	const char*  myIP;
+	const char*  myMAC;
+	int          dissect;
 }appOptions;
 
 class cInterface;
@@ -79,6 +81,8 @@ private:
 #if HAVE_PCAP
 	cPcapFileIO outfile;
 #endif
+	cTimeval activeDelay;
+	unsigned timeScale; // 1 = us, 1000 = ms, 1000000 = sec
 };
 
 #endif /* TCPPUMP_HPP */

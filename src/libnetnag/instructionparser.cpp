@@ -44,7 +44,7 @@ cInstructionParser::~cInstructionParser ()
 }
 
 // returns the number of added packets to the list 'packets'
-int cInstructionParser::parse (const char* instruction, cTimeval& timestamp, bool& isAbsolute,  std::list <cEthernetPacket> &packets)
+int cInstructionParser::parse (const char* instruction, uint64_t& timestamp, bool& isAbsolute,  std::list <cEthernetPacket> &packets)
 {
     const char* p = instruction;
 
@@ -68,7 +68,7 @@ int cInstructionParser::parse (const char* instruction, cTimeval& timestamp, boo
             isAbsolute = true;
         }
 
-        timestamp.setUs ((uint64_t)strtoull (p, &end, 10));
+        timestamp = ((uint64_t)strtoull (p, &end, 10));
         // check if timestamp is followed by whitespace
         if (!isspace (*end) && *end != '\0')
         {
@@ -77,7 +77,7 @@ int cInstructionParser::parse (const char* instruction, cTimeval& timestamp, boo
         p = end;
     }
 #else
-    timestamp.clear();
+    timestamp  = 0;
     isAbsolute = true;
 #endif
     const char* keyword = NULL;
@@ -513,7 +513,7 @@ void cInstructionParser::unitTest ()
 {
 	nn::Console::PrintDebug("-- " __FILE__ " --\n");
 
-	cTimeval timestamp;
+	uint64_t timestamp;
     bool isAbsolute;
 	mac_t ownMac;
 	ipv4_t ownIPv4;

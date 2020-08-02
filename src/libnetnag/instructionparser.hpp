@@ -26,7 +26,6 @@
 
 #include "protocoltypes.hpp"
 #include "ethernetpacket.hpp"
-#include "timeval.hpp"
 
 class cParameterList;
 class cIPv4Packet;
@@ -36,7 +35,7 @@ class cInstructionParser
 public:
     cInstructionParser (mac_t ownMac, ipv4_t ownIPv4);
     ~cInstructionParser ();
-    int parse (const char* instruction, cTimeval& timestamp, bool& isAbsolute, std::list <cEthernetPacket> &packets);
+    int parse (const char* instruction, uint64_t& timestamp, bool& isAbsolute, std::list <cEthernetPacket> &packets);
 
 #ifdef WITH_UNITTESTS
         static void unitTest ();

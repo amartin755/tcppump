@@ -95,6 +95,7 @@ IF (WIN32)
     # min. supported version is Windows 7
     ADD_DEFINITIONS (-D_WIN32_WINNT=0x0601)
     ADD_DEFINITIONS (-DWINVER=0x0601)
+    ADD_DEFINITIONS (-DHAVE_WINDOWS)
 ENDIF (WIN32)
 add_definitions(-DWITH_TIMESTAMP)
 

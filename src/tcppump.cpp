@@ -28,6 +28,8 @@
 #include "getch.hpp"
 #include "interface.hpp"
 #include "dissector.hpp"
+#include "libnetnag/ipaddress.hpp"
+#include "libnetnag/macaddress.hpp"
 #include "libnetnag/converter.hpp"
 #include "libnetnag/instructionparser.hpp"
 #include "libnetnag/fileparser.hpp"
@@ -45,18 +47,27 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
     options.repeat    = 1;
     options.inputmode = "token";
     options.keys      = "1234567890";
+    options.timeRes   = "u";
 
     triedToSendPackets = 0;
     sentPackets        = 0;
     malformedPackets   = 0;
 
+    timeScale = 1;
+
     addCmdLineOption (false, 'i', "interface", "IFC",
-            "Name of the network interface via which the packets are sent. On Linux this can be one of\n\t"
-            "the interfaces that are printed by \"ip link\" or \"ifconfig\", for example \"eth0\".\n\t"
-            "On Windows it can either be the AdapterName (GUID) like \"{3F4A136A-2ED5-4226-9CB2-7A511E93CD48}\", \n\t"
+            "Name of the network interface via which the packets are sent."
+#if HAVE_WINDOWS
+            "\n\t"
+    		"It can either be the AdapterName (GUID) like \"{3F4A136A-2ED5-4226-9CB2-7A511E93CD48}\", \n\t"
             "or the so-called FriendlyName, which is changeable by the user.\n\t"
             "For example \"WiFi\" or \"Local Area Connection 1\"."
+#endif
             , &options.ifc);
+    addCmdLineOption (true, 0, "myip4", "IPV4",
+    		"Use IPV4 as source IPv4 address instead of the network adapters ip address", &options.myIP);
+    addCmdLineOption (true, 0, "mymac", "MAC",
+    		"Use MAC as source MAC address instead of the network adapters MAC address", &options.myMAC);
     addCmdLineOption (true, 'v', "verbose",
             "When parsing and printing, produce verbose output. This option can be supplied multiple times\n\t"
     		"(max. 4 times, i.e. -vvvv) for even more debug output. "
@@ -80,9 +91,11 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
     addCmdLineOption (true, 'p', "pcap", "Short for --input=pcap", &options.pcap);
 #endif
     addCmdLineOption (true, 'l', "loop", "N", "Send all files/packets N times. Default: N = 1", &options.repeat);
-    addCmdLineOption (true, 'd', "delay", "SECONDS", "Packet transmission is delayed SECONDS. Default is no delay", &options.delay);
-    addCmdLineOption (true, 'u', "udelay", "MICROSECONDS",
-    		"Packet transmission is delayed MICROSECONDS. Default is no delay. Overwrites parameter -d", &options.udelay);
+    addCmdLineOption (true, 'd', "delay", "TIME", "Packet transmission is delayed TIME."
+    		"Resolution depends on -t parameter. Default is microseconds.", &options.delay);
+    addCmdLineOption (true, 't', "resolution", "RESOLUTION",
+    		"Resolution of transmission time. This affects -d parameter as well as all timestamps in script files\n\t"
+    		"Possible values are 'u'= microseconds (default), 'm'= milliseconds and 's'= seconds" , &options.timeRes);
     addCmdLineOption (true, "interactive", "KEYLIST",
             "Enable interactive mode (EXPERIMENTAL). In interactive mode no packets are sent automatically.\n\t"
             "Instead the packets are bound to keys and only sent when the corresponding key\n\t"
@@ -91,6 +104,8 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
 #if HAVE_PCAP
     addCmdLineOption (true, 0, "write-to-pcap", "OUTFILE", "TODO", &options.outpcap);
 #endif
+    addCmdLineOption (true, 0, "dissect",
+    		"Prints the dissected content of sent packets as known from tcpdump.", &options.dissect);
 }
 
 cTcpPump::~cTcpPump()
@@ -100,6 +115,9 @@ cTcpPump::~cTcpPump()
 
 int cTcpPump::execute (int argc, char* argv[])
 {
+    mac_t ownMac; // TODO use cMacAddress instead
+    ipv4_t ownIP; // TODO use cIpAddress instead
+
     switch (options.verbosity)
     {
     case 1:
@@ -116,23 +134,58 @@ int cTcpPump::execute (int argc, char* argv[])
         break;
     }
 
+    switch (options.timeRes[0])
+    {
+    case 'u':
+    	timeScale = 1;
+    	break;
+    case 'm':
+    	timeScale = 1000;
+    	break;
+    case 's':
+    	timeScale = 1000000;
+    	break;
+    default:
+        Console::PrintError ("Unsupported time resolution '%c'\n", options.timeRes[0]);
+        return -2;
+    }
+
     if (!argc)
     {
         Console::PrintError (options.script ? "no script files provided\n": "no packet data provided\n");
         return -2;
     }
 
+    if (options.myIP)
+    {
+    	cIpAddress ip;
+    	if (!ip.set (options.myIP))
+    	{
+            Console::PrintError ("Wrong IPv4 address format %s\n", options.myIP);
+            return -1;
+    	}
+    	ownIP = ip.getRaw();
+    }
+    if (options.myMAC)
+    {
+    	cMacAddress mac;
+    	if (!mac.set (options.myMAC))
+    	{
+            Console::PrintError ("Wrong MAC address format %s\n", options.myMAC);
+            return -1;
+    	}
+    	ownMac = mac.getRaw();
+    }
+
     cInterface ifc (options.ifc);
     if (!ifc.open())
         return -1;
-    mac_t ownMac;
-    if (!ifc.getMAC(&ownMac))
+    if (!options.myMAC && !ifc.getMAC(&ownMac))
     {
         Console::PrintError ("Could not determine mac address of interface.\n");
         return -1;
     }
-    ipv4_t ownIP;
-    if (!ifc.getIPv4(&ownIP))
+    if (!options.myIP && !ifc.getIPv4(&ownIP))
     {
         Console::PrintError ("Could not determine IPv4 address of interface.\n");
         return -1;
@@ -152,10 +205,8 @@ int cTcpPump::execute (int argc, char* argv[])
             return -1;
         }
     }
-    if (options.udelay)
-    	options.activeDelay.setUs (options.udelay);
-    else
-    	options.activeDelay.setS (options.delay);
+
+    activeDelay.setUs(options.delay * timeScale);
 
     cTimeval accuracy = tcppump::SleepInit ();
     Console::PrintMostVerbose ("System timer accuracy is %u usec. For packet delays below that value we do busy waiting.\n", (unsigned)accuracy.us());
@@ -179,7 +230,7 @@ int cTcpPump::execute (int argc, char* argv[])
     if (!options.interactive)
     {
 		assert (packets.size() == delays.size());
-        Console::PrintMoreVerbose ("Sending %d packets, each delayed by %" PRIu64 " usecs. Repeating %d times.\n\n", packets.size(), options.activeDelay, options.repeat);
+        Console::PrintMoreVerbose ("Sending %d packets, each delayed by %" PRIu64 " usecs. Repeating %d times.\n\n", packets.size(), activeDelay, options.repeat);
         while (options.repeat--)
         {
         	std::list<cTimeval>::const_iterator t = delays.cbegin();
@@ -204,9 +255,10 @@ int cTcpPump::execute (int argc, char* argv[])
 
 bool cTcpPump::parsePackets (mac_t ownMac, ipv4_t ownIP, int argc, char* argv[])
 {
+	uint64_t t = 0;
     cTimeval timestamp, currtime;
     bool isAbsolute;
-
+//FIXME default delay seems to be ignored
     for (int n = 0; n < argc; n++)
     {
     	Console::PrintDebug ("Parsing %d packets (format='%s') ...\n", argc, options.raw ? "raw" : "tokens");
@@ -214,7 +266,8 @@ bool cTcpPump::parsePackets (mac_t ownMac, ipv4_t ownIP, int argc, char* argv[])
         {
             if (!options.raw)
             {
-                int count = cInstructionParser (ownMac, ownIP).parse (argv[n], timestamp, isAbsolute, packets);
+                int count = cInstructionParser (ownMac, ownIP).parse (argv[n], t, isAbsolute, packets);
+                timestamp.setUs(t * timeScale);
 
                 for (int n = 0; n < count; n++)
                 {
@@ -229,6 +282,7 @@ bool cTcpPump::parsePackets (mac_t ownMac, ipv4_t ownIP, int argc, char* argv[])
                 			assert ("fixme" == 0);
                 		else
                 		{
+                			cTimeval delta(timestamp);
                 			delays.push_back (timestamp.sub (currtime));
                 			currtime.set (timestamp);
                 		}
@@ -259,6 +313,7 @@ bool cTcpPump::parsePackets (mac_t ownMac, ipv4_t ownIP, int argc, char* argv[])
 
 bool cTcpPump::parseScripts (mac_t ownMac, ipv4_t ownIP, int scriptsCnt, char* scripts[])
 {
+	uint64_t t = 0;
     FILE *fp;
     int count;
     cFileParser parser;
@@ -277,7 +332,7 @@ bool cTcpPump::parseScripts (mac_t ownMac, ipv4_t ownIP, int scriptsCnt, char* s
             return false;
         }
 
-        parser.init (fp, options.activeDelay, ownMac, ownIP);
+        parser.init (fp, activeDelay.us()/timeScale, ownMac, ownIP);
 
         scriptStartTime = currtime;
 
@@ -286,7 +341,8 @@ bool cTcpPump::parseScripts (mac_t ownMac, ipv4_t ownIP, int scriptsCnt, char* s
             // allocate a new packet
             try
             {
-                count = parser.parse (timestamp, isAbsolute, packets);
+                count = parser.parse (t, isAbsolute, packets);
+                timestamp.setUs(t * timeScale);
 
                 for (int n = 0; n < count; n++)
                 {
@@ -303,7 +359,8 @@ bool cTcpPump::parseScripts (mac_t ownMac, ipv4_t ownIP, int scriptsCnt, char* s
                 			assert ("fixme" == 0);
                 		else
                 		{
-                			delays.push_back (timestamp.sub (currtime));
+                			cTimeval delta(timestamp);
+                			delays.push_back (delta.sub (currtime));
                 			currtime.set (timestamp);
                 		}
                 	}
@@ -404,7 +461,7 @@ bool cTcpPump::sendPacket (cInterface &ifc, const cTimeval &delay, const cEthern
 #endif
 
 	sentPackets++;
-    if (!cDissector(p).dissect())
+    if (options.dissect && !cDissector(p).dissect())
         malformedPackets++;
 
     return true;
@@ -431,7 +488,7 @@ bool cTcpPump::interactiveMode (cInterface &ifc)
         try
         {
             cEthernetPacket& p = keyBindings.at (key);
-            if (!sendPacket (ifc, options.activeDelay, p))
+            if (!sendPacket (ifc, activeDelay, p))
                 return false;
         }
         catch (const std::out_of_range& e)

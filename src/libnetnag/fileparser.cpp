@@ -47,7 +47,7 @@ cFileParser::~cFileParser ()
 	free (instructionBuffer);
 }
 
-void cFileParser::init (FILE* fp, const cTimeval& defaultDelay, mac_t ownMac, ipv4_t ownIPv4)
+void cFileParser::init (FILE* fp, uint64_t defaultDelay, mac_t ownMac, ipv4_t ownIPv4)
 {
 	assert (fp);
 
@@ -65,7 +65,7 @@ void cFileParser::init (FILE* fp, const cTimeval& defaultDelay, mac_t ownMac, ip
  *  Each call delivers exactly one parsed instruction, which can result in one or more ethernet packets.
  *  It returns the number of packets that where added to the list or EOF/PARSE_ERROR.
  */
-int cFileParser::parse (cTimeval& timestamp, bool& isAbsolute, std::list <cEthernetPacket> &packets)
+int cFileParser::parse (uint64_t& timestamp, bool& isAbsolute, std::list <cEthernetPacket> &packets)
 {
 	int offset = 0;
 	int c;

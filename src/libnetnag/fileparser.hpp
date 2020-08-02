@@ -26,7 +26,6 @@
 
 #include "protocoltypes.hpp"
 #include "ethernetpacket.hpp"
-#include "timeval.hpp"
 
 const int PARSE_ERROR = -100;
 
@@ -37,8 +36,8 @@ class cFileParser
 public:
 	cFileParser ();
 	~cFileParser ();
-	void init (FILE* fp, const cTimeval& defaultDelay, mac_t ownMac, ipv4_t ownIPv4);
-	int parse (cTimeval&, bool&, std::list <cEthernetPacket> &packets);
+	void init (FILE* fp, uint64_t defaultDelay, mac_t ownMac, ipv4_t ownIPv4);
+	int parse (uint64_t&, bool&, std::list <cEthernetPacket> &packets);
 	const char* getLastError ();
 
 
@@ -48,10 +47,10 @@ private:
 	char*  instructionBuffer;
 	int    instructionBufferSize;
 
-	cTimeval    delay;
-	mac_t  ownMac;
-	ipv4_t ownIPv4;
-	FILE*  fp;
+	uint64_t delay;
+	mac_t    ownMac;
+	ipv4_t   ownIPv4;
+	FILE*    fp;
 
 	char lastError[1024];
 	unsigned lineNbr;

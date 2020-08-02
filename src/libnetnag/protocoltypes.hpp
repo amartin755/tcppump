@@ -19,6 +19,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+// FIXME get rid of this code! ipv4_t and mac_t must die
 
 #ifndef PROTOCOLTYPES_HPP_
 #define PROTOCOLTYPES_HPP_
