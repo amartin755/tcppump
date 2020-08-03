@@ -27,6 +27,7 @@
 # include <arpa/inet.h> /* that's the posix way */
 #elif HAVE_WS2
 # include <winsock2.h> /* on windows those symbols are defined here */
+# include <ws2tcpip.h>
 #else
 # error "no suitable header for htonl and friends found"
 #endif

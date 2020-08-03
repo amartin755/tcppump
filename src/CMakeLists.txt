@@ -60,6 +60,9 @@ IF (WIN32)
     CHECK_INCLUDE_FILES("winsock2.h;iphlpapi.h;winerror.h" HAVE_WS2)
     # getch() is needed for unbuffered stdin on Windows
     CHECK_SYMBOL_EXISTS (getch conio.h HAVE_GETCH)
+    # check for inet_pton() inet_ntop(), they do not exist on older mingw
+    CHECK_SYMBOL_EXISTS (inet_pton ws2tcpip.h HAVE_PTON)
+    CHECK_SYMBOL_EXISTS (inet_ntop ws2tcpip.h HAVE_NTOP)
 
     IF (NOT HAVE_GETCH)
         MESSAGE (FATAL_ERROR "Function getch() not found!")
@@ -70,6 +73,9 @@ IF (WIN32)
     IF (NOT HAVE_PCAP)
         MESSAGE (FATAL_ERROR "Library wpcap not found!")
     ENDIF (NOT HAVE_PCAP)
+ELSE (WIN32)
+    CHECK_SYMBOL_EXISTS (inet_pton arpa/inet.h HAVE_PTON)
+    CHECK_SYMBOL_EXISTS (inet_ntop arpa/inet.h HAVE_NTOP)
 ENDIF (WIN32)
 
 CHECK_INCLUDE_FILES("sys/time.h" HAVE_SYSTIME_H)
@@ -79,6 +85,7 @@ CHECK_INCLUDE_FILES("arpa/inet.h" HAVE_ARPAINET_H)
 # definitions
 ###############################################################################
 ADD_DEFINITIONS (-DAPP_VERSION="${PROJECT_VERSION}")
+ADD_DEFINITIONS(-DWITH_TIMESTAMP)
 IF (HAVE_WS2)
     ADD_DEFINITIONS (-DHAVE_WS2)
 ENDIF (HAVE_WS2)
@@ -97,7 +104,12 @@ IF (WIN32)
     ADD_DEFINITIONS (-DWINVER=0x0601)
     ADD_DEFINITIONS (-DHAVE_WINDOWS)
 ENDIF (WIN32)
-add_definitions(-DWITH_TIMESTAMP)
+IF (HAVE_PTON)
+    ADD_DEFINITIONS (-DHAVE_PTON)
+ENDIF (HAVE_PTON)
+IF (HAVE_NTOP)
+    ADD_DEFINITIONS (-DHAVE_NTOP)
+ENDIF (HAVE_NTOP)
 
 
 # warning level

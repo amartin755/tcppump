@@ -2,7 +2,7 @@
  * TCPPUMP <https://github.com/amartin755/tcppump>
  * Copyright (C) 2012-2020 Andreas Martin (netnag@mailbox.org)
  *
- * tcppump.hpp
+ * ipaddress.hpp
  *
  *
  * This program is free software: you can redistribute it and/or modify
@@ -59,7 +59,11 @@ public:
 	}
 	bool set (const char* ip)
 	{
+#if HAVE_PTON
 		return !!inet_pton(AF_INET, ip, &ipv4);
+#else
+		return (ipv4.s_addr = inet_addr (ip)) != INADDR_NONE;
+#endif
 	}
 	struct in_addr get ()
 	{
@@ -67,15 +71,18 @@ public:
 	}
 	bool get (char* s, size_t len)
 	{
+#if HAVE_NTOP
 		return !!inet_ntop(AF_INET, &ipv4, s, len);
+#else
+		strncpy (s, inet_ntoa(ipv4), len);
+		return true;
+#endif
 	}
 	bool get (std::string &s)
 	{
 		char ipAsString[INET_ADDRSTRLEN];
-		bool ret = !!inet_ntop(AF_INET, &ipv4, ipAsString, sizeof (ipAsString));
-
+		bool ret = get (ipAsString, sizeof (ipAsString));
 		s = ipAsString;
-
 		return ret;
 	}
 	// FIXME remove this, as soon as ipv4_t is removed

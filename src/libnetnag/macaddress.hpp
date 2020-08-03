@@ -2,7 +2,7 @@
  * TCPPUMP <https://github.com/amartin755/tcppump>
  * Copyright (C) 2012-2020 Andreas Martin (netnag@mailbox.org)
  *
- * tcppump.hpp
+ * macaddress.hpp
  *
  *
  * This program is free software: you can redistribute it and/or modify
