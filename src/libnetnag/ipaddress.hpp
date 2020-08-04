@@ -103,6 +103,22 @@ public:
 	{
 		return ipv4.s_addr == b.ipv4.s_addr;
 	}
+	bool operator !=(const cIpAddress &b) const
+	{
+		return ipv4.s_addr != b.ipv4.s_addr;
+	}
+
+#ifdef WITH_UNITTESTS
+	static void unitTest ()
+	{
+		assert (cIpAddress() == cIpAddress("0.0.0.0"));
+		assert (cIpAddress() != cIpAddress("0.0.0.1"));
+		const char x[] = "1.2.3.4dfadfasd";
+		cIpAddress a; a.set(x, 7);
+		assert (cIpAddress("1.2.3.4") == a);
+	}
+#endif
+
 
 private:
 	struct in_addr ipv4;

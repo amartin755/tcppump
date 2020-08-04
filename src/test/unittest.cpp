@@ -30,6 +30,7 @@
 #include "parameterlist.hpp"
 #include "instructionparser.hpp"
 #include "../sleep.hpp"
+#include "ipaddress.hpp"
 
 
 int main (void)
@@ -39,6 +40,7 @@ int main (void)
 	{
 		tcppump::SleepInit ();
 		tcppump::SleepUnitTest ();
+		cIpAddress::unitTest();
 		nn::Converter::unitTest ();
 		cTimeval::unitTest ();
 		cCmdline::unitTest ();
