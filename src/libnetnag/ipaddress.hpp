@@ -31,6 +31,9 @@
 class cIpAddress
 {
 public:
+
+    void operator=(const cIpAddress&) = delete;       // no copy-assignment operator
+
 	cIpAddress ()
 	{
 		ipv4.s_addr = 0;
@@ -90,6 +93,15 @@ public:
 		bool ret = get (ipAsString, sizeof (ipAsString));
 		s = ipAsString;
 		return ret;
+	}
+
+	bool isNull (void) const
+	{
+		return !ipv4.s_addr;
+	}
+	bool operator ==(const cIpAddress &b) const
+	{
+		return ipv4.s_addr == b.ipv4.s_addr;
 	}
 
 private:

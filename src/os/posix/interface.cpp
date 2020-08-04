@@ -42,7 +42,6 @@ cInterface::cInterface(const char* ifname)
     ifcHandle  = -1;
     ifIndex    = 0;
     myMac.set (0);
-    myIP = 0;
 }
 
 cInterface::~cInterface()
@@ -69,7 +68,7 @@ bool cInterface::open ()
         ifIndex = 0;
     }
     getMAC (&myMac);
-    getIPv4 (&myIP);
+    getIPv4 (myIP);
 
     nn::Console::PrintDebug ("Successfully openend %s mac=%02x:%02x:%02x:%02x:%02x:%02x\n",
         name.c_str(), myMac.a, myMac.b, myMac.c, myMac.d, myMac.e, myMac.f);
@@ -150,9 +149,9 @@ bool cInterface::getMAC (mac_t *mac)
     return true;
 }
 
-bool cInterface::getIPv4 (ipv4_t *ip)
+bool cInterface::getIPv4 (cIpAddress &ip)
 {
-    if (!myIP)
+    if (myIP.isNull())
     {
         struct ifreq ifr;
         int s;
@@ -175,13 +174,13 @@ bool cInterface::getIPv4 (ipv4_t *ip)
             return false;
            }
 
-        *ip = (ipv4_t)((struct sockaddr_in *)&(ifr.ifr_addr))->sin_addr.s_addr;
+        ip.set(((struct sockaddr_in *)&(ifr.ifr_addr))->sin_addr);
 
         ::close (s);
     }
     else
     {
-        *ip = myIP;
+        ip.set(myIP);
     }
     return true;
 }

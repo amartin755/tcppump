@@ -35,7 +35,7 @@
 cInstructionParser::cInstructionParser (mac_t ownMac, const cIpAddress& ownIPv4)
 {
     this->ownMac  = ownMac;
-    this->ownIPv4 = ownIPv4;
+    this->ownIPv4.set(ownIPv4);
 }
 
 
@@ -516,11 +516,11 @@ void cInstructionParser::unitTest ()
 	uint64_t timestamp;
     bool isAbsolute;
 	mac_t ownMac;
-	ipv4_t ownIPv4;
+	cIpAddress ownIPv4;
     std::list <cEthernetPacket> packets;
 
 	ownMac.set (0xba);
-	ownIPv4 = 0x0a0a0a0a;
+	ownIPv4.set("10.10.10.10");
 
 	for (unsigned n = 0; n < sizeof(tests)/sizeof(tests[0]); n++)
 	{

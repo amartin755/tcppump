@@ -35,11 +35,11 @@ cFileParser::cFileParser ()
 	instructionBuffer     = NULL;
 
 	ownMac.set (0);
-	ownIPv4 = 0;
 
 	fp           = NULL;
 	lineNbr      = 1;
 	lastError[0] = '\0';
+	delay        = 0;
 }
 
 cFileParser::~cFileParser ()
@@ -58,7 +58,7 @@ void cFileParser::init (FILE* fp, uint64_t defaultDelay, mac_t ownMac, const cIp
 
 	delay         = defaultDelay;
 	this->ownMac  = ownMac;
-	this->ownIPv4 = ownIPv4;
+	this->ownIPv4.set (ownIPv4);
 }
 
 /**

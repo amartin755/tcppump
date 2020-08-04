@@ -210,7 +210,7 @@ const cParameter* cParameterList::findParameter (const cParameter* startAfter, c
 	}
 	else
 	{
-		defaultParameter.ip = optionalValue;
+		defaultParameter.ip.set(optionalValue);
 		return &defaultParameter;
 	}
 }
@@ -228,7 +228,7 @@ const cParameter* cParameterList::findParameter (const char* parameter, const ma
 }
 
 
-const cParameter* findParameter (const char* parameter, const cIpAddress& optionalValue)
+const cParameter* cParameterList::findParameter (const char* parameter, const cIpAddress& optionalValue)
 {
 	return findParameter (nullptr, nullptr, parameter, optionalValue);
 }
@@ -529,7 +529,7 @@ void cParameterList::unitTest ()
 		{
 			assert (obj.isValid ());
 			assert (obj.findParameter("long")->asInt32()  == (uint32_t)100);
-			assert (obj.findParameter("ipv4")->asIPv4()  == (ipv4_t)0x04030201);
+			assert (obj.findParameter("ipv4")->asIPv4()  == cIpAddress("1.2.3.4"));
 			mac_t mac2 = {0x12,0x34,0x56,0x78,0x9a,0xbc};
 			mac_t mac = obj.findParameter("mac")->asMac();
 			assert (!memcmp (&mac, &mac2, sizeof (mac2)));

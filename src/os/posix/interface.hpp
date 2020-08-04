@@ -27,6 +27,7 @@
 #include <cstddef>
 
 #include "protocoltypes.hpp"
+#include "ipaddress.hpp"
 
 
 class cInterface
@@ -38,7 +39,7 @@ public:
     bool close ();
     bool sendPacket (const uint8_t* payload, size_t length) const;
     bool getMAC (mac_t*);
-    bool getIPv4 (ipv4_t*);
+    bool getIPv4 (cIpAddress&);
 
 private:
 
@@ -46,7 +47,7 @@ private:
     int ifcHandle;
     int ifIndex;
     mac_t myMac;
-    ipv4_t myIP;
+    cIpAddress myIP;
 };
 
 #endif /* INTERFACE_H_ */
