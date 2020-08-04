@@ -23,6 +23,7 @@
 #include <cstdint>
 
 #include "ethernetpacket.hpp"
+#include "ipaddress.hpp"
 
 #pragma pack(1)
 typedef struct
@@ -35,8 +36,8 @@ typedef struct
     uint8_t  ttl;
     uint8_t  protocol;
     uint16_t chksum;
-    ipv4_t   srcIp;
-    ipv4_t   dstIp;
+    struct in_addr srcIp;
+    struct in_addr dstIp;
 
     void setVersion (int version)
     {
@@ -80,8 +81,8 @@ public:
     void setECN (int ecn);
     void setTimeToLive (uint8_t ttl);
     void setDontFragment (bool df);
-    void setSource (ipv4_t ip);
-    void setDestination (ipv4_t ip);
+    void setSource (const cIpAddress& ip);
+    void setDestination (const cIpAddress& ip);
     void setPayload (uint8_t protocol, const char* payload, size_t len);
     void updateHeaderChecksum ();
 

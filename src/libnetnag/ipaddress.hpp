@@ -22,12 +22,10 @@
 #ifndef IPADDRESS_HPP
 #define IPADDRESS_HPP
 
-#include <cstdint>
 #include <cstring>
 #include <string>
 
 #include "inet.h"
-#include "protocoltypes.hpp"
 
 
 class cIpAddress
@@ -35,9 +33,9 @@ class cIpAddress
 public:
 	cIpAddress ()
 	{
-		memset (&ipv4, 0, sizeof (ipv4));
+		ipv4.s_addr = 0;
 	}
-	cIpAddress (cIpAddress& i)
+	cIpAddress (const cIpAddress& i)
 	{
 		set (i);
 	}
@@ -49,13 +47,21 @@ public:
 	{
 		set (ip);
 	}
-	void set (cIpAddress& i)
+	void set (const cIpAddress& i)
 	{
 		ipv4 = i.ipv4;
 	}
 	void set (const struct in_addr &addr)
 	{
 		ipv4 = addr;
+	}
+	bool set (const char* ip, size_t len)
+	{
+		char ipAsString[INET_ADDRSTRLEN];
+		if (len > sizeof(ipAsString))
+			return false;
+		::strncpy (ipAsString, ip, len);
+		return set (ipAsString);
 	}
 	bool set (const char* ip)
 	{
@@ -65,32 +71,25 @@ public:
 		return (ipv4.s_addr = inet_addr (ip)) != INADDR_NONE;
 #endif
 	}
-	struct in_addr get ()
+	struct in_addr get () const
 	{
 		return ipv4;
 	}
-	bool get (char* s, size_t len)
+	bool get (char* s, size_t len) const
 	{
 #if HAVE_NTOP
 		return !!inet_ntop(AF_INET, &ipv4, s, len);
 #else
-		strncpy (s, inet_ntoa(ipv4), len);
+		::strncpy (s, inet_ntoa(ipv4), len);
 		return true;
 #endif
 	}
-	bool get (std::string &s)
+	bool get (std::string &s) const
 	{
 		char ipAsString[INET_ADDRSTRLEN];
 		bool ret = get (ipAsString, sizeof (ipAsString));
 		s = ipAsString;
 		return ret;
-	}
-	// FIXME remove this, as soon as ipv4_t is removed
-	ipv4_t getRaw ()
-	{
-		ipv4_t i;
-		memcpy (&i, &ipv4, sizeof (i));
-		return i;
 	}
 
 private:

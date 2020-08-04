@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "protocoltypes.hpp"
+#include "ipaddress.hpp"
 #include "formatexception.hpp"
 
 
@@ -36,7 +37,7 @@ public:
 	virtual uint8_t     asInt8  (uint8_t  rangeBegin = 0, uint8_t rangeEnd = 0xff) const;
 	virtual mac_t       asMac   () const;
 	virtual const char* asRaw   (size_t& len) const;
-	virtual ipv4_t      asIPv4  () const;
+	virtual cIpAddress  asIPv4  () const;
 
 private:
 	const char* parameter;
@@ -63,11 +64,12 @@ public:
 		assert ("no raw access for optional parameters" == 0);
 		return NULL;
 	}
-	virtual ipv4_t      asIPv4  () const {return (uint32_t)int32;}
+	virtual cIpAddress  asIPv4  () const {return ip;}
 
 private:
-	uint32_t int32;
-	mac_t    mac;
+	uint32_t   int32;
+	mac_t      mac;
+	cIpAddress ip;
 };
 
 
@@ -80,9 +82,11 @@ public:
 	const cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, bool isOptional = false);
 	const cParameter* findParameter (const char* parameter, bool isOptional = false);
 	const cParameter* findParameter (const char* parameter, uint32_t optionalValue);
-	const cParameter* findParameter (const char* parameter, mac_t& optionalValue);
+	const cParameter* findParameter (const char* parameter, const mac_t& optionalValue);
+	const cParameter* findParameter (const char* parameter, const cIpAddress& optionalValue);
 	const cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, uint32_t optionalValue);
-	const cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, mac_t& optionalValue);
+	const cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, const mac_t& optionalValue);
+	const cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, const cIpAddress& optionalValue);
 
 #ifdef WITH_UNITTESTS
 	static void unitTest ();

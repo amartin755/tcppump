@@ -32,7 +32,7 @@
 #include "udppacket.hpp"
 
 
-cInstructionParser::cInstructionParser (mac_t ownMac, ipv4_t ownIPv4)
+cInstructionParser::cInstructionParser (mac_t ownMac, const cIpAddress& ownIPv4)
 {
     this->ownMac  = ownMac;
     this->ownIPv4 = ownIPv4;

@@ -30,15 +30,15 @@ cArpPacket::cArpPacket ()
 }
 
 
-void cArpPacket::probe (mac_t srcMac, ipv4_t ip)
+void cArpPacket::probe (mac_t srcMac, const cIpAddress& ip)
 {
 	mac_t dstMac;
 	dstMac.set (0);
-	setAll (1, srcMac, (ipv4_t)0, dstMac, ip);
+	setAll (1, srcMac, cIpAddress(), dstMac, ip);
 }
 
 
-void cArpPacket::announce (mac_t srcMac, ipv4_t ip)
+void cArpPacket::announce (mac_t srcMac, const cIpAddress& ip)
 {
 	mac_t dstMac;
 	dstMac.set (0);
@@ -46,18 +46,18 @@ void cArpPacket::announce (mac_t srcMac, ipv4_t ip)
 }
 
 
-void cArpPacket::setAll (uint16_t opcode, mac_t srcMac, ipv4_t srcIp, mac_t dstMac, ipv4_t dstIp)
+void cArpPacket::setAll (uint16_t opcode, mac_t srcMac, const cIpAddress& srcIp, mac_t dstMac, const cIpAddress& dstIp)
 {
 	arp_t a;
 	a.hwType       = htons (1);
 	a.protType     = htons (ETHERTYPE_IPV4);
 	a.hwAddrSize   = (uint8_t)sizeof (mac_t);
-	a.protAddrSize = (uint8_t)sizeof (ipv4_t);
+	a.protAddrSize = (uint8_t)sizeof (a.dstIp);
 	a.opcode       = htons (opcode);
 	a.srcMac       = srcMac;
-	a.srcIp        = srcIp;
+	a.srcIp        = srcIp.get ();
 	a.dstMac       = dstMac;
-	a.dstIp        = dstIp;
+	a.dstIp        = dstIp.get ();
 
 	if (dstMac.isNull())
 		dstMac.set (0xffu);

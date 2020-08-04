@@ -104,10 +104,10 @@ const char* cParameter::asRaw (size_t& len) const
 }
 
 
-ipv4_t cParameter::asIPv4 () const
+cIpAddress cParameter::asIPv4 () const
 {
-	ipv4_t ip;
-	if (nn::Converter::stringToIpv4 (value, ip, valLen))
+	cIpAddress ip;
+	if (ip.set(value, valLen))
 	{
 		return ip;
 	}
@@ -147,7 +147,7 @@ const cParameter* cParameterList::findParameter (const cParameter* startAfter, c
 
 	for (; n < list.size (); n++)
 	{
-		cParameter &par = list.at (n);
+		const cParameter &par = list.at (n);
 
 		if (len2 == par.parLen && !strncmp (stopAt, par.parameter, par.parLen))
 		{
@@ -186,7 +186,7 @@ const cParameter* cParameterList::findParameter (const cParameter* startAfter, c
 }
 
 
-const cParameter* cParameterList::findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, mac_t& optionalValue)
+const cParameter* cParameterList::findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, const mac_t& optionalValue)
 {
 	const cParameter* p = findParameter (startAfter, stopAt, parameter, true);
 	if (p)
@@ -201,13 +201,34 @@ const cParameter* cParameterList::findParameter (const cParameter* startAfter, c
 }
 
 
+const cParameter* cParameterList::findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, const cIpAddress& optionalValue)
+{
+	const cParameter* p = findParameter (startAfter, stopAt, parameter, true);
+	if (p)
+	{
+		return p;
+	}
+	else
+	{
+		defaultParameter.ip = optionalValue;
+		return &defaultParameter;
+	}
+}
+
+
 const cParameter* cParameterList::findParameter (const char* parameter, uint32_t optionalValue)
 {
 	return findParameter (nullptr, nullptr, parameter, optionalValue);
 }
 
 
-const cParameter* cParameterList::findParameter (const char* parameter, mac_t& optionalValue)
+const cParameter* cParameterList::findParameter (const char* parameter, const mac_t& optionalValue)
+{
+	return findParameter (nullptr, nullptr, parameter, optionalValue);
+}
+
+
+const cParameter* findParameter (const char* parameter, const cIpAddress& optionalValue)
 {
 	return findParameter (nullptr, nullptr, parameter, optionalValue);
 }

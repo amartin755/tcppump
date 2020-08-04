@@ -28,7 +28,7 @@
 #include <cstdlib>
 #include <ctime>
 
-typedef uint32_t ipv4_t;
+//typedef uint32_t ipv4_t;
 
 #pragma pack(1)
 

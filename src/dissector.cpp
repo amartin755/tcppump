@@ -19,6 +19,7 @@
 #include "dissector.hpp"
 
 #include <cassert>
+#include <string>
 
 #include "libnetnag/inet.h"
 #include "libnetnag/console.hpp"
@@ -194,12 +195,11 @@ const void* cDissector::dissectIPv4 (const void * p) const
 	if (!isWithinPacket (header, sizeof (header)))
 		throw "malformed packet";
 
-	ipv4_t src = ntohl(header->srcIp);
-	ipv4_t dst = ntohl(header->dstIp);
+	std::string src, dst;
+	cIpAddress(header->srcIp).get (src);
+	cIpAddress(header->dstIp).get (dst);
 
-    Console::Print ("%d.%d.%d.%d > %d.%d.%d.%d, ",
-    		(src >> 24) & 0xff, (src >> 16) & 0xff, (src >> 8) & 0xff, src & 0xff,
-			(dst >> 24) & 0xff, (dst >> 16) & 0xff, (dst >> 8) & 0xff, dst & 0xff);
+    Console::Print ("%s > %s, ", src.c_str(), dst.c_str());
 
     switch (header->protocol)
     {

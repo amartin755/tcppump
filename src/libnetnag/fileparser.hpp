@@ -26,6 +26,7 @@
 
 #include "protocoltypes.hpp"
 #include "ethernetpacket.hpp"
+#include "ipaddress.hpp"
 
 const int PARSE_ERROR = -100;
 
@@ -36,7 +37,7 @@ class cFileParser
 public:
 	cFileParser ();
 	~cFileParser ();
-	void init (FILE* fp, uint64_t defaultDelay, mac_t ownMac, ipv4_t ownIPv4);
+	void init (FILE* fp, uint64_t defaultDelay, mac_t ownMac, const cIpAddress&  ownIPv4);
 	int parse (uint64_t&, bool&, std::list <cEthernetPacket> &packets);
 	const char* getLastError ();
 
@@ -49,7 +50,7 @@ private:
 
 	uint64_t delay;
 	mac_t    ownMac;
-	ipv4_t   ownIPv4;
+	cIpAddress   ownIPv4;
 	FILE*    fp;
 
 	char lastError[1024];

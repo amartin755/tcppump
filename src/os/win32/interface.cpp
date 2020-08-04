@@ -120,7 +120,7 @@ bool cInterface::getMAC (mac_t *mac)
     return true;
 }
 
-bool cInterface::getIPv4 (ipv4_t *ip)
+bool cInterface::getIPv4 (cIpAddress& ip)
 {
     PIP_ADAPTER_ADDRESSES pAdapterInfo = getAdapterInfo ();
     if (!pAdapterInfo)
@@ -135,7 +135,7 @@ bool cInterface::getIPv4 (ipv4_t *ip)
              // filter Zeroconf addresses
              if ((ntohl ((u_long)addr->sin_addr.s_addr) & 0xFFFF0000) != 0xA9FE0000)
              {
-                 *ip = (ipv4_t)addr->sin_addr.s_addr;
+                 ip.set (addr->sin_addr);
                  return true;
              }
          }

@@ -26,6 +26,7 @@
 
 #include "protocoltypes.hpp"
 #include "ethernetpacket.hpp"
+#include "ipaddress.hpp"
 
 class cParameterList;
 class cIPv4Packet;
@@ -33,7 +34,7 @@ class cIPv4Packet;
 class cInstructionParser
 {
 public:
-    cInstructionParser (mac_t ownMac, ipv4_t ownIPv4);
+    cInstructionParser (mac_t ownMac, const cIpAddress& ownIPv4);
     ~cInstructionParser ();
     int parse (const char* instruction, uint64_t& timestamp, bool& isAbsolute, std::list <cEthernetPacket> &packets);
 
@@ -54,7 +55,7 @@ private:
     int compileIPv4Header (cParameterList& params, cIPv4Packet& packet);
 
     mac_t  ownMac;
-    ipv4_t ownIPv4;
+    cIpAddress ownIPv4;
 };
 
 class ParseException

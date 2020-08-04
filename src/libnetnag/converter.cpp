@@ -135,7 +135,7 @@ bool Converter::checkMacString (const char* mac, size_t len)
     return true;
 }
 
-
+#if 0
 // use optional parameter 'len' if 'str' is not null terminated or longer than an ip address
 bool Converter::stringToIpv4 (const char* str, ipv4_t& ip, int len)
 {
@@ -186,6 +186,7 @@ bool Converter::stringToIpv4 (const char* str, ipv4_t& ip, int len)
     ip = htonl ((ipElements[0] << 24) | (ipElements[1] << 16) | (ipElements[2] << 8) | ipElements [3]);
     return true;
 }
+#endif
 
 #ifdef WITH_UNITTESTS
 void Converter::unitTest ()
@@ -236,7 +237,7 @@ void Converter::unitTest ()
     assert (binLen == 2);
     assert (!memcmp (binbuf, "\x01\x23\x00\x67\x89\xab\xcd\xef\00", 9));
     binLen = 4;
-
+#if 0
     ipv4_t ip;
     assert (stringToIpv4 ("1.2.3.4", ip));
     assert (ip == inet_addr ("1.2.3.4"));
@@ -263,7 +264,7 @@ void Converter::unitTest ()
     assert (!stringToIpv4 ("1.2.3.4.", ip));
     assert (!stringToIpv4 ("1.2.3.4ab", ip));
     assert (!stringToIpv4 ("1.2.ab3.4", ip));
-
+#endif
 }
 #endif
 }

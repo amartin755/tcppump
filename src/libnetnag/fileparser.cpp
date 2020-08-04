@@ -47,7 +47,7 @@ cFileParser::~cFileParser ()
 	free (instructionBuffer);
 }
 
-void cFileParser::init (FILE* fp, uint64_t defaultDelay, mac_t ownMac, ipv4_t ownIPv4)
+void cFileParser::init (FILE* fp, uint64_t defaultDelay, mac_t ownMac, const cIpAddress& ownIPv4)
 {
 	assert (fp);
 

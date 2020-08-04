@@ -53,6 +53,7 @@ typedef struct
 
 class cInterface;
 class cTimeval;
+class cIpAddress;
 
 class cTcpPump : public cCmdlineApp
 {
@@ -63,8 +64,8 @@ public:
     int execute (int argc, char* argv[]);
 
 private:
-    bool parsePackets (mac_t ownMac, ipv4_t ownIP, int cnt, char* packets[]);
-    bool parseScripts (mac_t ownMac, ipv4_t ownIP , int cnt, char* scripts[]);
+    bool parsePackets (mac_t ownMac, const cIpAddress& ownIP, int cnt, char* packets[]);
+    bool parseScripts (mac_t ownMac, const cIpAddress& ownIP , int cnt, char* scripts[]);
 #if HAVE_PCAP
     bool parsePcapFiles (int cnt, char* pcaps[]);
 #endif

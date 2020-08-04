@@ -54,14 +54,14 @@ void cIPv4Packet::setDontFragment (bool df)
 	header.setFlags (false, df, false);
 }
 
-void cIPv4Packet::setSource (ipv4_t ip)
+void cIPv4Packet::setSource (const cIpAddress& ip)
 {
-	header.srcIp = ip;
+	header.srcIp = ip.get();
 }
 
-void cIPv4Packet::setDestination (ipv4_t ip)
+void cIPv4Packet::setDestination (const cIpAddress& ip)
 {
-	header.dstIp = ip;
+	header.dstIp = ip.get();
 }
 
 void cIPv4Packet::setPayload (uint8_t protocol, const char* payload, size_t len)
