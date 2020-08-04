@@ -134,12 +134,12 @@ void cEthernetPacket::setLength ()
 }
 
 
-void cEthernetPacket::setMacHeader (const mac_t& src, const mac_t& dest)
+void cEthernetPacket::setMacHeader (const cMacAddress& src, const cMacAddress& dest)
 {
 	// mac header contains source and destination mac and is always at the begin of the packet
 	mac_header_t* header = (mac_header_t*)packet;
-	header->src  = src;
-	header->dest = dest;
+	::memcpy(&header->src, src.get(), src.size());
+	::memcpy(&header->dest, dest.get(), dest.size());
 }
 
 
@@ -154,7 +154,7 @@ void cEthernetPacket::addLlcHeader (uint8_t dsap, uint8_t ssap, uint16_t control
 	// if there is already payload, we move it
 	if (payloadLength)
 	{
-		memmove (pPayload + llcHeaderLength, pPayload, payloadLength);
+		::memmove (pPayload + llcHeaderLength, pPayload, payloadLength);
 	}
 
 	llc_t* llc = (llc_t*)pPayload;
@@ -185,7 +185,7 @@ void cEthernetPacket::addSnapHeader (uint32_t oui, uint16_t protocol)
 	// if there is already payload, we move it
 	if (payloadLength)
 	{
-		memmove (pPayload + sizeof (snap_t), pPayload, payloadLength);
+		::memmove (pPayload + sizeof (snap_t), pPayload, payloadLength);
 	}
 
 	llcHeaderLength += sizeof (snap_t);
@@ -288,8 +288,8 @@ void cEthernetPacket::unitTest ()
 {
 	nn::Console::PrintDebug("-- " __FILE__ " --\n");
 
-	mac_t src = {0x12,0x34,0x56,0x78,0x9a,0xbc};
-	mac_t dst = {0x11,0x22,0x33,0x44,0x55,0x66};
+	cMacAddress src("12:34:56:78:9a:bc");
+	cMacAddress dst("11:22:33:44:55:66");
 
 
 	try

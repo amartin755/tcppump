@@ -189,6 +189,7 @@ void cPcapFileIO::printError (const char* err)
 
 #ifdef WITH_UNITTESTS
 #include <cstring>
+#include <cstdlib>
 #include "converter.hpp"
 void cPcapFileIO::unitTest (const char* file)
 {
@@ -277,7 +278,7 @@ void cPcapFileIO::unitTest (const char* file)
 
 	for (unsigned n = 0; n < sizeof (indata) / sizeof (indata[0]); n++)
 	{
-		free (indata[n].bin);
+		::free (indata[n].bin);
 	}
 
 	//TODO unit tests

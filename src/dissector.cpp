@@ -53,8 +53,8 @@ bool cDissector::dissect () const
 		}
 		// first, we print the mac header
 		nn::Console::Print("%02x:%02x:%02x:%02x:%02x:%02x > %02x:%02x:%02x:%02x:%02x:%02x (packet length %d)\n  ",
-				header->src.a, header->src. b, header->src.c, header->src.d, header->src.e, header->src.f,
-				header->dest.a, header->dest. b, header->dest.c, header->dest.d, header->dest.e, header->dest.f,
+				header->src.mac[0], header->src.mac[1], header->src.mac[2], header->src.mac[3], header->src.mac[4], header->src.mac[5],
+				header->dest.mac[0], header->dest.mac[1], header->dest.mac[2], header->dest.mac[3], header->dest.mac[4], header->dest.mac[5],
 				packetLength);
 
 		// ... then walk through possible existing VLAN and LLC/SNAP headers

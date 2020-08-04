@@ -27,7 +27,6 @@
 #include <list>
 #include <map>
 #include <cstddef>
-#include "libnetnag/protocoltypes.hpp"
 #include "libnetnag/cmdlineapp.hpp"
 #include "libnetnag/ethernetpacket.hpp"
 #include "libnetnag/pcapfileio.hpp"
@@ -54,6 +53,7 @@ typedef struct
 class cInterface;
 class cTimeval;
 class cIpAddress;
+class cMacAddress;
 
 class cTcpPump : public cCmdlineApp
 {
@@ -64,8 +64,8 @@ public:
     int execute (int argc, char* argv[]);
 
 private:
-    bool parsePackets (mac_t ownMac, const cIpAddress& ownIP, int cnt, char* packets[]);
-    bool parseScripts (mac_t ownMac, const cIpAddress& ownIP , int cnt, char* scripts[]);
+    bool parsePackets (const cMacAddress& ownMac, const cIpAddress& ownIP, int cnt, char* packets[]);
+    bool parseScripts (const cMacAddress& ownMac, const cIpAddress& ownIP , int cnt, char* scripts[]);
 #if HAVE_PCAP
     bool parsePcapFiles (int cnt, char* pcaps[]);
 #endif

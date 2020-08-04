@@ -25,16 +25,15 @@
 #include "instructionparser.hpp"
 
 #include "parameterlist.hpp"
-#include "protocoltypes.hpp"
 #include "ethernetpacket.hpp"
 #include "arppacket.hpp"
 #include "ipv4packet.hpp"
 #include "udppacket.hpp"
 
 
-cInstructionParser::cInstructionParser (mac_t ownMac, const cIpAddress& ownIPv4)
+cInstructionParser::cInstructionParser (const cMacAddress& ownMac, const cIpAddress& ownIPv4)
 {
-    this->ownMac  = ownMac;
+    this->ownMac.set(ownMac);
     this->ownIPv4.set(ownIPv4);
 }
 
@@ -250,9 +249,8 @@ int cInstructionParser::compileVLANTags (cParameterList& params, cEthernetPacket
 
 int cInstructionParser::compileARP (cParameterList& params, std::list <cEthernetPacket> &packets, bool isProbe, bool isGratuitous)
 {
-    cArpPacket arp;
-    mac_t targetMac;
-    targetMac.set (0);
+    cArpPacket  arp;
+    cMacAddress targetMac;
 
     assert ((!isProbe && !isGratuitous) || (isProbe != isGratuitous));
 
@@ -515,21 +513,21 @@ void cInstructionParser::unitTest ()
 
 	uint64_t timestamp;
     bool isAbsolute;
-	mac_t ownMac;
+	cMacAddress ownMac("ba:ba:ba:ba:ba:ba");
 	cIpAddress ownIPv4;
     std::list <cEthernetPacket> packets;
 
-	ownMac.set (0xba);
 	ownIPv4.set("10.10.10.10");
 
 	for (unsigned n = 0; n < sizeof(tests)/sizeof(tests[0]); n++)
 	{
-		nn::Console::PrintDebug("packet %d\r", n);
+		nn::Console::PrintDebug("packet %d", n);
 		cInstructionParser obj (ownMac, ownIPv4);
 		assert (1 == obj.parse (tests[n].tokens, timestamp, isAbsolute, packets));
 		assert (packets.size () == n + 1);
 		assert (tests[n].packetSize == packets.back().getLength());
 		assert (!memcmp (packets.back().get(), tests[n].packet, tests[n].packetSize));
+		nn::Console::PrintDebug("\r");
 	}
 }
 #endif /*WITH_UNITTESTS*/

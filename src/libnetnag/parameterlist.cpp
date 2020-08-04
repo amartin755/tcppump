@@ -82,11 +82,11 @@ uint8_t  cParameter::asInt8 (uint8_t  rangeBegin, uint8_t rangeEnd) const
 }
 
 
-mac_t cParameter::asMac () const
+cMacAddress cParameter::asMac () const
 {
-	mac_t mac;
+	cMacAddress mac;
 
-	if (nn::Converter::stringToMac (value, mac, valLen))
+	if (mac.set(value, valLen))
 	{
 		return mac;
 	}
@@ -186,7 +186,7 @@ const cParameter* cParameterList::findParameter (const cParameter* startAfter, c
 }
 
 
-const cParameter* cParameterList::findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, const mac_t& optionalValue)
+const cParameter* cParameterList::findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, const cMacAddress& optionalValue)
 {
 	const cParameter* p = findParameter (startAfter, stopAt, parameter, true);
 	if (p)
@@ -222,7 +222,7 @@ const cParameter* cParameterList::findParameter (const char* parameter, uint32_t
 }
 
 
-const cParameter* cParameterList::findParameter (const char* parameter, const mac_t& optionalValue)
+const cParameter* cParameterList::findParameter (const char* parameter, const cMacAddress& optionalValue)
 {
 	return findParameter (nullptr, nullptr, parameter, optionalValue);
 }
@@ -530,8 +530,8 @@ void cParameterList::unitTest ()
 			assert (obj.isValid ());
 			assert (obj.findParameter("long")->asInt32()  == (uint32_t)100);
 			assert (obj.findParameter("ipv4")->asIPv4()  == cIpAddress("1.2.3.4"));
-			mac_t mac2 = {0x12,0x34,0x56,0x78,0x9a,0xbc};
-			mac_t mac = obj.findParameter("mac")->asMac();
+			cMacAddress mac2("12:34:56:78:9a:bc");
+			cMacAddress mac = obj.findParameter("mac")->asMac();
 			assert (!memcmp (&mac, &mac2, sizeof (mac2)));
 			size_t len = 0;
 			assert (!strcmp (obj.findParameter("payload")->asRaw(len), "012345"));

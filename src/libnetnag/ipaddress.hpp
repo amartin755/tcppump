@@ -116,6 +116,7 @@ public:
 		const char x[] = "1.2.3.4dfadfasd";
 		cIpAddress a; a.set(x, 7);
 		assert (cIpAddress("1.2.3.4") == a);
+		assert (!a.set("laskdfj"));
 	}
 #endif
 

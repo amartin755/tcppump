@@ -115,8 +115,8 @@ cTcpPump::~cTcpPump()
 
 int cTcpPump::execute (int argc, char* argv[])
 {
-    mac_t ownMac; // TODO use cMacAddress instead
-    cIpAddress ownIP;
+    cMacAddress ownMac;
+    cIpAddress  ownIP;
 
     switch (options.verbosity)
     {
@@ -166,19 +166,17 @@ int cTcpPump::execute (int argc, char* argv[])
     }
     if (options.myMAC)
     {
-    	cMacAddress mac;
-    	if (!mac.set (options.myMAC))
+    	if (!ownMac.set (options.myMAC))
     	{
             Console::PrintError ("Wrong MAC address format %s\n", options.myMAC);
             return -1;
     	}
-    	ownMac = mac.getRaw();
     }
 
     cInterface ifc (options.ifc);
     if (!ifc.open())
         return -1;
-    if (!options.myMAC && !ifc.getMAC(&ownMac))
+    if (!options.myMAC && !ifc.getMAC(ownMac))
     {
         Console::PrintError ("Could not determine mac address of interface.\n");
         return -1;
@@ -251,7 +249,7 @@ int cTcpPump::execute (int argc, char* argv[])
 }
 
 
-bool cTcpPump::parsePackets (mac_t ownMac, const cIpAddress& ownIP, int argc, char* argv[])
+bool cTcpPump::parsePackets (const cMacAddress& ownMac, const cIpAddress& ownIP, int argc, char* argv[])
 {
 	uint64_t t = 0;
     cTimeval timestamp, currtime;
@@ -309,7 +307,7 @@ bool cTcpPump::parsePackets (mac_t ownMac, const cIpAddress& ownIP, int argc, ch
 }
 
 
-bool cTcpPump::parseScripts (mac_t ownMac, const cIpAddress& ownIP, int scriptsCnt, char* scripts[])
+bool cTcpPump::parseScripts (const cMacAddress& ownMac, const cIpAddress& ownIP, int scriptsCnt, char* scripts[])
 {
 	uint64_t t = 0;
     FILE *fp;

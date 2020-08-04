@@ -31,6 +31,7 @@
 #include <net/ethernet.h>
 #include <net/if.h>           // struct ifreq
 #include <netinet/in.h>
+#include <net/if_arp.h>       // ARPHRD_ETHER
 
 #include "interface.hpp"
 #include "console.hpp"
@@ -41,7 +42,6 @@ cInterface::cInterface(const char* ifname)
 {
     ifcHandle  = -1;
     ifIndex    = 0;
-    myMac.set (0);
 }
 
 cInterface::~cInterface()
@@ -67,11 +67,12 @@ bool cInterface::open ()
         nn::Console::PrintError ("Unable to open raw socket. %s.\n", strerror(errno));
         ifIndex = 0;
     }
-    getMAC (&myMac);
+    getMAC (myMac);
     getIPv4 (myIP);
 
-    nn::Console::PrintDebug ("Successfully openend %s mac=%02x:%02x:%02x:%02x:%02x:%02x\n",
-        name.c_str(), myMac.a, myMac.b, myMac.c, myMac.d, myMac.e, myMac.f);
+    std::string macAsString;
+    myMac.get(macAsString);
+    nn::Console::PrintDebug ("Successfully openend %s mac=%s\n", macAsString.c_str());
 
     return (ifcHandle != -1);
 }
@@ -85,7 +86,7 @@ bool cInterface::close ()
     ::close (ifcHandle);
     ifcHandle = -1;
     ifIndex = 0;
-    myMac.set (0);
+    myMac.clear();
 
     return true;
 }
@@ -113,7 +114,7 @@ bool cInterface::sendPacket (const uint8_t* payload, size_t length) const
     return true;
 }
 
-bool cInterface::getMAC (mac_t *mac)
+bool cInterface::getMAC (cMacAddress &mac)
 {
     if (myMac.isNull ())
     {
@@ -137,14 +138,17 @@ bool cInterface::getMAC (mac_t *mac)
             return false;
            }
 
-        // Copy source MAC address.
-        memcpy (mac, ifr.ifr_hwaddr.sa_data, sizeof (*mac));
-
         ::close (s);
+
+        if (ifr.ifr_hwaddr.sa_family != ARPHRD_ETHER)
+        	return false;
+
+        // Copy source MAC address
+        mac.set (ifr.ifr_hwaddr.sa_data, mac.size());
     }
     else
     {
-        *mac = myMac;
+        mac.set (myMac);
     }
     return true;
 }

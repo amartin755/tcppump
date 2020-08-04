@@ -26,8 +26,8 @@
 #include <cstdint>
 #include <cstddef>
 
-#include "protocoltypes.hpp"
 #include "ipaddress.hpp"
+#include "macaddress.hpp"
 
 
 class cInterface
@@ -38,7 +38,7 @@ public:
     bool open ();
     bool close ();
     bool sendPacket (const uint8_t* payload, size_t length) const;
-    bool getMAC (mac_t*);
+    bool getMAC (cMacAddress&);
     bool getIPv4 (cIpAddress&);
 
 private:
@@ -46,7 +46,7 @@ private:
     std::string name;
     int ifcHandle;
     int ifIndex;
-    mac_t myMac;
+    cMacAddress myMac;
     cIpAddress myIP;
 };
 

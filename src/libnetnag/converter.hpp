@@ -21,7 +21,6 @@
 #define TOOLS_HPP_
 
 #include <cstdint>
-#include "protocoltypes.hpp"
 
 namespace nn
 {
@@ -33,7 +32,6 @@ namespace nn
     public:
         static uint8_t* hexStringToBin (const char* hexString, int* binLength);
         static bool hexStringToBin (const char* hexString, int hexStringLen, uint8_t* bin, int* binLength);
-        static bool stringToMac (const char* str, mac_t& mac, int len = 0);
 
 #ifdef WITH_UNITTESTS
         static void unitTest ();

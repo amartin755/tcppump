@@ -24,14 +24,15 @@
 
 #include "ethernetpacket.hpp"
 #include "ipaddress.hpp"
+#include "macaddress.hpp"
 
 class cArpPacket : public cEthernetPacket
 {
 public:
 	cArpPacket ();
-	void probe (mac_t srcMac, const cIpAddress& ip);
-	void announce (mac_t srcMac, const cIpAddress& ip);
-	void setAll (uint16_t opcode, mac_t srcMac, const cIpAddress& srcIp, mac_t dstMac, const cIpAddress& dstIp);
+	void probe (const cMacAddress& srcMac, const cIpAddress& ip);
+	void announce (const cMacAddress& srcMac, const cIpAddress& ip);
+	void setAll (uint16_t opcode, const cMacAddress& srcMac, const cIpAddress& srcIp, const cMacAddress& dstMac, const cIpAddress& dstIp);
 
 
 
@@ -52,9 +53,9 @@ typedef struct
 	uint8_t  hwAddrSize;
 	uint8_t  protAddrSize;
 	uint16_t opcode;
-	mac_t    srcMac;
+	cMacAddress::mac_t srcMac;
 	struct in_addr srcIp;
-	mac_t    dstMac;
+	cMacAddress::mac_t dstMac;
 	struct in_addr dstIp;
 
 }arp_t;

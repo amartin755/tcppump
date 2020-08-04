@@ -25,7 +25,6 @@
 #include "fileparser.hpp"
 
 #include "instructionparser.hpp"
-#include "protocoltypes.hpp"
 #include "ethernetpacket.hpp"
 
 
@@ -33,8 +32,6 @@ cFileParser::cFileParser ()
 {
 	instructionBufferSize = 0;
 	instructionBuffer     = NULL;
-
-	ownMac.set (0);
 
 	fp           = NULL;
 	lineNbr      = 1;
@@ -47,7 +44,7 @@ cFileParser::~cFileParser ()
 	free (instructionBuffer);
 }
 
-void cFileParser::init (FILE* fp, uint64_t defaultDelay, mac_t ownMac, const cIpAddress& ownIPv4)
+void cFileParser::init (FILE* fp, uint64_t defaultDelay, const cMacAddress& ownMac, const cIpAddress& ownIPv4)
 {
 	assert (fp);
 
@@ -57,7 +54,7 @@ void cFileParser::init (FILE* fp, uint64_t defaultDelay, mac_t ownMac, const cIp
 	lastError[0]  = '\0';
 
 	delay         = defaultDelay;
-	this->ownMac  = ownMac;
+	this->ownMac.set (ownMac);
 	this->ownIPv4.set (ownIPv4);
 }
 

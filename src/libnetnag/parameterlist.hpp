@@ -21,8 +21,8 @@
 
 #include <vector>
 
-#include "protocoltypes.hpp"
 #include "ipaddress.hpp"
+#include "macaddress.hpp"
 #include "formatexception.hpp"
 
 
@@ -35,7 +35,7 @@ public:
 	virtual uint32_t    asInt32 (uint32_t rangeBegin = 0, uint32_t rangeEnd = 0xffffffff) const;
 	virtual uint16_t    asInt16 (uint16_t rangeBegin = 0, uint16_t rangeEnd = 0xffff) const;
 	virtual uint8_t     asInt8  (uint8_t  rangeBegin = 0, uint8_t rangeEnd = 0xff) const;
-	virtual mac_t       asMac   () const;
+	virtual cMacAddress asMac   () const;
 	virtual const char* asRaw   (size_t& len) const;
 	virtual cIpAddress  asIPv4  () const;
 
@@ -58,7 +58,7 @@ public:
 	virtual uint32_t    asInt32 (uint32_t, uint32_t) const {return int32;}
 	virtual uint16_t    asInt16 (uint16_t, uint16_t) const {return (uint16_t)int32;}
 	virtual uint8_t     asInt8  (uint8_t,  uint8_t) const {return (uint8_t)int32;}
-	virtual mac_t       asMac   () const {return mac;}
+	virtual cMacAddress asMac   () const {return mac;}
 	virtual const char* asRaw   (size_t&) const
 	{
 		assert ("no raw access for optional parameters" == 0);
@@ -67,9 +67,9 @@ public:
 	virtual cIpAddress  asIPv4  () const {return ip;}
 
 private:
-	uint32_t   int32;
-	mac_t      mac;
-	cIpAddress ip;
+	uint32_t    int32;
+	cMacAddress mac;
+	cIpAddress  ip;
 };
 
 
@@ -82,10 +82,10 @@ public:
 	const cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, bool isOptional = false);
 	const cParameter* findParameter (const char* parameter, bool isOptional = false);
 	const cParameter* findParameter (const char* parameter, uint32_t optionalValue);
-	const cParameter* findParameter (const char* parameter, const mac_t& optionalValue);
+	const cParameter* findParameter (const char* parameter, const cMacAddress& optionalValue);
 	const cParameter* findParameter (const char* parameter, const cIpAddress& optionalValue);
 	const cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, uint32_t optionalValue);
-	const cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, const mac_t& optionalValue);
+	const cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, const cMacAddress& optionalValue);
 	const cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, const cIpAddress& optionalValue);
 
 #ifdef WITH_UNITTESTS
