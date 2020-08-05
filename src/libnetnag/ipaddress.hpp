@@ -61,9 +61,10 @@ public:
 	bool set (const char* ip, size_t len)
 	{
 		char ipAsString[INET_ADDRSTRLEN];
-		if (len > sizeof(ipAsString))
+		if ((len+1) > sizeof(ipAsString))
 			return false;
 		::strncpy (ipAsString, ip, len);
+		ipAsString[len] = '\0';
 		return set (ipAsString);
 	}
 	bool set (const char* ip)

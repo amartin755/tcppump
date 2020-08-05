@@ -389,7 +389,7 @@ void cParameterList::unitTest ()
 	}
 
 	{
-		cParameterList obj (".first=100 .second = 200 .third   =300");
+		cParameterList obj (".first=100 .second = 200 .third   =300 .fourth=x12");
 		assert (obj.isValid ());
 		try
 		{
@@ -419,7 +419,7 @@ void cParameterList::unitTest ()
 		try
 		{
 			catched = false;
-			obj.findParameter("third")->asIPv4();
+			obj.findParameter("fourth")->asIPv4();
 		}
 		catch (FormatException& e)
 		{
