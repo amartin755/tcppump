@@ -27,8 +27,8 @@
 #include <cstddef>
 #include <iphlpapi.h>
 
-#include "protocoltypes.hpp"
 #include "ipaddress.hpp"
+#include "macaddress.hpp"
 
 typedef struct pcap pcap_t;
 //typedef struct _IP_ADAPTER_ADDRESSES *PIP_ADAPTER_ADDRESSES;
@@ -41,7 +41,7 @@ public:
     bool open ();
     bool close ();
     bool sendPacket (const uint8_t* payload, size_t length);
-    bool getMAC (mac_t*);
+    bool getMAC (cMacAddress&);
     bool getIPv4 (cIpAddress&);
 
 private:

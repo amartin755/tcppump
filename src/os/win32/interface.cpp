@@ -108,14 +108,14 @@ bool cInterface::sendPacket (const uint8_t* payload, size_t length)
     return ret == 0;
 }
 
-bool cInterface::getMAC (mac_t *mac)
+bool cInterface::getMAC (cMacAddress& mac)
 {
     PIP_ADAPTER_ADDRESSES pAdapterInfo = getAdapterInfo ();
     if (!pAdapterInfo)
         return false;
 
-    assert (pAdapterInfo->PhysicalAddressLength == sizeof (mac_t));
-    memcpy (mac, pAdapterInfo->PhysicalAddress, sizeof (mac_t));
+    assert (pAdapterInfo->PhysicalAddressLength == cMacAddress::size());
+    mac.set (pAdapterInfo->PhysicalAddress, pAdapterInfo->PhysicalAddressLength);
 
     return true;
 }

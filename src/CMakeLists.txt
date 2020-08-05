@@ -121,7 +121,19 @@ IF (MINGW)
     SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -static-libgcc")
     SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++")
 ENDIF (MINGW)
-
+#### workaround: pcap-stdinc.h does something like this:
+#  #if _MSC_VER < 1500
+#  #define snprintf _snprintf
+#  #define vsnprintf _vsnprintf
+#  #define strdup _strdup
+#  #endif
+# On non-ms compilers the if statement is always true and therefore can
+# lead to compile error with c++11 code
+IF (NOT MSVC)
+	IF (HAVE_PCAP)
+	    ADD_DEFINITIONS (-D_MSC_VER=1500)
+	ENDIF (HAVE_PCAP)
+ENDIF (NOT MSVC)
 
 # source files
 ###############################################################################

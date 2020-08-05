@@ -36,9 +36,6 @@ namespace nn
 #ifdef WITH_UNITTESTS
         static void unitTest ();
 #endif
-
-    private:
-        static bool checkMacString (const char* mac, size_t len = 0);
     };
 
 }
