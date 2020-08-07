@@ -51,7 +51,6 @@ int cInstructionParser::parse (const char* instruction, uint64_t& timestamp, boo
     while (isspace (*p))
         p++;
 
-#ifdef WITH_TIMESTAMP
     // if first character is a number we assume there is a timestamp
     if (isdigit (*p) || *p == '+')
     {
@@ -75,10 +74,7 @@ int cInstructionParser::parse (const char* instruction, uint64_t& timestamp, boo
         }
         p = end;
     }
-#else
-    timestamp  = 0;
-    isAbsolute = true;
-#endif
+
     const char* keyword = NULL;
     const char* keywordEnd = NULL;
 

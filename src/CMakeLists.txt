@@ -85,7 +85,6 @@ CHECK_INCLUDE_FILES("arpa/inet.h" HAVE_ARPAINET_H)
 # definitions
 ###############################################################################
 ADD_DEFINITIONS (-DAPP_VERSION="${PROJECT_VERSION}")
-ADD_DEFINITIONS(-DWITH_TIMESTAMP)
 IF (HAVE_WS2)
     ADD_DEFINITIONS (-DHAVE_WS2)
 ENDIF (HAVE_WS2)
