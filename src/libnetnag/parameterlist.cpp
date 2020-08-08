@@ -245,10 +245,14 @@ const char* cParameterList::parseParameters (const char* parameters)
 
 	/*
 	 * Parsing rules
-	 * - parameter name start with MAGIC_SYMBOL (a whitespace before is mandatory)
+	 * --> (par1=value, par2=value, ...) or ( par1 = value , par2 = value , ...)
+	 *
+	 * - parameter name start with letter (digit is not allowed)
+	 * - letters, digits and _ are allowed for parameter names
 	 * - parameter name ends with first whitespace or '='
 	 * - value starts with first non-whitespace after the '='
 	 * - value ends with first whitespace
+	 * - next parameter have to be separated via ','
 	 */
 
 	state = FIND_PARAMETER;

@@ -67,12 +67,15 @@ int cInstructionParser::parse (const char* instruction, uint64_t& timestamp, boo
         }
 
         timestamp = ((uint64_t)strtoull (p, &end, 10));
-        // check if timestamp is followed by whitespace
-        if (!isspace (*end) && *end != '\0')
+
+        // timestamp must be terminated with ':', whitespaces inbetween are allowed
+        while (*p != ':')
         {
-            throw ParseException ("Invalid timestamp", p);
+        	if (!isspace (*p))
+                throw ParseException ("Invalid timestamp", p);
+
+        	p++;
         }
-        p = end;
     }
 
     const char* keyword = NULL;
@@ -91,20 +94,31 @@ int cInstructionParser::parse (const char* instruction, uint64_t& timestamp, boo
     if (keyword)
     {
         // find end of protocol keyword
-        while (*p++ != '\0')
+        while (*p != '\0')
         {
-            if (*p == ':')
+            if (!isalnum (*p))
             {
-                keywordEnd = p++;
+            	keywordEnd = p;
                 break;
             }
+            p++;
+        }
+        // find begin of parameter list --> '('
+        while (*p != '\0')
+        {
+        	if (*p == '(')
+        		break;
+
+            if (!isspace (*p))
+            {
+                throw ParseException ("Expected '(' after protocol specifier", keyword);
+            }
+            p++;
         }
     }
 
     if (!keyword && !keywordEnd)
         throw ParseException ("Missing protocol specifier", p);
-    if (!keywordEnd)
-        throw ParseException ("Missing ':' after protocol specifier", keyword);
 
     // parse protocol parameter list
     cParameterList params (p);
