@@ -1,7 +1,7 @@
 ###############################################################################
 #
 # TCPPUMP <https://github.com/amartin755/tcppump>
-# Copyright (C) 2019 Andreas Martin (netnag@mailbox.org)
+# Copyright (C) 2019-2020 Andreas Martin (netnag@mailbox.org)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,91 +17,118 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0)
+cmake_minimum_required (VERSION 3.13)
 
-PROJECT (tcppump VERSION 0.0.1.0)
+project (tcppump VERSION 0.0.1.0
+                 DESCRIPTION "Ethernet packet generator" 
+                 LANGUAGES CXX)
 ###############################################################################
 
 
 # set output directories to "bin"
-SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
-SET (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
-SET (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
+set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
+set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
+set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
 
-# check environment
+
+# compiler settings
 ###############################################################################
-INCLUDE (CheckLibraryExists)
-INCLUDE (CheckSymbolExists)
-INCLUDE (CheckFunctionExists)
-INCLUDE (CheckIncludeFiles)
+# C++11 is required
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# warning level
+if (MSVC)
+	add_compile_options (/Wall)
+else()
+	add_compile_options (-Wall -Wextra)
+endif()
+
+# on mingw we link the std library statically
+if (MINGW)
+	add_link_options (-static-libgcc -static-libstdc++)
+endif ()
+
+# check dependencies
+###############################################################################
+include (CheckLibraryExists)
+include (CheckSymbolExists)
+include (CheckFunctionExists)
+include (CheckIncludeFiles)
 
 # try to find pcap library; can be set via PCAP_INCLUDE_DIR and PCAP_LIBRARY
-IF (NOT PCAP_INCLUDE_DIR)
+if (NOT PCAP_INCLUDE_DIR)
     SET (PCAPDIR ${PROJECT_SOURCE_DIR}/../pcap/include)
-    FIND_PATH (PCAP_INCLUDE_DIR NAMES pcap/pcap.h pcap.h PATHS ${PCAPDIR} NO_DEFAULT_PATH)
-ENDIF (NOT PCAP_INCLUDE_DIR)
-IF (NOT PCAP_LIBRARY)
+    FIND_PATH (PCAP_INCLUDE_DIR NAMES pcap/pcap.h pcap.h PATHS ${PCAPDIR})
+endif ()
+if (NOT PCAP_LIBRARY)
     SET (PCAPDIR ${PROJECT_SOURCE_DIR}/../pcap/lib)
-    FIND_LIBRARY (PCAP_LIBRARY NAMES wpcap pcap PATHS ${PCAPDIR} NO_DEFAULT_PATH)
-ENDIF (NOT PCAP_LIBRARY)
-IF (NOT PCAP_LIBRARY)
-    FIND_LIBRARY (PCAP_LIBRARY NAMES wpcap pcap)
-ENDIF (NOT PCAP_LIBRARY)
-
-MESSAGE (STATUS "PCAP_INCLUDE_DIR = ${PCAP_INCLUDE_DIR}")
-MESSAGE (STATUS "PCAP_LIBRARY = ${PCAP_LIBRARY}")
-SET (CMAKE_REQUIRED_LIBRARIES ${PCAP_LIBRARY})
-CHECK_FUNCTION_EXISTS (pcap_open_offline HAVE_PCAP)
-SET (CMAKE_REQUIRED_LIBRARIES "")
+    FIND_LIBRARY (PCAP_LIBRARY NAMES wpcap pcap PATHS ${PCAPDIR})
+endif ()
+message (STATUS "PCAP_INCLUDE_DIR = ${PCAP_INCLUDE_DIR}")
+message (STATUS "PCAP_LIBRARY     = ${PCAP_LIBRARY}")
+set (CMAKE_REQUIRED_LIBRARIES ${PCAP_LIBRARY})
+set (CMAKE_REQUIRED_INCLUDES ${PCAP_INCLUDE_DIR})
+check_symbol_exists (pcap_open_offline "pcap.h" HAVE_PCAP)
+set (CMAKE_REQUIRED_LIBRARIES "")
+set (CMAKE_REQUIRED_INCLUDES "")
 
 
-# on windows winsock, winpcap, conio and iphlpapi is needed
-IF (WIN32)
-    CHECK_INCLUDE_FILES("winsock2.h;iphlpapi.h;winerror.h" HAVE_WS2)
+if (WIN32)
+	# winsock, winpcap, conio and iphlpapi are needed on windows
+    check_include_files("winsock2.h;iphlpapi.h;winerror.h" HAVE_WS2)
     # getch() is needed for unbuffered stdin on Windows
-    CHECK_SYMBOL_EXISTS (getch conio.h HAVE_GETCH)
+    check_symbol_exists (getch "conio.h" HAVE_GETCH)
     # check for inet_pton() inet_ntop(), they do not exist on older mingw
-    CHECK_SYMBOL_EXISTS (inet_pton ws2tcpip.h HAVE_PTON)
-    CHECK_SYMBOL_EXISTS (inet_ntop ws2tcpip.h HAVE_NTOP)
+    check_symbol_exists (inet_pton "ws2tcpip.h" HAVE_PTON)
+    check_symbol_exists (inet_ntop "ws2tcpip.h" HAVE_NTOP)
 
-    IF (NOT HAVE_GETCH)
-        MESSAGE (FATAL_ERROR "Function getch() not found!")
-    ENDIF (NOT HAVE_GETCH)
-    IF (NOT HAVE_WS2)
-        MESSAGE (FATAL_ERROR "Winsock and ip helper headers not found!")
-    ENDIF (NOT HAVE_WS2)
-    IF (NOT HAVE_PCAP)
-        MESSAGE (FATAL_ERROR "Library wpcap not found!")
-    ENDIF (NOT HAVE_PCAP)
-ELSE (WIN32)
-    CHECK_SYMBOL_EXISTS (inet_pton arpa/inet.h HAVE_PTON)
-    CHECK_SYMBOL_EXISTS (inet_ntop arpa/inet.h HAVE_NTOP)
-ENDIF (WIN32)
+    if (NOT HAVE_GETCH)
+        message (FATAL_ERROR "Function getch() not found!")
+    endif ()
+    if (NOT HAVE_WS2)
+        message (FATAL_ERROR "Winsock and ip helper headers not found!")
+    endif ()
+    if (NOT HAVE_PCAP)
+        message (FATAL_ERROR "Library wpcap not found!")
+    endif ()
+else ()
+    check_symbol_exists (inet_pton "arpa/inet.h" HAVE_PTON)
+    check_symbol_exists (inet_ntop "arpa/inet.h" HAVE_NTOP)
+endif ()
 
-CHECK_INCLUDE_FILES("sys/time.h" HAVE_SYSTIME_H)
-CHECK_INCLUDE_FILES("arpa/inet.h" HAVE_ARPAINET_H)
+check_include_files("sys/time.h" HAVE_SYSTIME_H)
+check_include_files("arpa/inet.h" HAVE_ARPAINET_H)
 
 
-# definitions
+# preprocessor definitions
 ###############################################################################
-ADD_DEFINITIONS (-DAPP_VERSION="${PROJECT_VERSION}")
-IF (HAVE_WS2)
-    ADD_DEFINITIONS (-DHAVE_WS2)
-ENDIF (HAVE_WS2)
-IF (HAVE_SYSTIME_H)
-    ADD_DEFINITIONS (-DHAVE_SYSTIME_H)
-ENDIF (HAVE_SYSTIME_H)
-IF (HAVE_ARPAINET_H)
-    ADD_DEFINITIONS (-DHAVE_ARPAINET_H)
-ENDIF (HAVE_ARPAINET_H)
-IF (HAVE_PCAP)
-    ADD_DEFINITIONS (-DHAVE_PCAP)
-ENDIF (HAVE_PCAP)
-IF (WIN32)
+add_compile_definitions (APP_VERSION="${PROJECT_VERSION}")
+
+if (HAVE_WS2)
+    add_compile_definitions (HAVE_WS2)
+endif ()
+if (HAVE_SYSTIME_H)
+    add_compile_definitions (HAVE_SYSTIME_H)
+endif ()
+if (HAVE_ARPAINET_H)
+    add_compile_definitions (HAVE_ARPAINET_H)
+endif ()
+if (HAVE_PCAP)
+    add_compile_definitions (HAVE_PCAP)
+endif ()
+if (HAVE_PTON)
+    add_compile_definitions (HAVE_PTON)
+endif ()
+if (HAVE_NTOP)
+    add_compile_definitions (HAVE_NTOP)
+endif ()
+
+if (WIN32)
     # min. supported version is Windows 7
-    ADD_DEFINITIONS (-D_WIN32_WINNT=0x0601)
-    ADD_DEFINITIONS (-DWINVER=0x0601)
-    ADD_DEFINITIONS (-DHAVE_WINDOWS)
+    add_compile_definitions (_WIN32_WINNT=0x0601)
+    add_compile_definitions (WINVER=0x0601)
+    add_compile_definitions (HAVE_WINDOWS)
 
 	#### workaround: pcap-stdinc.h does something like this:
 	#  #if _MSC_VER < 1500
@@ -111,56 +138,39 @@ IF (WIN32)
 	#  #endif
 	# On non-ms compilers the if statement is always true and therefore can
 	# lead to compile error with c++11 code
-	IF (NOT MSVC)
-		IF (HAVE_PCAP)
-		    ADD_DEFINITIONS (-D_MSC_VER=1500)
-		ENDIF (HAVE_PCAP)
-	ENDIF (NOT MSVC)
+	if (NOT MSVC)
+		if (HAVE_PCAP)
+		    add_compile_definitions (_MSC_VER=1500)
+		endif ()
+	endif ()
 
-ENDIF (WIN32)
-IF (HAVE_PTON)
-    ADD_DEFINITIONS (-DHAVE_PTON)
-ENDIF (HAVE_PTON)
-IF (HAVE_NTOP)
-    ADD_DEFINITIONS (-DHAVE_NTOP)
-ENDIF (HAVE_NTOP)
-
-
-# warning level
-###############################################################################
-SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
-
-# on mingw we link the std library statically
-IF (MINGW)
-    SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -static-libgcc")
-    SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++")
-ENDIF (MINGW)
+endif ()
 
 
 # source files
 ###############################################################################
 
 # platform specific libs and files
-IF (WIN32)
-    SET (os_specific os/win32)
-    SET (libs
+if (WIN32)
+    set (os_specific os/win32)
+    set (libs
          ws2_32
          IPHLPAPI)
-ENDIF (WIN32)
-IF (UNIX)
-    SET (os_specific os/posix)
-ENDIF (UNIX)
+endif ()
+if (UNIX)
+    set (os_specific os/posix)
+endif ()
 
 # includes and libs
-IF (HAVE_PCAP)
-    SET (libs ${libs} ${PCAP_LIBRARY})
-    IF (PCAP_INCLUDE_DIR)
-        INCLUDE_DIRECTORIES (${PCAP_INCLUDE_DIR})
-    ENDIF (PCAP_INCLUDE_DIR)
-ENDIF (HAVE_PCAP)
+if (HAVE_PCAP)
+    set (libs ${libs} ${PCAP_LIBRARY})
+    if (PCAP_INCLUDE_DIR)
+        include_directories (${PCAP_INCLUDE_DIR})
+    endif ()
+endif ()
 
 # note: include only source files here, that are used by all targets
-SET (sourcefiles
+set (sourcefiles
      dissector.cpp
      libnetnag/cmdline.cpp
      libnetnag/console.cpp
@@ -171,6 +181,7 @@ SET (sourcefiles
      libnetnag/instructionparser.cpp
      libnetnag/fileparser.cpp
      libnetnag/parameterlist.cpp
+     libnetnag/parsehelper.cpp
      libnetnag/pcapfileio.cpp
      libnetnag/udppacket.cpp
      ${os_specific}/interface.cpp
@@ -179,22 +190,26 @@ SET (sourcefiles
      )
 
 
-ADD_EXECUTABLE (tcppump tcppump.cpp ${sourcefiles})
-TARGET_LINK_LIBRARIES (tcppump LINK_PUBLIC ${libs})
+add_executable (tcppump tcppump.cpp ${sourcefiles})
 
-TARGET_INCLUDE_DIRECTORIES (tcppump PUBLIC ${os_specific})
-TARGET_INCLUDE_DIRECTORIES (tcppump PUBLIC os)
-TARGET_INCLUDE_DIRECTORIES (tcppump PUBLIC libnetnag)
+target_link_libraries (tcppump LINK_PUBLIC ${libs})
+target_include_directories (tcppump PUBLIC ${os_specific})
+target_include_directories (tcppump PUBLIC os)
+target_include_directories (tcppump PUBLIC libnetnag)
 
 # unit test code
 ###############################################################################
-IF (WITH_UNITTESTS)
-	ADD_EXECUTABLE (unittest test/unittest.cpp ${sourcefiles})
-	TARGET_LINK_LIBRARIES (unittest LINK_PUBLIC ${libs})
-	TARGET_COMPILE_DEFINITIONS (unittest PRIVATE -DWITH_UNITTESTS)
-	TARGET_COMPILE_OPTIONS (unittest PRIVATE -Wno-write-strings)
+if (WITH_UNITTESTS)
+	add_executable (unittest test/unittest.cpp ${sourcefiles})
+	target_link_libraries (unittest PRIVATE ${libs})
+	
+	target_compile_definitions (unittest PRIVATE WITH_UNITTESTS)
+	if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+		target_compile_options (unittest PRIVATE -Wno-write-strings --coverage)
+		target_link_libraries (unittest PRIVATE gcov)
+	endif()
 
-	TARGET_INCLUDE_DIRECTORIES (unittest PUBLIC ${os_specific})
-	TARGET_INCLUDE_DIRECTORIES (unittest PUBLIC os)
-	TARGET_INCLUDE_DIRECTORIES (unittest PUBLIC libnetnag)
-ENDIF (WITH_UNITTESTS)
+	target_include_directories (unittest PUBLIC ${os_specific})
+	target_include_directories (unittest PUBLIC os)
+	target_include_directories (unittest PUBLIC libnetnag)
+endif ()
