@@ -43,6 +43,9 @@ public:
 #endif
 
 private:
+    static const char* parseTimestamp (const char* p, uint64_t& timestamp, bool& isAbsolute);
+    static const char* parseProtocollIdentifier (const char* p, const char** identifier, size_t *len);
+
     int compileRAW (cParameterList& params, std::list <cEthernetPacket> &packets);
     int compileETH (cParameterList& params, std::list <cEthernetPacket> &packets);
     int compileARP (cParameterList& params, std::list <cEthernetPacket> &packets, bool isProbe = false, bool isGratuitous = false);

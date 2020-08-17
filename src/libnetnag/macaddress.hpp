@@ -68,7 +68,7 @@ public:
 	        return false;
 
 	    uint8_t* pMac = (uint8_t*)mac;
-	    for (int n = 0; n < 17; n += 3)
+	    for (int n = 0; n < MACSTRLEN; n += 3)
 	    {
 	        *pMac++ = (uint8_t)strtoul (&s[n], NULL, 16);
 	    }
@@ -86,7 +86,7 @@ public:
 	}
 	void get (char* s, size_t len) const
 	{
-		assert (len > 17);
+		assert (len > MACSTRLEN);
 		::snprintf (s, len, "%02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 	}
 	void get (mac_t* mac) const
@@ -95,7 +95,7 @@ public:
 	}
 	void get (std::string& s) const
 	{
-		char cstr[17+1];
+		char cstr[MACSTRLEN+1];
 		get (cstr, sizeof(cstr));
 		s.assign(cstr);
 	}
@@ -150,7 +150,7 @@ private:
 
         // 11:22:33:44:55:66 or 11-22-33-44-55-66
 
-        if (len != 17)
+        if (len != MACSTRLEN)
             return false;
 
         for (size_t n = 0; n < len; n += 3)
@@ -165,6 +165,7 @@ private:
         return true;
     }
 
+    static const int MACSTRLEN = 17;
 
     uint8_t mac[6];
 };

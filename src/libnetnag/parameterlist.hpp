@@ -31,6 +31,7 @@ class cParameter
 public:
 	cParameter ();
 	cParameter (const cParameter&);
+	void clear ();
 
 	virtual uint32_t    asInt32 (uint32_t rangeBegin = 0, uint32_t rangeEnd = 0xffffffff) const;
 	virtual uint16_t    asInt16 (uint16_t rangeBegin = 0, uint16_t rangeEnd = 0xffff) const;

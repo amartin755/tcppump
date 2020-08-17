@@ -23,18 +23,14 @@
 #include <cerrno>
 
 #include "parameterlist.hpp"
-
+#include "parsehelper.hpp"
 #include "converter.hpp"
 
 
 
 cParameter::cParameter ()
 {
-	parameter = NULL;
-	parLen    = 0;
-	value     = NULL;
-	valLen    = 0;
-	index     = -1;
+	clear ();
 }
 
 
@@ -45,6 +41,16 @@ cParameter::cParameter (const cParameter& obj)
 	value     = obj.value;
 	valLen    = obj.valLen;
 	index     = obj.index;
+}
+
+
+void cParameter::clear ()
+{
+	parameter = NULL;
+	parLen    = 0;
+	value     = NULL;
+	valLen    = 0;
+	index     = -1;
 }
 
 
@@ -233,13 +239,11 @@ const cParameter* cParameterList::findParameter (const char* parameter, const cI
 	return findParameter (nullptr, nullptr, parameter, optionalValue);
 }
 
-
+// returns nullptr on success. Otherwise a pointer to the syntax error
 const char* cParameterList::parseParameters (const char* parameters)
 {
 	const char* p = parameters;
 	cParameter v;
-	enum {FIND_PARAMETER, PAR_START, PAR_END, OPERATOR, VAL_START, VAL_END}state;
-	const char MAGIC_SYMBOL = '.';
 
 	list.clear ();
 
@@ -247,7 +251,7 @@ const char* cParameterList::parseParameters (const char* parameters)
 	 * Parsing rules
 	 * --> (par1=value, par2=value, ...) or ( par1 = value , par2 = value , ...)
 	 *
-	 * - parameter name start with letter (digit is not allowed)
+	 * - parameter name starts with letter (digit is not allowed)
 	 * - letters, digits and _ are allowed for parameter names
 	 * - parameter name ends with first whitespace or '='
 	 * - value starts with first non-whitespace after the '='
@@ -255,119 +259,56 @@ const char* cParameterList::parseParameters (const char* parameters)
 	 * - next parameter have to be separated via ','
 	 */
 
-	state = FIND_PARAMETER;
+	// caller must ensure that parameter list starts with '('
+	assert (*p == '(');
+	p++;
 
-	while (*p != '\0')
+	while (*p != '\0' && *p != ')')
 	{
+		const char* token;
+		v.clear();
 
-		switch (state)
-		{
-		case FIND_PARAMETER: // warten auf symbol
-			if (*p == MAGIC_SYMBOL)
-			{
-				state = PAR_START;
-			}
-			else if (isspace (*p))
-			{
-				state = FIND_PARAMETER;
-			}
-			else
-			{
-				return p;//FEHLER
-			}
-			break;
-		case PAR_START: // symbol gefunden, nun muss ein Zeichen kommen
-			if (isalpha (*p))
-			{
-				v.parameter = p;
-				v.parLen++;
-				state = PAR_END;
-			}
-			else
-			{
-				return p;//FEHLER
-			}
-			break;
-		case PAR_END: // warten auf das Ende des Parameters
-			if (isalnum (*p) || *p == '_') // underscore is allowed in parameter name
-			{
-				v.parLen++;
-			}
-			else if (isspace (*p))
-			{
-				state = OPERATOR;
-			}
-			else if (*p == '=')
-			{
-				state = VAL_START;
-			}
-			else
-			{
-				return p;//FEHLER
-			}
-			break;
-		case OPERATOR: // warten auf =
-			if (isspace (*p))
-			{
-				state = OPERATOR;
-			}
-			else if (*p == '=')
-			{
-				state = VAL_START;
-			}
-			else
-			{
-				return p;//FEHLER
-			}
-			break;
-		case VAL_START: // warten auf Wertanfang
-			if (isspace (*p))
-			{
-				state = VAL_START;
-			}
-			else if (isalnum (*p))
-			{
-				v.value = p;
-				v.valLen++;
-				state = VAL_END;
-			}
-			else
-			{
-				return p;//FEHLER
-			}
-			break;
-		case VAL_END: // warten auf Wertende
-			if (isalnum (*p) || *p == '.' || *p == ':')
-			{
-				v.valLen++;
-			}
-			else if (isspace (*p))
-			{
-				v.index = list.size ();
-				list.push_back (v);
-				state = FIND_PARAMETER;
-				v.parameter = v.value = NULL;
-				v.parLen = v.valLen = 0;
-			}
-			else
-			{
-				return p;//FEHLER
-			}
-			break;
-		}
+		// find start of parameter
+		token = cParseHelper::nextKeyStart (p);
+		if (!token)
+			return p; // syntax error
+		else
+			p = token;
+
+		// find end of parameter
+		p = cParseHelper::nextKeyEnd (p);
+		v.parameter = token;
+		v.parLen    = p - token;
+		p = cParseHelper::skipWhitespaces (p);
+		if (*p != '=')
+			return p; // syntax error
 		p++;
-	}
 
-	if (state == VAL_END)
-	{
+		// find start of value
+		token = cParseHelper::nextValueStart (p);
+		if (!token)
+			return p; // syntax error
+		else
+			p = token;
+
+		// find end of value
+		p = cParseHelper::nextValueEnd (p);
+		v.value  = token;
+		v.valLen = p - token;
+
+		// store parameter and its value
 		v.index = list.size ();
 		list.push_back (v);
-		state = FIND_PARAMETER;
-		v.parameter = v.value = NULL;
-		v.parLen = v.valLen = 0;
+
+		p = cParseHelper::skipWhitespaces (p);
+		if (!cParseHelper::isOneOf (*p, ",)"))
+			return p; // syntax error
+
+		if (*p == ',')
+			p++;
 	}
 
-	return state == FIND_PARAMETER ? NULL : p;
+	return *p == ')' ? nullptr : p;
 }
 
 
@@ -381,7 +322,7 @@ void cParameterList::unitTest ()
 
 	try
 	{
-		cParameterList obj ("     .first=100 .second = 200 .third   =300");
+		cParameterList obj ("(     first=100, second = 200, third   =300)");
 		assert (obj.isValid ());
 		assert (obj.findParameter("first")->asInt32()  == (uint32_t)100);
 		assert (obj.findParameter("second")->asInt32() == (uint32_t)200);
@@ -393,7 +334,7 @@ void cParameterList::unitTest ()
 	}
 
 	{
-		cParameterList obj (".first=100 .second = 200 .third   =300 .fourth=x12");
+		cParameterList obj ("(first=100, second = 200, third   =300, fourth=x12)");
 		assert (obj.isValid ());
 		try
 		{
@@ -487,7 +428,7 @@ void cParameterList::unitTest ()
 
 	try
 	{
-		cParameterList obj (".first=100 .firstsecond = 200 .third   =300");
+		cParameterList obj ("(first=100, firstsecond = 200, third   =300)");
 		assert (obj.findParameter("first")->asInt32()  == (uint32_t)100);
 		assert (obj.findParameter("firstsecond")->asInt32()  == (uint32_t)200);
 		assert (obj.isValid ());
@@ -498,24 +439,24 @@ void cParameterList::unitTest ()
 	}
 
 	{
-		cParameterList obj (".first=100.firstsecond = 200 .third   =300");
+		cParameterList obj ("(first=100.firstsecond = 200, third   =300)");
 		assert (!obj.isValid ());
 	}
 	{
-		cParameterList obj ("d.first=100.second =");
+		cParameterList obj ("(d.first=100.second =)");
 		assert (!obj.isValid ());
 	}
 	{
-		cParameterList obj ("d.first=100");
+		cParameterList obj ("(d,first=100)");
 		assert (!obj.isValid ());
 	}
 	{
-		cParameterList obj (".=123");
+		cParameterList obj ("(=123)");
 		assert (!obj.isValid ());
 	}
 	try
 	{
-		cParameterList obj ("  .first=123");
+		cParameterList obj ("(  first=123)");
 		assert (obj.isValid ());
 		assert (obj.findParameter("first")->asInt32()  == (uint32_t)123);
 	}
@@ -524,11 +465,11 @@ void cParameterList::unitTest ()
 		assert (0);
 	}
 	{
-		cParameterList obj ("$.dkfjsdf=sd.djhdslk..0=0sd sdlfkjf");
+		cParameterList obj ("($,dkfjsdf=sd,djhdslk,,0=0sd sdlfkjf)");
 		assert (!obj.isValid ());
 	}
 	{
-		cParameterList obj (".long=100 .ipv4 = 1.2.3.4 .mac =12:34:56:78:9A:BC .payload=012345");
+		cParameterList obj ("(long=100, ipv4 = 1.2.3.4, mac =12:34:56:78:9A:BC, payload=012345)");
 		try
 		{
 			assert (obj.isValid ());
@@ -538,7 +479,7 @@ void cParameterList::unitTest ()
 			cMacAddress mac = obj.findParameter("mac")->asMac();
 			assert (!memcmp (&mac, &mac2, sizeof (mac2)));
 			size_t len = 0;
-			assert (!strcmp (obj.findParameter("payload")->asRaw(len), "012345"));
+			assert (!strncmp (obj.findParameter("payload")->asRaw(len), "012345", len));
 			assert (len == 6);
 		}
 		catch (FormatException& e)
@@ -547,7 +488,7 @@ void cParameterList::unitTest ()
 		}
 	}
 	{
-		cParameterList obj (".first=0xFFFF .second=0x10000 .toolong=0x100000000");
+		cParameterList obj ("(first=0xFFFF, second=0x10000, toolong=0x100000000)");
 		assert (obj.isValid ());
 		try
 		{
@@ -599,12 +540,12 @@ void cParameterList::unitTest ()
 		}
 		assert (catched);
 		{
-			cParameterList obj (".dk.fjsdf=12");
+			cParameterList obj ("(dk,fjsdf=12)");
 			assert (!obj.isValid ());
 		}
 	}
 	{
-		cParameterList obj (".first=0x1 .first=0x2 .first=0x3 ");
+		cParameterList obj ("(first=0x1, first=0x2, first=0x3 )");
 		assert (obj.isValid ());
 		try
 		{
@@ -626,7 +567,7 @@ void cParameterList::unitTest ()
 		}
 	}
 	{
-		cParameterList obj (".second=0x10 .first=0x1 .second=0x10 .first=0x2 .second=0x20 .first=0x3 .second=0x30");
+		cParameterList obj ("(second=0x10, first=0x1, second=0x10, first=0x2, second=0x20, first=0x3, second=0x30)");
 		assert (obj.isValid ());
 		try
 		{
@@ -654,7 +595,7 @@ void cParameterList::unitTest ()
 		}
 	}
 	{
-		cParameterList obj (".second=0x10 .first=0x1 .first=0x2 .second=0x20 .first=0x3 .second=0x30");
+		cParameterList obj ("(second=0x10, first=0x1, first=0x2, second=0x20, first=0x3, second=0x30)");
 		assert (obj.isValid ());
 		try
 		{
@@ -680,5 +621,7 @@ void cParameterList::unitTest ()
 			assert (0);
 		}
 	}
+
+	// TODO fuzzing
 }
 #endif

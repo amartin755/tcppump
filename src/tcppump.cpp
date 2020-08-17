@@ -102,7 +102,7 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
             "is pressed. The default implementation binds the first 10 packets to the keys 1, 2, ... 0."
             , &options.interactive, &options.keys);
 #if HAVE_PCAP
-    addCmdLineOption (true, 0, "write-to-pcap", "OUTFILE", "TODO", &options.outpcap);
+    addCmdLineOption (true, 0, "write-to-pcap", "OUTFILE", "Write generated packets to pcap file OUTFILE.", &options.outpcap);
 #endif
     addCmdLineOption (true, 0, "dissect",
     		"Prints the dissected content of sent packets as known from tcpdump.", &options.dissect);

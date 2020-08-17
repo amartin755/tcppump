@@ -32,6 +32,7 @@
 #include "../sleep.hpp"
 #include "ipaddress.hpp"
 #include "macaddress.hpp"
+#include "parsehelper.hpp"
 
 
 int main (void)
@@ -41,14 +42,15 @@ int main (void)
 	{
 		tcppump::SleepInit ();
 		tcppump::SleepUnitTest ();
-		cIpAddress::unitTest();
-		cMacAddress::unitTest();
+		cIpAddress::unitTest ();
+		cMacAddress::unitTest ();
 		nn::Converter::unitTest ();
 		cTimeval::unitTest ();
 		cCmdline::unitTest ();
 		cEthernetPacket::unitTest ();
 		cArpPacket::unitTest ();
 		cIPv4Packet::unitTest ();
+		cParseHelper::unitTest ();
 		cParameterList::unitTest ();
 		cInstructionParser::unitTest ();
 

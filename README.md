@@ -24,28 +24,26 @@ Supported protocols and packet formats
 
 **Note: This tool is in alpha state. Use at your own risk. Currently there are no binaries available.**
 
-## Build instruction
-tcppump has been successfully compiled on win 7 and win 10 (both x64) with mingw32 and on ubuntu linux (x64).
+## Build instructions
+tcppump has been successfully compiled on win 7 and win 10 (both x64) with mingw32 and on ubuntu linux (x64) with gcc.
+Theoretically it should also be compilable with other C++11 compilers (e.g. Visual Studio), but this was never tested.
 
 ### Dependencies
-* cmake >= V3.0.0
+* cmake >= V3.13
+* C++11 compiler
 
 Windows
 * WinPcap
 * WinPcap Developer' Pack (see http://www.winpcap.org/devel.htm and http://www.winpcap.org/install/bin/WpdPack_4_1_2.zip)
-* mingw
 
 Linux
-* gcc
 * optional: libpcap-devel (for pcap replay feature)
 
 ### How to build
+#### Setup
 
 	cd tcpdump
-	mkdir build
-	cd build
-	cmake ../src
-	make
+	cmake -S src -B build
 
 If cmake can not detect your mingw installation on windows, this cmake parameter can help:
 
@@ -58,6 +56,11 @@ To enable unit test targets add the following cmake paramaters:
 For debugging add:
 
 	-DCMAKE_BUILD_TYPE=Debug
+	
+#### Build
+
+	cmake --build build
+
 
 ## How to use
 ### Command-line interface
@@ -65,39 +68,46 @@ For debugging add:
 
 	Options:
 	-h --help
-	        Display this text
-	-i IFC --interface=IFC
-	        Name of the network interface via which the packets are sent. On Linux this can be one of
-	        the interfaces that are printed by "ip link" or "ifconfig", for example "eth0".
-	        On Windows it can either be the AdapterName (GUID) like "{3F4A136A-2ED5-4226-9CB2-7A511E93CD48}",
-	        or the so-called FriendlyName, which is changeable by the user.
-	        For example "WiFi" or "Local Area Connection 1".
+		Display this text
+	-i IFC --interface=IFC 
+		Name of the network interface via which the packets are sent.
+	--myip4=IPV4 
+		Use IPV4 as source IPv4 address instead of the network adapters ip address
+	--mymac=MAC 
+		Use MAC as source MAC address instead of the network adapters MAC address
 	-v --verbose
-	        When parsing and printing, produce verbose output. This option can be supplied multiple times
-	        (max. 4 times, i.e. -vvvv) for even more debug output.
-	--input=TYPE
-	        Input format of the packets to be sent. Possible values for TYPE (default is "token") are:
-	        raw     Packets are defined as hex-ascii string, and will not be interpreted.
-	                example: 0123456789ABCDEF001122334455667788
-	        token   Token based definition of packets. tcppump will compile it to Ethernet packets.
-	                example: eth: .dest=44:22:33:44:55:66 .payload=1234567890abcdef
-	                For complete description of the syntax, see documentation.
-	        script  Packets are defined in script files, that contain token based packets.
-	        pcap    pcap file of captured packets (e.g via wireshark or tcpdump) will be replayed.
+		When parsing and printing, produce verbose output. This option can be supplied multiple times
+		(max. 4 times, i.e. -vvvv) for even more debug output. 
+	--input=TYPE 
+		Input format of the packets to be sent. Possible values for TYPE (default is "token") are:
+		raw     Packets are defined as hex-ascii string, and will not be interpreted.
+		        example: 0123456789ABCDEF001122334455667788
+		token   Token based definition of packets. tcppump will compile it to Ethernet packets.
+		        example: eth: .dest=44:22:33:44:55:66 .payload=1234567890abcdef
+		        For complete description of the syntax, see documentation.
+		script  Packets are defined in script files, that contain token based packets.
+		pcap    pcap file of captured packets (e.g via wireshark or tcpdump) will be replayed.
 	-r --raw
-	        Short for --input=raw
+		Short for --input=raw
 	-s --script
-	        Short for --input=script
+		Short for --input=script
 	-p --pcap
-	        Short for --input=pcap
-	-l N --loop=N
-	        Send all files/packets N times. Default: N = 1
-	-d SECONDS --delay=SECONDS
-	        Packet transmission is delayed SECONDS. Default is no delay
-	--interactive[=KEYLIST]
-	        Enable interactive mode (EXPERIMENTAL). In interactive mode no packets are sent automatically.
-	        Instead the packets are bound to keys and only sent when the corresponding key
-	        is pressed. The default implementation binds the first 10 packets to the keys 1, 2, ... 0.
+		Short for --input=pcap
+	-l N --loop=N 
+		Send all files/packets N times. Default: N = 1
+	-d TIME --delay=TIME 
+		Packet transmission is delayed TIME.Resolution depends on -t parameter. Default is microseconds.
+	-t RESOLUTION --resolution=RESOLUTION 
+		Resolution of transmission time. This affects -d parameter as well as all timestamps in script files
+		Possible values are 'u'= microseconds (default), 'm'= milliseconds and 's'= seconds
+	--interactive[=KEYLIST] 
+		Enable interactive mode (EXPERIMENTAL). In interactive mode no packets are sent automatically.
+		Instead the packets are bound to keys and only sent when the corresponding key
+		is pressed. The default implementation binds the first 10 packets to the keys 1, 2, ... 0.
+	--write-to-pcap=OUTFILE 
+		Write generated packets to pcap file OUTFILE.
+	--dissect
+		Prints the dissected content of sent packets as known from tcpdump.
 
 ### Examples
 

@@ -29,6 +29,7 @@
 #include "arppacket.hpp"
 #include "ipv4packet.hpp"
 #include "udppacket.hpp"
+#include "parsehelper.hpp"
 
 
 cInstructionParser::cInstructionParser (const cMacAddress& ownMac, const cIpAddress& ownIPv4)
@@ -46,79 +47,11 @@ cInstructionParser::~cInstructionParser ()
 int cInstructionParser::parse (const char* instruction, uint64_t& timestamp, bool& isAbsolute,  std::list <cEthernetPacket> &packets)
 {
     const char* p = instruction;
+    const char* keyword;
+    size_t      keywordLen;
 
-    // ignore whitespaces at begin of instruction
-    while (isspace (*p))
-        p++;
-
-    // if first character is a number we assume there is a timestamp
-    if (isdigit (*p) || *p == '+')
-    {
-        char* end;
-
-        // relative timestamp?
-        if (*p == '+')
-        {
-            isAbsolute = false;
-        }
-        else
-        {
-            isAbsolute = true;
-        }
-
-        timestamp = ((uint64_t)strtoull (p, &end, 10));
-
-        // timestamp must be terminated with ':', whitespaces inbetween are allowed
-        while (*p != ':')
-        {
-        	if (!isspace (*p))
-                throw ParseException ("Invalid timestamp", p);
-
-        	p++;
-        }
-    }
-
-    const char* keyword = NULL;
-    const char* keywordEnd = NULL;
-
-    // find beginning of protocol keyword
-    while (*p != '\0')
-    {
-        if (isalnum (*p))
-        {
-            keyword = p;
-            break;
-        }
-        p++;
-    }
-    if (keyword)
-    {
-        // find end of protocol keyword
-        while (*p != '\0')
-        {
-            if (!isalnum (*p))
-            {
-            	keywordEnd = p;
-                break;
-            }
-            p++;
-        }
-        // find begin of parameter list --> '('
-        while (*p != '\0')
-        {
-        	if (*p == '(')
-        		break;
-
-            if (!isspace (*p))
-            {
-                throw ParseException ("Expected '(' after protocol specifier", keyword);
-            }
-            p++;
-        }
-    }
-
-    if (!keyword && !keywordEnd)
-        throw ParseException ("Missing protocol specifier", p);
+    p = parseTimestamp (p, timestamp, isAbsolute);
+    p = parseProtocollIdentifier (p, &keyword, &keywordLen);
 
     // parse protocol parameter list
     cParameterList params (p);
@@ -131,19 +64,19 @@ int cInstructionParser::parse (const char* instruction, uint64_t& timestamp, boo
     try
     {
         //TODO find better way for protocol selection (e.g. hash table)
-        if (!strncmp ("raw", keyword, keywordEnd - keyword))
+        if (!strncmp ("raw", keyword, keywordLen))
             return compileRAW (params, packets);
-        if (!strncmp ("eth", keyword, keywordEnd - keyword))
+        if (!strncmp ("eth", keyword, keywordLen))
             return compileETH (params, packets);
-        if (!strncmp ("arp", keyword, keywordEnd - keyword))
+        if (!strncmp ("arp", keyword, keywordLen))
             return compileARP (params, packets);
-        if (!strncmp ("arp-probe", keyword, keywordEnd - keyword))
+        if (!strncmp ("arp-probe", keyword, keywordLen))
             return compileARP (params, packets, true);
-        if (!strncmp ("arp-announce", keyword, keywordEnd - keyword))
+        if (!strncmp ("arp-announce", keyword, keywordLen))
             return compileARP (params, packets, false, true);
-        if (!strncmp ("ipv4", keyword, keywordEnd - keyword))
+        if (!strncmp ("ipv4", keyword, keywordLen))
             return compileIPv4 (params, packets);
-        if (!strncmp ("udp", keyword, keywordEnd - keyword))
+        if (!strncmp ("udp", keyword, keywordLen))
             return compileUDP (params, packets);
 
         throw ParseException ("Unknown protocol type", keyword);
@@ -166,6 +99,64 @@ int cInstructionParser::parse (const char* instruction, uint64_t& timestamp, boo
     assert ("BUG: unreachable code" == 0);
 
     return 0;
+}
+
+const char* cInstructionParser::parseTimestamp (const char* p, uint64_t& timestamp, bool& isAbsolute)
+{
+    // ignore whitespaces at begin of instruction
+    p = cParseHelper::skipWhitespaces(p);
+
+    // if first character is a number we assume there is a timestamp
+    if (isdigit (*p) || *p == '+')
+    {
+        char* end;
+
+        // relative timestamp?
+        isAbsolute = *p == '+' ? false : true;
+
+        timestamp = ((uint64_t)strtoull (p, &end, 10));
+
+        if (p != end)
+        {
+        	// timestamp must be terminated with ':'
+            p = cParseHelper::nextCharIgnoreWhitspaces (end, ':');
+            if (!p)
+            	throw ParseException ("Expected ':' after timestamp", end);
+            p++;
+        }
+        else
+        {
+            throw ParseException ("Invalid timestamp", p);
+        }
+    }
+
+    return p;
+}
+
+const char* cInstructionParser::parseProtocollIdentifier (const char* p, const char** identifier, size_t *len)
+{
+    const char* keyword = nullptr;
+    const char* keywordEnd = nullptr;
+
+    // find beginning of protocol keyword
+    p = keyword = cParseHelper::nextKeyStart (p);
+    // find end of protocol keyword
+    if (keyword)
+    	p = keywordEnd = cParseHelper::nextKeyEnd (p);
+    if (!keyword && !keywordEnd)
+        throw ParseException ("Missing protocol specifier", p);
+
+    // find begin of parameter list --> '('
+    p = cParseHelper::nextCharIgnoreWhitspaces (p, '(');
+    if (!p)
+        throw ParseException ("Expected '(' after protocol specifier", keyword);
+
+
+
+    *identifier = keyword;
+    *len = keywordEnd - keyword;
+
+    return p;
 }
 
 
@@ -360,154 +351,154 @@ typedef struct
 
 static const testcase_t tests[] = {
 	{
-		"eth: .dmac=11:22:33:44:55:66 .smac=aa:bb:cc:dd:ee:ff .ethertype=0x8123 .payload=1234567890abcdef",
+		"eth( dmac=11:22:33:44:55:66, smac=aa:bb:cc:dd:ee:ff, ethertype=0x8123, payload=1234567890abcdef)",
 		{
 			0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x81, 0x23, 0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef
 		},
 		22,
 	},
 	{
-		"eth: .dmac=11:22:33:44:55:66 .ethertype=0x8123 .payload=1234567890abcdef",
+		"eth(dmac=11:22:33:44:55:66, ethertype=0x8123, payload=1234567890abcdef)",
 		{
 			0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0xba, 0xba, 0xba, 0xba, 0xba, 0xba, 0x81, 0x23, 0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef
 		},
 		22,
 	},
 	{
-		"eth: .dmac=11:22:33:44:55:66 .smac=aa:bb:cc:dd:ee:ff .payload=1234567890abcdef",
+		"eth(dmac=11:22:33:44:55:66, smac=aa:bb:cc:dd:ee:ff, payload=1234567890abcdef)",
 		{
 			0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x00, 0x08, 0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef
 		},
 		22,
 	},
 	{
-		"eth: .dmac=11:22:33:44:55:66 .payload=1234567890abcdef",
+		"eth(dmac=11:22:33:44:55:66, payload=1234567890abcdef)",
 		{
 			0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0xba, 0xba, 0xba, 0xba, 0xba, 0xba, 0x00, 0x08, 0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef
 		},
 		22,
 	},
 	{
-		"raw: .payload = 112233445566aabbccddeeff81231234567890abcdef",
+		"raw(payload = 112233445566aabbccddeeff81231234567890abcdef)",
 		{
 			0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x81, 0x23, 0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef
 		},
 		22,
 	},
 	{
-		"eth: .dmac=11:22:33:44:55:66 .smac=aa:bb:cc:dd:ee:ff .vid=1 .ethertype=0x8123 .payload=1234567890abcdef",
+		"eth(dmac=11:22:33:44:55:66, smac=aa:bb:cc:dd:ee:ff, vid=1, ethertype=0x8123, payload=1234567890abcdef)",
 		{
 			0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x81, 0x00, 0x00, 0x01, 0x81, 0x23, 0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef
 		},
 		26,
 	},
 	{
-		"eth: .dmac=11:22:33:44:55:66 .smac=aa:bb:cc:dd:ee:ff .vid=42 .prio=3 .ethertype=0x8123 .payload=1234567890abcdef",
+		"eth(dmac=11:22:33:44:55:66, smac=aa:bb:cc:dd:ee:ff, vid=42, prio=3, ethertype=0x8123, payload=1234567890abcdef)",
 		{
 			0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x81, 0x00, 0x60, 0x2a, 0x81, 0x23, 0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef
 		},
 		26,
 	},
 	{
-		"eth: .dmac=11:22:33:44:55:66 .smac=aa:bb:cc:dd:ee:ff .dsap = 0x12 .ssap = 0x34 .control = 0x11 .payload = 1122",
+		"eth(dmac=11:22:33:44:55:66, smac=aa:bb:cc:dd:ee:ff, dsap = 0x12, ssap = 0x34, control = 0x11, payload = 1122)",
 		{
 			0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x00, 0x06, 0x12, 0x34, 0x00, 0x11, 0x11, 0x22
 		},
 		20,
 	},
 	{
-		"eth: .dmac=11:22:33:44:55:66 .smac=aa:bb:cc:dd:ee:ff .vlan=1 .vid=42 .prio=3 .dsap = 0x12 .ssap = 0x34 .control = 0x11 .payload = 1122",
+		"eth(dmac=11:22:33:44:55:66, smac=aa:bb:cc:dd:ee:ff, vlan=1, vid=42, prio=3, dsap = 0x12, ssap = 0x34, control = 0x11, payload = 1122)",
 		{
 			0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x81, 0x00, 0x60, 0x2a, 0x00, 0x06, 0x12, 0x34, 0x00, 0x11, 0x11, 0x22
 		},
 		24,
 	},
 	{
-		"eth: .dmac=11:22:33:44:55:66 .smac=aa:bb:cc:dd:ee:ff .oui = 0x808182 .protocol = 0x34 .payload = 1234567890abcdef",
+		"eth(dmac=11:22:33:44:55:66, smac=aa:bb:cc:dd:ee:ff, oui = 0x808182, protocol = 0x34, payload = 1234567890abcdef)",
 		{
 			0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x00, 0x10, 0xaa, 0xaa, 0x03, 0x80, 0x81, 0x82, 0x00, 0x34, 0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef
 		},
 		30,
 	},
 	{
-		"eth: .dmac=11:22:33:44:55:66 .smac=aa:bb:cc:dd:ee:ff .vid=100 .vtype=2 .vid=42 .prio=3 .ethertype=0x8123 .payload=1234567890abcdef",
+		"eth(dmac=11:22:33:44:55:66, smac=aa:bb:cc:dd:ee:ff, vid=100, vtype=2, vid=42, prio=3, ethertype=0x8123, payload=1234567890abcdef)",
 		{
 			0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x88, 0xa8, 0x00, 0x64, 0x81, 0x00, 0x60, 0x2a, 0x81, 0x23, 0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef
 		},
 		30,
 	},
 	{
-		"arp: .op=1 .smac=10:22:33:44:55:66 .sip=192.168.0.166 .dmac=01:02:03:04:05:06 .dip=1.2.3.4",
+		"arp(op=1, smac=10:22:33:44:55:66, sip=192.168.0.166, dmac=01:02:03:04:05:06, dip=1.2.3.4)",
 		{
 			0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x10, 0x22, 0x33, 0x44, 0x55, 0x66, 0x08, 0x06, 0x00, 0x01, 0x08, 0x00, 0x06, 0x04, 0x00, 0x01, 0x10, 0x22, 0x33, 0x44, 0x55, 0x66, 0xc0, 0xa8, 0x00, 0xa6, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x01, 0x02, 0x03, 0x04
 		},
 		42,
 	},
 	{
-		"arp: .op=1 .smac=10:22:33:44:55:66 .sip=192.168.0.166 .dip=1.2.3.4",
+		"arp(op=1, smac=10:22:33:44:55:66, sip=192.168.0.166, dip=1.2.3.4)",
 		{
 			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x10, 0x22, 0x33, 0x44, 0x55, 0x66, 0x08, 0x06, 0x00, 0x01, 0x08, 0x00, 0x06, 0x04, 0x00, 0x01, 0x10, 0x22, 0x33, 0x44, 0x55, 0x66, 0xc0, 0xa8, 0x00, 0xa6, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04
 		},
 		42,
 	},
 	{
-		"arp: .dip=11.22.33.44",
+		"arp(dip=11.22.33.44)",
 		{
 			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xba, 0xba, 0xba, 0xba, 0xba, 0xba, 0x08, 0x06, 0x00, 0x01, 0x08, 0x00, 0x06, 0x04, 0x00, 0x01, 0xba, 0xba, 0xba, 0xba, 0xba, 0xba, 0x0a, 0x0a, 0x0a, 0x0a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0b, 0x16, 0x21, 0x2c
 		},
 		42,
 	},
 	{
-		"arp: .op=2 .dip=11.22.33.44",
+		"arp(op=2, dip=11.22.33.44)",
 		{
 			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xba, 0xba, 0xba, 0xba, 0xba, 0xba, 0x08, 0x06, 0x00, 0x01, 0x08, 0x00, 0x06, 0x04, 0x00, 0x02, 0xba, 0xba, 0xba, 0xba, 0xba, 0xba, 0x0a, 0x0a, 0x0a, 0x0a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0b, 0x16, 0x21, 0x2c
 		},
 		42,
 	},
 	{
-		"arp: .vid=12 .dip=11.22.33.44",
+		"arp(vid=12, dip=11.22.33.44)",
 		{
 			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xba, 0xba, 0xba, 0xba, 0xba, 0xba, 0x81, 0x00, 0x00, 0x0c, 0x08, 0x06, 0x00, 0x01, 0x08, 0x00, 0x06, 0x04, 0x00, 0x01, 0xba, 0xba, 0xba, 0xba, 0xba, 0xba, 0x0a, 0x0a, 0x0a, 0x0a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0b, 0x16, 0x21, 0x2c
 		},
 		46,
 	},
 	{
-		"arp-probe: .dip=11.22.33.44",
+		"arp-probe(dip=11.22.33.44)",
 		{
 			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xba, 0xba, 0xba, 0xba, 0xba, 0xba, 0x08, 0x06, 0x00, 0x01, 0x08, 0x00, 0x06, 0x04, 0x00, 0x01, 0xba, 0xba, 0xba, 0xba, 0xba, 0xba, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0b, 0x16,	0x21, 0x2c
 		},
 		42,
 	},
 	{
-		"arp-announce: .dip=11.22.33.44",
+		"arp-announce(dip=11.22.33.44)",
 		{
 			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xba, 0xba, 0xba, 0xba, 0xba, 0xba, 0x08, 0x06, 0x00, 0x01, 0x08, 0x00, 0x06, 0x04, 0x00, 0x01, 0xba, 0xba, 0xba, 0xba, 0xba, 0xba, 0x0b, 0x16, 0x21, 0x2c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0b, 0x16, 0x21, 0x2c
 		},
 		42,
 	},
 	{
-		"arp-announce: ",
+		"arp-announce()",
 		{
 			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xba, 0xba, 0xba, 0xba, 0xba, 0xba, 0x08, 0x06, 0x00, 0x01, 0x08, 0x00, 0x06, 0x04, 0x00, 0x01, 0xba, 0xba, 0xba, 0xba, 0xba, 0xba, 0x0a, 0x0a, 0x0a, 0x0a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0a, 0x0a, 0x0a, 0x0a
 		},
 		42,
 	},
 	{
-		"ipv4: .dmac = 11:22:33:44:55:66 .dip=1.2.3.4 .protocol=254 .payload=12345678",
+		"ipv4(dmac = 11:22:33:44:55:66, dip=1.2.3.4, protocol=254, payload=12345678)",
 		{
 			0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0xba, 0xba, 0xba, 0xba, 0xba, 0xba, 0x08, 0x00, 0x45, 0x00, 0x00, 0x18, 0x00, 0x00, 0x00, 0x00, 0x40, 0xfe, 0x61, 0xcf, 0x0a, 0x0a, 0x0a, 0x0a, 0x01, 0x02, 0x03, 0x04, 0x12, 0x34, 0x56, 0x78
 		},
 		38,
 	},
 	{
-		"ipv4: .vid=42 .dmac = 11:22:33:44:55:66 .dip=1.2.3.4 .protocol=254 .payload=12345678",
+		"ipv4(vid=42, dmac = 11:22:33:44:55:66, dip=1.2.3.4, protocol=254, payload=12345678)",
 		{
 			0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0xba, 0xba, 0xba, 0xba, 0xba, 0xba, 0x81, 0x00, 0x00, 0x2a, 0x08, 0x00, 0x45, 0x00, 0x00, 0x18, 0x00, 0x00, 0x00, 0x00, 0x40, 0xfe, 0x61, 0xcf, 0x0a, 0x0a, 0x0a, 0x0a, 0x01, 0x02, 0x03, 0x04, 0x12, 0x34, 0x56, 0x78
 		},
 		42,
 	},
 	{
-		"ipv4: .smac=80:12:34:45:67:89 .dmac = 11:22:33:44:55:66 .sip=192.168.0.1 .dip=172.16.1.2 .ttl=200 .dscp=16 .ecn=1 .df=1 .protocol=254 .payload=12345678",
+		"ipv4(smac=80:12:34:45:67:89, dmac = 11:22:33:44:55:66, sip=192.168.0.1, dip=172.16.1.2, ttl=200, dscp=16, ecn=1, df=1, protocol=254, payload=12345678)",
 		{
 			0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x80, 0x12, 0x34, 0x45, 0x67, 0x89, 0x08, 0x00, 0x45, 0x41, 0x00, 0x18, 0x00, 0x00, 0x40, 0x00, 0xc8, 0xfe, 0x43, 0xeb, 0xc0, 0xa8, 0x00, 0x01, 0xac, 0x10, 0x01, 0x02, 0x12, 0x34, 0x56, 0x78
 		},
@@ -520,6 +511,297 @@ static const testcase_t tests[] = {
 void cInstructionParser::unitTest ()
 {
 	nn::Console::PrintDebug("-- " __FILE__ " --\n");
+	{
+		const char s[] = "  abc \tde_0f  ghi";
+		const char* p = nullptr;
+		bool catched = false;
+		bool abs = false;
+		uint64_t t = 0;
+
+		try
+		{
+			p = parseTimestamp (s, t, abs);
+		}
+		catch (ParseException& e)
+		{
+			catched = true;
+		}
+		assert (!catched);
+		assert (p == &s[2]);
+	}
+	{
+		const char s[] = "1000";
+		const char* p = nullptr;
+		bool catched = false;
+		bool abs = false;
+		uint64_t t = 0;
+
+		try
+		{
+			p = parseTimestamp (s, t, abs);
+		}
+		catch (ParseException& e)
+		{
+			catched = true;
+		}
+		assert (catched);
+		assert (!p);
+	}
+	{
+		const char s[] = "+1000";
+		const char* p = nullptr;
+		bool catched = false;
+		bool abs = false;
+		uint64_t t = 0;
+
+		try
+		{
+			p = parseTimestamp (s, t, abs);
+		}
+		catch (ParseException& e)
+		{
+			catched = true;
+		}
+		assert (catched);
+		assert (!p);
+	}
+	{
+		const char s[] = "1000:";
+		const char* p = nullptr;
+		bool catched = false;
+		bool abs = false;
+		uint64_t t = 0;
+
+		try
+		{
+			p = parseTimestamp (s, t, abs);
+		}
+		catch (ParseException& e)
+		{
+			catched = true;
+		}
+		assert (!catched);
+		assert (abs);
+		assert (p == &s[sizeof(s)]-1);
+		assert (t == 1000);
+	}
+	{
+		const char s[] = "+1000:";
+		const char* p = nullptr;
+		bool catched = false;
+		bool abs = false;
+		uint64_t t = 0;
+
+		try
+		{
+			p = parseTimestamp (s, t, abs);
+		}
+		catch (ParseException& e)
+		{
+			catched = true;
+		}
+		assert (!catched);
+		assert (!abs);
+		assert (p == &s[sizeof(s)]-1);
+		assert (t == 1000);
+	}
+	{
+		const char s[] = " 1000 : ";
+		const char* p = nullptr;
+		bool catched = false;
+		bool abs = false;
+		uint64_t t = 0;
+
+		try
+		{
+			p = parseTimestamp (s, t, abs);
+		}
+		catch (ParseException& e)
+		{
+			catched = true;
+		}
+		assert (!catched);
+		assert (abs);
+		assert (p == &s[7]);
+		assert (t == 1000);
+	}
+	{
+		const char s[] = " +1000 : ";
+		const char* p = nullptr;
+		bool catched = false;
+		bool abs = false;
+		uint64_t t = 0;
+
+		try
+		{
+			p = parseTimestamp (s, t, abs);
+		}
+		catch (ParseException& e)
+		{
+			catched = true;
+		}
+		assert (!catched);
+		assert (!abs);
+		assert (p == &s[8]);
+		assert (t == 1000);
+	}
+	{
+		const char s[] = " 1asd000 : ";
+		const char* p = nullptr;
+		bool catched = false;
+		bool abs = false;
+		uint64_t t = 0;
+
+		try
+		{
+			p = parseTimestamp (s, t, abs);
+		}
+		catch (ParseException& e)
+		{
+			catched = true;
+		}
+		assert (catched);
+		assert (abs);
+		assert (!p);
+		assert (t==1);
+	}
+	{
+		const char s[] = " abcd(";
+	    const char* prot;
+		size_t len = 0;
+		const char* p = nullptr;
+		bool catched = false;
+
+		try
+		{
+			p = parseProtocollIdentifier (s, &prot, &len);
+		}
+		catch (ParseException& e)
+		{
+			catched = true;
+		}
+		assert (!catched);
+		assert (len == 4);
+		assert (!strncmp("abcd", prot, len));
+		assert (*p=='(');
+	}
+	{
+		const char s[] = " abcd (";
+	    const char* prot;
+		size_t len = 0;
+		const char* p = nullptr;
+		bool catched = false;
+
+		try
+		{
+			p = parseProtocollIdentifier (s, &prot, &len);
+		}
+		catch (ParseException& e)
+		{
+			catched = true;
+		}
+		assert (!catched);
+		assert (len == 4);
+		assert (!strncmp("abcd", prot, len));
+		assert (*p=='(');
+	}
+	{
+		const char s[] = "abcd(";
+	    const char* prot;
+		size_t len = 0;
+		const char* p = nullptr;
+		bool catched = false;
+
+		try
+		{
+			p = parseProtocollIdentifier (s, &prot, &len);
+		}
+		catch (ParseException& e)
+		{
+			catched = true;
+		}
+		assert (!catched);
+		assert (len == 4);
+		assert (!strncmp("abcd", prot, len));
+		assert (*p=='(');
+	}
+	{
+		const char s[] = "abcd( ";
+	    const char* prot;
+		size_t len = 0;
+		const char* p = nullptr;
+		bool catched = false;
+
+		try
+		{
+			p = parseProtocollIdentifier (s, &prot, &len);
+		}
+		catch (ParseException& e)
+		{
+			catched = true;
+		}
+		assert (!catched);
+		assert (len == 4);
+		assert (!strncmp("abcd", prot, len));
+		assert (*p=='(');
+	}
+	{
+		const char s[] = " ab42cd-ef(";
+	    const char* prot;
+		size_t len = 0;
+		const char* p = nullptr;
+		bool catched = false;
+
+		try
+		{
+			p = parseProtocollIdentifier (s, &prot, &len);
+		}
+		catch (ParseException& e)
+		{
+			catched = true;
+		}
+		assert (!catched);
+		assert (len == 9);
+		assert (!strncmp("ab42cd-ef", prot, len));
+		assert (*p=='(');
+	}
+	{
+	    const char* prot = nullptr;
+		size_t len = 0;
+		const char* p = nullptr;
+		bool catched = false;
+		const char* wrongstrings[] = {
+				" ab!42cd_ef(",
+				" 1abcd(",
+				" _abcd(",
+				" -abcd(",
+				" abcd "
+		};
+
+		for (size_t n = 0; n <  sizeof(wrongstrings) / sizeof(wrongstrings[0]); n++)
+		{
+			len = 0;
+			p = nullptr;
+			catched = false;
+			prot = nullptr;
+
+			try
+			{
+				p = parseProtocollIdentifier (wrongstrings[n], &prot, &len);
+			}
+			catch (ParseException& e)
+			{
+				catched = true;
+			}
+			assert (catched);
+			assert (!len);
+			assert (!p);
+		}
+	}
+
+
+	//TODO fuzzing of parseTimestamp and parseProtocollIdentifier
+
 
 	uint64_t timestamp;
     bool isAbsolute;
