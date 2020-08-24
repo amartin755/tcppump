@@ -64,6 +64,8 @@ const char* cParseHelper::nextCharIgnoreWhitspaces (const char* p, char c)
 
 int cParseHelper::isOneOf (char c, const char* accept)
 {
+	assert (accept);
+
 	while (*accept != '\0')
 		if (*accept++ == c)
 			return 1;
@@ -79,6 +81,21 @@ int cParseHelper::isOneOf (char c, const char* accept)
 void cParseHelper::unitTest ()
 {
 	nn::Console::PrintDebug("-- " __FILE__ " --\n");
+
+	assert (isOneOf ('a', "abcdef"));
+	assert (isOneOf ('c', "abcdef"));
+	assert (isOneOf ('f', "abcdef"));
+	assert (!isOneOf ('r', "abcdef"));
+	assert (!isOneOf ('r', ""));
+
+	assert (*skipWhitespaces ("abc") == 'a');
+	assert (*skipWhitespaces (" abc") == 'a');
+	assert (*skipWhitespaces (" \t\nabc") == 'a');
+	assert (*skipWhitespaces ("") == '\0');
+
+	assert (!nextCharIgnoreWhitspaces (" abcd\tef\ng", 'f'));
+	assert (!nextCharIgnoreWhitspaces (" abcd\tef\ng", 'b'));
+	assert (*nextCharIgnoreWhitspaces (" abcd\tef\ng", 'a') == 'a');
 
 	{
 		const char s[] = "abc de-0f  ghi";

@@ -46,8 +46,8 @@ public:
     	// alphabetic characters, numbers, '.' and ':' are allowed
         return nextTokenEnd (p, true, true, ".:");
     }
-    static const char* nextTokenStart (const char* p, bool alpha, bool num, const char* accept);
-    static const char* nextTokenEnd (const char* p, bool alpha, bool num, const char* accept);
+    static const char* nextTokenStart (const char* p, bool isAlpha, bool isDigit, const char* accept);
+    static const char* nextTokenEnd (const char* p, bool isAlpha, bool isDigit, const char* accept);
     static const char* nextCharIgnoreWhitspaces (const char* p, char c);
     static int isOneOf (char c, const char* accept);
 
