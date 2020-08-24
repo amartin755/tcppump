@@ -1,6 +1,6 @@
 /**
- * tcppump <https://github.com/amartin755/netnag>
- * Copyright (C) 2012-2019 Andreas Martin (netnag@mailbox.org)
+ * TCPPUMP <https://github.com/amartin755/tcppump>
+ * Copyright (C) 2012-2020 Andreas Martin (netnag@mailbox.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

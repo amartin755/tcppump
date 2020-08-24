@@ -1,5 +1,5 @@
 /**
- * NETNAG <https://github.com/amartin755/netnag>
+ * TCPPUMP <https://github.com/amartin755/tcppump>
  * Copyright (C) 2012-2020 Andreas Martin (netnag@mailbox.org)
  *
  * This program is free software: you can redistribute it and/or modify
