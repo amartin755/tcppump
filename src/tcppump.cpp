@@ -245,7 +245,7 @@ int cTcpPump::execute (int argc, char* argv[])
     }
 
     Console::PrintVerbose ("Successfully sent %u of %u packets. %u of them where malformed\n", sentPackets, triedToSendPackets, malformedPackets);
-    return 0;
+    return sentPackets;
 }
 
 
