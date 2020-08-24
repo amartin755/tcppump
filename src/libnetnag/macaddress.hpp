@@ -32,76 +32,76 @@ public:
     typedef struct {uint8_t mac[6];} mac_t;
 
     cMacAddress ()
-	{
-		clear();
-	}
+    {
+        clear();
+    }
     cMacAddress (unsigned val)
-	{
-		set (val);
-	}
-	cMacAddress (const char* s)
-	{
-		set (s);
-	}
-	void clear ()
-	{
-		set ((unsigned)0);
-	}
-	void set (const cMacAddress& obj)
-	{
-		mac[0] = obj.mac[0];
-		mac[1] = obj.mac[1];
-		mac[2] = obj.mac[2];
-		mac[3] = obj.mac[3];
-		mac[4] = obj.mac[4];
-		mac[5] = obj.mac[5];
-	}
-	void set (unsigned val)
-	{
-		mac[0] = mac[1] = mac[2] = mac[3] = mac[4] = mac[5] = (uint8_t)val;
-	}
-	bool set (const char* s, size_t len = 0)
-	{
-	    if (!isValidString (s, len))
-	        return false;
+    {
+        set (val);
+    }
+    cMacAddress (const char* s)
+    {
+        set (s);
+    }
+    void clear ()
+    {
+        set ((unsigned)0);
+    }
+    void set (const cMacAddress& obj)
+    {
+        mac[0] = obj.mac[0];
+        mac[1] = obj.mac[1];
+        mac[2] = obj.mac[2];
+        mac[3] = obj.mac[3];
+        mac[4] = obj.mac[4];
+        mac[5] = obj.mac[5];
+    }
+    void set (unsigned val)
+    {
+        mac[0] = mac[1] = mac[2] = mac[3] = mac[4] = mac[5] = (uint8_t)val;
+    }
+    bool set (const char* s, size_t len = 0)
+    {
+        if (!isValidString (s, len))
+            return false;
 
-	    uint8_t* pMac = (uint8_t*)mac;
-	    for (int n = 0; n < MACSTRLEN; n += 3)
-	    {
-	        *pMac++ = (uint8_t)strtoul (&s[n], NULL, 16);
-	    }
+        uint8_t* pMac = (uint8_t*)mac;
+        for (int n = 0; n < MACSTRLEN; n += 3)
+        {
+            *pMac++ = (uint8_t)strtoul (&s[n], NULL, 16);
+        }
 
-	    return true;
-	}
-	void set (const void* b, size_t len)
-	{
-		assert (len >= size());
-		::memcpy(mac, b, size());
-	}
-	const void* get() const
-	{
-		return mac;
-	}
-	void get (char* s, size_t len) const
-	{
-		assert (len > MACSTRLEN);
-		::snprintf (s, len, "%02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-	}
-	void get (mac_t* mac) const
-	{
-		::memcpy(mac, this->mac, size());
-	}
-	void get (std::string& s) const
-	{
-		char cstr[MACSTRLEN+1];
-		get (cstr, sizeof(cstr));
-		s.assign(cstr);
-	}
+        return true;
+    }
+    void set (const void* b, size_t len)
+    {
+        assert (len >= size());
+        ::memcpy(mac, b, size());
+    }
+    const void* get() const
+    {
+        return mac;
+    }
+    void get (char* s, size_t len) const
+    {
+        assert (len > MACSTRLEN);
+        ::snprintf (s, len, "%02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    }
+    void get (mac_t* mac) const
+    {
+        ::memcpy(mac, this->mac, size());
+    }
+    void get (std::string& s) const
+    {
+        char cstr[MACSTRLEN+1];
+        get (cstr, sizeof(cstr));
+        s.assign(cstr);
+    }
 
-	static size_t size ()
-	{
-		return sizeof(mac);
-	}
+    static size_t size ()
+    {
+        return sizeof(mac);
+    }
     bool isNull () const
     {
         return !mac[0] && !mac[1] && !mac[2] && !mac[3] && !mac[4] && !mac[5];
@@ -117,27 +117,27 @@ public:
 
 
 #ifdef WITH_UNITTESTS
-	static void unitTest ()
-	{
-	    assert (!isValidString(""));
-	    assert (!isValidString("11:22:33:44:55:66:77"));
-	    assert (isValidString("11:22:33:44:55:66"));
-	    assert (isValidString("11-22-33-44-55-66"));
-	    assert (isValidString("11:a2:33:44:55:66"));
-	    assert (!isValidString("11:a2:3g:44:55:66"));
-	    assert (!isValidString("11:a2:g3:44:55:66"));
+    static void unitTest ()
+    {
+        assert (!isValidString(""));
+        assert (!isValidString("11:22:33:44:55:66:77"));
+        assert (isValidString("11:22:33:44:55:66"));
+        assert (isValidString("11-22-33-44-55-66"));
+        assert (isValidString("11:a2:33:44:55:66"));
+        assert (!isValidString("11:a2:3g:44:55:66"));
+        assert (!isValidString("11:a2:g3:44:55:66"));
 
-	    uint8_t a[] = {1,2,3,4,5,6};
-	    cMacAddress b("01:02:03:04:05:06");
-	    assert (b.size() == 6);
-	    assert (!::memcmp(a, b.mac, sizeof(a)));
+        uint8_t a[] = {1,2,3,4,5,6};
+        cMacAddress b("01:02:03:04:05:06");
+        assert (b.size() == 6);
+        assert (!::memcmp(a, b.mac, sizeof(a)));
 
-	    assert (cMacAddress().isNull());
-	    assert (cMacAddress("ff:ff:ff:ff:ff:ff").isBroadcast());
-	    assert (!cMacAddress("ff:ff:ff:ff:ff:ff").isMulticast());
-	    assert (cMacAddress("01:ff:ff:ff:ff:ff").isMulticast());
-	    assert (!cMacAddress("80:ff:ff:ff:ff:ff").isMulticast());
-	}
+        assert (cMacAddress().isNull());
+        assert (cMacAddress("ff:ff:ff:ff:ff:ff").isBroadcast());
+        assert (!cMacAddress("ff:ff:ff:ff:ff:ff").isMulticast());
+        assert (cMacAddress("01:ff:ff:ff:ff:ff").isMulticast());
+        assert (!cMacAddress("80:ff:ff:ff:ff:ff").isMulticast());
+    }
 #endif
 
 private:

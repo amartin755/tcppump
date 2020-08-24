@@ -38,33 +38,33 @@
 
 int main (void)
 {
-	nn::Console::SetPrintLevel(nn::Console::Debug);
-	try
-	{
-		tcppump::SleepInit ();
-		tcppump::SleepUnitTest ();
-		cIpAddress::unitTest ();
-		cMacAddress::unitTest ();
-		nn::Converter::unitTest ();
-		cTimeval::unitTest ();
-		cCmdline::unitTest ();
-		cEthernetPacket::unitTest ();
-		cArpPacket::unitTest ();
-		cIPv4Packet::unitTest ();
-		cParseHelper::unitTest ();
-		cParameterList::unitTest ();
-		cInstructionParser::unitTest ();
+    nn::Console::SetPrintLevel(nn::Console::Debug);
+    try
+    {
+        tcppump::SleepInit ();
+        tcppump::SleepUnitTest ();
+        cIpAddress::unitTest ();
+        cMacAddress::unitTest ();
+        nn::Converter::unitTest ();
+        cTimeval::unitTest ();
+        cCmdline::unitTest ();
+        cEthernetPacket::unitTest ();
+        cArpPacket::unitTest ();
+        cIPv4Packet::unitTest ();
+        cParseHelper::unitTest ();
+        cParameterList::unitTest ();
+        cInstructionParser::unitTest ();
 
 #if HAVE_PCAP
-		cPcapFileIO::unitTest ("../src/test/readtest.pcap");
+        cPcapFileIO::unitTest ("../src/test/readtest.pcap");
 #endif
-	}
-	catch (...)
-	{
-		assert ("unhandled exception" == 0);
-	}
-	// every failure will lead to assert, thus if we see this output, all tests have passed
-	printf ("\n --- unit tests finished successfully !!! --- \n");
+    }
+    catch (...)
+    {
+        assert ("unhandled exception" == 0);
+    }
+    // every failure will lead to assert, thus if we see this output, all tests have passed
+    printf ("\n --- unit tests finished successfully !!! --- \n");
 
-	return 0;
+    return 0;
 }

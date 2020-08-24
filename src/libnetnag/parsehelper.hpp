@@ -26,22 +26,22 @@ public:
     static const char* skipWhitespaces (const char* p);
     static const char* nextKeyStart (const char* p)
     {
-    	// Keys always start with an alphabetic character
+        // Keys always start with an alphabetic character
         return nextTokenStart (p, true, false, nullptr);
     }
     static const char* nextKeyEnd (const char* p)
     {
-    	// alphabetic characters, numbers and '-' are allowed
+        // alphabetic characters, numbers and '-' are allowed
         return nextTokenEnd (p, true, true, "-");
     }
     static const char* nextValueStart (const char* p)
     {
-    	// Values always start with an alphabetic character or a number
+        // Values always start with an alphabetic character or a number
         return nextTokenStart (p, true, true, nullptr);
     }
     static const char* nextValueEnd (const char* p)
     {
-    	// alphabetic characters, numbers, '.' and ':' are allowed
+        // alphabetic characters, numbers, '.' and ':' are allowed
         return nextTokenEnd (p, true, true, ".:");
     }
     static const char* nextTokenStart (const char* p, bool isAlpha, bool isDigit, const char* accept);

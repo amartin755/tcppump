@@ -27,10 +27,10 @@
 #pragma pack(1)
 typedef struct
 {
-	uint16_t srcPort;
-	uint16_t dstPort;
-	uint16_t length;
-	uint16_t checksum;
+    uint16_t srcPort;
+    uint16_t dstPort;
+    uint16_t length;
+    uint16_t checksum;
 
 }udp_header_t;
 #pragma pack()

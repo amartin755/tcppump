@@ -32,228 +32,228 @@ const int NO_SHORTNAME = 0x100;
 
 cCmdline::cCmdline (int argc, char* argv[])
 {
-	this->argc = argc;
-	this->argv = argv;
+    this->argc = argc;
+    this->argv = argv;
 }
 
 cCmdline::cCmdline ()
 {
-	this->argc = 0;
-	this->argv = NULL;
+    this->argc = 0;
+    this->argv = NULL;
 }
 
 cCmdline::~cCmdline ()
 {
-	// TODO Auto-generated destructor stub
+    // TODO Auto-generated destructor stub
 }
 
 
 
 bool cCmdline::parse (int argc, char* argv[], int* optind)
 {
-	this->argc = argc;
-	this->argv = argv;
+    this->argc = argc;
+    this->argv = argv;
 
-	return parse (optind);
+    return parse (optind);
 }
 
 
 bool cCmdline::parse (int* optind)
 {
-	ketopt_t opt = KETOPT_INIT;
-	bool ret = true;
-	char* shortopts = new (std::nothrow) char[options.size() * 2 + 1];
-	char* pShort = shortopts;
-	if (!shortopts)
-	{
-		nn::Console::PrintError ("Not enough memory\n");
-		return false;
-	}
+    ketopt_t opt = KETOPT_INIT;
+    bool ret = true;
+    char* shortopts = new (std::nothrow) char[options.size() * 2 + 1];
+    char* pShort = shortopts;
+    if (!shortopts)
+    {
+        nn::Console::PrintError ("Not enough memory\n");
+        return false;
+    }
 
-	ko_longopt_t *longopts = new (std::nothrow) ko_longopt_t[options.size() + 1];
-	ko_longopt_t *pLong = longopts;
-	if (!longopts)
-	{
-		delete[] shortopts;
-		nn::Console::PrintError ("Not enough memory\n");
-		return false;
-	}
+    ko_longopt_t *longopts = new (std::nothrow) ko_longopt_t[options.size() + 1];
+    ko_longopt_t *pLong = longopts;
+    if (!longopts)
+    {
+        delete[] shortopts;
+        nn::Console::PrintError ("Not enough memory\n");
+        return false;
+    }
 
-	for (unsigned n = 0; n < options.size (); n++)
-	{
-		if (options.at (n).shortname < NO_SHORTNAME)
-		{
-			*pShort++ = (char)options.at (n).shortname;
-			if (options.at (n).hasArg)
-			{
-				*pShort++ = ':';
-			}
-		}
-		if (options.at (n).longname)
-		{
-			pLong->name    = (char*)options.at (n).longname;
-			pLong->has_arg = options.at (n).hasArg ? ko_required_argument : ko_no_argument;
-			if (options.at (n).hasOptionalArg && options.at (n).hasArg)
-				pLong->has_arg = ko_optional_argument;
-			pLong->val     = options.at (n).shortname;
-			pLong++;
-		}
-	}
+    for (unsigned n = 0; n < options.size (); n++)
+    {
+        if (options.at (n).shortname < NO_SHORTNAME)
+        {
+            *pShort++ = (char)options.at (n).shortname;
+            if (options.at (n).hasArg)
+            {
+                *pShort++ = ':';
+            }
+        }
+        if (options.at (n).longname)
+        {
+            pLong->name    = (char*)options.at (n).longname;
+            pLong->has_arg = options.at (n).hasArg ? ko_required_argument : ko_no_argument;
+            if (options.at (n).hasOptionalArg && options.at (n).hasArg)
+                pLong->has_arg = ko_optional_argument;
+            pLong->val     = options.at (n).shortname;
+            pLong++;
+        }
+    }
 
-	*pShort        = '\0';
-	pLong->name    = NULL;
-	pLong->has_arg = 0;
-	pLong->val     = 0;
+    *pShort        = '\0';
+    pLong->name    = NULL;
+    pLong->has_arg = 0;
+    pLong->val     = 0;
 
 
-	int result;
-	while ((result = ketopt (&opt, argc, argv, 1, shortopts, longopts)) >= 0 && ret)
-	{
-		if (result == '?')
-		{
-			nn::Console::PrintError ("Unknown option `%s'.\n", opt.ind - 1 <= argc ? argv[opt.ind - 1] : "???");
-			ret = false;
-		}
-		else if (result == ':')
-		{
-			nn::Console::PrintError ("Option %s requires an argument.\n", opt.ind - 1 <= argc ? argv[opt.ind - 1] : "???");
-			ret = false;
-		}
-		else
-		{
-			int option = findOption (opt.opt);
-			if (option >= 0)
-			{
-				argument &o = options.at (option);
-				if (o.hasArg && opt.arg)
-				{
-					if (o.type == ARG_STRING)
-						*((char**)o.arg) = opt.arg;
-					if (o.type == ARG_INT)
-						*((int*)o.arg) = (int)strtol (opt.arg, NULL, 0);
-				}
-				o.isSet++;
-			}
-			else
-			{
-				assert ("getopt returned unexpected value" == 0);
-			}
-		}
-	}
+    int result;
+    while ((result = ketopt (&opt, argc, argv, 1, shortopts, longopts)) >= 0 && ret)
+    {
+        if (result == '?')
+        {
+            nn::Console::PrintError ("Unknown option `%s'.\n", opt.ind - 1 <= argc ? argv[opt.ind - 1] : "???");
+            ret = false;
+        }
+        else if (result == ':')
+        {
+            nn::Console::PrintError ("Option %s requires an argument.\n", opt.ind - 1 <= argc ? argv[opt.ind - 1] : "???");
+            ret = false;
+        }
+        else
+        {
+            int option = findOption (opt.opt);
+            if (option >= 0)
+            {
+                argument &o = options.at (option);
+                if (o.hasArg && opt.arg)
+                {
+                    if (o.type == ARG_STRING)
+                        *((char**)o.arg) = opt.arg;
+                    if (o.type == ARG_INT)
+                        *((int*)o.arg) = (int)strtol (opt.arg, NULL, 0);
+                }
+                o.isSet++;
+            }
+            else
+            {
+                assert ("getopt returned unexpected value" == 0);
+            }
+        }
+    }
 
-	for (const auto &currOpt : options)
-	{
-		// check if all mandatory options are present
-		if (!currOpt.optional && !currOpt.isSet)
-		{
-			nn::Console::PrintError ("mandatory option -%c --%s not set\n", currOpt.shortname, currOpt.longname);
-			ret = false;
-		}
+    for (const auto &currOpt : options)
+    {
+        // check if all mandatory options are present
+        if (!currOpt.optional && !currOpt.isSet)
+        {
+            nn::Console::PrintError ("mandatory option -%c --%s not set\n", currOpt.shortname, currOpt.longname);
+            ret = false;
+        }
 
-		// return how often option was present
-		if (currOpt.pOptSet)
-			*(currOpt.pOptSet) = currOpt.isSet;
-	}
+        // return how often option was present
+        if (currOpt.pOptSet)
+            *(currOpt.pOptSet) = currOpt.isSet;
+    }
 
-	delete[] shortopts;
-	delete[] longopts;
+    delete[] shortopts;
+    delete[] longopts;
 
-	if (optind)
-		*optind = opt.ind;
+    if (optind)
+        *optind = opt.ind;
 
-	return ret;
+    return ret;
 }
 
 
 void cCmdline::printOptions ()
 {
-	//FIXME still incomplete
-	for (unsigned n = 0; n < options.size (); n++)
-	{
-		if (options.at (n).shortname < NO_SHORTNAME)
-		{
-			nn::Console::Print ("-%c ", options.at (n).shortname);
-			if (options.at (n).hasArg)
-				nn::Console::Print ("%s ", options.at (n).argname);
-		}
-		if (options.at (n).longname)
-		{
-			nn::Console::Print ("--%s", options.at (n).longname);
-			if (options.at (n).hasArg)
-			{
-				if (options.at (n).hasOptionalArg)
-					nn::Console::Print ("[=%s] ", options.at (n).argname);
-				else
-					nn::Console::Print ("=%s ", options.at (n).argname);
-			}
+    //FIXME still incomplete
+    for (unsigned n = 0; n < options.size (); n++)
+    {
+        if (options.at (n).shortname < NO_SHORTNAME)
+        {
+            nn::Console::Print ("-%c ", options.at (n).shortname);
+            if (options.at (n).hasArg)
+                nn::Console::Print ("%s ", options.at (n).argname);
+        }
+        if (options.at (n).longname)
+        {
+            nn::Console::Print ("--%s", options.at (n).longname);
+            if (options.at (n).hasArg)
+            {
+                if (options.at (n).hasOptionalArg)
+                    nn::Console::Print ("[=%s] ", options.at (n).argname);
+                else
+                    nn::Console::Print ("=%s ", options.at (n).argname);
+            }
 
-			nn::Console::Print ("\n\t");
-		}
-		if (options.at (n).description)
-			nn::Console::Print ("%s", options.at (n).description);
-		nn::Console::Print ("\n");
-	}
+            nn::Console::Print ("\n\t");
+        }
+        if (options.at (n).description)
+            nn::Console::Print ("%s", options.at (n).description);
+        nn::Console::Print ("\n");
+    }
 }
 
 
 // NOTE 'longname', 'description' and 'argname' are assumed to be static!
 bool cCmdline::addOption (bool optional, char shortname, const char* longname, const char* description, int* isOptionSet,
-		const char* argname, arg_type type, void* arg, bool hasOptionalArg)
+        const char* argname, arg_type type, void* arg, bool hasOptionalArg)
 {
-	if (hasOptionalArg && shortname)
-		assert ("optional arguments are only possible with long options" == 0);
-	if (!shortname && !longname)
-		assert ("either shortname or longname must be != null" == 0);
+    if (hasOptionalArg && shortname)
+        assert ("optional arguments are only possible with long options" == 0);
+    if (!shortname && !longname)
+        assert ("either shortname or longname must be != null" == 0);
 
-	if (longname)
-	{
-		int len = strlen (longname);
-		if (len <= 1)
-			return false;
-	}
+    if (longname)
+    {
+        int len = strlen (longname);
+        if (len <= 1)
+            return false;
+    }
 
-	argument a;
-	memset (&a, 0, sizeof (a));
+    argument a;
+    memset (&a, 0, sizeof (a));
 
-	a.optional       = optional;
-	a.pOptSet        = isOptionSet;
-	a.shortname      = shortname ? shortname : NO_SHORTNAME + options.size();
-	a.longname       = longname;
-	a.description    = description;
-	if (argname) // option has argument?
-	{
-		a.hasArg         = true;
-		a.argname        = argname;
-		a.type           = type;
-		a.arg            = arg;
-		a.hasOptionalArg = hasOptionalArg;
-	}
-	options.push_back (a);
+    a.optional       = optional;
+    a.pOptSet        = isOptionSet;
+    a.shortname      = shortname ? shortname : NO_SHORTNAME + options.size();
+    a.longname       = longname;
+    a.description    = description;
+    if (argname) // option has argument?
+    {
+        a.hasArg         = true;
+        a.argname        = argname;
+        a.type           = type;
+        a.arg            = arg;
+        a.hasOptionalArg = hasOptionalArg;
+    }
+    options.push_back (a);
 
-	return true;
+    return true;
 }
 
 
 int cCmdline::findOption (int shortname)
 {
-	for (unsigned n = 0; n < options.size (); n++)
-	{
-		if (options.at (n).shortname == shortname)
-			return n;
-	}
-	return -1;
+    for (unsigned n = 0; n < options.size (); n++)
+    {
+        if (options.at (n).shortname == shortname)
+            return n;
+    }
+    return -1;
 }
 
 #ifdef WITH_UNITTESTS
 void cCmdline::unitTest ()
 {
-	nn::Console::PrintDebug("-- " __FILE__ " --\n");
+    nn::Console::PrintDebug("-- " __FILE__ " --\n");
 
-	// parsing rules:
-	// - short options without args -a -b -c == -abc
-	// - short options with args -aARG == -a ARG
-	// - long options with args --aaa=ARG == --aaa ARG
-	// - parsing stops when the first non-option argument is detected
+    // parsing rules:
+    // - short options without args -a -b -c == -abc
+    // - short options with args -aARG == -a ARG
+    // - long options with args --aaa=ARG == --aaa ARG
+    // - parsing stops when the first non-option argument is detected
 
     int  intarg1 = -1;
     int  intarg2 = -1;
@@ -265,432 +265,432 @@ void cCmdline::unitTest ()
     int  isset4 = -1;
 
     {
-		char* argv[] = {"unittest1", "-aAAA", "-b", "-cCCC", "-d"};
-		int argc = 5;
-		stringarg1 = stringarg2 = NULL;
-		isset1 = isset2 = isset3 = isset4 = -1;
+        char* argv[] = {"unittest1", "-aAAA", "-b", "-cCCC", "-d"};
+        int argc = 5;
+        stringarg1 = stringarg2 = NULL;
+        isset1 = isset2 = isset3 = isset4 = -1;
 
-		cCmdline obj(argc, (char**)argv);
+        cCmdline obj(argc, (char**)argv);
 
-		assert (obj.addOption (false, 'a', "arga", "mandatory option with args", &isset1, "ARG", ARG_STRING, &stringarg1));
-		assert (obj.addOption (false, 'b', "argb", "mandatory option without args (makes no sense)", &isset2));
-		assert (obj.addOption (true, 'c', "argc", "optional option with args", &isset3, "ARG", ARG_STRING, &stringarg2));
-		assert (obj.addOption (true, 'd', "argd", "optional option without args", &isset4));
+        assert (obj.addOption (false, 'a', "arga", "mandatory option with args", &isset1, "ARG", ARG_STRING, &stringarg1));
+        assert (obj.addOption (false, 'b', "argb", "mandatory option without args (makes no sense)", &isset2));
+        assert (obj.addOption (true, 'c', "argc", "optional option with args", &isset3, "ARG", ARG_STRING, &stringarg2));
+        assert (obj.addOption (true, 'd', "argd", "optional option without args", &isset4));
 
-		assert (obj.parse ());
-		assert (isset1 == 1);
-		assert (stringarg1);
-		assert (!strcmp ("AAA", stringarg1));
-		assert (isset2 == 1);
-		assert (isset3 == 1);
-		assert (stringarg2);
-		assert (!strcmp ("CCC", stringarg2));
-		assert (isset4 == 1);
+        assert (obj.parse ());
+        assert (isset1 == 1);
+        assert (stringarg1);
+        assert (!strcmp ("AAA", stringarg1));
+        assert (isset2 == 1);
+        assert (isset3 == 1);
+        assert (stringarg2);
+        assert (!strcmp ("CCC", stringarg2));
+        assert (isset4 == 1);
     }
     {
-		char* argv[] = {"unittest2", "-a", "AAA", "-b", "-c", "CCC", "-d"};
-		int argc = 7;
-		isset1 = isset2 = isset3 = isset4 = -1;
-		stringarg1 = stringarg2 = NULL;
+        char* argv[] = {"unittest2", "-a", "AAA", "-b", "-c", "CCC", "-d"};
+        int argc = 7;
+        isset1 = isset2 = isset3 = isset4 = -1;
+        stringarg1 = stringarg2 = NULL;
 
-		cCmdline obj(argc, (char**)argv);
+        cCmdline obj(argc, (char**)argv);
 
-		assert (obj.addOption (false, 'a', "arga", "mandatory option with args", &isset1, "ARG", ARG_STRING, &stringarg1));
-		assert (obj.addOption (false, 'b', "argb", "mandatory option without args (makes no sense)", &isset2));
-		assert (obj.addOption (true, 'c', "argc", "optional option with args", &isset3, "ARG", ARG_STRING, &stringarg2));
-		assert (obj.addOption (true, 'd', "argd", "optional option without args", &isset4));
+        assert (obj.addOption (false, 'a', "arga", "mandatory option with args", &isset1, "ARG", ARG_STRING, &stringarg1));
+        assert (obj.addOption (false, 'b', "argb", "mandatory option without args (makes no sense)", &isset2));
+        assert (obj.addOption (true, 'c', "argc", "optional option with args", &isset3, "ARG", ARG_STRING, &stringarg2));
+        assert (obj.addOption (true, 'd', "argd", "optional option without args", &isset4));
 
-		assert (obj.parse ());
-		assert (isset1 == 1);
-		assert (stringarg1);
-		assert (!strcmp ("AAA", stringarg1));
-		assert (isset2 == 1);
-		assert (isset3 == 1);
-		assert (stringarg2);
-		assert (!strcmp ("CCC", stringarg2));
-		assert (isset4 == 1);
+        assert (obj.parse ());
+        assert (isset1 == 1);
+        assert (stringarg1);
+        assert (!strcmp ("AAA", stringarg1));
+        assert (isset2 == 1);
+        assert (isset3 == 1);
+        assert (stringarg2);
+        assert (!strcmp ("CCC", stringarg2));
+        assert (isset4 == 1);
     }
     {
-		char* argv[] = {"unittest3", "--arga=AAA", "--argb", "--argc=CCC", "--argd"};
-		int argc = 5;
-		isset1 = isset2 = isset3 = isset4 = -1;
-		stringarg1 = stringarg2 = NULL;
+        char* argv[] = {"unittest3", "--arga=AAA", "--argb", "--argc=CCC", "--argd"};
+        int argc = 5;
+        isset1 = isset2 = isset3 = isset4 = -1;
+        stringarg1 = stringarg2 = NULL;
 
-		cCmdline obj(argc, (char**)argv);
+        cCmdline obj(argc, (char**)argv);
 
-		assert (obj.addOption (false, 'a', "arga", "mandatory option with args", &isset1, "ARG", ARG_STRING, &stringarg1));
-		assert (obj.addOption (false, 'b', "argb", "mandatory option without args (makes no sense)", &isset2));
-		assert (obj.addOption (true, 'c', "argc", "optional option with args", &isset3, "ARG", ARG_STRING, &stringarg2));
-		assert (obj.addOption (true, 'd', "argd", "optional option without args", &isset4));
+        assert (obj.addOption (false, 'a', "arga", "mandatory option with args", &isset1, "ARG", ARG_STRING, &stringarg1));
+        assert (obj.addOption (false, 'b', "argb", "mandatory option without args (makes no sense)", &isset2));
+        assert (obj.addOption (true, 'c', "argc", "optional option with args", &isset3, "ARG", ARG_STRING, &stringarg2));
+        assert (obj.addOption (true, 'd', "argd", "optional option without args", &isset4));
 
-		assert (obj.parse ());
-		assert (isset1 == 1);
-		assert (stringarg1);
-		assert (!strcmp ("AAA", stringarg1));
-		assert (isset2 == 1);
-		assert (isset3 == 1);
-		assert (stringarg2);
-		assert (!strcmp ("CCC", stringarg2));
-		assert (isset4 == 1);
+        assert (obj.parse ());
+        assert (isset1 == 1);
+        assert (stringarg1);
+        assert (!strcmp ("AAA", stringarg1));
+        assert (isset2 == 1);
+        assert (isset3 == 1);
+        assert (stringarg2);
+        assert (!strcmp ("CCC", stringarg2));
+        assert (isset4 == 1);
     }
     {
-		char* argv[] = {"unittest4", "--arga", "AAA", "--argb", "--argc", "CCC", "--argd"};
-		int argc = 7;
-		isset1 = isset2 = isset3 = isset4 = -1;
-		stringarg1 = stringarg2 = NULL;
+        char* argv[] = {"unittest4", "--arga", "AAA", "--argb", "--argc", "CCC", "--argd"};
+        int argc = 7;
+        isset1 = isset2 = isset3 = isset4 = -1;
+        stringarg1 = stringarg2 = NULL;
 
-		cCmdline obj(argc, (char**)argv);
+        cCmdline obj(argc, (char**)argv);
 
-		assert (obj.addOption (false, 'a', "arga", "mandatory option with args", &isset1, "ARG", ARG_STRING, &stringarg1));
-		assert (obj.addOption (false, 'b', "argb", "mandatory option without args (makes no sense)", &isset2));
-		assert (obj.addOption (true, 'c', "argc", "optional option with args", &isset3, "ARG", ARG_STRING, &stringarg2));
-		assert (obj.addOption (true, 'd', "argd", "optional option without args", &isset4));
+        assert (obj.addOption (false, 'a', "arga", "mandatory option with args", &isset1, "ARG", ARG_STRING, &stringarg1));
+        assert (obj.addOption (false, 'b', "argb", "mandatory option without args (makes no sense)", &isset2));
+        assert (obj.addOption (true, 'c', "argc", "optional option with args", &isset3, "ARG", ARG_STRING, &stringarg2));
+        assert (obj.addOption (true, 'd', "argd", "optional option without args", &isset4));
 
-		assert (obj.parse ());
-		assert (isset1 == 1);
-		assert (stringarg1);
-		assert (!strcmp ("AAA", stringarg1));
-		assert (isset2 == 1);
-		assert (isset3 == 1);
-		assert (stringarg2);
-		assert (!strcmp ("CCC", stringarg2));
-		assert (isset4 == 1);
+        assert (obj.parse ());
+        assert (isset1 == 1);
+        assert (stringarg1);
+        assert (!strcmp ("AAA", stringarg1));
+        assert (isset2 == 1);
+        assert (isset3 == 1);
+        assert (stringarg2);
+        assert (!strcmp ("CCC", stringarg2));
+        assert (isset4 == 1);
     }
     {
-		char* argv[] = {"unittest5", "-a", "-b", "-cCCC", "-d"};
-		int argc = 5;
-		isset1 = isset2 = isset3 = isset4 = -1;
-		stringarg1 = stringarg2 = NULL;
+        char* argv[] = {"unittest5", "-a", "-b", "-cCCC", "-d"};
+        int argc = 5;
+        isset1 = isset2 = isset3 = isset4 = -1;
+        stringarg1 = stringarg2 = NULL;
 
-		cCmdline obj(argc, (char**)argv);
+        cCmdline obj(argc, (char**)argv);
 
-		assert (obj.addOption (false, 'a', "arga", "mandatory option with args", &isset1, "ARG", ARG_STRING, &stringarg1));
-		assert (obj.addOption (false, 'b', "argb", "mandatory option without args (makes no sense)", &isset2));
-		assert (obj.addOption (true, 'c', "argc", "optional option with args", &isset3, "ARG", ARG_STRING, &stringarg2));
-		assert (obj.addOption (true, 'd', "argd", "optional option without args", &isset4));
+        assert (obj.addOption (false, 'a', "arga", "mandatory option with args", &isset1, "ARG", ARG_STRING, &stringarg1));
+        assert (obj.addOption (false, 'b', "argb", "mandatory option without args (makes no sense)", &isset2));
+        assert (obj.addOption (true, 'c', "argc", "optional option with args", &isset3, "ARG", ARG_STRING, &stringarg2));
+        assert (obj.addOption (true, 'd', "argd", "optional option without args", &isset4));
 
-		assert (!obj.parse ());
-		assert (isset1 == 1);
-		assert (stringarg1);
-		assert (!strcmp ("-b", stringarg1));
-		assert (isset2 == 0);
-		assert (isset3 == 1);
-		assert (stringarg2);
-		assert (!strcmp ("CCC", stringarg2));
-		assert (isset4 == 1);
+        assert (!obj.parse ());
+        assert (isset1 == 1);
+        assert (stringarg1);
+        assert (!strcmp ("-b", stringarg1));
+        assert (isset2 == 0);
+        assert (isset3 == 1);
+        assert (stringarg2);
+        assert (!strcmp ("CCC", stringarg2));
+        assert (isset4 == 1);
     }
     {
-		char* argv[] = {"unittest6", "-b", "-cCCC"};
-		int argc = 3;
-		isset1 = isset2 = isset3 = isset4 = -1;
-		stringarg1 = stringarg2 = NULL;
+        char* argv[] = {"unittest6", "-b", "-cCCC"};
+        int argc = 3;
+        isset1 = isset2 = isset3 = isset4 = -1;
+        stringarg1 = stringarg2 = NULL;
 
-		cCmdline obj(argc, (char**)argv);
+        cCmdline obj(argc, (char**)argv);
 
-		assert (obj.addOption (false, 'a', "arga", "mandatory option with args", &isset1, "ARG", ARG_STRING, &stringarg1));
-		assert (obj.addOption (false, 'b', "argb", "mandatory option without args (makes no sense)", &isset2));
-		assert (obj.addOption (true, 'c', "argc", "optional option with args", &isset3, "ARG", ARG_STRING, &stringarg2));
-		assert (obj.addOption (true, 'd', "argd", "optional option without args", &isset4));
+        assert (obj.addOption (false, 'a', "arga", "mandatory option with args", &isset1, "ARG", ARG_STRING, &stringarg1));
+        assert (obj.addOption (false, 'b', "argb", "mandatory option without args (makes no sense)", &isset2));
+        assert (obj.addOption (true, 'c', "argc", "optional option with args", &isset3, "ARG", ARG_STRING, &stringarg2));
+        assert (obj.addOption (true, 'd', "argd", "optional option without args", &isset4));
 
-		assert (!obj.parse ());
-		assert (isset1 == 0);
-		assert (isset2 == 1);
-		assert (isset3 == 1);
-		assert (isset4 == 0);
-		assert (!stringarg1);
-		assert (stringarg2);
-		assert (!strcmp ("CCC", stringarg2));
+        assert (!obj.parse ());
+        assert (isset1 == 0);
+        assert (isset2 == 1);
+        assert (isset3 == 1);
+        assert (isset4 == 0);
+        assert (!stringarg1);
+        assert (stringarg2);
+        assert (!strcmp ("CCC", stringarg2));
     }
     {
-		char* argv[] = {"unittest7", "-a", "-b"};
-		int argc = 3;
-		isset1 = isset2 = isset3 = isset4 = -1;
-		stringarg1 = stringarg2 = NULL;
-		intarg1 = intarg2 = -1;
+        char* argv[] = {"unittest7", "-a", "-b"};
+        int argc = 3;
+        isset1 = isset2 = isset3 = isset4 = -1;
+        stringarg1 = stringarg2 = NULL;
+        intarg1 = intarg2 = -1;
 
-		cCmdline obj(argc, (char**)argv);
+        cCmdline obj(argc, (char**)argv);
 
-		assert (obj.addOption (true, 'a', "arga", "optional option without args", &isset1));
-		assert (obj.addOption (true, 'b', "argb", "optional option without args", &isset2));
+        assert (obj.addOption (true, 'a', "arga", "optional option without args", &isset1));
+        assert (obj.addOption (true, 'b', "argb", "optional option without args", &isset2));
 
-		assert (obj.parse ());
-		assert (isset1 == 1);
-		assert (isset2 == 1);
+        assert (obj.parse ());
+        assert (isset1 == 1);
+        assert (isset2 == 1);
     }
     {
-		char* argv[] = {"unittest8", "-b"};
-		int argc = 2;
-		isset1 = isset2 = isset3 = isset4 = -1;
-		stringarg1 = stringarg2 = NULL;
-		intarg1 = intarg2 = -1;
+        char* argv[] = {"unittest8", "-b"};
+        int argc = 2;
+        isset1 = isset2 = isset3 = isset4 = -1;
+        stringarg1 = stringarg2 = NULL;
+        intarg1 = intarg2 = -1;
 
-		cCmdline obj(argc, (char**)argv);
+        cCmdline obj(argc, (char**)argv);
 
-		assert (obj.addOption (true, 'a', "arga", "optional option without args", &isset1));
-		assert (obj.addOption (true, 'b', "argb", "optional option without args", &isset2));
+        assert (obj.addOption (true, 'a', "arga", "optional option without args", &isset1));
+        assert (obj.addOption (true, 'b', "argb", "optional option without args", &isset2));
 
-		assert (obj.parse ());
-		assert (isset1 == 0);
-		assert (isset2 == 1);
+        assert (obj.parse ());
+        assert (isset1 == 0);
+        assert (isset2 == 1);
     }
     {
-		char* argv[] = {"unittest9", "-a0xa", "-b10"};
-		int argc = 3;
-		isset1 = isset2 = isset3 = isset4 = -1;
-		stringarg1 = stringarg2 = NULL;
-		intarg1 = intarg2 = -1;
+        char* argv[] = {"unittest9", "-a0xa", "-b10"};
+        int argc = 3;
+        isset1 = isset2 = isset3 = isset4 = -1;
+        stringarg1 = stringarg2 = NULL;
+        intarg1 = intarg2 = -1;
 
-		cCmdline obj(argc, (char**)argv);
+        cCmdline obj(argc, (char**)argv);
 
-		assert (obj.addOption (true, 'a', "arga", "optional option with args", &isset1, "ARG", ARG_INT, &intarg1));
-		assert (obj.addOption (true, 'b', "argb", "optional option with args", &isset2, "ARG", ARG_INT, &intarg2));
+        assert (obj.addOption (true, 'a', "arga", "optional option with args", &isset1, "ARG", ARG_INT, &intarg1));
+        assert (obj.addOption (true, 'b', "argb", "optional option with args", &isset2, "ARG", ARG_INT, &intarg2));
 
-		assert (obj.parse ());
-		assert (isset1 == 1);
-		assert (isset2 == 1);
-		assert (intarg1 == 10);
-		assert (intarg2 == 10);
+        assert (obj.parse ());
+        assert (isset1 == 1);
+        assert (isset2 == 1);
+        assert (intarg1 == 10);
+        assert (intarg2 == 10);
     }
     {
-		char* argv[] = {"unittest10", "-a", "0xa", "-b", "10"};
-		int argc = 5;
-		isset1 = isset2 = isset3 = isset4 = -1;
-		stringarg1 = stringarg2 = NULL;
-		intarg1 = intarg2 = -1;
+        char* argv[] = {"unittest10", "-a", "0xa", "-b", "10"};
+        int argc = 5;
+        isset1 = isset2 = isset3 = isset4 = -1;
+        stringarg1 = stringarg2 = NULL;
+        intarg1 = intarg2 = -1;
 
-		cCmdline obj(argc, (char**)argv);
+        cCmdline obj(argc, (char**)argv);
 
-		assert (obj.addOption (true, 'a', "arga", "optional option with args", &isset1, "ARG", ARG_INT, &intarg1));
-		assert (obj.addOption (true, 'b', "argb", "optional option with args", &isset2, "ARG", ARG_INT, &intarg2));
+        assert (obj.addOption (true, 'a', "arga", "optional option with args", &isset1, "ARG", ARG_INT, &intarg1));
+        assert (obj.addOption (true, 'b', "argb", "optional option with args", &isset2, "ARG", ARG_INT, &intarg2));
 
-		assert (obj.parse ());
-		assert (isset1 == 1);
-		assert (isset2 == 1);
-		assert (intarg1 == 10);
-		assert (intarg2 == 10);
+        assert (obj.parse ());
+        assert (isset1 == 1);
+        assert (isset2 == 1);
+        assert (intarg1 == 10);
+        assert (intarg2 == 10);
     }
     {
-		char* argv[] = {"unittest11", "--arga=0xa", "--argb=10"};
-		int argc = 3;
-		isset1 = isset2 = isset3 = isset4 = -1;
-		stringarg1 = stringarg2 = NULL;
-		intarg1 = intarg2 = -1;
+        char* argv[] = {"unittest11", "--arga=0xa", "--argb=10"};
+        int argc = 3;
+        isset1 = isset2 = isset3 = isset4 = -1;
+        stringarg1 = stringarg2 = NULL;
+        intarg1 = intarg2 = -1;
 
-		cCmdline obj(argc, (char**)argv);
+        cCmdline obj(argc, (char**)argv);
 
-		assert (obj.addOption (true, 'a', "arga", "optional option with args", &isset1, "ARG", ARG_INT, &intarg1));
-		assert (obj.addOption (true, 'b', "argb", "optional option with args", &isset2, "ARG", ARG_INT, &intarg2));
+        assert (obj.addOption (true, 'a', "arga", "optional option with args", &isset1, "ARG", ARG_INT, &intarg1));
+        assert (obj.addOption (true, 'b', "argb", "optional option with args", &isset2, "ARG", ARG_INT, &intarg2));
 
-		assert (obj.parse ());
-		assert (isset1 == 1);
-		assert (isset2 == 1);
-		assert (intarg1 == 10);
-		assert (intarg2 == 10);
+        assert (obj.parse ());
+        assert (isset1 == 1);
+        assert (isset2 == 1);
+        assert (intarg1 == 10);
+        assert (intarg2 == 10);
     }
     {
-		char* argv[] = {"unittest12", "--arga", "0xa", "--argb", "10"};
-		int argc = 5;
-		isset1 = isset2 = isset3 = isset4 = -1;
-		stringarg1 = stringarg2 = NULL;
-		intarg1 = intarg2 = -1;
+        char* argv[] = {"unittest12", "--arga", "0xa", "--argb", "10"};
+        int argc = 5;
+        isset1 = isset2 = isset3 = isset4 = -1;
+        stringarg1 = stringarg2 = NULL;
+        intarg1 = intarg2 = -1;
 
-		cCmdline obj(argc, (char**)argv);
+        cCmdline obj(argc, (char**)argv);
 
-		assert (obj.addOption (true, 'a', "arga", "optional option with args", &isset1, "ARG", ARG_INT, &intarg1));
-		assert (obj.addOption (true, 'b', "argb", "optional option with args", &isset2, "ARG", ARG_INT, &intarg2));
+        assert (obj.addOption (true, 'a', "arga", "optional option with args", &isset1, "ARG", ARG_INT, &intarg1));
+        assert (obj.addOption (true, 'b', "argb", "optional option with args", &isset2, "ARG", ARG_INT, &intarg2));
 
-		assert (obj.parse ());
-		assert (isset1 == 1);
-		assert (isset2 == 1);
-		assert (intarg1 == 10);
-		assert (intarg2 == 10);
+        assert (obj.parse ());
+        assert (isset1 == 1);
+        assert (isset2 == 1);
+        assert (intarg1 == 10);
+        assert (intarg2 == 10);
     }
     {
-		char* argv[] = {"unittest13", "--arga=0xa", "--argb", "10", "--argc=CCC", "--argd", "DDD", "ABCD", "EFGH"};
-		int argc = 9;
-		isset1 = isset2 = isset3 = isset4 = -1;
-		stringarg1 = stringarg2 = NULL;
-		intarg1 = intarg2 = -1;
-		int index = 0;
+        char* argv[] = {"unittest13", "--arga=0xa", "--argb", "10", "--argc=CCC", "--argd", "DDD", "ABCD", "EFGH"};
+        int argc = 9;
+        isset1 = isset2 = isset3 = isset4 = -1;
+        stringarg1 = stringarg2 = NULL;
+        intarg1 = intarg2 = -1;
+        int index = 0;
 
-		cCmdline obj(argc, (char**)argv);
+        cCmdline obj(argc, (char**)argv);
 
-		assert (obj.addOption (true, 'a', "arga", "optional option with args", &isset1, "ARG", ARG_INT, &intarg1));
-		assert (obj.addOption (true, 'b', "argb", "optional option with args", &isset2, "ARG", ARG_INT, &intarg2));
-		assert (obj.addOption (true, 'c', "argc", "optional option with args", &isset3, "ARG", ARG_STRING, &stringarg1));
-		assert (obj.addOption (true, 'd', "argd", "optional option with args", &isset4, "ARG", ARG_STRING, &stringarg2));
+        assert (obj.addOption (true, 'a', "arga", "optional option with args", &isset1, "ARG", ARG_INT, &intarg1));
+        assert (obj.addOption (true, 'b', "argb", "optional option with args", &isset2, "ARG", ARG_INT, &intarg2));
+        assert (obj.addOption (true, 'c', "argc", "optional option with args", &isset3, "ARG", ARG_STRING, &stringarg1));
+        assert (obj.addOption (true, 'd', "argd", "optional option with args", &isset4, "ARG", ARG_STRING, &stringarg2));
 
-		assert (obj.parse (&index));
-		assert (isset1 == 1);
-		assert (isset2 == 1);
-		assert (isset3 == 1);
-		assert (isset4 == 1);
-		assert (intarg1 == 10);
-		assert (intarg2 == 10);
-		assert (stringarg1);
-		assert (!strcmp ("CCC", stringarg1));
-		assert (stringarg2);
-		assert (!strcmp ("DDD", stringarg2));
-		assert (index == 7);
+        assert (obj.parse (&index));
+        assert (isset1 == 1);
+        assert (isset2 == 1);
+        assert (isset3 == 1);
+        assert (isset4 == 1);
+        assert (intarg1 == 10);
+        assert (intarg2 == 10);
+        assert (stringarg1);
+        assert (!strcmp ("CCC", stringarg1));
+        assert (stringarg2);
+        assert (!strcmp ("DDD", stringarg2));
+        assert (index == 7);
     }
     {
-		char* argv[] = {"unittest14", "--arga=0xa", "--argb", "10", "--argc=CCC", "--argd", "DDD", "ABCD", "EFGH"};
-		int argc = 9;
-		isset1 = isset2 = isset3 = isset4 = -1;
-		stringarg1 = stringarg2 = NULL;
-		intarg1 = intarg2 = -1;
-		int index = 0;
+        char* argv[] = {"unittest14", "--arga=0xa", "--argb", "10", "--argc=CCC", "--argd", "DDD", "ABCD", "EFGH"};
+        int argc = 9;
+        isset1 = isset2 = isset3 = isset4 = -1;
+        stringarg1 = stringarg2 = NULL;
+        intarg1 = intarg2 = -1;
+        int index = 0;
 
-		cCmdline obj(argc, (char**)argv);
+        cCmdline obj(argc, (char**)argv);
 
-		assert (obj.addOption (true, 'a', "arga", "optional option with args", &isset1, "ARG", ARG_INT, &intarg1));
-		assert (obj.addOption (true, 'b', "argb", "optional option with args", &isset2, "ARG", ARG_INT, &intarg2));
-		assert (obj.addOption (true, 0, "argc", "optional option with args", &isset3, "ARG", ARG_STRING, &stringarg1));
-		assert (obj.addOption (true, 'd', "argd", "optional option with args", &isset4, "ARG", ARG_STRING, &stringarg2));
+        assert (obj.addOption (true, 'a', "arga", "optional option with args", &isset1, "ARG", ARG_INT, &intarg1));
+        assert (obj.addOption (true, 'b', "argb", "optional option with args", &isset2, "ARG", ARG_INT, &intarg2));
+        assert (obj.addOption (true, 0, "argc", "optional option with args", &isset3, "ARG", ARG_STRING, &stringarg1));
+        assert (obj.addOption (true, 'd', "argd", "optional option with args", &isset4, "ARG", ARG_STRING, &stringarg2));
 
-		assert (obj.parse (&index));
-		assert (isset1 == 1);
-		assert (isset2 == 1);
-		assert (isset3 == 1);
-		assert (isset4 == 1);
-		assert (intarg1 == 10);
-		assert (intarg2 == 10);
-		assert (stringarg1);
-		assert (!strcmp ("CCC", stringarg1));
-		assert (stringarg2);
-		assert (!strcmp ("DDD", stringarg2));
-		assert (index == 7);
+        assert (obj.parse (&index));
+        assert (isset1 == 1);
+        assert (isset2 == 1);
+        assert (isset3 == 1);
+        assert (isset4 == 1);
+        assert (intarg1 == 10);
+        assert (intarg2 == 10);
+        assert (stringarg1);
+        assert (!strcmp ("CCC", stringarg1));
+        assert (stringarg2);
+        assert (!strcmp ("DDD", stringarg2));
+        assert (index == 7);
     }
     {
-		char* argv[] = {"unittest15", "-vvv"};
-		int argc = 2;
-		isset1 = isset2 = isset3 = isset4 = -1;
-		int index = 0;
+        char* argv[] = {"unittest15", "-vvv"};
+        int argc = 2;
+        isset1 = isset2 = isset3 = isset4 = -1;
+        int index = 0;
 
-		cCmdline obj(argc, (char**)argv);
+        cCmdline obj(argc, (char**)argv);
 
-		assert (obj.addOption (true, 'v', "argd", "optional option without args", &isset1));
+        assert (obj.addOption (true, 'v', "argd", "optional option without args", &isset1));
 
-		assert (obj.parse (&index));
-		assert (isset1 == 3);
+        assert (obj.parse (&index));
+        assert (isset1 == 3);
     }
     {
-		char* argv[] = {"unittest16", "-vv", "--arga"};
-		int argc = 3;
-		isset1 = isset2 = isset3 = isset4 = -1;
-		int index = 0;
+        char* argv[] = {"unittest16", "-vv", "--arga"};
+        int argc = 3;
+        isset1 = isset2 = isset3 = isset4 = -1;
+        int index = 0;
 
-		cCmdline obj(argc, (char**)argv);
+        cCmdline obj(argc, (char**)argv);
 
-		assert (obj.addOption (true, 'v', nullptr, "optional short-only option without args", &isset1));
-		assert (obj.addOption (true, 0, "arga", "optional long-only option without args", &isset2));
+        assert (obj.addOption (true, 'v', nullptr, "optional short-only option without args", &isset1));
+        assert (obj.addOption (true, 0, "arga", "optional long-only option without args", &isset2));
 
-		assert (obj.parse (&index));
-		assert (isset1 == 2);
-		assert (isset2 == 1);
+        assert (obj.parse (&index));
+        assert (isset1 == 2);
+        assert (isset2 == 1);
     }
     {
-		char* argv[] = {"unittest17", "-a"};
-		int argc = 2;
-		intarg1 = intarg2 = -2;
-		isset1 = isset2 = isset3 = isset4 = -1;
-		int index = 0;
+        char* argv[] = {"unittest17", "-a"};
+        int argc = 2;
+        intarg1 = intarg2 = -2;
+        isset1 = isset2 = isset3 = isset4 = -1;
+        int index = 0;
 
-		cCmdline obj(argc, (char**)argv);
+        cCmdline obj(argc, (char**)argv);
 
-		assert (obj.addOption (true, 'a', "arga", "optional option with args", &isset1, "ARG", ARG_INT, &intarg1));
+        assert (obj.addOption (true, 'a', "arga", "optional option with args", &isset1, "ARG", ARG_INT, &intarg1));
 
-		assert (!obj.parse (&index));
-		assert (isset1 == 0);
-		assert (intarg1 == -2);
+        assert (!obj.parse (&index));
+        assert (isset1 == 0);
+        assert (intarg1 == -2);
     }
     {
-		char* argv[] = {"unittest18", "-a"};
-		int argc = 2;
-		intarg1 = intarg2 = -2;
-		isset1 = isset2 = isset3 = isset4 = -1;
-		int index = 0;
+        char* argv[] = {"unittest18", "-a"};
+        int argc = 2;
+        intarg1 = intarg2 = -2;
+        isset1 = isset2 = isset3 = isset4 = -1;
+        int index = 0;
 
-		cCmdline obj(argc, (char**)argv);
+        cCmdline obj(argc, (char**)argv);
 
-		assert (obj.addOption (true, 'a', nullptr, "optional short-only option with args", &isset1, "ARG", ARG_INT, &intarg1));
+        assert (obj.addOption (true, 'a', nullptr, "optional short-only option with args", &isset1, "ARG", ARG_INT, &intarg1));
 
-		assert (!obj.parse (&index));
-		assert (isset1 == 0);
-		assert (intarg1 == -2);
+        assert (!obj.parse (&index));
+        assert (isset1 == 0);
+        assert (intarg1 == -2);
     }
     {
-		char* argv[] = {"unittest19", "--arga"};
-		int argc = 2;
-		intarg1 = intarg2 = -2;
-		isset1 = isset2 = isset3 = isset4 = -1;
-		int index = 0;
+        char* argv[] = {"unittest19", "--arga"};
+        int argc = 2;
+        intarg1 = intarg2 = -2;
+        isset1 = isset2 = isset3 = isset4 = -1;
+        int index = 0;
 
-		cCmdline obj(argc, (char**)argv);
+        cCmdline obj(argc, (char**)argv);
 
-		assert (obj.addOption (true, 0, "arga", "optional long-only option with args", &isset1, "ARG", ARG_INT, &intarg1));
+        assert (obj.addOption (true, 0, "arga", "optional long-only option with args", &isset1, "ARG", ARG_INT, &intarg1));
 
-		assert (!obj.parse (&index));
-		assert (isset1 == 0);
-		assert (intarg1 == -2);
+        assert (!obj.parse (&index));
+        assert (isset1 == 0);
+        assert (intarg1 == -2);
     }
     {
-		char* argv[] = {"unittest20", "-a", "-b"};
-		int argc = 3;
-		intarg1 = intarg2 = 0;
-		isset1 = isset2 = isset3 = isset4 = -1;
-		int index = 0;
+        char* argv[] = {"unittest20", "-a", "-b"};
+        int argc = 3;
+        intarg1 = intarg2 = 0;
+        isset1 = isset2 = isset3 = isset4 = -1;
+        int index = 0;
 
-		cCmdline obj(argc, (char**)argv);
+        cCmdline obj(argc, (char**)argv);
 
-		assert (obj.addOption (true, 'a', "arga", "optional option without args", &isset1));
+        assert (obj.addOption (true, 'a', "arga", "optional option without args", &isset1));
 
-		assert (!obj.parse (&index));
-		assert (isset1 == 1);
+        assert (!obj.parse (&index));
+        assert (isset1 == 1);
     }
     {
-		char* argv[] = {"unittest21", "-a", "--berta"};
-		int argc = 3;
-		intarg1 = intarg2 = 0;
-		isset1 = isset2 = isset3 = isset4 = -1;
-		int index = 0;
+        char* argv[] = {"unittest21", "-a", "--berta"};
+        int argc = 3;
+        intarg1 = intarg2 = 0;
+        isset1 = isset2 = isset3 = isset4 = -1;
+        int index = 0;
 
-		cCmdline obj(argc, (char**)argv);
+        cCmdline obj(argc, (char**)argv);
 
-		assert (obj.addOption (true, 'a', "arga", "optional option without args", &isset1));
+        assert (obj.addOption (true, 'a', "arga", "optional option without args", &isset1));
 
-		assert (!obj.parse (&index));
-		assert (isset1 == 1);
+        assert (!obj.parse (&index));
+        assert (isset1 == 1);
     }
     {
-		char* argv[] = {"unittest23", "--arga", "2"};
-		int argc = 3;
-		intarg1 = intarg2 = -2;
-		isset1 = isset2 = isset3 = isset4 = -1;
-		int index = 0;
+        char* argv[] = {"unittest23", "--arga", "2"};
+        int argc = 3;
+        intarg1 = intarg2 = -2;
+        isset1 = isset2 = isset3 = isset4 = -1;
+        int index = 0;
 
-		cCmdline obj(argc, (char**)argv);
+        cCmdline obj(argc, (char**)argv);
 
-		assert (obj.addOption (true, 0, "arga", "optional long-only option optional with args", &isset1, "ARG", ARG_INT, &intarg1, true));
+        assert (obj.addOption (true, 0, "arga", "optional long-only option optional with args", &isset1, "ARG", ARG_INT, &intarg1, true));
 
-		assert (obj.parse (&index));
-		assert (isset1 == 1);
-		assert (intarg1 == -2);
+        assert (obj.parse (&index));
+        assert (isset1 == 1);
+        assert (intarg1 == -2);
     }
     {
-		char* argv[] = {"unittest23", "--arga=2"};
-		int argc = 2;
-		intarg1 = intarg2 = -2;
-		isset1 = isset2 = isset3 = isset4 = -1;
-		int index = 0;
+        char* argv[] = {"unittest23", "--arga=2"};
+        int argc = 2;
+        intarg1 = intarg2 = -2;
+        isset1 = isset2 = isset3 = isset4 = -1;
+        int index = 0;
 
-		cCmdline obj(argc, (char**)argv);
+        cCmdline obj(argc, (char**)argv);
 
-		assert (obj.addOption (true, 0, "arga", "optional long-only option optional with args", &isset1, "ARG", ARG_INT, &intarg1, true));
+        assert (obj.addOption (true, 0, "arga", "optional long-only option optional with args", &isset1, "ARG", ARG_INT, &intarg1, true));
 
-		assert (obj.parse (&index));
-		assert (isset1 == 1);
-		assert (intarg1 == 2);
+        assert (obj.parse (&index));
+        assert (isset1 == 1);
+        assert (intarg1 == 2);
     }
 }
 #endif

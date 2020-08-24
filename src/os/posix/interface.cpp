@@ -139,7 +139,7 @@ bool cInterface::getMAC (cMacAddress &mac)
         ::close (s);
 
         if (ifr.ifr_hwaddr.sa_family != ARPHRD_ETHER)
-        	return false;
+            return false;
 
         // Copy source MAC address
         mac.set (ifr.ifr_hwaddr.sa_data, mac.size());

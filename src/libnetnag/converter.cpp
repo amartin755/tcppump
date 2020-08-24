@@ -101,7 +101,7 @@ bool Converter::hexStringToBin (const char* hexString, int hexStringLen, uint8_t
 #ifdef WITH_UNITTESTS
 void Converter::unitTest ()
 {
-	nn::Console::PrintDebug("-- " __FILE__ " --\n");
+    nn::Console::PrintDebug("-- " __FILE__ " --\n");
 
     int binLen;
     uint8_t* bin;

@@ -23,25 +23,25 @@
 
 namespace tcppump
 {
-	// emulates the behavior of DOS' getch, which returns unbuffered STDIN
-	int getch (void)
-	{
-		int c;
-		struct termios oldt, newt;
+    // emulates the behavior of DOS' getch, which returns unbuffered STDIN
+    int getch (void)
+    {
+        int c;
+        struct termios oldt, newt;
 
-		// save current terminal status
-		tcgetattr (STDIN_FILENO, &oldt);
+        // save current terminal status
+        tcgetattr (STDIN_FILENO, &oldt);
 
-		// set terminal to non-canonical mode
-		newt = oldt;
-		newt.c_lflag &= ~(ICANON | ECHO);
-		tcsetattr (STDIN_FILENO, TCSANOW, &newt);
-		c = getchar();
+        // set terminal to non-canonical mode
+        newt = oldt;
+        newt.c_lflag &= ~(ICANON | ECHO);
+        tcsetattr (STDIN_FILENO, TCSANOW, &newt);
+        c = getchar();
 
-		// restore terminal status
-		tcsetattr (STDIN_FILENO, TCSANOW, &oldt);
+        // restore terminal status
+        tcsetattr (STDIN_FILENO, TCSANOW, &oldt);
 
-		return c;
-	}
+        return c;
+    }
 }
 

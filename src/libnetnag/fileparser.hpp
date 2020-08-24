@@ -35,26 +35,26 @@ class cParameterList;
 class cFileParser
 {
 public:
-	cFileParser ();
-	~cFileParser ();
-	void init (FILE* fp, uint64_t defaultDelay, const cMacAddress& ownMac, const cIpAddress&  ownIPv4);
-	int parse (uint64_t&, bool&, std::list <cEthernetPacket> &packets);
-	const char* getLastError ();
+    cFileParser ();
+    ~cFileParser ();
+    void init (FILE* fp, uint64_t defaultDelay, const cMacAddress& ownMac, const cIpAddress&  ownIPv4);
+    int parse (uint64_t&, bool&, std::list <cEthernetPacket> &packets);
+    const char* getLastError ();
 
 
 private:
-	int parseError (const char* errmsg, const char* pos = NULL);
+    int parseError (const char* errmsg, const char* pos = NULL);
 
-	char*  instructionBuffer;
-	int    instructionBufferSize;
+    char*  instructionBuffer;
+    int    instructionBufferSize;
 
-	uint64_t     delay;
-	cMacAddress  ownMac;
-	cIpAddress   ownIPv4;
-	FILE*        fp;
+    uint64_t     delay;
+    cMacAddress  ownMac;
+    cIpAddress   ownIPv4;
+    FILE*        fp;
 
-	char         lastError[1024];
-	unsigned     lineNbr;
+    char         lastError[1024];
+    unsigned     lineNbr;
 };
 
 #endif /* FILEPARSER_HPP_ */

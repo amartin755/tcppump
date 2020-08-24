@@ -37,38 +37,38 @@ const char* cParseHelper::nextTokenStart (const char* p, bool alpha, bool num, c
     p = skipWhitespaces(p);
 
     if ((alpha && isalpha (*p)) || (num && isdigit (*p)) || (accept && isOneOf (*p, accept)))
-    	return p;
+        return p;
 
     return nullptr;
 }
 
 const char* cParseHelper::nextTokenEnd (const char* p, bool alpha, bool num, const char* accept)
 {
-	while (*p != '\0')
-	{
-	    if ((alpha && isalpha (*p)) || (num && isdigit (*p)) || (accept && isOneOf (*p, accept)))
-	    	p++;
-	    else
-	    	return p;
-	}
-	return p;
+    while (*p != '\0')
+    {
+        if ((alpha && isalpha (*p)) || (num && isdigit (*p)) || (accept && isOneOf (*p, accept)))
+            p++;
+        else
+            return p;
+    }
+    return p;
 }
 
 const char* cParseHelper::nextCharIgnoreWhitspaces (const char* p, char c)
 {
-	p = skipWhitespaces(p);
-	return *p == c ? p : nullptr;
+    p = skipWhitespaces(p);
+    return *p == c ? p : nullptr;
 }
 
 int cParseHelper::isOneOf (char c, const char* accept)
 {
-	assert (accept);
+    assert (accept);
 
-	while (*accept != '\0')
-		if (*accept++ == c)
-			return 1;
+    while (*accept != '\0')
+        if (*accept++ == c)
+            return 1;
 
-	return 0;
+    return 0;
 }
 
 
@@ -78,84 +78,84 @@ int cParseHelper::isOneOf (char c, const char* accept)
 
 void cParseHelper::unitTest ()
 {
-	nn::Console::PrintDebug("-- " __FILE__ " --\n");
+    nn::Console::PrintDebug("-- " __FILE__ " --\n");
 
-	assert (isOneOf ('a', "abcdef"));
-	assert (isOneOf ('c', "abcdef"));
-	assert (isOneOf ('f', "abcdef"));
-	assert (!isOneOf ('r', "abcdef"));
-	assert (!isOneOf ('r', ""));
+    assert (isOneOf ('a', "abcdef"));
+    assert (isOneOf ('c', "abcdef"));
+    assert (isOneOf ('f', "abcdef"));
+    assert (!isOneOf ('r', "abcdef"));
+    assert (!isOneOf ('r', ""));
 
-	assert (*skipWhitespaces ("abc") == 'a');
-	assert (*skipWhitespaces (" abc") == 'a');
-	assert (*skipWhitespaces (" \t\nabc") == 'a');
-	assert (*skipWhitespaces ("") == '\0');
+    assert (*skipWhitespaces ("abc") == 'a');
+    assert (*skipWhitespaces (" abc") == 'a');
+    assert (*skipWhitespaces (" \t\nabc") == 'a');
+    assert (*skipWhitespaces ("") == '\0');
 
-	assert (!nextCharIgnoreWhitspaces (" abcd\tef\ng", 'f'));
-	assert (!nextCharIgnoreWhitspaces (" abcd\tef\ng", 'b'));
-	assert (*nextCharIgnoreWhitspaces (" abcd\tef\ng", 'a') == 'a');
+    assert (!nextCharIgnoreWhitspaces (" abcd\tef\ng", 'f'));
+    assert (!nextCharIgnoreWhitspaces (" abcd\tef\ng", 'b'));
+    assert (*nextCharIgnoreWhitspaces (" abcd\tef\ng", 'a') == 'a');
 
-	{
-		const char s[] = "abc de-0f  ghi";
-		const char* p = nullptr;
-		p = nextKeyStart (s);
-		assert (p == &s[0]);
-		p = nextKeyEnd (p);
-		assert (p == &s[3]);
-		p = nextKeyStart (p);
-		assert (p == &s[4]);
-		p = nextKeyEnd (p);
-		assert (p == &s[9]);
-		p = nextKeyStart (p);
-		assert (p == &s[11]);
-		p = nextKeyEnd (p);
-		assert (p == &s[14]);
-	}
-	{
-		const char s[] = "  abc \tde-0f  ghi";
-		const char* p = nullptr;
-		p = nextKeyStart (s);
-		assert (p == &s[2]);
-		p = nextKeyEnd (p);
-		assert (p == &s[5]);
-		p = nextKeyStart (p);
-		assert (p == &s[7]);
-		p = nextKeyEnd (p);
-		assert (p == &s[12]);
-		p = nextKeyStart (p);
-		assert (p == &s[14]);
-		p = nextKeyEnd (p);
-		assert (p == &s[17]);
-	}
-	{
-		const char s[] = "a b c ";
-		const char* p = nullptr;
-		p = nextKeyStart (s);
-		assert (p == &s[0]);
-		p = nextKeyEnd (p);
-		assert (p == &s[1]);
-		p = nextKeyStart (p);
-		assert (p == &s[2]);
-		p = nextKeyEnd (p);
-		assert (p == &s[3]);
-		p = nextKeyStart (p);
-		assert (p == &s[4]);
-		p = nextKeyEnd (p);
-		assert (p == &s[5]);
-	}
-	{
-		const char s[] = "-a";
-		const char* p = nullptr;
-		p = nextKeyStart (s);
-		assert (!p);
-	}
-	{
-		const char s[] = "5a";
-		const char* p = nullptr;
-		p = nextKeyStart (s);
-		assert (!p);
-	}
+    {
+        const char s[] = "abc de-0f  ghi";
+        const char* p = nullptr;
+        p = nextKeyStart (s);
+        assert (p == &s[0]);
+        p = nextKeyEnd (p);
+        assert (p == &s[3]);
+        p = nextKeyStart (p);
+        assert (p == &s[4]);
+        p = nextKeyEnd (p);
+        assert (p == &s[9]);
+        p = nextKeyStart (p);
+        assert (p == &s[11]);
+        p = nextKeyEnd (p);
+        assert (p == &s[14]);
+    }
+    {
+        const char s[] = "  abc \tde-0f  ghi";
+        const char* p = nullptr;
+        p = nextKeyStart (s);
+        assert (p == &s[2]);
+        p = nextKeyEnd (p);
+        assert (p == &s[5]);
+        p = nextKeyStart (p);
+        assert (p == &s[7]);
+        p = nextKeyEnd (p);
+        assert (p == &s[12]);
+        p = nextKeyStart (p);
+        assert (p == &s[14]);
+        p = nextKeyEnd (p);
+        assert (p == &s[17]);
+    }
+    {
+        const char s[] = "a b c ";
+        const char* p = nullptr;
+        p = nextKeyStart (s);
+        assert (p == &s[0]);
+        p = nextKeyEnd (p);
+        assert (p == &s[1]);
+        p = nextKeyStart (p);
+        assert (p == &s[2]);
+        p = nextKeyEnd (p);
+        assert (p == &s[3]);
+        p = nextKeyStart (p);
+        assert (p == &s[4]);
+        p = nextKeyEnd (p);
+        assert (p == &s[5]);
+    }
+    {
+        const char s[] = "-a";
+        const char* p = nullptr;
+        p = nextKeyStart (s);
+        assert (!p);
+    }
+    {
+        const char s[] = "5a";
+        const char* p = nullptr;
+        p = nextKeyStart (s);
+        assert (!p);
+    }
 
-	// TODO much more detailed tests
+    // TODO much more detailed tests
 }
 #endif

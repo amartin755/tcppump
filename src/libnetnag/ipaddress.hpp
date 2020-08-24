@@ -32,96 +32,96 @@ public:
 
     void operator=(const cIpAddress&) = delete;       // no copy-assignment operator
 
-	cIpAddress ()
-	{
-		ipv4.s_addr = 0;
-	}
-	cIpAddress (const cIpAddress& i)
-	{
-		set (i);
-	}
-	cIpAddress (const struct in_addr &addr)
-	{
-		set (addr);
-	}
-	cIpAddress (const char* ip)
-	{
-		set (ip);
-	}
-	void set (const cIpAddress& i)
-	{
-		ipv4 = i.ipv4;
-	}
-	void set (const struct in_addr &addr)
-	{
-		ipv4 = addr;
-	}
-	bool set (const char* ip, size_t len)
-	{
-		char ipAsString[INET_ADDRSTRLEN];
-		if ((len+1) > sizeof(ipAsString))
-			return false;
-		::strncpy (ipAsString, ip, len);
-		ipAsString[len] = '\0';
-		return set (ipAsString);
-	}
-	bool set (const char* ip)
-	{
+    cIpAddress ()
+    {
+        ipv4.s_addr = 0;
+    }
+    cIpAddress (const cIpAddress& i)
+    {
+        set (i);
+    }
+    cIpAddress (const struct in_addr &addr)
+    {
+        set (addr);
+    }
+    cIpAddress (const char* ip)
+    {
+        set (ip);
+    }
+    void set (const cIpAddress& i)
+    {
+        ipv4 = i.ipv4;
+    }
+    void set (const struct in_addr &addr)
+    {
+        ipv4 = addr;
+    }
+    bool set (const char* ip, size_t len)
+    {
+        char ipAsString[INET_ADDRSTRLEN];
+        if ((len+1) > sizeof(ipAsString))
+            return false;
+        ::strncpy (ipAsString, ip, len);
+        ipAsString[len] = '\0';
+        return set (ipAsString);
+    }
+    bool set (const char* ip)
+    {
 #if HAVE_PTON
-		return !!inet_pton(AF_INET, ip, &ipv4);
+        return !!inet_pton(AF_INET, ip, &ipv4);
 #else
-		return (ipv4.s_addr = inet_addr (ip)) != INADDR_NONE;
+        return (ipv4.s_addr = inet_addr (ip)) != INADDR_NONE;
 #endif
-	}
-	struct in_addr get () const
-	{
-		return ipv4;
-	}
-	bool get (char* s, size_t len) const
-	{
+    }
+    struct in_addr get () const
+    {
+        return ipv4;
+    }
+    bool get (char* s, size_t len) const
+    {
 #if HAVE_NTOP
-		return !!inet_ntop(AF_INET, &ipv4, s, len);
+        return !!inet_ntop(AF_INET, &ipv4, s, len);
 #else
-		::strncpy (s, inet_ntoa(ipv4), len);
-		return true;
+        ::strncpy (s, inet_ntoa(ipv4), len);
+        return true;
 #endif
-	}
-	bool get (std::string &s) const
-	{
-		char ipAsString[INET_ADDRSTRLEN];
-		bool ret = get (ipAsString, sizeof (ipAsString));
-		s = ipAsString;
-		return ret;
-	}
+    }
+    bool get (std::string &s) const
+    {
+        char ipAsString[INET_ADDRSTRLEN];
+        bool ret = get (ipAsString, sizeof (ipAsString));
+        s = ipAsString;
+        return ret;
+    }
 
-	bool isNull (void) const
-	{
-		return !ipv4.s_addr;
-	}
-	bool operator ==(const cIpAddress &b) const
-	{
-		return ipv4.s_addr == b.ipv4.s_addr;
-	}
-	bool operator !=(const cIpAddress &b) const
-	{
-		return ipv4.s_addr != b.ipv4.s_addr;
-	}
+    bool isNull (void) const
+    {
+        return !ipv4.s_addr;
+    }
+    bool operator ==(const cIpAddress &b) const
+    {
+        return ipv4.s_addr == b.ipv4.s_addr;
+    }
+    bool operator !=(const cIpAddress &b) const
+    {
+        return ipv4.s_addr != b.ipv4.s_addr;
+    }
 
 #ifdef WITH_UNITTESTS
-	static void unitTest ()
-	{
-		assert (cIpAddress() == cIpAddress("0.0.0.0"));
-		assert (cIpAddress() != cIpAddress("0.0.0.1"));
-		const char x[] = "1.2.3.4dfadfasd";
-		cIpAddress a; a.set(x, 7);
-		assert (cIpAddress("1.2.3.4") == a);
-		assert (!a.set("laskdfj"));
-	}
+    static void unitTest ()
+    {
+        assert (cIpAddress() == cIpAddress("0.0.0.0"));
+        assert (cIpAddress() != cIpAddress("0.0.0.1"));
+        const char x[] = "1.2.3.4dfadfasd";
+        cIpAddress a; a.set(x, 7);
+        assert (cIpAddress("1.2.3.4") == a);
+        assert (!a.set("laskdfj"));
+    }
 #endif
 
 
 private:
-	struct in_addr ipv4;
+    struct in_addr ipv4;
 };
 
 

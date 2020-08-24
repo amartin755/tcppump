@@ -26,89 +26,89 @@
 class cCmdlineApp
 {
 public:
-	cCmdlineApp (const char* name, const char* brief, const char* usage, const char* description)
-	{
-			this->name = name;
-			this->brief = brief;
-			this->usage = usage;
-			this->description = description;
-			this->help = 0;
+    cCmdlineApp (const char* name, const char* brief, const char* usage, const char* description)
+    {
+            this->name = name;
+            this->brief = brief;
+            this->usage = usage;
+            this->description = description;
+            this->help = 0;
 
-			addCmdLineOption (true, 'h', "help", "Display this text", &help);
-	}
-	virtual ~cCmdlineApp ()
-	{
-	}
-	int main (int argc, char* argv[])
-	{
-		int index = 0;
-		bool parseOk = cmdline.parse (argc, argv, &index);
+            addCmdLineOption (true, 'h', "help", "Display this text", &help);
+    }
+    virtual ~cCmdlineApp ()
+    {
+    }
+    int main (int argc, char* argv[])
+    {
+        int index = 0;
+        bool parseOk = cmdline.parse (argc, argv, &index);
 
-		if (help)
-		{
-			printUsage ();
-			return 0;
-		}
+        if (help)
+        {
+            printUsage ();
+            return 0;
+        }
 
-		if (!parseOk)
-		{
-			nn::Console::PrintError ("try %s -h\n", argv[0]);
-			return -1;
-		}
+        if (!parseOk)
+        {
+            nn::Console::PrintError ("try %s -h\n", argv[0]);
+            return -1;
+        }
 
-		return this->execute (argc - index, &argv[index]);
-	}
+        return this->execute (argc - index, &argv[index]);
+    }
 
 protected:
-	virtual int execute (int argc, char* argv[]) = 0;
-	void printUsage ()
-	{
-		const char* version = "";
+    virtual int execute (int argc, char* argv[]) = 0;
+    void printUsage ()
+    {
+        const char* version = "";
 #ifdef APP_VERSION
-		version = " V" APP_VERSION;
+        version = " V" APP_VERSION;
 #endif
-		nn::Console::Print ("\n%s%s - %s\n\nUsage: %s\n\nOptions:\n", name, version, brief, usage);
-		cmdline.printOptions ();
-		nn::Console::Print ("\n%s\n\n", description);
-	}
+        nn::Console::Print ("\n%s%s - %s\n\nUsage: %s\n\nOptions:\n", name, version, brief, usage);
+        cmdline.printOptions ();
+        nn::Console::Print ("\n%s\n\n", description);
+    }
 
-	// adds (optional) integer option with argument
-	bool addCmdLineOption (bool optional, char shortname, const char* longname, const char* argname, const char* description,
-			int* arg)
-	{
-		return cmdline.addOption (optional, shortname, longname, description, nullptr, argname, ARG_INT, (void*)arg, false);
-	}
-	// adds (optional) integer long-only-option with optional argument
-	bool addCmdLineOption (bool optional, const char* longname, const char* argname, const char* description,
-			int* optSet, int* arg)
-	{
-		return cmdline.addOption (optional, 0, longname, description, optSet, argname, ARG_INT, (void*)arg, true);
-	}
-	// adds (optional) string option with argument
-	bool addCmdLineOption (bool optional, char shortname, const char* longname, const char* argname, const char* description,
-			const char** arg)
-	{
-		return cmdline.addOption (optional, shortname, longname, description, nullptr, argname, ARG_STRING, (void*)arg, false);
-	}
-	// adds (optional) string long-only-option with optional argument
-	bool addCmdLineOption (bool optional, const char* longname, const char* argname, const char* description,
-			int* optSet, const char** arg)
-	{
-		return cmdline.addOption (optional, 0, longname, description, optSet, argname, ARG_STRING, (void*)arg, true);
-	}
-	// adds boolean (optional) option without argument
-	bool addCmdLineOption (bool optional, char shortname, const char* longname, const char* description, int* optSet)
-	{
-		return cmdline.addOption (optional, shortname, longname, description, optSet);
-	}
+    // adds (optional) integer option with argument
+    bool addCmdLineOption (bool optional, char shortname, const char* longname, const char* argname, const char* description,
+            int* arg)
+    {
+        return cmdline.addOption (optional, shortname, longname, description, nullptr, argname, ARG_INT, (void*)arg, false);
+    }
+    // adds (optional) integer long-only-option with optional argument
+    bool addCmdLineOption (bool optional, const char* longname, const char* argname, const char* description,
+            int* optSet, int* arg)
+    {
+        return cmdline.addOption (optional, 0, longname, description, optSet, argname, ARG_INT, (void*)arg, true);
+    }
+    // adds (optional) string option with argument
+    bool addCmdLineOption (bool optional, char shortname, const char* longname, const char* argname, const char* description,
+            const char** arg)
+    {
+        return cmdline.addOption (optional, shortname, longname, description, nullptr, argname, ARG_STRING, (void*)arg, false);
+    }
+    // adds (optional) string long-only-option with optional argument
+    bool addCmdLineOption (bool optional, const char* longname, const char* argname, const char* description,
+            int* optSet, const char** arg)
+    {
+        return cmdline.addOption (optional, 0, longname, description, optSet, argname, ARG_STRING, (void*)arg, true);
+    }
+    // adds boolean (optional) option without argument
+    bool addCmdLineOption (bool optional, char shortname, const char* longname, const char* description, int* optSet)
+    {
+        return cmdline.addOption (optional, shortname, longname, description, optSet);
+    }
 
 private:
-	const char* name;
-	const char* brief;
-	const char* usage;
-	const char* description;
-	int help;
-	cCmdline cmdline;
+    const char* name;
+    const char* brief;
+    const char* usage;
+    const char* description;
+    int help;
+    cCmdline cmdline;
 };
 
 #endif /* CMDLINE_HPP_ */

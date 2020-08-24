@@ -27,38 +27,38 @@ const int exParFormat  = 3;
 class FormatException
 {
 public:
-	FormatException (int cause, const char* val)
-	{
-		this->cause = cause;
-		this->val   = val;
-	}
+    FormatException (int cause, const char* val)
+    {
+        this->cause = cause;
+        this->val   = val;
+    }
 
-	int what ()
-	{
-		return cause;
-	}
-	const char* why ()
-	{
-		switch (cause)
-		{
-		case exParUnknown:
-			return "Unknown or missing parameter";
-		case exParRange:
-			return "Range of parameter violated";
-		case exParFormat:
-			return "Invalid parameter format";
-		}
-		return "";
-	}
+    int what ()
+    {
+        return cause;
+    }
+    const char* why ()
+    {
+        switch (cause)
+        {
+        case exParUnknown:
+            return "Unknown or missing parameter";
+        case exParRange:
+            return "Range of parameter violated";
+        case exParFormat:
+            return "Invalid parameter format";
+        }
+        return "";
+    }
 
-	const char* value ()
-	{
-		return val;
-	}
+    const char* value ()
+    {
+        return val;
+    }
 
 private:
-	int cause;
-	const char* val;
+    int cause;
+    const char* val;
 };
 
 

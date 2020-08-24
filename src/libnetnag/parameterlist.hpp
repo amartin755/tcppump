@@ -30,75 +30,75 @@
 class cParameter
 {
 public:
-	cParameter ();
-	cParameter (const cParameter&);
-	void clear ();
+    cParameter ();
+    cParameter (const cParameter&);
+    void clear ();
 
-	virtual uint32_t    asInt32 (uint32_t rangeBegin = 0, uint32_t rangeEnd = 0xffffffff) const;
-	virtual uint16_t    asInt16 (uint16_t rangeBegin = 0, uint16_t rangeEnd = 0xffff) const;
-	virtual uint8_t     asInt8  (uint8_t  rangeBegin = 0, uint8_t rangeEnd = 0xff) const;
-	virtual cMacAddress asMac   () const;
-	virtual const char* asRaw   (size_t& len) const;
-	virtual cIpAddress  asIPv4  () const;
+    virtual uint32_t    asInt32 (uint32_t rangeBegin = 0, uint32_t rangeEnd = 0xffffffff) const;
+    virtual uint16_t    asInt16 (uint16_t rangeBegin = 0, uint16_t rangeEnd = 0xffff) const;
+    virtual uint8_t     asInt8  (uint8_t  rangeBegin = 0, uint8_t rangeEnd = 0xff) const;
+    virtual cMacAddress asMac   () const;
+    virtual const char* asRaw   (size_t& len) const;
+    virtual cIpAddress  asIPv4  () const;
 
 private:
-	const char* parameter;
-	size_t      parLen;
-	const char* value;
-	size_t      valLen;
-	int         index;
+    const char* parameter;
+    size_t      parLen;
+    const char* value;
+    size_t      valLen;
+    int         index;
 
-	friend class cParameterList;
+    friend class cParameterList;
 };
 
 
 class cDefaultParameter : public cParameter
 {
-	friend class cParameterList;
+    friend class cParameterList;
 
 public:
-	virtual uint32_t    asInt32 (uint32_t, uint32_t) const {return int32;}
-	virtual uint16_t    asInt16 (uint16_t, uint16_t) const {return (uint16_t)int32;}
-	virtual uint8_t     asInt8  (uint8_t,  uint8_t) const {return (uint8_t)int32;}
-	virtual cMacAddress asMac   () const {return mac;}
-	virtual const char* asRaw   (size_t&) const
-	{
-		assert ("no raw access for optional parameters" == 0);
-		return NULL;
-	}
-	virtual cIpAddress  asIPv4  () const {return ip;}
+    virtual uint32_t    asInt32 (uint32_t, uint32_t) const {return int32;}
+    virtual uint16_t    asInt16 (uint16_t, uint16_t) const {return (uint16_t)int32;}
+    virtual uint8_t     asInt8  (uint8_t,  uint8_t) const {return (uint8_t)int32;}
+    virtual cMacAddress asMac   () const {return mac;}
+    virtual const char* asRaw   (size_t&) const
+    {
+        assert ("no raw access for optional parameters" == 0);
+        return NULL;
+    }
+    virtual cIpAddress  asIPv4  () const {return ip;}
 
 private:
-	uint32_t    int32;
-	cMacAddress mac;
-	cIpAddress  ip;
+    uint32_t    int32;
+    cMacAddress mac;
+    cIpAddress  ip;
 };
 
 
 class cParameterList
 {
 public:
-	cParameterList (const char*);
-	bool isValid ();
-	const char* getParseError ();
-	const cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, bool isOptional = false);
-	const cParameter* findParameter (const char* parameter, bool isOptional = false);
-	const cParameter* findParameter (const char* parameter, uint32_t optionalValue);
-	const cParameter* findParameter (const char* parameter, const cMacAddress& optionalValue);
-	const cParameter* findParameter (const char* parameter, const cIpAddress& optionalValue);
-	const cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, uint32_t optionalValue);
-	const cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, const cMacAddress& optionalValue);
-	const cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, const cIpAddress& optionalValue);
+    cParameterList (const char*);
+    bool isValid ();
+    const char* getParseError ();
+    const cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, bool isOptional = false);
+    const cParameter* findParameter (const char* parameter, bool isOptional = false);
+    const cParameter* findParameter (const char* parameter, uint32_t optionalValue);
+    const cParameter* findParameter (const char* parameter, const cMacAddress& optionalValue);
+    const cParameter* findParameter (const char* parameter, const cIpAddress& optionalValue);
+    const cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, uint32_t optionalValue);
+    const cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, const cMacAddress& optionalValue);
+    const cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, const cIpAddress& optionalValue);
 
 #ifdef WITH_UNITTESTS
-	static void unitTest ();
+    static void unitTest ();
 #endif
 
 private:
-	const char* parseParameters (const char*);
-	std::vector<cParameter> list;
-	const char* parseError;
-	cDefaultParameter defaultParameter;
+    const char* parseParameters (const char*);
+    std::vector<cParameter> list;
+    const char* parseError;
+    cDefaultParameter defaultParameter;
 };
 
 

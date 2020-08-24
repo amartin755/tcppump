@@ -30,29 +30,29 @@
 class cPcapFileIO
 {
 public:
-	cPcapFileIO ();
-	~cPcapFileIO ();
+    cPcapFileIO ();
+    ~cPcapFileIO ();
 #ifdef WITH_UNITTESTS
-	static void unitTest (const char* file);
+    static void unitTest (const char* file);
 #endif
 
-	bool open (const char* path, bool write = false);
-	void close ();
-	bool read (struct pcap_pkthdr **, const u_char **);
-	uint8_t* read (cTimeval* timestamp, int* len);
-	bool write (const cTimeval& timestamp, const uint8_t* frame, int len, bool absoluteTimestamp = true);
-	bool error (){return fileError;};
+    bool open (const char* path, bool write = false);
+    void close ();
+    bool read (struct pcap_pkthdr **, const u_char **);
+    uint8_t* read (cTimeval* timestamp, int* len);
+    bool write (const cTimeval& timestamp, const uint8_t* frame, int len, bool absoluteTimestamp = true);
+    bool error (){return fileError;};
 
 private:
-	void printError (const char* err);
+    void printError (const char* err);
 
-	bool modeWrite;
-	pcap_t *fileHandle;
-	pcap_dumper_t* dumper;
-	const char* path;
-	bool fileError;
-	bool eof;
-	cTimeval offset;
+    bool modeWrite;
+    pcap_t *fileHandle;
+    pcap_dumper_t* dumper;
+    const char* path;
+    bool fileError;
+    bool eof;
+    cTimeval offset;
 };
 
 #endif /* HAVE_PCAP */

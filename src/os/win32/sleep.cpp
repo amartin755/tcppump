@@ -33,65 +33,65 @@ static cTimeval resolution;
 
 static void busyWaitUs (uint64_t us)
 {
-	if (!us)
-		return;
+    if (!us)
+        return;
 
-	LARGE_INTEGER t1, t2;
-	uint64_t ticks = us * ticksPerUs;
+    LARGE_INTEGER t1, t2;
+    uint64_t ticks = us * ticksPerUs;
 
-	::QueryPerformanceCounter (&t1);
+    ::QueryPerformanceCounter (&t1);
 
-	do
-	{
-		::QueryPerformanceCounter (&t2);
-	}
-	while ((uint64_t)(t2.QuadPart - t1.QuadPart) < ticks);
+    do
+    {
+        ::QueryPerformanceCounter (&t2);
+    }
+    while ((uint64_t)(t2.QuadPart - t1.QuadPart) < ticks);
 }
 
 cTimeval SleepInit ()
 {
-	LARGE_INTEGER t1, t2, freq;
-	double elapsedTime = 0;
-	const int LOOPS = 50;
+    LARGE_INTEGER t1, t2, freq;
+    double elapsedTime = 0;
+    const int LOOPS = 50;
 
-	::QueryPerformanceFrequency (&freq);
-	ticksPerUs = unsigned(freq.QuadPart / 1000000.0);
+    ::QueryPerformanceFrequency (&freq);
+    ticksPerUs = unsigned(freq.QuadPart / 1000000.0);
 
-	// mearure the resolution of Windows' Sleep function
-	for (int n = 0; n < LOOPS; n++)
-	{
-		::QueryPerformanceCounter (&t1);
-		::Sleep(1);
-		::QueryPerformanceCounter (&t2);
+    // mearure the resolution of Windows' Sleep function
+    for (int n = 0; n < LOOPS; n++)
+    {
+        ::QueryPerformanceCounter (&t1);
+        ::Sleep(1);
+        ::QueryPerformanceCounter (&t2);
 
-		elapsedTime += (double)(t2.QuadPart-t1.QuadPart) / ticksPerUs;
-	}
-	resolution.setUs (elapsedTime / LOOPS);
-	return resolution;
+        elapsedTime += (double)(t2.QuadPart-t1.QuadPart) / ticksPerUs;
+    }
+    resolution.setUs (elapsedTime / LOOPS);
+    return resolution;
 }
 
 void Sleep (const cTimeval& t)
 {
-	assert (!resolution.isNull());
+    assert (!resolution.isNull());
 
-	if (t < resolution)
-	{
-		busyWaitUs (t.us ());
-	}
-	else
-	{
-		cTimeval tRounded(t);
-		tRounded.roundDown(resolution);
+    if (t < resolution)
+    {
+        busyWaitUs (t.us ());
+    }
+    else
+    {
+        cTimeval tRounded(t);
+        tRounded.roundDown(resolution);
 
-		LARGE_INTEGER t1, t2;
-		::QueryPerformanceCounter (&t1);
-		::Sleep ((DWORD)t.ms());
-		::QueryPerformanceCounter (&t2);
+        LARGE_INTEGER t1, t2;
+        ::QueryPerformanceCounter (&t1);
+        ::Sleep ((DWORD)t.ms());
+        ::QueryPerformanceCounter (&t2);
 
-		uint64_t elapsedUs = (uint64_t)(t2.QuadPart - t1.QuadPart) / ticksPerUs;
-		if (t.us () > elapsedUs)
-			busyWaitUs (t.us () - elapsedUs);
-	}
+        uint64_t elapsedUs = (uint64_t)(t2.QuadPart - t1.QuadPart) / ticksPerUs;
+        if (t.us () > elapsedUs)
+            busyWaitUs (t.us () - elapsedUs);
+    }
 }
 
 #ifdef WITH_UNITTESTS
@@ -100,37 +100,37 @@ void Sleep (const cTimeval& t)
 
 static double measure (uint64_t us)
 {
-	LARGE_INTEGER t1, t2;
-	double deviation;
-	cTimeval t;
-	t.setUs(us);
+    LARGE_INTEGER t1, t2;
+    double deviation;
+    cTimeval t;
+    t.setUs(us);
 
-	::QueryPerformanceCounter (&t1);
-	Sleep (t);
-	::QueryPerformanceCounter (&t2);
-	double elapsedUs = (double)(t2.QuadPart-t1.QuadPart) / ticksPerUs;
+    ::QueryPerformanceCounter (&t1);
+    Sleep (t);
+    ::QueryPerformanceCounter (&t2);
+    double elapsedUs = (double)(t2.QuadPart-t1.QuadPart) / ticksPerUs;
 
-	deviation = ((elapsedUs - (double)us) / (double)us) * 100.0;
+    deviation = ((elapsedUs - (double)us) / (double)us) * 100.0;
 
-	::nn::Console::PrintDebug ("measure %u = %.3f usec (error = %.1f%%)\n", (unsigned) us, (double)elapsedUs, deviation);
+    ::nn::Console::PrintDebug ("measure %u = %.3f usec (error = %.1f%%)\n", (unsigned) us, (double)elapsedUs, deviation);
 
-	return deviation;
+    return deviation;
 }
 
 void SleepUnitTest ()
 {
-	measure (0);
-	measure (1);
-	measure (10);
-	measure (50);
-	measure (60);
-	measure (70);
-	measure (100);
-	measure (200);
-	measure (1000);
-	measure (10000);
-	measure (12345);
-	measure (20000);
+    measure (0);
+    measure (1);
+    measure (10);
+    measure (50);
+    measure (60);
+    measure (70);
+    measure (100);
+    measure (200);
+    measure (1000);
+    measure (10000);
+    measure (12345);
+    measure (20000);
 }
 
 #endif

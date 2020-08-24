@@ -27,7 +27,7 @@
 
 cUdpPacket::cUdpPacket ()
 {
-	this->setTypeLength (ETHERTYPE_IPV4);
+    this->setTypeLength (ETHERTYPE_IPV4);
 }
 
 void cUdpPacket::setPayload (const char* payload, size_t len)
@@ -54,6 +54,6 @@ void cUdpPacket::setChecksum (uint16_t checksum)
 
 void cUdpPacket::unitTest ()
 {
-	nn::Console::PrintDebug("-- " __FILE__ " --\n");
+    nn::Console::PrintDebug("-- " __FILE__ " --\n");
 }
 #endif

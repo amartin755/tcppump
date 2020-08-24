@@ -20,7 +20,7 @@
 cmake_minimum_required (VERSION 3.13)
 
 project (tcppump VERSION 0.0.1.0
-                 DESCRIPTION "Ethernet packet generator" 
+                 DESCRIPTION "Ethernet packet generator"
                  LANGUAGES CXX)
 ###############################################################################
 
@@ -39,14 +39,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # warning level
 if (MSVC)
-	add_compile_options (/Wall)
+    add_compile_options (/Wall)
 else()
-	add_compile_options (-Wall -Wextra)
+    add_compile_options (-Wall -Wextra)
 endif()
 
 # on mingw we link the std library statically
 if (MINGW)
-	add_link_options (-static-libgcc -static-libstdc++)
+    add_link_options (-static-libgcc -static-libstdc++)
 endif ()
 
 # check dependencies
@@ -75,7 +75,7 @@ set (CMAKE_REQUIRED_INCLUDES "")
 
 
 if (WIN32)
-	# winsock, winpcap, conio and iphlpapi are needed on windows
+    # winsock, winpcap, conio and iphlpapi are needed on windows
     check_include_files("winsock2.h;iphlpapi.h;winerror.h" HAVE_WS2)
     # getch() is needed for unbuffered stdin on Windows
     check_symbol_exists (getch "conio.h" HAVE_GETCH)
@@ -130,19 +130,19 @@ if (WIN32)
     add_compile_definitions (WINVER=0x0601)
     add_compile_definitions (HAVE_WINDOWS)
 
-	#### workaround: pcap-stdinc.h does something like this:
-	#  #if _MSC_VER < 1500
-	#  #define snprintf _snprintf
-	#  #define vsnprintf _vsnprintf
-	#  #define strdup _strdup
-	#  #endif
-	# On non-ms compilers the if statement is always true and therefore can
-	# lead to compile error with c++11 code
-	if (NOT MSVC)
-		if (HAVE_PCAP)
-		    add_compile_definitions (_MSC_VER=1500)
-		endif ()
-	endif ()
+    #### workaround: pcap-stdinc.h does something like this:
+    #  #if _MSC_VER < 1500
+    #  #define snprintf _snprintf
+    #  #define vsnprintf _vsnprintf
+    #  #define strdup _strdup
+    #  #endif
+    # On non-ms compilers the if statement is always true and therefore can
+    # lead to compile error with c++11 code
+    if (NOT MSVC)
+        if (HAVE_PCAP)
+            add_compile_definitions (_MSC_VER=1500)
+        endif ()
+    endif ()
 
 endif ()
 
@@ -200,16 +200,16 @@ target_include_directories (tcppump PUBLIC libnetnag)
 # unit test code
 ###############################################################################
 if (WITH_UNITTESTS)
-	add_executable (unittest test/unittest.cpp ${sourcefiles})
-	target_link_libraries (unittest PRIVATE ${libs})
-	
-	target_compile_definitions (unittest PRIVATE WITH_UNITTESTS)
-	if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-		target_compile_options (unittest PRIVATE -Wno-write-strings --coverage)
-		target_link_libraries (unittest PRIVATE gcov)
-	endif()
+    add_executable (unittest test/unittest.cpp ${sourcefiles})
+    target_link_libraries (unittest PRIVATE ${libs})
 
-	target_include_directories (unittest PUBLIC ${os_specific})
-	target_include_directories (unittest PUBLIC os)
-	target_include_directories (unittest PUBLIC libnetnag)
+    target_compile_definitions (unittest PRIVATE WITH_UNITTESTS)
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        target_compile_options (unittest PRIVATE -Wno-write-strings --coverage)
+        target_link_libraries (unittest PRIVATE gcov)
+    endif()
+
+    target_include_directories (unittest PUBLIC ${os_specific})
+    target_include_directories (unittest PUBLIC os)
+    target_include_directories (unittest PUBLIC libnetnag)
 endif ()

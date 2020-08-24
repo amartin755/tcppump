@@ -38,13 +38,13 @@ typedef struct
     int          interactive;
     int          raw;
     int          script;
-    int 		 pcap;
+    int          pcap;
     const char*  inputmode; // raw, token, script, pcap
     const char*  keys;      // key bindings for interactive mode
     const char*  outpcap;
-	const char*  myIP;
-	const char*  myMAC;
-	int          dissect;
+    const char*  myIP;
+    const char*  myMAC;
+    int          dissect;
 }appOptions;
 
 class cInterface;
@@ -77,10 +77,10 @@ private:
     unsigned sentPackets;
     unsigned malformedPackets;
 #if HAVE_PCAP
-	cPcapFileIO outfile;
+    cPcapFileIO outfile;
 #endif
-	cTimeval activeDelay;
-	unsigned timeScale; // 1 = us, 1000 = ms, 1000000 = sec
+    cTimeval activeDelay;
+    unsigned timeScale; // 1 = us, 1000 = ms, 1000000 = sec
 };
 
 #endif /* TCPPUMP_HPP */

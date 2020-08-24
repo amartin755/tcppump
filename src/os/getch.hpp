@@ -23,7 +23,7 @@
 
 namespace tcppump
 {
-	extern int getch (void);
+    extern int getch (void);
 }
 
 

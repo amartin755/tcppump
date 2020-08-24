@@ -25,7 +25,7 @@
 namespace nn
 {
 
-	// FIXME MAC and IP address converters should be moved to cMacAddress and cIpAddress!
+    // FIXME MAC and IP address converters should be moved to cMacAddress and cIpAddress!
 
     class Converter
     {

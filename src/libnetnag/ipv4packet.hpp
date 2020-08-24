@@ -61,7 +61,7 @@ typedef struct
     }
     void setFlags (bool reserved, bool df, bool mf)
     {
-    	uint16_t fo = ntohs (flags_offset) & 0x1fff;
+        uint16_t fo = ntohs (flags_offset) & 0x1fff;
         flags_offset = htons((reserved ? 0x8000 : 0) | (df ? 0x4000 : 0) | (mf ? 0x2000 : 0) | fo);
     }
     void setOffset (int offset)

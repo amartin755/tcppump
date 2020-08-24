@@ -32,34 +32,34 @@ cArpPacket::cArpPacket ()
 
 void cArpPacket::probe (const cMacAddress& srcMac, const cIpAddress& ip)
 {
-	cMacAddress dstMac;
-	setAll (1, srcMac, cIpAddress(), dstMac, ip);
+    cMacAddress dstMac;
+    setAll (1, srcMac, cIpAddress(), dstMac, ip);
 }
 
 
 void cArpPacket::announce (const cMacAddress& srcMac, const cIpAddress& ip)
 {
-	cMacAddress dstMac;
-	setAll (1, srcMac, ip, dstMac, ip);
+    cMacAddress dstMac;
+    setAll (1, srcMac, ip, dstMac, ip);
 }
 
 
 void cArpPacket::setAll (uint16_t opcode, const cMacAddress& srcMac, const cIpAddress& srcIp, const cMacAddress& dstMac, const cIpAddress& dstIp)
 {
-	arp_t a;
-	a.hwType       = htons (1);
-	a.protType     = htons (ETHERTYPE_IPV4);
-	a.hwAddrSize   = (uint8_t)cMacAddress::size();
-	a.protAddrSize = (uint8_t)sizeof (a.dstIp);
-	a.opcode       = htons (opcode);
-	a.srcIp        = srcIp.get ();
-	a.dstIp        = dstIp.get ();
-	srcMac.get(&a.srcMac);
-	dstMac.get(&a.dstMac);
+    arp_t a;
+    a.hwType       = htons (1);
+    a.protType     = htons (ETHERTYPE_IPV4);
+    a.hwAddrSize   = (uint8_t)cMacAddress::size();
+    a.protAddrSize = (uint8_t)sizeof (a.dstIp);
+    a.opcode       = htons (opcode);
+    a.srcIp        = srcIp.get ();
+    a.dstIp        = dstIp.get ();
+    srcMac.get(&a.srcMac);
+    dstMac.get(&a.dstMac);
 
-	this->setMacHeader (srcMac, dstMac.isNull() ? cMacAddress(0xffu) : dstMac);
-	this->setTypeLength (ETHERTYPE_ARP);
-	this->setPayload ((uint8_t*)&a, sizeof(a));
+    this->setMacHeader (srcMac, dstMac.isNull() ? cMacAddress(0xffu) : dstMac);
+    this->setTypeLength (ETHERTYPE_ARP);
+    this->setPayload ((uint8_t*)&a, sizeof(a));
 }
 
 
@@ -67,7 +67,7 @@ void cArpPacket::setAll (uint16_t opcode, const cMacAddress& srcMac, const cIpAd
 #include "console.hpp"
 void cArpPacket::unitTest ()
 {
-	nn::Console::PrintDebug("-- " __FILE__ " --\n");
+    nn::Console::PrintDebug("-- " __FILE__ " --\n");
 
 }
 #endif

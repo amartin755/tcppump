@@ -24,14 +24,14 @@
 
 namespace tcppump
 {
-	int getch (void)
-	{
-		/*
-		 * note: getch doesn't return special characters like EOF or catch signals like ctrl+c.
-		 * As a workaround we return all non-printable characters as EOF
-		 */
-		int c = ::getch ();
-		return isprint (c) ? c : EOF;
-	}
+    int getch (void)
+    {
+        /*
+         * note: getch doesn't return special characters like EOF or catch signals like ctrl+c.
+         * As a workaround we return all non-printable characters as EOF
+         */
+        int c = ::getch ();
+        return isprint (c) ? c : EOF;
+    }
 }
 

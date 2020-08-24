@@ -29,15 +29,15 @@
 class cArpPacket : public cEthernetPacket
 {
 public:
-	cArpPacket ();
-	void probe (const cMacAddress& srcMac, const cIpAddress& ip);
-	void announce (const cMacAddress& srcMac, const cIpAddress& ip);
-	void setAll (uint16_t opcode, const cMacAddress& srcMac, const cIpAddress& srcIp, const cMacAddress& dstMac, const cIpAddress& dstIp);
+    cArpPacket ();
+    void probe (const cMacAddress& srcMac, const cIpAddress& ip);
+    void announce (const cMacAddress& srcMac, const cIpAddress& ip);
+    void setAll (uint16_t opcode, const cMacAddress& srcMac, const cIpAddress& srcIp, const cMacAddress& dstMac, const cIpAddress& dstIp);
 
 
 
 #ifdef WITH_UNITTESTS
-	static void unitTest ();
+    static void unitTest ();
 #endif
 
 private:
@@ -48,15 +48,15 @@ private:
 
 typedef struct
 {
-	uint16_t hwType;
-	uint16_t protType;
-	uint8_t  hwAddrSize;
-	uint8_t  protAddrSize;
-	uint16_t opcode;
-	cMacAddress::mac_t srcMac;
-	struct in_addr srcIp;
-	cMacAddress::mac_t dstMac;
-	struct in_addr dstIp;
+    uint16_t hwType;
+    uint16_t protType;
+    uint8_t  hwAddrSize;
+    uint8_t  protAddrSize;
+    uint16_t opcode;
+    cMacAddress::mac_t srcMac;
+    struct in_addr srcIp;
+    cMacAddress::mac_t dstMac;
+    struct in_addr dstIp;
 
 }arp_t;
 
