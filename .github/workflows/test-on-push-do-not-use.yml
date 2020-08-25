@@ -30,7 +30,7 @@ jobs:
       # access regardless of the host operating system
       shell: bash
       working-directory: ${{runner.workspace}}/tcppump
-      run: cmake -S src -B build -DWITH_UNITTESTS=1 -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DPCAP_INCLUDE_DIR=C:/vcpkg/packages/winpcap_x86-windows/include/ -DPCAP_LIBRARY=C:/vcpkg/packages/winpcap_x86-windows/lib/ || type D:/a/tcppump/tcppump/build/CMakeFiles/CMakeError.log
+      run: cmake -S src -B build -DWITH_UNITTESTS=1 -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DPCAP_INCLUDE_DIR=C:/vcpkg/packages/winpcap_x86-windows/include/ -DPCAP_LIBRARY=C:/vcpkg/packages/winpcap_x86-windows/lib/ || cat D:/a/tcppump/tcppump/build/CMakeFiles/CMakeError.log
 
     - name: Build
       working-directory: ${{runner.workspace}}/tcppump
