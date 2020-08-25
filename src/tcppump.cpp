@@ -20,6 +20,7 @@
 #include <cstring>
 #include <cstdint>
 #include <cassert>
+#include <stdexcept>
 
 #include "tcppump.hpp"
 #include "sleep.hpp"
