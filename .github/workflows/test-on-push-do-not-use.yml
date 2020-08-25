@@ -39,7 +39,7 @@ jobs:
       run: cmake --build build --config $BUILD_TYPE
 
     - name: Execute Unit Tests
-      working-directory: ${{runner.workspace}}/tcppump/Debug/bin
+      working-directory: ${{runner.workspace}}/tcppump/bin/Debug
       shell: bash
       # Execute unittest binary  
       run: ./unittest
