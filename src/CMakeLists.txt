@@ -83,8 +83,10 @@ if (WIN32)
     # getch() is needed for unbuffered stdin on Windows
     check_symbol_exists (getch "conio.h" HAVE_GETCH)
     # check for inet_pton() inet_ntop(), they do not exist on older mingw
+    set (CMAKE_REQUIRED_LIBRARIES ws2_32})
     check_symbol_exists (inet_pton "ws2tcpip.h" HAVE_PTON)
     check_symbol_exists (inet_ntop "ws2tcpip.h" HAVE_NTOP)
+    set (CMAKE_REQUIRED_LIBRARIES "")
 
     if (NOT HAVE_GETCH)
         message (FATAL_ERROR "Function getch() not found!")
@@ -128,11 +130,13 @@ if (HAVE_NTOP)
 endif ()
 
 if (WIN32)
+    add_compile_definitions (HAVE_WINDOWS)
     # min. supported version is Windows 7
     add_compile_definitions (_WIN32_WINNT=0x0601)
     add_compile_definitions (WINVER=0x0601)
-    add_compile_definitions (HAVE_WINDOWS)
+    # only include minimum windows dependencies
     add_compile_definitions (WIN32_LEAN_AND_MEAN)
+    # suppress warnings about unsafe strncpy and friends
     add_compile_definitions (_CRT_SECURE_NO_WARNINGS)
 
     #### workaround: pcap-stdinc.h does something like this:
