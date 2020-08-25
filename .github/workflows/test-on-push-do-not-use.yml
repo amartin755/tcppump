@@ -23,7 +23,7 @@ jobs:
 
     - name: Install Dependencies
       # install libpcap and its development files
-      run: vcpkg install winpcap
+      run: vcpkg install winpcap:x64-windows
 
     - name: Configure CMake
       # Use a bash shell so we can use the same syntax for environment variable
