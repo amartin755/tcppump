@@ -1,4 +1,6 @@
-name: CMake
+name: Test-on-push
+
+# Note: currently only linux is address. Later on this will be changed to a matrix build
 
 on: [workflow_dispatch]
 
@@ -20,6 +22,7 @@ jobs:
         ref: ${{ github.ref }}
 
     - name: Install Dependencies
+      # install libpcap and its development files
       run: sudo apt-get --assume-yes install libpcap-dev
 
     - name: Configure CMake
@@ -38,8 +41,7 @@ jobs:
     - name: Execute Unit Tests
       working-directory: ${{runner.workspace}}/tcppump/bin
       shell: bash
-      # Execute tests defined by the CMake configuration.  
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
+      # Execute unittest binary  
       run: ./unittest
 
     - name: Test
