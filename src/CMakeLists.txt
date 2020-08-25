@@ -213,3 +213,8 @@ if (WITH_UNITTESTS)
     target_include_directories (unittest PUBLIC os)
     target_include_directories (unittest PUBLIC libnetnag)
 endif ()
+
+
+enable_testing()
+
+add_test(NAME show-usage COMMAND tcppump -h WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
