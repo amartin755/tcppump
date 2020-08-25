@@ -65,6 +65,6 @@ int main (void)
     }
     // every failure will lead to assert, thus if we see this output, all tests have passed
     printf ("\n --- unit tests finished successfully !!! --- \n");
-assert (0);
+
     return 0;
 }
