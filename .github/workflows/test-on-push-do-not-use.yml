@@ -21,9 +21,9 @@ jobs:
       with:
         ref: ${{ github.ref }}
 
-#    - name: Install Dependencies
-#      # install libpcap and its development files
-#      run: sudo apt-get --assume-yes install libpcap-dev
+    - name: Install Dependencies
+      # install libpcap and its development files
+      run: vcpkg install winpcap
 
     - name: Configure CMake
       # Use a bash shell so we can use the same syntax for environment variable
