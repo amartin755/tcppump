@@ -69,7 +69,7 @@ message (STATUS "PCAP_INCLUDE_DIR = ${PCAP_INCLUDE_DIR}")
 message (STATUS "PCAP_LIBRARY     = ${PCAP_LIBRARY}")
 set (CMAKE_REQUIRED_LIBRARIES ${PCAP_LIBRARY})
 set (CMAKE_REQUIRED_INCLUDES ${PCAP_INCLUDE_DIR})
-check_symbol_exists (pcap_open_offline "pcap.h" HAVE_PCAP)
+check_symbol_exists (pcap_open_offline "stdio.h;pcap.h" HAVE_PCAP)
 set (CMAKE_REQUIRED_LIBRARIES "")
 set (CMAKE_REQUIRED_INCLUDES "")
 
