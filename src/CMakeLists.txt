@@ -132,6 +132,8 @@ if (WIN32)
     add_compile_definitions (_WIN32_WINNT=0x0601)
     add_compile_definitions (WINVER=0x0601)
     add_compile_definitions (HAVE_WINDOWS)
+    add_compile_definitions (WIN32_LEAN_AND_MEAN)
+    add_compile_definitions (_CRT_SECURE_NO_WARNINGS)
 
     #### workaround: pcap-stdinc.h does something like this:
     #  #if _MSC_VER < 1500
