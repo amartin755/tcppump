@@ -1,4 +1,4 @@
-name: Test-on-push
+name: Test-on-push-windows
 
 # Note: for testing only. DO NOT USE
 
@@ -21,16 +21,16 @@ jobs:
       with:
         ref: ${{ github.ref }}
 
-#    - name: Install Dependencies
-#      # install libpcap and its development files
-#      run: sudo apt-get --assume-yes install libpcap-dev
+    - name: Install Dependencies
+      # install libpcap and its development files
+      run: vcpkg install winpcap
 
     - name: Configure CMake
       # Use a bash shell so we can use the same syntax for environment variable
       # access regardless of the host operating system
       shell: bash
       working-directory: ${{runner.workspace}}/tcppump
-      run: cmake -S src -B build -DWITH_UNITTESTS=1 -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+      run: cmake -S src -B build -DWITH_UNITTESTS=1 -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DPCAP_INCLUDE_DIR=C:/vcpkg/packages/winpcap_x86-windows/include/ -DPCAP_LIBRARY=C:/vcpkg/packages/winpcap_x86-windows/lib/
 
     - name: Build
       working-directory: ${{runner.workspace}}/tcppump
