@@ -818,7 +818,7 @@ void cInstructionParser::unitTest ()
         assert (1 == obj.parse (tests[n].tokens, timestamp, isAbsolute, packets));
         assert (packets.size () == n + 1);
         assert (tests[n].packetSize == packets.back().getLength());
-        if (!memcmp (packets.back().get(), tests[n].packet, tests[n].packetSize))
+        if (memcmp (packets.back().get(), tests[n].packet, tests[n].packetSize))
         {
             const uint8_t* p = packets.back().get();
 
