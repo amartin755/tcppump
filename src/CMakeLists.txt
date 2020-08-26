@@ -83,7 +83,7 @@ if (WIN32)
     # getch() is needed for unbuffered stdin on Windows
     check_symbol_exists (getch "conio.h" HAVE_GETCH)
     # check for inet_pton() inet_ntop(), they do not exist on older mingw
-    set (CMAKE_REQUIRED_LIBRARIES ws2_32})
+    set (CMAKE_REQUIRED_LIBRARIES "ws2_32")
     set (CMAKE_REQUIRED_DEFINITIONS -D_WIN32_WINNT=0x0600)
     check_symbol_exists (inet_pton "ws2tcpip.h" HAVE_PTON)
     check_symbol_exists (inet_ntop "ws2tcpip.h" HAVE_NTOP)
