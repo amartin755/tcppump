@@ -251,7 +251,6 @@ int cInstructionParser::compileVLANTags (cParameterList& params, cEthernetPacket
 int cInstructionParser::compileARP (cParameterList& params, std::list <cEthernetPacket> &packets, bool isProbe, bool isGratuitous)
 {
     cArpPacket  arp;
-    cMacAddress targetMac;
 
     assert ((!isProbe && !isGratuitous) || (isProbe != isGratuitous));
 
@@ -265,10 +264,12 @@ int cInstructionParser::compileARP (cParameterList& params, std::list <cEthernet
     }
     else
     {
+        cMacAddress targetMac = params.findParameter ("dmac", cMacAddress ((unsigned)0))->asMac();
+
         arp.setAll (params.findParameter ("op", (uint32_t)1)->asInt16(),
                     params.findParameter ("smac", ownMac)->asMac(),
                     params.findParameter ("sip", ownIPv4)->asIPv4(),
-                    params.findParameter ("dmac", targetMac)->asMac(),
+                    targetMac,
                     params.findParameter ("dip")->asIPv4()
                     );
     }
@@ -441,7 +442,7 @@ static const testcase_t tests[] = {
         },
         42,
     },
-    {
+    { /*13*/
         "arp(dip=11.22.33.44)",
         {
             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xba, 0xba, 0xba, 0xba, 0xba, 0xba, 0x08, 0x06, 0x00, 0x01, 0x08, 0x00, 0x06, 0x04, 0x00, 0x01, 0xba, 0xba, 0xba, 0xba, 0xba, 0xba, 0x0a, 0x0a, 0x0a, 0x0a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0b, 0x16, 0x21, 0x2c
