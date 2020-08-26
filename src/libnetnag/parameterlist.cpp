@@ -488,6 +488,24 @@ void cParameterList::unitTest ()
         }
     }
     {
+        cParameterList obj ("(ipv4 = 1.2.3.4)");
+        try
+        {
+            assert (obj.isValid ());
+            assert (obj.findParameter("ipv4")->asIPv4()  == cIpAddress("1.2.3.4"));
+            cMacAddress mac1("12:34:56:78:9a:bc");
+            cMacAddress mac2("11:22:33:44:55:66");
+            cMacAddress _mac2 = obj.findParameter("mac2", mac2)->asMac();
+            cMacAddress _mac1 = obj.findParameter("mac1", mac1)->asMac();
+            assert (!memcmp (&_mac2, &mac2, sizeof (mac2)));
+            assert (!memcmp (&_mac1, &mac1, sizeof (mac2)));
+        }
+        catch (FormatException& e)
+        {
+            assert (0);
+        }
+    }
+    {
         cParameterList obj ("(first=0xFFFF, second=0x10000, toolong=0x100000000)");
         assert (obj.isValid ());
         try
