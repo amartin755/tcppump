@@ -41,7 +41,7 @@ jobs:
     - name: Prepare Test Environment
       working-directory: ${{runner.workspace}}/tcppump/bin/Debug
       shell: bash
-      run: cp C:/vcpkg/packages/winpcap_x64-windows/bin/wpcap.dll .
+      run: cp C:/vcpkg/packages/winpcap_x64-windows/bin/*.dll .
       
     - name: Execute Unit Tests
       working-directory: ${{runner.workspace}}/tcppump/bin/Debug
