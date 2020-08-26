@@ -43,6 +43,15 @@ public:
     {
         set (s);
     }
+    cMacAddress (const cMacAddress& obj)
+    {
+        set (obj);
+    }
+    void operator=(const cMacAddress& obj)
+    {
+        set (obj);
+    }
+
     void clear ()
     {
         set ((unsigned)0);
