@@ -140,6 +140,10 @@ if (WIN32)
     add_compile_definitions (WIN32_LEAN_AND_MEAN)
     # suppress warnings about unsafe strncpy and friends
     add_compile_definitions (_CRT_SECURE_NO_WARNINGS)
+    # because of the workaround below we explicitly flag usage of ms visual c compiler
+    if (MSVC)
+        add_compile_definitions (HAVE_MSVC)
+    endif ()
 
     #### workaround: pcap-stdinc.h does something like this:
     #  #if _MSC_VER < 1500

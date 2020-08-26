@@ -34,10 +34,21 @@
 #include "ipaddress.hpp"
 #include "macaddress.hpp"
 #include "parsehelper.hpp"
+#if HAVE_MSVC
+#include <crtdbg.h>
+#endif
 
 
 int main (void)
 {
+#if HAVE_MSVC
+        if(!IsDebuggerPresent())
+        {
+            _CrtSetReportMode( _CRT_ASSERT, _CRTDBG_MODE_DEBUG );
+            _CrtSetReportMode( _CRT_ERROR, _CRTDBG_MODE_DEBUG );
+        }
+#endif
+
     nn::Console::SetPrintLevel(nn::Console::Debug);
     try
     {
