@@ -1,8 +1,8 @@
-name: Test-on-push
+name: Test-on-windows-MSVC-64bit
 
-# Note: currently only linux is address. Later on this will be changed to a matrix build
+# TODO: should be merged with linux workflow as matrix build
 
-on: [workflow_dispatch]
+on: [push, workflow_dispatch]
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
@@ -14,7 +14,8 @@ jobs:
     # well on Windows or Mac.  You can convert this to a matrix build if you need
     # cross-platform coverage.
     # See: https://docs.github.com/en/actions/configuring-and-managing-workflows/configuring-a-workflow#configuring-a-build-matrix
-    runs-on: ubuntu-20.04
+    runs-on: windows-latest
+    timeout-minutes: 15
 
     steps:
     - uses: actions/checkout@v2
@@ -23,14 +24,14 @@ jobs:
 
     - name: Install Dependencies
       # install libpcap and its development files
-      run: sudo apt-get --assume-yes install libpcap-dev
+      run: vcpkg install winpcap:x64-windows
 
     - name: Configure CMake
       # Use a bash shell so we can use the same syntax for environment variable
       # access regardless of the host operating system
       shell: bash
       working-directory: ${{runner.workspace}}/tcppump
-      run: cmake -S src -B build -DWITH_UNITTESTS=1 -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+      run: cmake -S src -B build -DWITH_UNITTESTS=1 -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DPCAP_INCLUDE_DIR=C:/vcpkg/packages/winpcap_x64-windows/include/ -DPCAP_LIBRARY=C:/vcpkg/packages/winpcap_x64-windows/lib/ ; cat D:/a/tcppump/tcppump/build/CMakeFiles/CMakeError.log
 
     - name: Build
       working-directory: ${{runner.workspace}}/tcppump
@@ -38,6 +39,11 @@ jobs:
       # Execute the build.  You can specify a specific target with "--target <NAME>"
       run: cmake --build build --config $BUILD_TYPE
 
+    - name: Prepare Test Environment
+      working-directory: ${{runner.workspace}}/tcppump/bin
+      shell: bash
+      run: cp C:/vcpkg/packages/winpcap_x64-windows/bin/*.dll .
+      
     - name: Execute Unit Tests
       working-directory: ${{runner.workspace}}/tcppump/bin
       shell: bash
