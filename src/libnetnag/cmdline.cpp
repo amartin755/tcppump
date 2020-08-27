@@ -207,7 +207,7 @@ bool cCmdline::addOption (bool optional, char shortname, const char* longname, c
 
     if (longname)
     {
-        int len = strlen (longname);
+        size_t len = strlen (longname);
         if (len <= 1)
             return false;
     }
@@ -217,7 +217,7 @@ bool cCmdline::addOption (bool optional, char shortname, const char* longname, c
 
     a.optional       = optional;
     a.pOptSet        = isOptionSet;
-    a.shortname      = shortname ? shortname : NO_SHORTNAME + options.size();
+    a.shortname      = shortname ? shortname : NO_SHORTNAME + (int)options.size();
     a.longname       = longname;
     a.description    = description;
     if (argname) // option has argument?

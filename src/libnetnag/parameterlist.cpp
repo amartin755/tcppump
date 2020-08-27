@@ -147,7 +147,7 @@ const cParameter* cParameterList::findParameter (const cParameter* startAfter, c
     unsigned n = 0;
 
     if (startAfter)
-        n = startAfter->index >= 0 ? startAfter->index + 1 : list.size();
+        n = startAfter->index >= 0 ? startAfter->index + 1 : (unsigned)list.size();
     size_t len = strlen (parameter);
     size_t len2 = stopAt ? strlen (stopAt) : 0;
 
@@ -297,7 +297,7 @@ const char* cParameterList::parseParameters (const char* parameters)
         v.valLen = p - token;
 
         // store parameter and its value
-        v.index = list.size ();
+        v.index = (int)list.size ();
         list.push_back (v);
 
         p = cParseHelper::skipWhitespaces (p);
@@ -328,7 +328,7 @@ void cParameterList::unitTest ()
         assert (obj.findParameter("second")->asInt32() == (uint32_t)200);
         assert (obj.findParameter("third")->asInt32()  == (uint32_t)300);
     }
-    catch (FormatException& e)
+    catch (FormatException& )
     {
         assert (0);
     }
@@ -343,7 +343,7 @@ void cParameterList::unitTest ()
             assert (obj.findParameter("second")->asInt32() == (uint32_t)200);
             assert (obj.findParameter("third")->asInt32()  == (uint32_t)300);
         }
-        catch (FormatException& e)
+        catch (FormatException& )
         {
             assert (0);
         }
@@ -406,7 +406,7 @@ void cParameterList::unitTest ()
         {
             assert (obj.findParameter("first")->asInt32(100, 100)  == (uint32_t)100);
         }
-        catch (FormatException& e)
+        catch (FormatException& )
         {
             assert (0);
         }
@@ -433,7 +433,7 @@ void cParameterList::unitTest ()
         assert (obj.findParameter("firstsecond")->asInt32()  == (uint32_t)200);
         assert (obj.isValid ());
     }
-    catch (FormatException& e)
+    catch (FormatException& )
     {
         assert (0);
     }
@@ -460,7 +460,7 @@ void cParameterList::unitTest ()
         assert (obj.isValid ());
         assert (obj.findParameter("first")->asInt32()  == (uint32_t)123);
     }
-    catch (FormatException& e)
+    catch (FormatException& )
     {
         assert (0);
     }
@@ -482,7 +482,7 @@ void cParameterList::unitTest ()
             assert (!strncmp (obj.findParameter("payload")->asRaw(len), "012345", len));
             assert (len == 6);
         }
-        catch (FormatException& e)
+        catch (FormatException& )
         {
             assert (0);
         }
@@ -500,7 +500,7 @@ void cParameterList::unitTest ()
             assert (!memcmp (&_mac2, &mac2, sizeof (mac2)));
             assert (!memcmp (&_mac1, &mac1, sizeof (mac2)));
         }
-        catch (FormatException& e)
+        catch (FormatException& )
         {
             assert (0);
         }
@@ -517,7 +517,7 @@ void cParameterList::unitTest ()
             assert (obj.findParameter("second")->asInt32()  == (uint32_t)0x00010000);
             assert (obj.findParameter("second")->asInt32(0x00010000)  == (uint32_t)0x00010000);
         }
-        catch (FormatException& e)
+        catch (FormatException& )
         {
             assert (0);
         }
@@ -579,7 +579,7 @@ void cParameterList::unitTest ()
             par = obj.findParameter(par, nullptr, "first", true);
             assert (!par);
         }
-        catch (FormatException& e)
+        catch (FormatException& )
         {
             assert (0);
         }
@@ -607,7 +607,7 @@ void cParameterList::unitTest ()
             par = obj.findParameter(par, nullptr, "first", true);
             assert (!par);
         }
-        catch (FormatException& e)
+        catch (FormatException& )
         {
             assert (0);
         }
@@ -634,7 +634,7 @@ void cParameterList::unitTest ()
             par = obj.findParameter(par, nullptr, "first", true);
             assert (!par);
         }
-        catch (FormatException& e)
+        catch (FormatException& )
         {
             assert (0);
         }

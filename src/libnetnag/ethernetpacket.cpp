@@ -130,7 +130,7 @@ void cEthernetPacket::setTypeLength (uint16_t ethertypeLength)
 
 void cEthernetPacket::setLength ()
 {
-    setTypeLength (payloadLength + llcHeaderLength);
+    setTypeLength (uint16_t(payloadLength + llcHeaderLength));
 }
 
 
@@ -220,7 +220,7 @@ void cEthernetPacket::setPayload (const char* payloadAsHexStr, size_t len)
     payloadLength = 0;
     checkPacketLength ((len + 1)/2);
 
-    int copiedLen = packet + packetMaxLength - pPayload;
+    size_t copiedLen = packet + packetMaxLength - pPayload;
     if (!nn::Converter::hexStringToBin (payloadAsHexStr, len, pPayload, &copiedLen))
         throw FormatException (exParFormat, payloadAsHexStr);
 
@@ -243,7 +243,7 @@ void cEthernetPacket::appendPayload (const char* payloadAsHexStr, size_t len)
 
     uint8_t* p = pPayload + payloadLength;
 
-    int copiedLen = packet + packetMaxLength - p;
+    size_t copiedLen = packet + packetMaxLength - p;
     if (!nn::Converter::hexStringToBin (payloadAsHexStr, len, p, &copiedLen))
         throw FormatException (exParFormat, payloadAsHexStr);
 
@@ -258,7 +258,7 @@ void cEthernetPacket::setRaw (const char* payloadAsHexStr, size_t len)
 
     reset ();
 
-    int copiedLen = packetMaxLength;
+    size_t copiedLen = packetMaxLength;
     if (!nn::Converter::hexStringToBin (payloadAsHexStr, len, packet, &copiedLen))
         throw FormatException (exParFormat, payloadAsHexStr);
 
@@ -328,7 +328,7 @@ void cEthernetPacket::unitTest ()
         assert (!memcmp (obj.packet, "\x11\x22\x33\x44\x55\x66\x12\x34\x56\x78\x9a\xbc\x00\x08\xaa\xaa\x03\x80\x81\x82\x98\x76\xcc\xcc", 24));
         assert (obj.getLength() == 22);
     }
-    catch (FormatException& e)
+    catch (FormatException& )
     {
         assert (0);
     }
@@ -339,7 +339,7 @@ void cEthernetPacket::unitTest ()
         cEthernetPacket obj(sizeof (mac_header_t) + sizeof(vlan_t));
         obj.addVlanTag(false, 12, 7, 0);
     }
-    catch (FormatException& e)
+    catch (FormatException& )
     {
         assert (0);
     }
@@ -349,7 +349,7 @@ void cEthernetPacket::unitTest ()
         cEthernetPacket obj(sizeof (mac_header_t) + sizeof(vlan_t)-1);
         obj.addVlanTag(false, 12, 7, 0);
     }
-    catch (FormatException& e)
+    catch (FormatException& )
     {
         catched = true;
     }
@@ -361,7 +361,7 @@ void cEthernetPacket::unitTest ()
         obj.addVlanTag(false, 12, 7, 0);
         obj.addVlanTag(true, 12, 7, 0);
     }
-    catch (FormatException& e)
+    catch (FormatException& )
     {
         assert (0);
     }
@@ -372,7 +372,7 @@ void cEthernetPacket::unitTest ()
         obj.addVlanTag(false, 12, 7, 0);
         obj.addVlanTag(true, 12, 7, 0);
     }
-    catch (FormatException& e)
+    catch (FormatException& )
     {
         catched = true;
     }
@@ -383,7 +383,7 @@ void cEthernetPacket::unitTest ()
         cEthernetPacket obj(sizeof (mac_header_t));
         obj.setRaw("12345678901234567890aabbccdd", 28);
     }
-    catch (FormatException& e)
+    catch (FormatException& )
     {
         assert (0);
     }
@@ -393,7 +393,7 @@ void cEthernetPacket::unitTest ()
         cEthernetPacket obj(sizeof (mac_header_t));
         obj.setRaw("12345678901234567890aabbccddee", 30);
     }
-    catch (FormatException& e)
+    catch (FormatException& )
     {
         catched = true;
     }
@@ -404,7 +404,7 @@ void cEthernetPacket::unitTest ()
         cEthernetPacket obj(sizeof (mac_header_t) + 1);
         obj.setPayload ("aa", 2);
     }
-    catch (FormatException& e)
+    catch (FormatException& )
     {
         assert (0);
     }
@@ -414,7 +414,7 @@ void cEthernetPacket::unitTest ()
         cEthernetPacket obj(sizeof (mac_header_t) + 1);
         obj.setPayload ("aabb", 4);
     }
-    catch (FormatException& e)
+    catch (FormatException& )
     {
         catched = true;
     }
@@ -425,7 +425,7 @@ void cEthernetPacket::unitTest ()
         cEthernetPacket obj(sizeof (mac_header_t) + sizeof(llc_t));
         obj.addLlcHeader(12, 34, 0);
     }
-    catch (FormatException& e)
+    catch (FormatException& )
     {
         assert (0);
     }
@@ -435,7 +435,7 @@ void cEthernetPacket::unitTest ()
         cEthernetPacket obj(sizeof (mac_header_t) + sizeof(llc_t)-1);
         obj.addLlcHeader(12, 34, 0);
     }
-    catch (FormatException& e)
+    catch (FormatException& )
     {
         catched = true;
     }
@@ -446,7 +446,7 @@ void cEthernetPacket::unitTest ()
         cEthernetPacket obj(sizeof (mac_header_t) + sizeof(llc_t) - 1);
         obj.addLlcHeader(12, 34, 3);
     }
-    catch (FormatException& e)
+    catch (FormatException& )
     {
         assert (0);
     }
@@ -456,7 +456,7 @@ void cEthernetPacket::unitTest ()
         cEthernetPacket obj(sizeof (mac_header_t) + sizeof(llc_t) - 1 - 1);
         obj.addLlcHeader(12, 34, 3);
     }
-    catch (FormatException& e)
+    catch (FormatException& )
     {
         catched = true;
     }
@@ -467,7 +467,7 @@ void cEthernetPacket::unitTest ()
         cEthernetPacket obj(sizeof (mac_header_t) + sizeof(llc_t) + sizeof(snap_t) - 1);
         obj.addSnapHeader(0x123456, 1234);
     }
-    catch (FormatException& e)
+    catch (FormatException& )
     {
         assert (0);
     }
@@ -477,7 +477,7 @@ void cEthernetPacket::unitTest ()
         cEthernetPacket obj(sizeof (mac_header_t) + sizeof(llc_t) + sizeof(snap_t) - 1 - 1);
         obj.addSnapHeader(0x123456, 1234);
     }
-    catch (FormatException& e)
+    catch (FormatException& )
     {
         catched = true;
     }
@@ -501,7 +501,7 @@ void cEthernetPacket::unitTest ()
         assert (obj.packet[MAX_DOUBLE_TAGGED_PACKET-1] == 0);
         assert (obj.packet[MAX_DOUBLE_TAGGED_PACKET] == 0xcc);
     }
-    catch (FormatException& e)
+    catch (FormatException& )
     {
         assert (0);
     }
@@ -523,7 +523,7 @@ void cEthernetPacket::unitTest ()
         assert (obj.packet[30] == 0);
         assert (obj.packet[MAX_DOUBLE_TAGGED_PACKET-1] == 0);
     }
-    catch (FormatException& e)
+    catch (FormatException& )
     {
         catched = true;
     }

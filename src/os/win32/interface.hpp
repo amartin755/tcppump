@@ -38,7 +38,7 @@ public:
     virtual ~cInterface();
     bool open ();
     bool close ();
-    bool sendPacket (const uint8_t* payload, size_t length);
+    bool sendPacket (const uint8_t* payload, size_t length) const;
     bool getMAC (cMacAddress&);
     bool getIPv4 (cIpAddress&);
 

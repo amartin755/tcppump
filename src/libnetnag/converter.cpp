@@ -31,9 +31,9 @@ namespace nn
 {
 
 // the function will alloc a buffer. The caller has to free this buffer!
-uint8_t* Converter::hexStringToBin (const char* hexString, int* binLength)
+uint8_t* Converter::hexStringToBin (const char* hexString, size_t* binLength)
 {
-    int length = strlen (hexString);
+    size_t length = strlen (hexString);
     uint8_t* binary = (uint8_t*)malloc (length / 2);
 
 
@@ -54,12 +54,12 @@ uint8_t* Converter::hexStringToBin (const char* hexString, int* binLength)
     return binary;
 }
 
-bool Converter::hexStringToBin (const char* hexString, int hexStringLen, uint8_t* bin, int* binLength)
+bool Converter::hexStringToBin (const char* hexString, size_t hexStringLen, uint8_t* bin, size_t* binLength)
 {
     assert (hexString);
     assert (binLength);
 
-    int length = hexStringLen ? hexStringLen : strlen (hexString);
+    size_t length = hexStringLen ? hexStringLen : strlen (hexString);
 
     if (!length)
     {
@@ -76,7 +76,7 @@ bool Converter::hexStringToBin (const char* hexString, int hexStringLen, uint8_t
 
     assert ((length / 2) <= *binLength);
 
-    for (int n = 0; n < length; n++)
+    for (size_t n = 0; n < length; n++)
     {
         if (!isxdigit (hexString[n]))
         {
@@ -86,7 +86,7 @@ bool Converter::hexStringToBin (const char* hexString, int hexStringLen, uint8_t
         }
     }
 
-    for (int n = 0; n < length; n += 2)
+    for (size_t n = 0; n < length; n += 2)
     {
         char b[3] = {0};
         b[0] = hexString[n];
@@ -103,7 +103,7 @@ void Converter::unitTest ()
 {
     nn::Console::PrintDebug("-- " __FILE__ " --\n");
 
-    int binLen;
+    size_t binLen;
     uint8_t* bin;
     binLen = -1;
     assert (!hexStringToBin ("", &binLen));

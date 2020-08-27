@@ -66,7 +66,7 @@ cTimeval SleepInit ()
 
         elapsedTime += (double)(t2.QuadPart-t1.QuadPart) / ticksPerUs;
     }
-    resolution.setUs (elapsedTime / LOOPS);
+    resolution.setUs (uint64_t(elapsedTime / LOOPS));
     return resolution;
 }
 

@@ -450,7 +450,7 @@ bool cTcpPump::sendPacket (cInterface &ifc, const cTimeval &delay, const cEthern
 #if HAVE_PCAP
     else
     {
-        if (!outfile.write (delay, p.get(), p.getLength(), false))
+        if (!outfile.write (delay, p.get(), (int)p.getLength(), false))
             return false;
     }
 #endif
@@ -486,7 +486,7 @@ bool cTcpPump::interactiveMode (cInterface &ifc)
             if (!sendPacket (ifc, activeDelay, p))
                 return false;
         }
-        catch (const std::out_of_range& e)
+        catch (const std::out_of_range&)
         {
             // key not found --> nothing to do
         }

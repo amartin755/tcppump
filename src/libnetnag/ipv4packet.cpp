@@ -66,7 +66,7 @@ void cIPv4Packet::setDestination (const cIpAddress& ip)
 
 void cIPv4Packet::setPayload (uint8_t protocol, const char* payload, size_t len)
 {
-    header.len = htons (header.getHeaderLenght() * 4 + len / 2);
+    header.len = htons (uint16_t(header.getHeaderLenght() * 4 + len / 2));
     header.protocol = protocol;
     updateHeaderChecksum();
     cEthernetPacket::setPayload ((uint8_t*)&header, sizeof (header));

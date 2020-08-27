@@ -232,7 +232,7 @@ int cInstructionParser::compileETH (cParameterList& params, std::list <cEthernet
 }
 
 
-int cInstructionParser::compileVLANTags (cParameterList& params, cEthernetPacket &packet)
+size_t cInstructionParser::compileVLANTags (cParameterList& params, cEthernetPacket &packet)
 {
     const cParameter* optionalPar = nullptr;
 
@@ -282,7 +282,7 @@ int cInstructionParser::compileARP (cParameterList& params, std::list <cEthernet
 }
 
 
-int cInstructionParser::compileIPv4Header (cParameterList& params, cIPv4Packet& packet)
+size_t cInstructionParser::compileIPv4Header (cParameterList& params, cIPv4Packet& packet)
 {
     packet.setDSCP         (params.findParameter ("dscp", (uint32_t)0)->asInt8(0, 0x1f));
     packet.setECN          (params.findParameter ("ecn", (uint32_t)0)->asInt8(0, 2));
@@ -523,7 +523,7 @@ void cInstructionParser::unitTest ()
         {
             p = parseTimestamp (s, t, abs);
         }
-        catch (ParseException& e)
+        catch (ParseException& )
         {
             catched = true;
         }
@@ -541,7 +541,7 @@ void cInstructionParser::unitTest ()
         {
             p = parseTimestamp (s, t, abs);
         }
-        catch (ParseException& e)
+        catch (ParseException& )
         {
             catched = true;
         }
@@ -559,7 +559,7 @@ void cInstructionParser::unitTest ()
         {
             p = parseTimestamp (s, t, abs);
         }
-        catch (ParseException& e)
+        catch (ParseException& )
         {
             catched = true;
         }
@@ -577,7 +577,7 @@ void cInstructionParser::unitTest ()
         {
             p = parseTimestamp (s, t, abs);
         }
-        catch (ParseException& e)
+        catch (ParseException& )
         {
             catched = true;
         }
@@ -597,7 +597,7 @@ void cInstructionParser::unitTest ()
         {
             p = parseTimestamp (s, t, abs);
         }
-        catch (ParseException& e)
+        catch (ParseException& )
         {
             catched = true;
         }
@@ -617,7 +617,7 @@ void cInstructionParser::unitTest ()
         {
             p = parseTimestamp (s, t, abs);
         }
-        catch (ParseException& e)
+        catch (ParseException& )
         {
             catched = true;
         }
@@ -637,7 +637,7 @@ void cInstructionParser::unitTest ()
         {
             p = parseTimestamp (s, t, abs);
         }
-        catch (ParseException& e)
+        catch (ParseException& )
         {
             catched = true;
         }
@@ -657,7 +657,7 @@ void cInstructionParser::unitTest ()
         {
             p = parseTimestamp (s, t, abs);
         }
-        catch (ParseException& e)
+        catch (ParseException& )
         {
             catched = true;
         }
@@ -677,7 +677,7 @@ void cInstructionParser::unitTest ()
         {
             p = parseProtocollIdentifier (s, &prot, &len);
         }
-        catch (ParseException& e)
+        catch (ParseException& )
         {
             catched = true;
         }
@@ -697,7 +697,7 @@ void cInstructionParser::unitTest ()
         {
             p = parseProtocollIdentifier (s, &prot, &len);
         }
-        catch (ParseException& e)
+        catch (ParseException& )
         {
             catched = true;
         }
@@ -717,7 +717,7 @@ void cInstructionParser::unitTest ()
         {
             p = parseProtocollIdentifier (s, &prot, &len);
         }
-        catch (ParseException& e)
+        catch (ParseException& )
         {
             catched = true;
         }
@@ -737,7 +737,7 @@ void cInstructionParser::unitTest ()
         {
             p = parseProtocollIdentifier (s, &prot, &len);
         }
-        catch (ParseException& e)
+        catch (ParseException& )
         {
             catched = true;
         }
@@ -757,7 +757,7 @@ void cInstructionParser::unitTest ()
         {
             p = parseProtocollIdentifier (s, &prot, &len);
         }
-        catch (ParseException& e)
+        catch (ParseException& )
         {
             catched = true;
         }
@@ -790,7 +790,7 @@ void cInstructionParser::unitTest ()
             {
                 p = parseProtocollIdentifier (wrongstrings[n], &prot, &len);
             }
-            catch (ParseException& e)
+            catch (ParseException& )
             {
                 catched = true;
             }

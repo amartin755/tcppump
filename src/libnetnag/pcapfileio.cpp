@@ -221,7 +221,7 @@ void cPcapFileIO::unitTest (const char* file)
     {
         uint64_t t;
         uint8_t* bin;
-        int binlen;
+        size_t binlen;
         const char* txt;
     }frame;
 
@@ -256,7 +256,7 @@ void cPcapFileIO::unitTest (const char* file)
     while ((f = obj.read (&t, &len)) != NULL)
     {
         assert (t.us() == indata[n].t);
-        assert (len == indata[n].binlen);
+        assert ((size_t)len == indata[n].binlen);
         assert (!memcmp (f, indata[n].bin, indata[n].binlen));
         n++;
     }

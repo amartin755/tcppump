@@ -21,6 +21,7 @@
 #define TOOLS_HPP_
 
 #include <cstdint>
+#include <cstddef>    // size_t
 
 namespace nn
 {
@@ -30,8 +31,8 @@ namespace nn
     class Converter
     {
     public:
-        static uint8_t* hexStringToBin (const char* hexString, int* binLength);
-        static bool hexStringToBin (const char* hexString, int hexStringLen, uint8_t* bin, int* binLength);
+        static uint8_t* hexStringToBin (const char* hexString, size_t* binLength);
+        static bool hexStringToBin (const char* hexString, size_t hexStringLen, uint8_t* bin, size_t* binLength);
 
 #ifdef WITH_UNITTESTS
         static void unitTest ();

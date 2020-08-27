@@ -21,6 +21,7 @@
 #define INSTRUCTIONSPARSER_HPP_
 
 #include <cstdint>
+#include <cstddef>    // size_t
 #include <cstdio>
 #include <list>
 
@@ -54,8 +55,8 @@ private:
     int compileUDP (cParameterList& params, std::list <cEthernetPacket> &packets);
 
     void compileMacHeader (cParameterList& params, cEthernetPacket& packet);
-    int compileVLANTags (cParameterList& params, cEthernetPacket& packet);
-    int compileIPv4Header (cParameterList& params, cIPv4Packet& packet);
+    size_t compileVLANTags (cParameterList& params, cEthernetPacket& packet);
+    size_t compileIPv4Header (cParameterList& params, cIPv4Packet& packet);
 
     cMacAddress ownMac;
     cIpAddress  ownIPv4;

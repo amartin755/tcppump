@@ -96,9 +96,9 @@ bool cInterface::close ()
     return true;
 }
 
-bool cInterface::sendPacket (const uint8_t* payload, size_t length)
+bool cInterface::sendPacket (const uint8_t* payload, size_t length) const
 {
-    int ret = pcap_sendpacket (ifcHandle, (u_char*)payload, length);
+    int ret = pcap_sendpacket (ifcHandle, (u_char*)payload, (int)length);
 
     if (ret == -1)
         nn::Console::PrintError ("pcap error: %s\n", pcap_geterr (ifcHandle));
