@@ -59,11 +59,6 @@ jobs:
       
     - uses: actions/upload-artifact@v2
       with:
-        name: tcppump binaray
-        path: ${{runner.workspace}}/tcppump/bin/tcppump.exe
-
-    - uses: actions/upload-artifact@v2
-      with:
-        name: unittest binaray
-        path: ${{runner.workspace}}/tcppump/bin/unittest.exe
+        name: generated binaries
+        path: ${{runner.workspace}}/tcppump/bin/
 
