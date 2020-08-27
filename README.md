@@ -1,3 +1,6 @@
+![Test-on-ubuntu-gcc-64bit](https://github.com/amartin755/tcppump/workflows/Test-on-ubuntu-gcc-64bit/badge.svg)
+![Test-on-windows-MSVC-64bit](https://github.com/amartin755/tcppump/workflows/Test-on-windows-MSVC-64bit/badge.svg)
+
 # tcppump
 Simple Ethernet network packet generator
 
