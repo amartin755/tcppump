@@ -306,7 +306,7 @@ int cInstructionParser::compileIPv4 (cParameterList& params, std::list <cEtherne
     const char* payload = params.findParameter ("payload")->asRaw(len);
     ippacket.setPayload (params.findParameter ("protocol")->asInt8(), nullptr, 0, payload, len);
 
-    return ippacket.getAllEthernetPackets(packets);
+    return (int)ippacket.getAllEthernetPackets(packets);
 }
 
 
@@ -333,7 +333,7 @@ int cInstructionParser::compileUDP (cParameterList& params, std::list <cEthernet
         payload = optionalPar->asRaw(len);
     udppacket.setPayload (payload, len);
 
-    return udppacket.getAllEthernetPackets(packets);
+    return (int)udppacket.getAllEthernetPackets(packets);
 }
 
 
