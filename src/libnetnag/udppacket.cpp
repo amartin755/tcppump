@@ -27,7 +27,6 @@
 
 cUdpPacket::cUdpPacket ()
 {
-    this->setTypeLength (ETHERTYPE_IPV4);
 }
 
 void cUdpPacket::setPayload (const char* payload, size_t len)

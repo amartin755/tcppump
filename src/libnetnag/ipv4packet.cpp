@@ -31,7 +31,28 @@ cIPv4Packet::cIPv4Packet ()
     header.setVersion (4);
     header.setHeaderLenght (5);
 
-    this->setTypeLength (ETHERTYPE_IPV4);
+    cEthernetPacket firstPacket;
+    firstPacket.setTypeLength (ETHERTYPE_IPV4);
+    packets.push_back(std::move(firstPacket));
+}
+
+cEthernetPacket& cIPv4Packet::getFirstEthernetPacket ()
+{
+    assert (packets.size() > 0);
+    return packets.front();
+}
+
+size_t cIPv4Packet::getAllEthernetPackets (std::list<cEthernetPacket>& l)
+{
+    size_t ret = packets.size();
+
+    for (auto & p : packets)
+    {
+        l.push_back(std::move(p));
+    }
+
+
+    return ret;
 }
 
 void cIPv4Packet::setDSCP (int dscp)
@@ -69,8 +90,11 @@ void cIPv4Packet::setPayload (uint8_t protocol, const char* payload, size_t len)
     header.len = htons (uint16_t(header.getHeaderLenght() * 4 + len / 2));
     header.protocol = protocol;
     updateHeaderChecksum();
-    cEthernetPacket::setPayload ((uint8_t*)&header, sizeof (header));
-    cEthernetPacket::appendPayload (payload, len);
+
+    cEthernetPacket &packet = packets.front();
+
+    packet.setPayload ((uint8_t*)&header, sizeof (header));
+    packet.appendPayload (payload, len);
 
     //TODO later when supporting fragmentation flags_offset and identification also have to be updated
 }

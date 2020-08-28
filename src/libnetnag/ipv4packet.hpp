@@ -21,6 +21,7 @@
 #define IPV4_PACKET_H_
 
 #include <cstdint>
+#include <list>
 
 #include "ethernetpacket.hpp"
 #include "ipaddress.hpp"
@@ -73,7 +74,7 @@ typedef struct
 #pragma pack()
 
 
-class cIPv4Packet : public cEthernetPacket
+class cIPv4Packet
 {
 public:
     cIPv4Packet ();
@@ -85,6 +86,8 @@ public:
     void setDestination (const cIpAddress& ip);
     void setPayload (uint8_t protocol, const char* payload, size_t len);
     void updateHeaderChecksum ();
+    cEthernetPacket& getFirstEthernetPacket ();
+    size_t getAllEthernetPackets (std::list<cEthernetPacket>&);
 
 #ifdef WITH_UNITTESTS
     static void unitTest ();
@@ -93,7 +96,8 @@ public:
 private:
     static uint16_t calcHeaderChecksum (const uint16_t* ipheader, int headerLen);
 
-    ipv4_header_t    header;
+    ipv4_header_t              header;
+    std::list<cEthernetPacket> packets;
 };
 
 

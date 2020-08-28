@@ -48,6 +48,7 @@ cEthernetPacket::cEthernetPacket (size_t maxLength)
     reset ();
 }
 
+// move constructor
 cEthernetPacket::cEthernetPacket (cEthernetPacket&& other)
 {
     data             = other.data;
@@ -66,6 +67,23 @@ cEthernetPacket::cEthernetPacket (cEthernetPacket&& other)
     other.pEthertypeLength = nullptr;
     other.payloadLength    = 0;
     other.llcHeaderLength  = 0;
+}
+
+// copy constructor
+cEthernetPacket::cEthernetPacket (const cEthernetPacket& obj) : cEthernetPacket (obj.packetMaxLength)
+{
+    assert (packetMaxLength == obj.packetMaxLength);
+
+    payloadLength    = obj.payloadLength;
+    llcHeaderLength  = obj.llcHeaderLength;
+    vlanTags         = obj.vlanTags;
+
+    // copy packet data
+    std::memcpy (packet, obj.packet, obj.getLength());
+
+    // recalculate offsets
+    pPayload         = packet + (obj.pPayload - obj.packet);
+    pEthertypeLength = (uint16_t*)(packet + ((uint8_t*)obj.pEthertypeLength - obj.packet));
 }
 
 
@@ -321,12 +339,47 @@ void cEthernetPacket::unitTest ()
         obj.addLlcHeader(0x10, 0x20, 3);
         assert (obj.getLength() == 37);
 
+        {
+            // test copy constructor
+            cEthernetPacket cpy(obj);
+            assert (obj.data != cpy.data);
+            assert (obj.packet != cpy.packet);
+            assert (obj.pPayload != cpy.pPayload);
+            assert (obj.pEthertypeLength != cpy.pEthertypeLength);
+            assert (obj.packetMaxLength == cpy.packetMaxLength);
+            assert (obj.payloadLength == cpy.payloadLength);
+            assert (obj.llcHeaderLength == cpy.llcHeaderLength);
+            assert (obj.vlanTags == cpy.vlanTags);
+            assert (*obj.data == *cpy.data);
+            assert (*obj.packet == *cpy.packet);
+            assert (*obj.pPayload == *cpy.pPayload);
+            assert (*obj.pEthertypeLength == *cpy.pEthertypeLength);
+            assert (!memcmp (obj.packet, cpy.packet, (obj.pPayload + obj.payloadLength) - obj.packet));
+        }
+
         memset (obj.packet, 0xcc, MAX_DOUBLE_TAGGED_PACKET + 1);
         obj.reset();
         obj.setMacHeader(src, dst);
         obj.addSnapHeader(0x00808182, 0x9876);
         assert (!memcmp (obj.packet, "\x11\x22\x33\x44\x55\x66\x12\x34\x56\x78\x9a\xbc\x00\x08\xaa\xaa\x03\x80\x81\x82\x98\x76\xcc\xcc", 24));
         assert (obj.getLength() == 22);
+
+        {
+            // test copy constructor
+            cEthernetPacket cpy(obj);
+            assert (obj.data != cpy.data);
+            assert (obj.packet != cpy.packet);
+            assert (obj.pPayload != cpy.pPayload);
+            assert (obj.pEthertypeLength != cpy.pEthertypeLength);
+            assert (obj.packetMaxLength == cpy.packetMaxLength);
+            assert (obj.payloadLength == cpy.payloadLength);
+            assert (obj.llcHeaderLength == cpy.llcHeaderLength);
+            assert (obj.vlanTags == cpy.vlanTags);
+            assert (*obj.data == *cpy.data);
+            assert (*obj.packet == *cpy.packet);
+            assert (*obj.pEthertypeLength == *cpy.pEthertypeLength);
+            assert (!memcmp (obj.packet, cpy.packet, obj.getLength()));
+        }
     }
     catch (FormatException& )
     {

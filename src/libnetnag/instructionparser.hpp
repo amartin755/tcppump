@@ -54,9 +54,9 @@ private:
     int compileIPv4 (cParameterList& params, std::list <cEthernetPacket> &packets);
     int compileUDP (cParameterList& params, std::list <cEthernetPacket> &packets);
 
-    void compileMacHeader (cParameterList& params, cEthernetPacket& packet);
+    void   compileMacHeader (cParameterList& params, cEthernetPacket& packet);
     size_t compileVLANTags (cParameterList& params, cEthernetPacket& packet);
-    size_t compileIPv4Header (cParameterList& params, cIPv4Packet& packet);
+    void   compileIPv4Header (cParameterList& params, cIPv4Packet& packet);
 
     cMacAddress ownMac;
     cIpAddress  ownIPv4;

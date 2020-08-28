@@ -282,7 +282,7 @@ int cInstructionParser::compileARP (cParameterList& params, std::list <cEthernet
 }
 
 
-size_t cInstructionParser::compileIPv4Header (cParameterList& params, cIPv4Packet& packet)
+void cInstructionParser::compileIPv4Header (cParameterList& params, cIPv4Packet& packet)
 {
     packet.setDSCP         (params.findParameter ("dscp", (uint32_t)0)->asInt8(0, 0x1f));
     packet.setECN          (params.findParameter ("ecn", (uint32_t)0)->asInt8(0, 2));
@@ -290,31 +290,29 @@ size_t cInstructionParser::compileIPv4Header (cParameterList& params, cIPv4Packe
     packet.setDontFragment (params.findParameter ("df", (uint32_t)0)->asInt8(0, 1));
     packet.setDestination  (params.findParameter ("dip")->asIPv4());
     packet.setSource       (params.findParameter ("sip", ownIPv4)->asIPv4());
-
-    return packet.getLength();
 }
 
 
 int cInstructionParser::compileIPv4 (cParameterList& params, std::list <cEthernetPacket> &packets)
 {
-    cIPv4Packet packet;
+    cIPv4Packet ippacket;
+    cEthernetPacket& eth = ippacket.getFirstEthernetPacket();
 
-    compileMacHeader  (params, packet);
-    compileVLANTags   (params, packet);
-    compileIPv4Header (params, packet);
+    compileMacHeader  (params, eth);
+    compileVLANTags   (params, eth);
+    compileIPv4Header (params, ippacket);
 
     size_t len;
     const char* payload = params.findParameter ("payload")->asRaw(len);
-    packet.setPayload (params.findParameter ("protocol")->asInt8(), payload, len);
+    ippacket.setPayload (params.findParameter ("protocol")->asInt8(), payload, len);
 
-    packets.push_back (std::move(packet));
-
-    return 1; // one packet was added to the list
+    return ippacket.getAllEthernetPackets(packets);
 }
 
 
 int cInstructionParser::compileUDP (cParameterList& params, std::list <cEthernetPacket> &packets)
 {
+#if 0
     cUdpPacket packet;
 
     compileMacHeader  (params, packet);
@@ -334,7 +332,7 @@ int cInstructionParser::compileUDP (cParameterList& params, std::list <cEthernet
 
     compileVLANTags (params, packet);
     packets.push_back (std::move(packet));
-
+#endif
     return 1; // one packet was added to the list
 }
 
@@ -484,7 +482,7 @@ static const testcase_t tests[] = {
         },
         42,
     },
-    {
+    {/*19*/
         "ipv4(dmac = 11:22:33:44:55:66, dip=1.2.3.4, protocol=254, payload=12345678)",
         {
             0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0xba, 0xba, 0xba, 0xba, 0xba, 0xba, 0x08, 0x00, 0x45, 0x00, 0x00, 0x18, 0x00, 0x00, 0x00, 0x00, 0x40, 0xfe, 0x61, 0xcf, 0x0a, 0x0a, 0x0a, 0x0a, 0x01, 0x02, 0x03, 0x04, 0x12, 0x34, 0x56, 0x78

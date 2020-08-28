@@ -32,7 +32,7 @@ class cEthernetPacket
 public:
     cEthernetPacket ();
     cEthernetPacket (size_t maxLength);
-    cEthernetPacket (const cEthernetPacket& obj) = delete; // no copy constructor
+    cEthernetPacket (const cEthernetPacket& obj); // copy constructor
     ~cEthernetPacket ();
     cEthernetPacket (cEthernetPacket&& other);
     cEthernetPacket& operator=(cEthernetPacket&& other);
