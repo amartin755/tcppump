@@ -256,10 +256,14 @@ checksum (range 0 - 0xffff) If ommited, checksum will be automatically calculate
 
 payload in ascii hex
 
-    payload
+    payload (optional)
 
 NOTE: Optionally all vlan tag parameters and all optional ipv4 parameters (see above) are also allowed.
 
 #### examples
 
-TODO
+    # UDP packet with source-mac and ip taken from network interface
+    udp(dmac=12:23:34:34:44:44, dip=1.2.3.4, sport=1234, dport=2345, payload=12345678);
+    # UDP packet with explicit source-mac and ip
+    udp(dmac=12:23:34:34:44:44, dip=1.2.3.4, smac=80:12:34:45:67:89, sip=192.168.0.1, sport=1234, dport=2345, payload=12345678);
+

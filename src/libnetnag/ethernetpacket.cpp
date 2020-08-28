@@ -250,7 +250,7 @@ void cEthernetPacket::setPayload (const uint8_t* payload, size_t len)
 {
     payloadLength = 0;
     checkPacketLength (len);
-    memcpy (pPayload, payload, len);
+    std::memcpy (pPayload, payload, len);
     payloadLength = len;
 }
 
@@ -266,6 +266,14 @@ void cEthernetPacket::appendPayload (const char* payloadAsHexStr, size_t len)
         throw FormatException (exParFormat, payloadAsHexStr);
 
     payloadLength += copiedLen;
+}
+
+void cEthernetPacket::appendPayload (const uint8_t* payload, size_t len)
+{
+    checkPacketLength (len);
+    uint8_t* p = pPayload + payloadLength;
+    std::memcpy (p, payload, len);
+    payloadLength += len;
 }
 
 

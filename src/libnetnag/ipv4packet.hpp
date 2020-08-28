@@ -84,7 +84,7 @@ public:
     void setDontFragment (bool df);
     void setSource (const cIpAddress& ip);
     void setDestination (const cIpAddress& ip);
-    void setPayload (uint8_t protocol, const char* payload, size_t len);
+    void setPayload (uint8_t protocol, const uint8_t* l4header, size_t l4headerLen, const char* payload, size_t payloadLen);
     void updateHeaderChecksum ();
     cEthernetPacket& getFirstEthernetPacket ();
     size_t getAllEthernetPackets (std::list<cEthernetPacket>&);
@@ -96,8 +96,17 @@ public:
 private:
     static uint16_t calcHeaderChecksum (const uint16_t* ipheader, int headerLen);
 
-    ipv4_header_t              header;
+    ipv4_header_t              ipHeader;
     std::list<cEthernetPacket> packets;
+};
+
+enum ipprotocols_t
+{
+    PROTO_ICMP = 1,
+    PROTO_TCP  = 6,
+    PROTO_UDP  = 17,
+    PROTO_ESP  = 50,
+    PROTO_VRRP = 112,
 };
 
 

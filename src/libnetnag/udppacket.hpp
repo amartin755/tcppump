@@ -52,6 +52,7 @@ public:
 #endif
 
 private:
+    udp_header_t header;
 };
 
 

@@ -27,9 +27,9 @@
 
 cIPv4Packet::cIPv4Packet ()
 {
-    memset (&header, 0, sizeof (header));
-    header.setVersion (4);
-    header.setHeaderLenght (5);
+    memset (&ipHeader, 0, sizeof (ipHeader));
+    ipHeader.setVersion (4);
+    ipHeader.setHeaderLenght (5);
 
     cEthernetPacket firstPacket;
     firstPacket.setTypeLength (ETHERTYPE_IPV4);
@@ -57,51 +57,55 @@ size_t cIPv4Packet::getAllEthernetPackets (std::list<cEthernetPacket>& l)
 
 void cIPv4Packet::setDSCP (int dscp)
 {
-    header.setDSCP (dscp);
+    ipHeader.setDSCP (dscp);
 }
 
 void cIPv4Packet::setECN (int ecn)
 {
-    header.setECN (ecn);
+    ipHeader.setECN (ecn);
 }
 
 void cIPv4Packet::setTimeToLive (uint8_t ttl)
 {
-    header.ttl = ttl;
+    ipHeader.ttl = ttl;
 }
 
 void cIPv4Packet::setDontFragment (bool df)
 {
-    header.setFlags (false, df, false);
+    ipHeader.setFlags (false, df, false);
 }
 
 void cIPv4Packet::setSource (const cIpAddress& ip)
 {
-    header.srcIp = ip.get();
+    ipHeader.srcIp = ip.get();
 }
 
 void cIPv4Packet::setDestination (const cIpAddress& ip)
 {
-    header.dstIp = ip.get();
+    ipHeader.dstIp = ip.get();
 }
 
-void cIPv4Packet::setPayload (uint8_t protocol, const char* payload, size_t len)
+// note: payload is a ascii hex bytestream e.g. "123456789abcde"
+void cIPv4Packet::setPayload (uint8_t protocol, const uint8_t* l4header, size_t l4headerLen, const char* payload, size_t payloadLen)
 {
-    header.len = htons (uint16_t(header.getHeaderLenght() * 4 + len / 2));
-    header.protocol = protocol;
+    ipHeader.len = htons (uint16_t(ipHeader.getHeaderLenght() * 4 + l4headerLen + payloadLen / 2));
+    ipHeader.protocol = protocol;
     updateHeaderChecksum();
 
     cEthernetPacket &packet = packets.front();
 
-    packet.setPayload ((uint8_t*)&header, sizeof (header));
-    packet.appendPayload (payload, len);
+    packet.setPayload ((uint8_t*)&ipHeader, sizeof (ipHeader)); // write IP header
+    if (l4headerLen && l4header)
+        packet.appendPayload(l4header, l4headerLen);            // copy L4 header (e.g. udp header)
+    if (payloadLen && payload)
+        packet.appendPayload (payload, payloadLen);             // copy payload from ascii string
 
     //TODO later when supporting fragmentation flags_offset and identification also have to be updated
 }
 
 void cIPv4Packet::updateHeaderChecksum ()
 {
-    header.chksum = htons(calcHeaderChecksum ((const uint16_t*)&header, sizeof (header)));
+    ipHeader.chksum = htons(calcHeaderChecksum ((const uint16_t*)&ipHeader, sizeof (ipHeader)));
 }
 
 uint16_t cIPv4Packet::calcHeaderChecksum (const uint16_t* ipheader, int headerLen)

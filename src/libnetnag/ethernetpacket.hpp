@@ -47,6 +47,7 @@ public:
     void setPayload (const char* payloadAsHexStr, size_t len);
     void setPayload (const uint8_t* payload, size_t len);
     void appendPayload (const char* payloadAsHexStr, size_t len);
+    void appendPayload (const uint8_t* payload, size_t len);
     void setRaw (const char* payloadAsHexStr, size_t len);
     void setRaw (const uint8_t* payload, size_t len);
     const uint8_t* get () const;
@@ -54,6 +55,20 @@ public:
     inline void clear () {reset ();};
     inline bool hasLlcHeader () {return llcHeaderLength != 0;};
     inline bool hasPayload () {return payloadLength != 0;};
+    inline uint8_t getPayloadAt8 (unsigned offset)
+    {
+        if (offset > payloadLength)
+            throw FormatException (exParRange, NULL);
+
+        return pPayload[offset];
+    }
+    inline uint16_t getPayloadAt16 (unsigned offset)
+    {
+        if (offset*2 > payloadLength)
+            throw FormatException (exParRange, NULL);
+
+        return pPayload[offset*2];
+    }
 
     static const size_t   MAX_ETHERNET_PAYLOAD     = 1500;
     static const size_t   MAX_PACKET               = 6+6+2+MAX_ETHERNET_PAYLOAD;

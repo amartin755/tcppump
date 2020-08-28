@@ -304,7 +304,7 @@ int cInstructionParser::compileIPv4 (cParameterList& params, std::list <cEtherne
 
     size_t len;
     const char* payload = params.findParameter ("payload")->asRaw(len);
-    ippacket.setPayload (params.findParameter ("protocol")->asInt8(), payload, len);
+    ippacket.setPayload (params.findParameter ("protocol")->asInt8(), nullptr, 0, payload, len);
 
     return ippacket.getAllEthernetPackets(packets);
 }
@@ -312,28 +312,28 @@ int cInstructionParser::compileIPv4 (cParameterList& params, std::list <cEtherne
 
 int cInstructionParser::compileUDP (cParameterList& params, std::list <cEthernetPacket> &packets)
 {
-#if 0
-    cUdpPacket packet;
+    cUdpPacket udppacket;
+    cEthernetPacket& eth = udppacket.getFirstEthernetPacket();
 
-    compileMacHeader  (params, packet);
-    compileVLANTags   (params, packet);
-    compileIPv4Header (params, packet);
+    compileMacHeader  (params, eth);
+    compileVLANTags   (params, eth);
+    compileIPv4Header (params, udppacket);
 
-    packet.setSourcePort(params.findParameter ("sport")->asInt16());
-    packet.setDestinationPort(params.findParameter ("dport")->asInt16());
+    udppacket.setSourcePort(params.findParameter ("sport")->asInt16());
+    udppacket.setDestinationPort(params.findParameter ("dport")->asInt16());
 
     const cParameter* optionalPar = params.findParameter ("chksum", true);
     if (optionalPar)
-        packet.setChecksum(optionalPar->asInt16());
+        udppacket.setChecksum(optionalPar->asInt16());
 
-    size_t len;
-    const char* payload = params.findParameter ("payload")->asRaw(len);
-    packet.setPayload (payload, len);
+    size_t len = 0;
+    const char* payload = nullptr;
+    optionalPar = params.findParameter ("payload", true);
+    if (optionalPar)
+        payload = optionalPar->asRaw(len);
+    udppacket.setPayload (payload, len);
 
-    compileVLANTags (params, packet);
-    packets.push_back (std::move(packet));
-#endif
-    return 1; // one packet was added to the list
+    return udppacket.getAllEthernetPackets(packets);
 }
 
 

@@ -24,6 +24,7 @@ Supported protocols and packet formats
 * VLAN tagging; including multiple tagging
 * ARP
 * Raw IPv4 (fragmentation is currently not supported)
+* UDP
 
 **Note: This tool is in alpha state. Use at your own risk. Currently there are no binaries available.**
 
@@ -161,3 +162,7 @@ Raw simple IPv4 packet
 Raw full defined IPv4 packet
 
     tcppump -i eth0 "ipv4(smac=80:12:34:45:67:89, dmac = 11:22:33:44:55:66, sip=192.168.0.1, dip=172.16.1.2, ttl=200, dscp=16, ecn=1, df=1, protocol=254, payload=12345678)"
+
+UDP packet
+
+    tcppump -i eth0 "udp(dmac=12:23:34:34:44:44, dip=1.2.3.4, sport=1234, dport=2345, payload=12345678)"
