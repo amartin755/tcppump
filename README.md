@@ -50,11 +50,11 @@ Linux
     cd tcpdump
     cmake -S src -B build
 
-If you use mingw with make add the following cmake parameter:
+If you use 'mingw' and 'make' add the following cmake parameter:
 
     -G "MinGW Makefiles"
 
-To enable unit test targets add the following cmake paramaters:
+To enable unit test targets add the following cmake paramater:
 
     -DWITH_UNITTESTS=1
 
