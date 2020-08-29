@@ -9,6 +9,7 @@ tcpdump is a simple command-line tool for generating Ethernet packets, with focu
 Features
 * Definiton of packets either as ASCII hex string or via a token based language
 * Sending of single packets
+* time triggered send of packets
 * Script defined packets
 * Loops
 * Delays between packets
@@ -29,8 +30,8 @@ Supported protocols and packet formats
 **Note: This tool is in alpha state. Use at your own risk. Currently there are no binaries available.**
 
 ## Build instructions
-tcppump has been successfully compiled on win 7 and win 10 (both x64) with mingw32 and on ubuntu linux (x64) with gcc.
-Theoretically it should also be compilable with other C++11 compilers (e.g. Visual Studio), but this was never tested.
+tcppump has been successfully compiled on ubuntu linux (x64) with gcc and on windows 10 with mingw32 and MSVC.
+Theoretically it should also be compilable with other C++11 compilers, but this was never tested.
 
 ### Dependencies
 * cmake >= V3.13
@@ -49,7 +50,7 @@ Linux
     cd tcpdump
     cmake -S src -B build
 
-If cmake can not detect your mingw installation on windows, this cmake parameter can help:
+If you use mingw with make add the following cmake parameter:
 
     -G "MinGW Makefiles"
 
