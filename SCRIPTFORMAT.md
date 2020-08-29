@@ -250,7 +250,7 @@ destination port (range 0 - 0xffff)
 
     dport
 
-checksum (range 0 - 0xffff) If ommited, checksum will be automatically calculated
+checksum (range 0 - 0xffff) If ommited, checksum is calculated automatically
 
     checksum (optional)
 

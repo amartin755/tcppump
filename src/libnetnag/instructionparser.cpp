@@ -322,16 +322,16 @@ int cInstructionParser::compileUDP (cParameterList& params, std::list <cEthernet
     udppacket.setSourcePort(params.findParameter ("sport")->asInt16());
     udppacket.setDestinationPort(params.findParameter ("dport")->asInt16());
 
-    const cParameter* optionalPar = params.findParameter ("chksum", true);
-    if (optionalPar)
-        udppacket.setChecksum(optionalPar->asInt16());
-
     size_t len = 0;
     const char* payload = nullptr;
-    optionalPar = params.findParameter ("payload", true);
+    const cParameter* optionalPar = params.findParameter ("payload", true);
     if (optionalPar)
         payload = optionalPar->asRaw(len);
     udppacket.setPayload (payload, len);
+
+    optionalPar = params.findParameter ("chksum", true);
+    if (optionalPar)
+        udppacket.setChecksum (optionalPar->asInt16());
 
     return (int)udppacket.getAllEthernetPackets(packets);
 }

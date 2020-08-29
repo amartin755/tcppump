@@ -24,6 +24,17 @@
 #include "udppacket.hpp"
 
 
+#pragma pack(1)
+typedef struct
+{
+    struct in_addr srcIp;
+    struct in_addr dstIp;
+    uint8_t        nix;         // 0
+    uint8_t        protocol;
+    uint16_t       len;
+}ipv4_pseudo_header_t;
+#pragma pack()
+
 
 cUdpPacket::cUdpPacket ()
 {
@@ -36,8 +47,8 @@ void cUdpPacket::setPayload (const char* payload, size_t len)
 
     header.length = htons(sizeof (header) + len/2);
     cIPv4Packet::setPayload (PROTO_UDP, (const uint8_t*)&header, sizeof (header), payload, len);
-
-    // TODO calc udp checksum
+    header.checksum = calcChecksum();
+    cIPv4Packet::updateL4Header ((const uint8_t*)&header, sizeof (header));
 }
 
 void cUdpPacket::setSourcePort (uint16_t port)
@@ -53,6 +64,63 @@ void cUdpPacket::setDestinationPort (uint16_t port)
 void cUdpPacket::setChecksum (uint16_t checksum)
 {
     header.checksum = htons(checksum);
+    cIPv4Packet::updateL4Header ((const uint8_t*)&header, sizeof (header));
+}
+
+uint16_t cUdpPacket::calcChecksum () const
+{
+    ipv4_pseudo_header_t ipPseudoHeader;
+    const ipv4_header_t& ipHeader = cIPv4Packet::getHeader();
+
+    ipPseudoHeader.srcIp    = ipHeader.srcIp;
+    ipPseudoHeader.dstIp    = ipHeader.dstIp;
+    ipPseudoHeader.nix      = 0;
+    ipPseudoHeader.protocol = ipHeader.protocol;
+    ipPseudoHeader.len      = htons((uint16_t)cIPv4Packet::getPayloadLength());
+
+    uint32_t sum;
+
+    sum  = csum ((const uint16_t*)&ipPseudoHeader, sizeof (ipPseudoHeader));
+    sum += csum ();
+
+    while (sum >> 16)
+        sum = (sum & 0xffff) + (sum >> 16);
+
+    uint16_t ret = (uint16_t)~sum;
+    return ret ? ret : 0xffff;
+}
+
+uint32_t cUdpPacket::csum (const uint16_t* p, unsigned len) const
+{
+    uint32_t sum = 0;
+
+    while (len > 1)
+    {
+        sum += *p++;
+        len -= 2;
+    }
+    if (len)
+        sum += *(uint8_t*)p;
+
+    return sum;
+}
+
+uint32_t cUdpPacket::csum () const
+{
+    uint32_t sum = 0;
+    unsigned offset = 0;
+    unsigned len = (unsigned)cIPv4Packet::getPayloadLength ();
+
+    while (len > 1)
+    {
+        sum += cIPv4Packet::getPayloadAt16(offset);
+        len -= 2;
+        offset += 2;
+    }
+    if (len)
+        sum += cIPv4Packet::getPayloadAt8(offset);
+
+    return sum;
 }
 
 #ifdef WITH_UNITTESTS

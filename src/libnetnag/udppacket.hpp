@@ -52,6 +52,10 @@ public:
 #endif
 
 private:
+    uint16_t calcChecksum () const;
+    uint32_t csum (const uint16_t* p, unsigned len) const;
+    uint32_t csum () const;
+
     udp_header_t header;
 };
 

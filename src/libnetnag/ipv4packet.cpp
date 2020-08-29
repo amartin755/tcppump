@@ -42,7 +42,7 @@ cEthernetPacket& cIPv4Packet::getFirstEthernetPacket ()
     return packets.front();
 }
 
-size_t cIPv4Packet::getAllEthernetPackets (std::list<cEthernetPacket>& l)
+size_t cIPv4Packet::getAllEthernetPackets (std::list<cEthernetPacket>& l) const
 {
     size_t ret = packets.size();
 
@@ -85,9 +85,11 @@ void cIPv4Packet::setDestination (const cIpAddress& ip)
     ipHeader.dstIp = ip.get();
 }
 
-// note: payload is a ascii hex bytestream e.g. "123456789abcde"
+// note: payload is an ascii hex bytestream e.g. "123456789abcde"
 void cIPv4Packet::setPayload (uint8_t protocol, const uint8_t* l4header, size_t l4headerLen, const char* payload, size_t payloadLen)
 {
+    // FIXME fragmentation
+
     ipHeader.len = htons (uint16_t(ipHeader.getHeaderLenght() * 4 + l4headerLen + payloadLen / 2));
     ipHeader.protocol = protocol;
     updateHeaderChecksum();
@@ -101,6 +103,44 @@ void cIPv4Packet::setPayload (uint8_t protocol, const uint8_t* l4header, size_t 
         packet.appendPayload (payload, payloadLen);             // copy payload from ascii string
 
     //TODO later when supporting fragmentation flags_offset and identification also have to be updated
+}
+
+uint8_t cIPv4Packet::getPayloadAt8 (unsigned offset) const
+{
+    // FIXME fragmentation
+
+    const cEthernetPacket &packet = packets.front();
+    return packet.getPayloadAt8 (offset + sizeof (ipHeader));
+}
+
+// note: offset is a byte offset!!!
+uint16_t cIPv4Packet::getPayloadAt16 (unsigned offset) const
+{
+    // FIXME fragmentation
+
+    const cEthernetPacket &packet = packets.front();
+    return packet.getPayloadAt16 (offset + sizeof (ipHeader));
+}
+
+size_t cIPv4Packet::getPayloadLength () const
+{
+    // FIXME fragmentation
+
+    const cEthernetPacket &packet = packets.front();
+    size_t len = packet.getPayloadLength ();
+
+    assert (len > sizeof (ipHeader));
+
+    return len > sizeof (ipHeader) ? len - sizeof (ipHeader) : 0;
+}
+
+void cIPv4Packet::updateL4Header (const uint8_t* l4header, size_t l4headerLen)
+{
+    cEthernetPacket &packet = packets.front();
+
+    assert (packet.getPayloadLength () > sizeof (ipHeader));
+
+    packet.updatePayloadAt((unsigned)sizeof (ipHeader), l4header, l4headerLen);
 }
 
 void cIPv4Packet::updateHeaderChecksum ()

@@ -23,6 +23,7 @@
 #include <cstdint>
 #include <list>
 
+#include "inet.h" // ntohs, htons
 #include "ethernetpacket.hpp"
 #include "ipaddress.hpp"
 
@@ -62,8 +63,8 @@ typedef struct
     }
     void setFlags (bool reserved, bool df, bool mf)
     {
-        uint16_t fo = ntohs (flags_offset) & 0x1fff;
-        flags_offset = htons((reserved ? 0x8000 : 0) | (df ? 0x4000 : 0) | (mf ? 0x2000 : 0) | fo);
+        uint16_t fo  = ntohs (flags_offset) & 0x1fff;
+        flags_offset = htons ((reserved ? 0x8000 : 0) | (df ? 0x4000 : 0) | (mf ? 0x2000 : 0) | fo);
     }
     void setOffset (int offset)
     {
@@ -87,11 +88,22 @@ public:
     void setPayload (uint8_t protocol, const uint8_t* l4header, size_t l4headerLen, const char* payload, size_t payloadLen);
     void updateHeaderChecksum ();
     cEthernetPacket& getFirstEthernetPacket ();
-    size_t getAllEthernetPackets (std::list<cEthernetPacket>&);
+    size_t getAllEthernetPackets (std::list<cEthernetPacket>&) const;
 
 #ifdef WITH_UNITTESTS
     static void unitTest ();
 #endif
+
+protected:
+    const ipv4_header_t& getHeader () const
+    {
+        return ipHeader;
+    }
+    uint8_t  getPayloadAt8 (unsigned offset) const;
+    uint16_t getPayloadAt16 (unsigned offset) const; // note: offset is a byte offset!!!
+    size_t   getPayloadLength () const;
+    void     updateL4Header (const uint8_t* l4header, size_t l4headerLen);
+
 
 private:
     static uint16_t calcHeaderChecksum (const uint16_t* ipheader, int headerLen);
@@ -105,7 +117,6 @@ enum ipprotocols_t
     PROTO_ICMP = 1,
     PROTO_TCP  = 6,
     PROTO_UDP  = 17,
-    PROTO_ESP  = 50,
     PROTO_VRRP = 112,
 };
 

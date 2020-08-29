@@ -307,6 +307,15 @@ const uint8_t* cEthernetPacket::get () const
 }
 
 
+void cEthernetPacket::updatePayloadAt (unsigned offset, const void* payload, size_t len)
+{
+    if ((offset + len) > payloadLength)
+        throw FormatException (exParRange, NULL);
+
+    std::memcpy (&(pPayload[offset]), payload, len);
+}
+
+
 #ifdef WITH_UNITTESTS
 #include "console.hpp"
 

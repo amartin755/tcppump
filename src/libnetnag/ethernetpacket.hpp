@@ -22,6 +22,7 @@
 
 #include <cstdint>
 #include <cstddef>    // size_t
+#include <cassert>
 #include "formatexception.hpp"
 #include "inet.h"
 #include "macaddress.hpp"
@@ -53,22 +54,24 @@ public:
     const uint8_t* get () const;
     inline size_t getLength () const {return pPayload - packet + payloadLength;}
     inline void clear () {reset ();};
-    inline bool hasLlcHeader () {return llcHeaderLength != 0;};
-    inline bool hasPayload () {return payloadLength != 0;};
-    inline uint8_t getPayloadAt8 (unsigned offset)
+    inline bool hasLlcHeader () const {return llcHeaderLength != 0;};
+    inline bool hasPayload () const {return payloadLength != 0;};
+    inline uint8_t getPayloadAt8 (unsigned offset) const
     {
         if (offset > payloadLength)
             throw FormatException (exParRange, NULL);
 
         return pPayload[offset];
     }
-    inline uint16_t getPayloadAt16 (unsigned offset)
+    inline uint16_t getPayloadAt16 (unsigned offset) const // note: offset is a byte offset!!!
     {
-        if (offset*2 > payloadLength)
+        if (offset > payloadLength)
             throw FormatException (exParRange, NULL);
 
-        return pPayload[offset*2];
+        return ((uint16_t*)pPayload)[offset/2];
     }
+    inline size_t getPayloadLength () const {return payloadLength;}
+    void updatePayloadAt (unsigned offset, const void* payload, size_t len);
 
     static const size_t   MAX_ETHERNET_PAYLOAD     = 1500;
     static const size_t   MAX_PACKET               = 6+6+2+MAX_ETHERNET_PAYLOAD;
@@ -85,7 +88,7 @@ protected:
 private:
     void reset ();
     void updatePosition (size_t len);
-    inline void checkPacketLength (size_t addedBytes)
+    inline void checkPacketLength (size_t addedBytes) const
     {
         if ((getLength () + addedBytes) > packetMaxLength)
             throw FormatException (exParRange, NULL);
