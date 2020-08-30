@@ -26,6 +26,7 @@ Supported protocols and packet formats
 * ARP
 * Raw IPv4 (fragmentation is currently not supported)
 * UDP
+* VRRP
 
 **Note: This tool is in alpha state. Use at your own risk. Currently there are no binaries available.**
 

@@ -47,16 +47,17 @@ private:
     static const char* parseTimestamp (const char* p, uint64_t& timestamp, bool& isAbsolute);
     static const char* parseProtocollIdentifier (const char* p, const char** identifier, size_t *len);
 
-    int compileRAW (cParameterList& params, std::list <cEthernetPacket> &packets);
-    int compileETH (cParameterList& params, std::list <cEthernetPacket> &packets);
-    int compileARP (cParameterList& params, std::list <cEthernetPacket> &packets, bool isProbe = false, bool isGratuitous = false);
+    int compileRAW  (cParameterList& params, std::list <cEthernetPacket> &packets);
+    int compileETH  (cParameterList& params, std::list <cEthernetPacket> &packets);
+    int compileARP  (cParameterList& params, std::list <cEthernetPacket> &packets, bool isProbe = false, bool isGratuitous = false);
     int compileSNAP (cParameterList& params, std::list <cEthernetPacket> &packets);
     int compileIPv4 (cParameterList& params, std::list <cEthernetPacket> &packets);
-    int compileUDP (cParameterList& params, std::list <cEthernetPacket> &packets);
+    int compileUDP  (cParameterList& params, std::list <cEthernetPacket> &packets);
+    int compileVRRP (cParameterList& params, std::list <cEthernetPacket> &packets);
 
     void   compileMacHeader (cParameterList& params, cEthernetPacket& packet);
     size_t compileVLANTags (cParameterList& params, cEthernetPacket& packet);
-    void   compileIPv4Header (cParameterList& params, cIPv4Packet& packet);
+    void   compileIPv4Header (cParameterList& params, cIPv4Packet& packet, bool noDestinationIP = false);
 
     cMacAddress ownMac;
     cIpAddress  ownIPv4;

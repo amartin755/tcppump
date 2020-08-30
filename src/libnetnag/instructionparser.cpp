@@ -29,6 +29,7 @@
 #include "arppacket.hpp"
 #include "ipv4packet.hpp"
 #include "udppacket.hpp"
+#include "vrrppacket.hpp"
 #include "parsehelper.hpp"
 
 
@@ -78,6 +79,8 @@ int cInstructionParser::parse (const char* instruction, uint64_t& timestamp, boo
             return compileIPv4 (params, packets);
         if (!strncmp ("udp", keyword, keywordLen))
             return compileUDP (params, packets);
+        if (!strncmp ("vrrp", keyword, keywordLen))
+            return compileVRRP (params, packets);
 
         throw ParseException ("Unknown protocol type", keyword);
     }
@@ -282,13 +285,14 @@ int cInstructionParser::compileARP (cParameterList& params, std::list <cEthernet
 }
 
 
-void cInstructionParser::compileIPv4Header (cParameterList& params, cIPv4Packet& packet)
+void cInstructionParser::compileIPv4Header (cParameterList& params, cIPv4Packet& packet, bool noDestinationIP)
 {
     packet.setDSCP         (params.findParameter ("dscp", (uint32_t)0)->asInt8(0, 0x1f));
     packet.setECN          (params.findParameter ("ecn", (uint32_t)0)->asInt8(0, 2));
     packet.setTimeToLive   (params.findParameter ("ttl", (uint32_t)64)->asInt8());
     packet.setDontFragment (params.findParameter ("df", (uint32_t)0)->asInt8(0, 1));
-    packet.setDestination  (params.findParameter ("dip")->asIPv4());
+    if (!noDestinationIP)
+        packet.setDestination  (params.findParameter ("dip")->asIPv4());
     packet.setSource       (params.findParameter ("sip", ownIPv4)->asIPv4());
 }
 
@@ -334,6 +338,45 @@ int cInstructionParser::compileUDP (cParameterList& params, std::list <cEthernet
         udppacket.setChecksum (optionalPar->asInt16());
 
     return (int)udppacket.getAllEthernetPackets(packets);
+}
+
+
+int cInstructionParser::compileVRRP (cParameterList& params, std::list <cEthernetPacket> &packets)
+{
+    cVrrpPacket vrrp;
+    cEthernetPacket& eth = vrrp.getFirstEthernetPacket();
+
+    compileVLANTags   (params, eth);
+    compileIPv4Header (params, vrrp, true);
+
+    uint8_t version = params.findParameter ("vers", (uint32_t)3)->asInt8(2, 3);
+    const cParameter* firstVRIP = params.findParameter ("vrip");
+
+    vrrp.setVersion(version);
+    vrrp.setVRID(params.findParameter ("vrid")->asInt8(1, 255));
+    vrrp.addVirtualIP(firstVRIP->asIPv4());
+    vrrp.setPrio(params.findParameter ("prio", (uint32_t)100)->asInt8());
+    vrrp.setType(params.findParameter ("type", (uint32_t)1)->asInt8());
+    if (version == 2)
+        vrrp.setInterval(params.findParameter ("aint", (uint32_t)1)->asInt8());
+    else
+        vrrp.setInterval(params.findParameter ("aint", (uint32_t)100)->asInt16(0, 4095));
+    const cParameter* optionalPar = params.findParameter ("chksum", true);
+    if (optionalPar)
+        vrrp.setChecksum (optionalPar->asInt16());
+
+    // additional virtual IPs (optional)
+    optionalPar = firstVRIP;
+    int vripCount = 1;
+    while ((vripCount++ <= 255 ) &&
+           ((optionalPar = params.findParameter(optionalPar, nullptr, "vrip", true)) != nullptr))
+    {
+        vrrp.addVirtualIP (optionalPar->asIPv4());
+    }
+
+    vrrp.compile (params.findParameter ("smac", ownMac)->asMac ());
+
+    return (int)vrrp.getAllEthernetPackets(packets);
 }
 
 

@@ -21,11 +21,11 @@ examples:
 ## Protocol definitions
 
 ### Raw unstructured ethernet packet as byte stream
-#### protocol specifier
+#### Protocol Specifier
 
     raw
 
-#### parameters
+#### Parameters
 Payload in ascii hex
 
     payload
@@ -36,11 +36,11 @@ Payload in ascii hex
 
 
 ### Ethernet II or IEEE802.3 packet format
-#### protocol specifier
+#### Protocol Specifier
 
     eth
 
-#### parameters
+#### Parameters
 Destination EUI-48 MAC address
 
     dmac
@@ -59,7 +59,8 @@ Ethertype or length of the packet (range 0 - 0xffff). If ommited or LLC header i
 
 __VLAN tags__
 
-note: for vlan tagged packets parameter .vid is mandatory, if ommitted all other vlan parameters will be ignored and a untagged packet is compiled
+note: for vlan tagged packets parameter 'vid' is mandatory, if ommitted all other vlan parameters will be ignored and a untagged packet is compiled.
+Multiple vlan tags are also allowed.
 
 VLAN id (TCI.VID) (range 0-4095)
 
@@ -103,7 +104,7 @@ Protocol type (range 0 - 0xffff)
 
     protocol
 
-#### examples
+#### Examples
 
     # IEEE802.3 packet
     eth(dmac=11:22:33:44:55:66, smac=aa:bb:cc:dd:ee:ff, payload=1234567890abcdef);
@@ -124,11 +125,11 @@ Protocol type (range 0 - 0xffff)
 
 
 ### Address Resolution Protocol
-#### protocol specifier
+#### Protocol Specifier
 
     arp
 
-#### parameters
+#### Parameters
 destination IPv4 address
 
     dip
@@ -151,7 +152,7 @@ destination EUI-48 MAC address (default 00:00:00:00:00:00)
 
 NOTE: Optionally all vlan tag parameters (see above) are also allowed.
 
-#### examples
+#### Examples
 
     # full crafted arp packet
     arp(op=1, smac=10:22:33:44:55:66, sip=192.168.0.166, dmac=01:02:03:04:05:06, dip=1.2.3.4);
@@ -163,11 +164,11 @@ NOTE: Optionally all vlan tag parameters (see above) are also allowed.
     arp-announce(dip=1.2.3.4); # short for arp: .op=1 .sip=1.2.3.4 .dmac=00:00:00:00:00:00 .dip=1.2.3.4
 
 ### IPv4
-#### protocol specifier
+#### Protocol Specifier
 
     ipv4
 
-#### parameters
+#### Parameters
 destination EUI-48 MAC address
 
     dmac
@@ -210,7 +211,7 @@ payload in ascii hex
 
 NOTE: Optionally all vlan tag parameters (see above) are also allowed.
 
-#### examples
+#### Examples
 
     # raw simple ipv4 packet
     ipv4(dmac = 11:22:33:44:55:66, dip=1.2.3.4, protocol=254, payload=12345678);
@@ -221,11 +222,11 @@ NOTE: Optionally all vlan tag parameters (see above) are also allowed.
 
 
 ### UDP
-#### protocol specifier
+#### Protocol Specifier
 
     udp
 
-#### parameters
+#### Parameters
 destination EUI-48 MAC address
 
     dmac
@@ -252,7 +253,7 @@ destination port (range 0 - 0xffff)
 
 checksum (range 0 - 0xffff) If ommited, checksum is calculated automatically
 
-    checksum (optional)
+    chksum (optional)
 
 payload in ascii hex
 
@@ -260,10 +261,70 @@ payload in ascii hex
 
 NOTE: Optionally all vlan tag parameters and all optional ipv4 parameters (see above) are also allowed.
 
-#### examples
+#### Examples
 
     # UDP packet with source-mac and ip taken from network interface
     udp(dmac=12:23:34:34:44:44, dip=1.2.3.4, sport=1234, dport=2345, payload=12345678);
     # UDP packet with explicit source-mac and ip
     udp(dmac=12:23:34:34:44:44, dip=1.2.3.4, smac=80:12:34:45:67:89, sip=192.168.0.1, sport=1234, dport=2345, payload=12345678);
 
+### VRRP Virtual Router Redundancy Protocol
+Supported are the protocol versions 2 (RFC3768) and 3 (RFC5798)
+
+#### Protocol Specifier
+
+    vrrp
+
+#### Parameters
+Source EUI-48 MAC Address. If ommited, address of the network interface is used
+
+    smac (optional)
+
+Source IPv4 Address. If ommited, address of the network interface is used
+
+    sip (optional)
+
+Protocol Version (range 2 - 3, default 3)
+
+    vers (optional)
+
+Virtual Router ID (range 1 - 255)
+
+    vrid
+
+Virtual Router IPv4 Address; Up to 255 IP addresses are allowed. At least one IP is mandatory, if you provide more addresses they will be silently ignored.
+
+    vrip
+
+Virtual Router Priority (range 0 - 255, default 100)
+
+    prio (optional)
+
+VRRP Packet Type (range 0 - 255; default 1). Note: According to RFC3768 only 1 is a valid value
+
+    type (optional)
+
+Checksum (range 0 - 0xffff) If ommited, checksum is calculated automatically
+
+    chksum (optional)
+
+Advertisement Interval. Note: Value range and unit depends on the specified protocol version. V2: seconds (range: 0 - 255, default 1), V3: centiseconds (range: 0 - 4095, default 100)
+
+    aint (optional)
+
+
+NOTE: Optionally all vlan tag parameters and all optional ipv4 parameters (see above) are also allowed.
+
+#### Examples
+
+    # VRRP V3 packet with default values; virtual router with id 42 and ip address 1.2.3.4
+    # Source-mac and ip are taken from network interface
+    vrrp(vrid=42, vrip=1.2.3.4);
+    # The same as above with protocol version 2
+    vrrp(vers=2, vrid=42, vrip=1.2.3.4);
+    # full defined VRRP2 packet with two virtual router ip addresses
+    vrrp(vers=2, smac=80:12:34:45:67:89, sip=192.168.0.1, vrid=42, prio=120, vrip=1.2.3.4, vrip=1.2.3.5, aint=3);
+    # malformed vrrp packet (undefined type)
+    vrrp(vrid=42, vrip=1.2.3.4, type=3);
+    # malformed vrrp packet (wrong checksum)
+    vrrp(vrid=42, vrip=1.2.3.4, chksum=0x4321);

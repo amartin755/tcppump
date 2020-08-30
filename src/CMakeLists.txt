@@ -199,6 +199,7 @@ set (sourcefiles
      libnetnag/parsehelper.cpp
      libnetnag/pcapfileio.cpp
      libnetnag/udppacket.cpp
+     libnetnag/vrrppacket.cpp
      ${os_specific}/interface.cpp
      ${os_specific}/getch.cpp
      ${os_specific}/sleep.cpp
