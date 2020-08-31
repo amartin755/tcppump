@@ -34,6 +34,7 @@
 #include "ipaddress.hpp"
 #include "macaddress.hpp"
 #include "parsehelper.hpp"
+#include "inetchecksum.hpp"
 #if HAVE_MSVC
 #include <crtdbg.h>
 #endif
@@ -59,6 +60,7 @@ int main (void)
         nn::Converter::unitTest ();
         cTimeval::unitTest ();
         cCmdline::unitTest ();
+        cInetChecksum::unitTest();
         cEthernetPacket::unitTest ();
         cArpPacket::unitTest ();
         cIPv4Packet::unitTest ();

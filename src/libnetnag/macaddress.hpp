@@ -47,6 +47,15 @@ public:
     {
         set (obj);
     }
+    cMacAddress (uint8_t b0, uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4, uint8_t b5)
+    {
+        mac[0] = b0;
+        mac[1] = b1;
+        mac[2] = b2;
+        mac[3] = b3;
+        mac[4] = b4;
+        mac[5] = b5;
+    }
     void operator=(const cMacAddress& obj)
     {
         set (obj);
@@ -86,6 +95,14 @@ public:
     {
         assert (len >= size());
         ::memcpy(mac, b, size());
+    }
+    void setAt (int offset, uint8_t value)
+    {
+        assert (offset <= 5);
+        if (offset <= 5)
+        {
+            mac[offset] = value;
+        }
     }
     const void* get() const
     {

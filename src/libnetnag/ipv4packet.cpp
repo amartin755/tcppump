@@ -22,6 +22,7 @@
 
 #include "inet.h"
 #include "ipv4packet.hpp"
+#include "inetchecksum.hpp"
 
 
 
@@ -105,6 +106,25 @@ void cIPv4Packet::setPayload (uint8_t protocol, const uint8_t* l4header, size_t 
     //TODO later when supporting fragmentation flags_offset and identification also have to be updated
 }
 
+void cIPv4Packet::setPayload (uint8_t protocol, const uint8_t* l4header, size_t l4headerLen, const uint8_t* payload, size_t payloadLen)
+{
+    // FIXME fragmentation
+
+    ipHeader.len = htons (uint16_t(ipHeader.getHeaderLenght() * 4 + l4headerLen + payloadLen));
+    ipHeader.protocol = protocol;
+    updateHeaderChecksum();
+
+    cEthernetPacket &packet = packets.front();
+
+    packet.setPayload ((uint8_t*)&ipHeader, sizeof (ipHeader)); // write IP header
+    if (l4headerLen && l4header)
+        packet.appendPayload(l4header, l4headerLen);            // copy L4 header (e.g. udp header)
+    if (payloadLen && payload)
+        packet.appendPayload (payload, payloadLen);             // copy payload from ascii string
+
+    //TODO later when supporting fragmentation flags_offset and identification also have to be updated
+}
+
 uint8_t cIPv4Packet::getPayloadAt8 (unsigned offset) const
 {
     // FIXME fragmentation
@@ -145,27 +165,9 @@ void cIPv4Packet::updateL4Header (const uint8_t* l4header, size_t l4headerLen)
 
 void cIPv4Packet::updateHeaderChecksum ()
 {
-    ipHeader.chksum = htons(calcHeaderChecksum ((const uint16_t*)&ipHeader, sizeof (ipHeader)));
+    ipHeader.chksum = cInetChecksum::rfc1071((const uint16_t*)&ipHeader, sizeof (ipHeader), nullptr, 0);
 }
 
-uint16_t cIPv4Packet::calcHeaderChecksum (const uint16_t* ipheader, int headerLen)
-{
-    assert (ipheader);
-    assert (headerLen >= 20);
-    assert (!(headerLen & 1));
-
-    uint32_t chksum = 0;
-    headerLen = headerLen / 2;
-
-    while (headerLen--)
-    {
-        chksum += ntohs(*ipheader++);
-    }
-
-    chksum += (chksum >> 16) & 0x0f;
-
-    return (uint16_t)(~chksum & 0x0000FFFF);
-}
 
 #ifdef WITH_UNITTESTS
 #include "console.hpp"
@@ -174,9 +176,6 @@ void cIPv4Packet::unitTest ()
 {
     nn::Console::PrintDebug("-- " __FILE__ " --\n");
 
-    uint8_t hd[] = {0x45,0x00,0x02,0x03,0x16,0xd1,0x00,0x00,0x01,0x11,0,0,0xc0,0xa8,0x00,0x88,0xef,0xff,0xff,0xfa};
-    assert (cIPv4Packet::calcHeaderChecksum ((uint16_t*)hd, sizeof (hd)) == 0xefee);
-    uint8_t hd1[] = {0x45,0x00,0x02,0x03,0x16,0xd1,0x00,0x00,0x01,0x11,0xef,0xee,0xc0,0xa8,0x00,0x88,0xef,0xff,0xff,0xfa};
-    assert (cIPv4Packet::calcHeaderChecksum ((uint16_t*)hd1, sizeof (hd1)) == 0);
+    // FIXME unit tests!
 }
 #endif

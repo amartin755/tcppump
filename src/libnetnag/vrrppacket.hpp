@@ -19,6 +19,7 @@
 #ifndef VRRP_PACKET_H_
 #define VRRP_PACKET_H_
 
+#include <vector>
 #include "ipv4packet.hpp"
 
 /*
@@ -88,7 +89,7 @@ typedef struct
 
     };
     uint16_t chksum;
-//    struct in_addr ipAddresses[1]; // note: real array size is ipAddresses[countIpAddr]
+//    struct in_addr ipAddresses[countIpAddr];
 
 
     void setVersion (int version)
@@ -122,12 +123,13 @@ public:
     void setInterval (uint16_t interval);
     void setChecksum (uint16_t checksum);
     void addVirtualIP (const cIpAddress& vip);
-    void compile (const cMacAddress& srcMac);
+    void compile (const cMacAddress& srcMac, bool calcChecksum);
 
 
 
 private:
     vrrp_header_t header;
+    std::vector<struct in_addr> vrIPs;
 };
 
 #endif /* VRRP_PACKET_H_ */

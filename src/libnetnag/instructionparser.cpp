@@ -343,6 +343,7 @@ int cInstructionParser::compileUDP (cParameterList& params, std::list <cEthernet
 
 int cInstructionParser::compileVRRP (cParameterList& params, std::list <cEthernetPacket> &packets)
 {
+    bool userDefinedChecksum = false;
     cVrrpPacket vrrp;
     cEthernetPacket& eth = vrrp.getFirstEthernetPacket();
 
@@ -363,7 +364,10 @@ int cInstructionParser::compileVRRP (cParameterList& params, std::list <cEtherne
         vrrp.setInterval(params.findParameter ("aint", (uint32_t)100)->asInt16(0, 4095));
     const cParameter* optionalPar = params.findParameter ("chksum", true);
     if (optionalPar)
+    {
+        userDefinedChecksum = true;
         vrrp.setChecksum (optionalPar->asInt16());
+    }
 
     // additional virtual IPs (optional)
     optionalPar = firstVRIP;
@@ -374,7 +378,7 @@ int cInstructionParser::compileVRRP (cParameterList& params, std::list <cEtherne
         vrrp.addVirtualIP (optionalPar->asIPv4());
     }
 
-    vrrp.compile (params.findParameter ("smac", ownMac)->asMac ());
+    vrrp.compile (params.findParameter ("smac", ownMac)->asMac (), !userDefinedChecksum);
 
     return (int)vrrp.getAllEthernetPackets(packets);
 }
@@ -547,6 +551,8 @@ static const testcase_t tests[] = {
         38,
     },
 
+    // FIXME UDP Test Cases
+    // FIXME VRRP Test Cases
 };
 
 

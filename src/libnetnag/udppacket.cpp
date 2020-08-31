@@ -24,17 +24,6 @@
 #include "udppacket.hpp"
 
 
-#pragma pack(1)
-typedef struct
-{
-    struct in_addr srcIp;
-    struct in_addr dstIp;
-    uint8_t        nix;         // 0
-    uint8_t        protocol;
-    uint16_t       len;
-}ipv4_pseudo_header_t;
-#pragma pack()
-
 
 cUdpPacket::cUdpPacket ()
 {
@@ -67,6 +56,7 @@ void cUdpPacket::setChecksum (uint16_t checksum)
     cIPv4Packet::updateL4Header ((const uint8_t*)&header, sizeof (header));
 }
 
+// FIXME use cInetChecksum instead
 uint16_t cUdpPacket::calcChecksum () const
 {
     ipv4_pseudo_header_t ipPseudoHeader;

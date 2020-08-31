@@ -72,6 +72,16 @@ typedef struct
     }
 
 }ipv4_header_t;
+
+typedef struct
+{
+    struct in_addr srcIp;
+    struct in_addr dstIp;
+    uint8_t        nix;         // 0
+    uint8_t        protocol;
+    uint16_t       len;
+}ipv4_pseudo_header_t;
+
 #pragma pack()
 
 
@@ -85,7 +95,8 @@ public:
     void setDontFragment (bool df);
     void setSource (const cIpAddress& ip);
     void setDestination (const cIpAddress& ip);
-    void setPayload (uint8_t protocol, const uint8_t* l4header, size_t l4headerLen, const char* payload, size_t payloadLen);
+    void setPayload (uint8_t protocol, const uint8_t* l4header, size_t l4headerLen, const char* asciiPayload, size_t payloadLen);
+    void setPayload (uint8_t protocol, const uint8_t* l4header, size_t l4headerLen, const uint8_t* payload, size_t payloadLen);
     void updateHeaderChecksum ();
     cEthernetPacket& getFirstEthernetPacket ();
     size_t getAllEthernetPackets (std::list<cEthernetPacket>&) const;
@@ -106,8 +117,6 @@ protected:
 
 
 private:
-    static uint16_t calcHeaderChecksum (const uint16_t* ipheader, int headerLen);
-
     ipv4_header_t              ipHeader;
     std::list<cEthernetPacket> packets;
 };
