@@ -91,17 +91,17 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
 #endif
     addCmdLineOption (true, 'l', "loop", "N", "Send all files/packets N times. Default: N = 1", &options.repeat);
     addCmdLineOption (true, 'd', "delay", "TIME", "Packet transmission is delayed TIME."
-            "Resolution depends on -t parameter. Default is microseconds.", &options.delay);
+            "Resolution depends on -t parameter. Default is no delay.", &options.delay);
     addCmdLineOption (true, 't', "resolution", "RESOLUTION",
-            "Resolution of transmission time. This affects -d parameter as well as all timestamps in script files\n\t"
-            "Possible values are 'u'= microseconds (default), 'm'= milliseconds and 's'= seconds" , &options.timeRes);
+            "Resolution of transmission time. This affects -d parameter as well as all timestamps in script files.\n\t"
+            "Possible values are 'u'= microseconds (default), 'm'= milliseconds, 'c'= centiseconds and 's'= seconds" , &options.timeRes);
     addCmdLineOption (true, "interactive", "KEYLIST",
             "Enable interactive mode (EXPERIMENTAL). In interactive mode no packets are sent automatically.\n\t"
             "Instead the packets are bound to keys and only sent when the corresponding key\n\t"
             "is pressed. The default implementation binds the first 10 packets to the keys 1, 2, ... 0."
             , &options.interactive, &options.keys);
 #if HAVE_PCAP
-    addCmdLineOption (true, 0, "write-to-pcap", "OUTFILE", "Write generated packets to pcap file OUTFILE.", &options.outpcap);
+    addCmdLineOption (true, 'o', "write-to-file", "OUTFILE", "Write generated packets to pcap file OUTFILE instead of sending them to the network.", &options.outpcap);
 #endif
     addCmdLineOption (true, 0, "dissect",
             "Prints the dissected content of sent packets as known from tcpdump.", &options.dissect);
@@ -135,13 +135,16 @@ int cTcpPump::execute (int argc, char* argv[])
 
     switch (options.timeRes[0])
     {
-    case 'u':
+    case 'u':    // microseconds
         timeScale = 1;
         break;
-    case 'm':
+    case 'm':   // milliseconds
         timeScale = 1000;
         break;
-    case 's':
+    case 'c':   // centiseconds
+        timeScale = 10000;
+        break;
+    case 's':  // seconds
         timeScale = 1000000;
         break;
     default:
@@ -253,7 +256,7 @@ bool cTcpPump::parsePackets (const cMacAddress& ownMac, const cIpAddress& ownIP,
     uint64_t t = 0;
     cTimeval timestamp, currtime;
     bool isAbsolute;
-//FIXME default delay seems to be ignored
+
     for (int n = 0; n < argc; n++)
     {
         Console::PrintDebug ("Parsing %d packets (format='%s') ...\n", argc, options.raw ? "raw" : "tokens");
@@ -261,6 +264,8 @@ bool cTcpPump::parsePackets (const cMacAddress& ownMac, const cIpAddress& ownIP,
         {
             if (!options.raw)
             {
+                t = activeDelay.us()/timeScale;
+                isAbsolute = false;
                 int count = cInstructionParser (ownMac, ownIP).parse (argv[n], t, isAbsolute, packets);
                 timestamp.setUs(t * timeScale);
 
@@ -289,6 +294,8 @@ bool cTcpPump::parsePackets (const cMacAddress& ownMac, const cIpAddress& ownIP,
                 cEthernetPacket packet;
                 packet.setRaw (argv[n], strlen (argv[n]));
                 packets.push_back (std::move(packet));
+                timestamp.setUs (activeDelay.us());
+                delays.push_back(timestamp);
             }
         }
         catch (ParseException &e)
