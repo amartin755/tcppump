@@ -235,4 +235,39 @@ endif ()
 ###############################################################################
 enable_testing()
 
-add_test(NAME show-usage COMMAND tcppump -h WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+if (WIN32)
+    set (OUT_IFC WiFi)
+endif ()
+if (UNIX)
+    set (OUT_IFC lo)
+endif ()
+set (TEST_OUTPUT testoutput.pcap)
+set (DEFAULT_PARAMS -i ${OUT_IFC} --myip4=1.2.3.4 --mymac=81:23:45:67:89:AB -o ${TEST_OUTPUT})
+set (TEST_FILE_PREFIX ${CMAKE_BINARY_DIR}/../src/test)
+
+
+add_test(NAME no-params--nok COMMAND tcppump WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+set_tests_properties(no-params--nok PROPERTIES WILL_FAIL TRUE)
+
+add_test(NAME show-usage--ok COMMAND tcppump -h WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+
+add_test(NAME raw-1--ok COMMAND tcppump ${DEFAULT_PARAMS} -r "0123456789abcdef0123456789abcdef" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME raw-1--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/raw-1.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME raw-2--nok COMMAND tcppump ${DEFAULT_PARAMS} -r "abcdf" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+set_tests_properties(raw-2--nok PROPERTIES WILL_FAIL TRUE)
+
+add_test(NAME raw-3--ok COMMAND tcppump ${DEFAULT_PARAMS} "raw(payload = 0123456789abcdef0123456789abcdef)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME raw-3--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/raw-3.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+
+add_test(NAME eth-1--ok COMMAND tcppump ${DEFAULT_PARAMS} "eth(dmac=11:22:33:44:55:66, payload = 0123456789abcdef0123456789abcdef)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME eth-1--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/eth-1.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME eth-2--nok COMMAND tcppump ${DEFAULT_PARAMS} "eth(dmac=1122:33:44:55:66, payload = 0123456789abcdef0123456789abcdef)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+set_tests_properties(eth-2--nok PROPERTIES WILL_FAIL TRUE)
+add_test(NAME eth-3--ok COMMAND tcppump ${DEFAULT_PARAMS} "eth(dmac=11:22:33:44:55:66, ethertype=0x9000, payload = 0123456789abcdef0123456789abcdef)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME eth-3--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/eth-3.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME eth-4--nok COMMAND tcppump ${DEFAULT_PARAMS} "eth(dmac=11:22:33:44:55:66, ethertype=0x10000, payload = 0123456789abcdef0123456789abcdef)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+set_tests_properties(eth-4--nok PROPERTIES WILL_FAIL TRUE)
+add_test(NAME eth-5--nok COMMAND tcppump ${DEFAULT_PARAMS} "eth(dmac=11:22:33:44:55:66)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+set_tests_properties(eth-5--nok PROPERTIES WILL_FAIL TRUE)
+add_test(NAME eth-6--ok COMMAND tcppump ${DEFAULT_PARAMS} "eth(dmac=11:22:33:44:55:66, smac=80:81:82:83:84:85, payload = 0123456789abcdef0123456789abcdef)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME eth-6--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/eth-6.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
