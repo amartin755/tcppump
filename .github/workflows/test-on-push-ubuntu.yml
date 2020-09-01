@@ -38,6 +38,11 @@ jobs:
       # Execute the build.  You can specify a specific target with "--target <NAME>"
       run: cmake --build build --config $BUILD_TYPE
 
+    - name: Prepare Test Environment
+      working-directory: ${{runner.workspace}}/tcppump/bin
+      shell: bash
+      run: sudo setcap cap_net_raw ./tcppump
+      
     - name: Execute Unit Tests
       working-directory: ${{runner.workspace}}/tcppump/bin
       shell: bash
