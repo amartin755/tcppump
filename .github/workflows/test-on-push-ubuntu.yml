@@ -41,7 +41,7 @@ jobs:
     - name: Prepare Test Environment
       working-directory: ${{runner.workspace}}/tcppump/bin
       shell: bash
-      run: sudo setcap cap_net_raw ./tcppump
+      run: sudo setcap cap_net_raw+eip ./tcppump
       
     - name: Execute Unit Tests
       working-directory: ${{runner.workspace}}/tcppump/bin
