@@ -241,6 +241,12 @@ endif ()
 if (UNIX)
     set (OUT_IFC lo)
 endif ()
+if (TEST_NET_ADAPTER)
+    set (OUT_IFC ${TEST_NET_ADAPTER})
+endif ()
+
+message(STATUS "Using network adapter '${OUT_IFC}' for testing")
+
 set (TEST_OUTPUT testoutput.pcap)
 set (DEFAULT_PARAMS -i ${OUT_IFC} --myip4=1.2.3.4 --mymac=81:23:45:67:89:AB -o ${TEST_OUTPUT})
 set (TEST_FILE_PREFIX ${CMAKE_BINARY_DIR}/../src/test)
