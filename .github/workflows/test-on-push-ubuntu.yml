@@ -61,3 +61,11 @@ jobs:
         name: generated binaries
         path: ${{runner.workspace}}/tcppump/bin/
 
+    - uses: actions/upload-artifact@v2
+      if: always()
+      with: 
+        name: logfiles
+        path: |
+          ${{runner.workspace}}/tcppump/build/CMakeFiles/CMakeError.log
+          ${{runner.workspace}}/tcppump/build/CMakeFiles/CMakeOutput.log
+          ${{runner.workspace}}/tcppump/build/Testing/Temporary/LastTest.log

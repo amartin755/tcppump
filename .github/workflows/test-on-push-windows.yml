@@ -69,5 +69,5 @@ jobs:
         path: |
           ${{runner.workspace}}/tcppump/build/CMakeFiles/CMakeError.log
           ${{runner.workspace}}/tcppump/build/CMakeFiles/CMakeOutput.log
-          ${{runner.workspace}}/tcppump/build/CMakeFiles/Testing/Temporary/LastTest.log
+          ${{runner.workspace}}/tcppump/build/Testing/Temporary/LastTest.log
 
