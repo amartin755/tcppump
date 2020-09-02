@@ -63,6 +63,7 @@ jobs:
         path: ${{runner.workspace}}/tcppump/bin/
 
     - uses: actions/upload-artifact@v2
+      if: always()
       with: 
         name: logfiles
         path: |
