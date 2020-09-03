@@ -287,8 +287,8 @@ int cInstructionParser::compileARP (cParameterList& params, std::list <cEthernet
 
 void cInstructionParser::compileIPv4Header (cParameterList& params, cIPv4Packet& packet, bool noDestinationIP)
 {
-    packet.setDSCP         (params.findParameter ("dscp", (uint32_t)0)->asInt8(0, 0x1f));
-    packet.setECN          (params.findParameter ("ecn", (uint32_t)0)->asInt8(0, 2));
+    packet.setDSCP         (params.findParameter ("dscp", (uint32_t)0)->asInt8(0, 0x3f));
+    packet.setECN          (params.findParameter ("ecn", (uint32_t)0)->asInt8(0, 3));
     packet.setTimeToLive   (params.findParameter ("ttl", (uint32_t)64)->asInt8());
     packet.setDontFragment (params.findParameter ("df", (uint32_t)0)->asInt8(0, 1));
     if (!noDestinationIP)

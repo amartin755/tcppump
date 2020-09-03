@@ -186,7 +186,7 @@ source IPv4 address; If ommited, address of the network interface is used
 
     sip (optional)
 
-differentiated services code point (range 0 - 0x1f; default 0)
+differentiated services code point (range 0 - 0x3f; default 0)
 
     dscp (optional)
 
