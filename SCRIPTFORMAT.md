@@ -80,7 +80,7 @@ VLAN type (1 = Customer VLAN, 2 = Provider VLAN; default 1)
 
 __LLC header__
 
-note: for packets with llc header both parameters .dsap and .ssap have to be defined
+note: for packets with llc header both parameters 'dsap' and 'ssap' have to be defined
 
 Destination Service Access point (range 0 - 0xff)
 
@@ -96,6 +96,7 @@ Control word (range 0 - 0xffff; default 3); will be compiled to a 8 bit value, i
 
 __LLC header with SNAP extension__
 
+note: LLC header parameters must not be defined for snap packets. Their content is filled automatically. Otherwise a normal LLC packet is compiled.
 Organizationally Unique Identifier (range 0 - 0xffffff)
 
     oui
