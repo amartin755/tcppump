@@ -252,7 +252,7 @@ destination port (range 0 - 0xffff)
 
     dport
 
-checksum (range 0 - 0xffff) If ommited, checksum is calculated automatically
+checksum (range 0 - 0xffff) If ommited, checksum is calculated automatically. Setting the checksum manually is only useful to force creation of malformed packets.
 
     chksum (optional)
 
