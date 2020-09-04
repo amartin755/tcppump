@@ -60,7 +60,7 @@ Ethertype or length of the packet (range 0 - 0xffff). If ommited or LLC header i
 __VLAN tags__
 
 note: for vlan tagged packets parameter 'vid' is mandatory, if ommitted all other vlan parameters will be ignored and a untagged packet is compiled.
-Multiple vlan tags are also allowed.
+Multiple vlan tags are also allowed. 'vid' must be the first parameter of a vlan tag.
 
 VLAN id (TCI.VID) (range 0-4095)
 

@@ -444,7 +444,10 @@ add_test(NAME udp-13--ok COMMAND tcppump ${DEFAULT_PARAMS} "udp(dip=10.20.30.40,
 add_test(NAME udp-13--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/udp-13.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 add_test(NAME udp-14--ok COMMAND tcppump ${DEFAULT_PARAMS} "udp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=1, dport=2, payload = 0123456789abcdef0123456789abcdef)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 add_test(NAME udp-14--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/udp-14.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-# TODO change fields in IP header
-# TODO with vlan tags
-# TODO with src ip and src mac
+add_test(NAME udp-15--ok COMMAND tcppump ${DEFAULT_PARAMS} "udp(sip=11.22.33.44, smac=90:91:92:93:94:95, dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=1, dport=2, payload = 0123456789abcdef0123456789abcdef)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME udp-15--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/udp-15.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME udp-16--ok COMMAND tcppump ${DEFAULT_PARAMS} "udp(dscp=42, ecn=2, ttl=10, df=1, sip=11.22.33.44, smac=90:91:92:93:94:95, dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=1, dport=2, payload = 0123456789abcdef0123456789abcdef)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME udp-16--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/udp-16.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME udp-17--ok COMMAND tcppump ${DEFAULT_PARAMS} "udp(vid=42, vtype=2, dei=1, prio=4, vid=43, prio=5, dscp=42, ecn=2, ttl=10, df=1, sip=11.22.33.44, smac=90:91:92:93:94:95, dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=1, dport=2, payload = 0123456789abcdef0123456789abcdef)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME udp-17--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/udp-17.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
