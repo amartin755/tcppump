@@ -1,0 +1,67 @@
+raw(payload = 0123456789abcdef0123456789abcdef);
+
+raw(payload = 0123456789abcdef0123456789abcdef);
+
+eth(dmac=11:22:33:44:55:66, payload = 0123456789abcdef0123456789abcdef);
+eth(dmac=11:22:33:44:55:66, ethertype=0x9000, payload = 0123456789abcdef0123456789abcdef);
+eth(dmac=11:22:33:44:55:66, smac=80:81:82:83:84:85, payload = 0123456789abcdef0123456789abcdef);
+eth(dmac=11:22:33:44:55:66, vid=0, payload = 0123456789abcdef0123456789abcdef);
+eth(dmac=11:22:33:44:55:66, vid=4095, payload = 0123456789abcdef0123456789abcdef);
+eth(dmac=11:22:33:44:55:66, vid=4095, prio=0, payload = 0123456789abcdef0123456789abcdef);
+eth(dmac=11:22:33:44:55:66, vid=4095, prio=7, payload = 0123456789abcdef0123456789abcdef);
+eth(dmac=11:22:33:44:55:66, vid=4095, prio=7, dei=0, payload = 0123456789abcdef0123456789abcdef);
+eth(dmac=11:22:33:44:55:66, vid=4095, prio=7, dei=1, payload = 0123456789abcdef0123456789abcdef);
+eth(dmac=11:22:33:44:55:66, vid=4095, prio=7, dei=1, vtype=1, payload = 0123456789abcdef0123456789abcdef);
+eth(dmac=11:22:33:44:55:66, vid=4095, prio=7, dei=1, vtype=2, payload = 0123456789abcdef0123456789abcdef);
+eth(dmac=11:22:33:44:55:66, vid=4095, prio=3, ethertype=0x9000, payload = 0123456789abcdef0123456789abcdef);
+eth(dmac=11:22:33:44:55:66, vid=1, vid=4095, prio=3, ethertype=0x9000, payload = 0123456789abcdef0123456789abcdef);
+eth(dmac=11:22:33:44:55:66, vid=1, vtype=2, vid=4095, prio=3, ethertype=0x9000, payload = 0123456789abcdef0123456789abcdef);
+eth(dmac=11:22:33:44:55:66, dsap=0, ssap=0xff, payload = 0123456789abcdef0123456789abcdef);
+eth(dmac=11:22:33:44:55:66, dsap=255, ssap=0, payload = 0123456789abcdef0123456789abcdef);
+eth(dmac=11:22:33:44:55:66, dsap=255, ssap=0, control=3, payload = 0123456789abcdef0123456789abcdef);
+eth(dmac=11:22:33:44:55:66, dsap=255, ssap=0, control=0, payload = 0123456789abcdef0123456789abcdef);
+eth(dmac=11:22:33:44:55:66, dsap=255, ssap=0, control=0xffff, payload = 0123456789abcdef0123456789abcdef);
+eth(dmac=11:22:33:44:55:66, ethertype=0x9000, dsap=255, ssap=0, control=0xffff, payload = 0123456789abcdef0123456789abcdef);
+eth(dmac=11:22:33:44:55:66, vid=42, dsap=255, ssap=0, control=0xffff, payload = 0123456789abcdef0123456789abcdef);
+eth(dmac=11:22:33:44:55:66, oui=0, protocol=0, payload = 0123456789abcdef0123456789abcdef);
+eth(dmac=11:22:33:44:55:66, oui=0xffffff, protocol=0, payload = 0123456789abcdef0123456789abcdef);
+eth(dmac=11:22:33:44:55:66, oui=0x654321, protocol=0xffff, payload = 0123456789abcdef0123456789abcdef);
+eth(dmac=11:22:33:44:55:66, vid=1, vid=2, oui=0x654321, protocol=0xffff, payload = 0123456789abcdef0123456789abcdef);
+
+arp(dip=10.20.30.40);
+arp(dip=10.20.30.40, op=1);
+arp(dip=10.20.30.40, op=2);
+arp(dip=10.20.30.40, op=0xffff);
+arp(dip=10.20.30.40, smac=80:81:82:83:84:85);
+arp(dip=10.20.30.40, sip=11.22.33.44);
+arp(dip=10.20.30.40, dmac=80:81:82:83:84:85);
+arp(op=2, dip=10.20.30.40, dmac=80:81:82:83:84:85, smac=90:91:92:93:94:95, sip=11.22.33.44);
+arp(dip=10.20.30.40, vid=42, prio=5, dei=1);
+arp-probe(dip=10.20.30.40);
+arp-announce(dip=10.20.30.40);
+
+ipv4(dip=10.20.30.40, dmac=11:22:33:44:55:66, protocol=255, payload = 0123456789abcdef0123456789abcdef);
+ipv4(dip=10.20.30.40, dmac=11:22:33:44:55:66, protocol=0, payload = 0123456789abcdef0123456789abcdef);
+ipv4(dip=10.20.30.40, dmac=11:22:33:44:55:66, dscp=0, protocol=255, payload = 0123456789abcdef0123456789abcdef);
+ipv4(dip=10.20.30.40, dmac=11:22:33:44:55:66, dscp=0x3f, protocol=255, payload = 0123456789abcdef0123456789abcdef);
+ipv4(dip=10.20.30.40, dmac=11:22:33:44:55:66, dscp=0x3f, ecn=0, protocol=255, payload = 0123456789abcdef0123456789abcdef);
+ipv4(dip=10.20.30.40, dmac=11:22:33:44:55:66, dscp=0x0, ecn=3, protocol=255, payload = 0123456789abcdef0123456789abcdef);
+ipv4(dip=10.20.30.40, dmac=11:22:33:44:55:66, ttl=64, dscp=0x0, ecn=3, protocol=255, payload = 0123456789abcdef0123456789abcdef);
+ipv4(dip=10.20.30.40, dmac=11:22:33:44:55:66, ttl=0, dscp=0x0, ecn=3, protocol=255, payload = 0123456789abcdef0123456789abcdef);
+ipv4(dip=10.20.30.40, dmac=11:22:33:44:55:66, ttl=255, dscp=0x0, ecn=3, protocol=255, payload = 0123456789abcdef0123456789abcdef);
+ipv4(dip=10.20.30.40, dmac=11:22:33:44:55:66, df=0, ttl=255, dscp=0x0, ecn=3, protocol=255, payload = 0123456789abcdef0123456789abcdef);
+ipv4(dip=10.20.30.40, dmac=11:22:33:44:55:66, df=1, ttl=255, dscp=0x0, ecn=3, protocol=255, payload = 0123456789abcdef0123456789abcdef);
+ipv4(dip=10.20.30.40, smac=90:91:92:93:94:95, dmac=11:22:33:44:55:66, df=1, ttl=255, dscp=0x0, ecn=3, protocol=255, payload = 0123456789abcdef0123456789abcdef);
+ipv4(sip=11.22.33.44, dip=10.20.30.40, smac=90:91:92:93:94:95, dmac=11:22:33:44:55:66, df=1, ttl=255, dscp=0x0, ecn=3, protocol=255, payload = 0123456789abcdef0123456789abcdef);
+ipv4(vid=42, prio=4, sip=11.22.33.44, dip=10.20.30.40, smac=90:91:92:93:94:95, dmac=11:22:33:44:55:66, df=1, ttl=255, dscp=0x0, ecn=3, protocol=255, payload = 0123456789abcdef0123456789abcdef);
+
+udp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=0, dport=0);
+udp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=0xffff, dport=0);
+udp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=0, dport=0xffff);
+udp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=1, dport=2, chksum=0);
+udp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=1, dport=2, chksum=0xffff);
+udp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=1, dport=2, chksum=0xffff,  payload = 0123456789abcdef0123456789abcdef);
+udp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=1, dport=2, payload = 0123456789abcdef0123456789abcdef);
+udp(sip=11.22.33.44, smac=90:91:92:93:94:95, dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=1, dport=2, payload = 0123456789abcdef0123456789abcdef);
+udp(dscp=42, ecn=2, ttl=10, df=1, sip=11.22.33.44, smac=90:91:92:93:94:95, dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=1, dport=2, payload = 0123456789abcdef0123456789abcdef);
+udp(vid=42, vtype=2, dei=1, prio=4, vid=43, prio=5, dscp=42, ecn=2, ttl=10, df=1, sip=11.22.33.44, smac=90:91:92:93:94:95, dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=1, dport=2, payload = 0123456789abcdef0123456789abcdef);
