@@ -34,7 +34,7 @@ namespace nn
 uint8_t* Converter::hexStringToBin (const char* hexString, size_t* binLength)
 {
     size_t length = strlen (hexString);
-    uint8_t* binary = (uint8_t*)malloc (length / 2);
+    uint8_t* binary = new uint8_t[length / 2];
 
 
     if (!binary)
@@ -47,7 +47,7 @@ uint8_t* Converter::hexStringToBin (const char* hexString, size_t* binLength)
         *binLength = length / 2;
         if (!hexStringToBin (hexString, length, binary, binLength))
         {
-            free (binary);
+            delete[] (binary);
             binary = NULL;
         }
     }
@@ -122,7 +122,7 @@ void Converter::unitTest ()
     assert (binLen == 8);
     assert (!memcmp (bin, "\x01\x23\x45\x67\x89\xab\xcd\xef", binLen));
     binLen = -1;
-    free ((void*)bin);
+    delete[] bin;
 
     uint8_t binbuf[16] = {0};
     binLen = sizeof (binbuf);

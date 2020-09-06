@@ -233,19 +233,6 @@ void cEthernetPacket::addVlanTag (bool isCTag, int id, int prio, int dei)
 }
 
 
-void cEthernetPacket::setPayload (const char* payloadAsHexStr, size_t len)
-{
-    payloadLength = 0;
-    checkPacketLength ((len + 1)/2);
-
-    size_t copiedLen = packet + packetMaxLength - pPayload;
-    if (!nn::Converter::hexStringToBin (payloadAsHexStr, len, pPayload, &copiedLen))
-        throw FormatException (exParFormat, payloadAsHexStr);
-
-    payloadLength = copiedLen;
-}
-
-
 void cEthernetPacket::setPayload (const uint8_t* payload, size_t len)
 {
     payloadLength = 0;
@@ -254,19 +241,6 @@ void cEthernetPacket::setPayload (const uint8_t* payload, size_t len)
     payloadLength = len;
 }
 
-
-void cEthernetPacket::appendPayload (const char* payloadAsHexStr, size_t len)
-{
-    checkPacketLength ((len + 1)/2);
-
-    uint8_t* p = pPayload + payloadLength;
-
-    size_t copiedLen = packet + packetMaxLength - p;
-    if (!nn::Converter::hexStringToBin (payloadAsHexStr, len, p, &copiedLen))
-        throw FormatException (exParFormat, payloadAsHexStr);
-
-    payloadLength += copiedLen;
-}
 
 void cEthernetPacket::appendPayload (const uint8_t* payload, size_t len)
 {
@@ -277,26 +251,12 @@ void cEthernetPacket::appendPayload (const uint8_t* payload, size_t len)
 }
 
 
-void cEthernetPacket::setRaw (const char* payloadAsHexStr, size_t len)
-{
-    if ((len + 1)/2 > packetMaxLength)
-        throw FormatException (exParRange, NULL);
-
-    reset ();
-
-    size_t copiedLen = packetMaxLength;
-    if (!nn::Converter::hexStringToBin (payloadAsHexStr, len, packet, &copiedLen))
-        throw FormatException (exParFormat, payloadAsHexStr);
-
-    payloadLength = copiedLen - sizeof (mac_header_t);
-}
-
-
 void cEthernetPacket::setRaw (const uint8_t* payload, size_t len)
 {
     reset ();
-    checkPacketLength (len);
-    memcpy (packet, payload, len);
+    if (len > packetMaxLength)
+        throw FormatException (exParRange, NULL);
+    std::memcpy (packet, payload, len);
     payloadLength = len - sizeof (mac_header_t);
 }
 
@@ -345,7 +305,7 @@ void cEthernetPacket::unitTest ()
         obj.addVlanTag(false, 12, 7, 0);
         assert (!memcmp (obj.packet, "\x11\x22\x33\x44\x55\x66\x12\x34\x56\x78\x9a\xbc\x88\xa8\xe0\x0c\x12\x34\xcc\xcc", 20));
         assert (obj.getLength() == 18);
-        obj.setPayload ("aabbccddeeff0a0b0c0d0e0f", 24);
+        obj.setPayload ((uint8_t*)"\xaa\xbb\xcc\xdd\xee\xff\x0a\x0b\x0c\x0d\x0e\x0f", 12);
         assert (obj.getLength() == 30);
         assert (!memcmp (obj.packet, "\x11\x22\x33\x44\x55\x66\x12\x34\x56\x78\x9a\xbc\x88\xa8\xe0\x0c\x12\x34\xaa\xbb\xcc\xdd\xee\xff\x0a\x0b\x0c\x0d\x0e\x0f\xcc\xcc", 32));
         obj.addVlanTag(true, 12, 7, 0);
@@ -451,7 +411,7 @@ void cEthernetPacket::unitTest ()
     try
     {
         cEthernetPacket obj(sizeof (mac_header_t));
-        obj.setRaw("12345678901234567890aabbccdd", 28);
+        obj.setRaw((uint8_t*)"\x12\x34\x56\x78\x90\x12\x34\x56\x78\x90\xaa\xbb\xcc\xdd", 14);
     }
     catch (FormatException& )
     {
@@ -461,7 +421,7 @@ void cEthernetPacket::unitTest ()
     {
         catched = false;
         cEthernetPacket obj(sizeof (mac_header_t));
-        obj.setRaw("12345678901234567890aabbccddee", 30);
+        obj.setRaw((uint8_t* )"\x12\x34\x56\x78\x90\x12\x34\x56\x78\x90\xaa\xbb\xcc\xdd\xee", 15);
     }
     catch (FormatException& )
     {
@@ -472,7 +432,7 @@ void cEthernetPacket::unitTest ()
     try
     {
         cEthernetPacket obj(sizeof (mac_header_t) + 1);
-        obj.setPayload ("aa", 2);
+        obj.setPayload ((uint8_t* )"\xaa", 1);
     }
     catch (FormatException& )
     {
@@ -482,7 +442,7 @@ void cEthernetPacket::unitTest ()
     {
         catched = false;
         cEthernetPacket obj(sizeof (mac_header_t) + 1);
-        obj.setPayload ("aabb", 4);
+        obj.setPayload ((uint8_t* )"\xaa\xbb", 2);
     }
     catch (FormatException& )
     {
@@ -555,8 +515,8 @@ void cEthernetPacket::unitTest ()
 
     try
     {
-        char payload[(MAX_DOUBLE_TAGGED_PACKET - 30)*2];
-        memset (payload, '0', sizeof (payload));
+        uint8_t payload[(MAX_DOUBLE_TAGGED_PACKET - 30)];
+        memset (payload, 0, sizeof (payload));
         cEthernetPacket obj(MAX_DOUBLE_TAGGED_PACKET+1);
         memset (obj.packet, 0xcc, MAX_DOUBLE_TAGGED_PACKET+1);
         obj.reset();
@@ -578,8 +538,8 @@ void cEthernetPacket::unitTest ()
     try
     {
         catched = false;
-        char payload[(MAX_DOUBLE_TAGGED_PACKET - 29)*2];
-        memset (payload, '0', sizeof (payload));
+        uint8_t payload[(MAX_DOUBLE_TAGGED_PACKET - 29)];
+        memset (payload, 0, sizeof (payload));
         cEthernetPacket obj(MAX_DOUBLE_TAGGED_PACKET);
         memset (obj.packet, 0xcc, MAX_DOUBLE_TAGGED_PACKET);
         obj.reset();

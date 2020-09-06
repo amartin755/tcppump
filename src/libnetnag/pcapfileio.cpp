@@ -275,7 +275,7 @@ void cPcapFileIO::unitTest (const char* file)
 
     for (unsigned n = 0; n < sizeof (indata) / sizeof (indata[0]); n++)
     {
-        ::free (indata[n].bin);
+        delete[] (indata[n].bin);
     }
 
     //TODO unit tests

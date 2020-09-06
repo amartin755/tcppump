@@ -36,6 +36,7 @@
 #if HAVE_PCAP
 #include "libnetnag/pcapfileio.hpp"
 #endif
+#include "parsehelper.hpp"
 
 using namespace nn;
 
@@ -292,10 +293,16 @@ bool cTcpPump::parsePackets (const cMacAddress& ownMac, const cIpAddress& ownIP,
             else
             {
                 cEthernetPacket packet;
-                packet.setRaw (argv[n], strlen (argv[n]));
+                size_t len;
+                const uint8_t* data = cParseHelper::hexStringToBin(argv[n], 0, len);
+                if (!data)
+                    throw FormatException (exParFormat, argv[n]);
+
+                packet.setRaw (data, len);
                 packets.push_back (std::move(packet));
                 timestamp.setUs (activeDelay.us());
                 delays.push_back(timestamp);
+                delete[] data;
             }
         }
         catch (ParseException &e)

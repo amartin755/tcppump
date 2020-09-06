@@ -41,7 +41,7 @@ class cUdpPacket : public cIPv4Packet
 public:
     cUdpPacket ();
 
-    void setPayload (const char* payload, size_t len);
+    void setPayload (const uint8_t* payload, size_t len);
     void setSourcePort (uint16_t port);
     void setDestinationPort (uint16_t port);
     void setChecksum (uint16_t checksum);

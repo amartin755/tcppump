@@ -95,7 +95,6 @@ public:
     void setDontFragment (bool df);
     void setSource (const cIpAddress& ip);
     void setDestination (const cIpAddress& ip);
-    void setPayload (uint8_t protocol, const uint8_t* l4header, size_t l4headerLen, const char* asciiPayload, size_t payloadLen);
     void setPayload (uint8_t protocol, const uint8_t* l4header, size_t l4headerLen, const uint8_t* payload, size_t payloadLen);
     void updateHeaderChecksum ();
     cEthernetPacket& getFirstEthernetPacket ();

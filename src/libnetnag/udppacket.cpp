@@ -30,11 +30,11 @@ cUdpPacket::cUdpPacket ()
     std::memset (&header, 0, sizeof(header));
 }
 
-void cUdpPacket::setPayload (const char* payload, size_t len)
+void cUdpPacket::setPayload (const uint8_t* payload, size_t len)
 {
     // TODO check max udp length
 
-    header.length = htons(uint16_t(sizeof (header) + len/2));
+    header.length = htons(uint16_t(sizeof (header) + len));
     cIPv4Packet::setPayload (PROTO_UDP, (const uint8_t*)&header, sizeof (header), payload, len);
     header.checksum = calcChecksum();
     cIPv4Packet::updateL4Header ((const uint8_t*)&header, sizeof (header));

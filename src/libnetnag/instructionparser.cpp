@@ -166,7 +166,7 @@ const char* cInstructionParser::parseProtocollIdentifier (const char* p, const c
 int cInstructionParser::compileRAW (cParameterList& params, std::list <cEthernetPacket> &packets)
 {
     size_t len;
-    const char* value = params.findParameter ("payload")->asRaw(len);
+    const uint8_t* value = params.findParameter ("payload")->asStream(len);
     cEthernetPacket eth;
     eth.setRaw (value, len);
     packets.push_back (std::move(eth));
@@ -216,7 +216,7 @@ int cInstructionParser::compileETH (cParameterList& params, std::list <cEthernet
     }
 
     size_t len;
-    const char* value = params.findParameter ("payload")->asRaw(len);
+    const uint8_t* value = params.findParameter ("payload")->asStream(len);
     eth.setPayload (value, len);
 
     // if llc header or no ethertype/length is provided, we calculate the length ourself
@@ -307,7 +307,7 @@ int cInstructionParser::compileIPv4 (cParameterList& params, std::list <cEtherne
     compileIPv4Header (params, ippacket);
 
     size_t len;
-    const char* payload = params.findParameter ("payload")->asRaw(len);
+    const uint8_t* payload = params.findParameter ("payload")->asStream(len);
     ippacket.setPayload (params.findParameter ("protocol")->asInt8(), nullptr, 0, payload, len);
 
     return (int)ippacket.getAllEthernetPackets(packets);
@@ -327,10 +327,10 @@ int cInstructionParser::compileUDP (cParameterList& params, std::list <cEthernet
     udppacket.setDestinationPort(params.findParameter ("dport")->asInt16());
 
     size_t len = 0;
-    const char* payload = nullptr;
-    const cParameter* optionalPar = params.findParameter ("payload", true);
+    const uint8_t* payload = nullptr;
+    cParameter* optionalPar = params.findParameter ("payload", true);
     if (optionalPar)
-        payload = optionalPar->asRaw(len);
+        payload = optionalPar->asStream(len);
     udppacket.setPayload (payload, len);
 
     optionalPar = params.findParameter ("chksum", true);

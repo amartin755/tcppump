@@ -19,6 +19,8 @@
 
 #include <cctype>
 #include <cassert>
+#include <cstring>
+#include <cstdlib>
 
 #include "parsehelper.hpp"
 
@@ -71,6 +73,50 @@ int cParseHelper::isOneOf (char c, const char* accept)
     return 0;
 }
 
+// the function will alloc a buffer. The caller has to free this buffer!
+uint8_t* cParseHelper::hexStringToBin (const char* hexString, size_t hexStringLen, size_t& binLength)
+{
+    assert (hexString);
+
+    binLength = 0;
+
+    size_t length = hexStringLen ? hexStringLen : std::strlen (hexString);
+
+    if (!length)
+    {
+//        Console::PrintError ("Zero length of hex string of frame payload\n");
+        return nullptr;
+    }
+    if (length & 1)
+    {
+//        Console::PrintError ("Uneven length of hex string of frame payload\n");
+        return nullptr;
+    }
+
+    for (size_t n = 0; n < length; n++)
+    {
+        if (!isxdigit (hexString[n]))
+        {
+//            Console::PrintError ("Invalid character in hex string of frame payload\n");
+            return nullptr;
+        }
+    }
+
+    uint8_t* bin = new uint8_t[length / 2];
+
+
+    for (size_t n = 0; n < length; n += 2)
+    {
+        char b[3] = {0};
+        b[0] = hexString[n];
+        b[1] = hexString[n + 1];
+        bin[n/2] = (uint8_t)std::strtoul (b, NULL, 16);
+    }
+    binLength = length / 2;
+
+    return bin;
+}
+
 
 #ifdef WITH_UNITTESTS
 
@@ -79,6 +125,28 @@ int cParseHelper::isOneOf (char c, const char* accept)
 void cParseHelper::unitTest ()
 {
     nn::Console::PrintDebug("-- " __FILE__ " --\n");
+
+    size_t binLen;
+    uint8_t* bin;
+    binLen = -1;
+    assert (!hexStringToBin ("", 0, binLen));
+    assert (!binLen);
+    binLen = -1;
+    assert (!hexStringToBin ("1abcdef", 0, binLen));
+    assert (!binLen);
+    binLen = -1;
+    assert (!hexStringToBin ("abcdefg", 0, binLen));
+    assert (!binLen);
+    binLen = -1;
+    assert (!hexStringToBin ("1abcdefg", 0, binLen));
+    assert (!binLen);
+    binLen = -1;
+    assert ((bin = hexStringToBin ("0123456789abcdef", 0, binLen)));
+    assert (binLen == 8);
+    assert (!memcmp (bin, "\x01\x23\x45\x67\x89\xab\xcd\xef", binLen));
+    binLen = -1;
+    delete[] bin;
+
 
     assert (isOneOf ('a', "abcdef"));
     assert (isOneOf ('c', "abcdef"));

@@ -86,26 +86,6 @@ void cIPv4Packet::setDestination (const cIpAddress& ip)
     ipHeader.dstIp = ip.get();
 }
 
-// note: payload is an ascii hex bytestream e.g. "123456789abcde"
-void cIPv4Packet::setPayload (uint8_t protocol, const uint8_t* l4header, size_t l4headerLen, const char* payload, size_t payloadLen)
-{
-    // FIXME fragmentation
-
-    ipHeader.len = htons (uint16_t(ipHeader.getHeaderLenght() * 4 + l4headerLen + payloadLen / 2));
-    ipHeader.protocol = protocol;
-    updateHeaderChecksum();
-
-    cEthernetPacket &packet = packets.front();
-
-    packet.setPayload ((uint8_t*)&ipHeader, sizeof (ipHeader)); // write IP header
-    if (l4headerLen && l4header)
-        packet.appendPayload(l4header, l4headerLen);            // copy L4 header (e.g. udp header)
-    if (payloadLen && payload)
-        packet.appendPayload (payload, payloadLen);             // copy payload from ascii string
-
-    //TODO later when supporting fragmentation flags_offset and identification also have to be updated
-}
-
 void cIPv4Packet::setPayload (uint8_t protocol, const uint8_t* l4header, size_t l4headerLen, const uint8_t* payload, size_t payloadLen)
 {
     // FIXME fragmentation

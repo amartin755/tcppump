@@ -41,6 +41,23 @@ cParameter::cParameter (const cParameter& obj)
     value     = obj.value;
     valLen    = obj.valLen;
     index     = obj.index;
+    if (obj.dataLen)
+    {
+        assert (obj.data);
+        dataLen   = obj.dataLen;
+        data      = new uint8_t[dataLen];
+        std::memcpy (data, obj.data, dataLen);
+    }
+    else
+    {
+        data    = nullptr;
+        dataLen = 0;
+    }
+}
+
+cParameter::~cParameter ()
+{
+    delete[] data;
 }
 
 
@@ -51,6 +68,8 @@ void cParameter::clear ()
     value     = NULL;
     valLen    = 0;
     index     = -1;
+    data      = nullptr;
+    dataLen   = 0;
 }
 
 
@@ -103,10 +122,18 @@ cMacAddress cParameter::asMac () const
 }
 
 
-const char* cParameter::asRaw (size_t& len) const
+const uint8_t* cParameter::asStream (size_t& len)
 {
-    len =  valLen;
-    return value;
+    if (!data)
+    {
+        data = cParseHelper::hexStringToBin(value, valLen, dataLen);
+        if (!data)
+            throw FormatException (exParFormat, value);
+    }
+
+    len = dataLen;
+
+    return data;
 }
 
 
@@ -142,7 +169,7 @@ const char* cParameterList::getParseError ()
 }
 
 //FIXME there's a lot of room for improvement; too many string compares
-const cParameter* cParameterList::findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, bool isOptional)
+cParameter* cParameterList::findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, bool isOptional)
 {
     unsigned n = 0;
 
@@ -153,7 +180,7 @@ const cParameter* cParameterList::findParameter (const cParameter* startAfter, c
 
     for (; n < list.size (); n++)
     {
-        const cParameter &par = list.at (n);
+        cParameter &par = list.at (n);
 
         if (len2 == par.parLen && !strncmp (stopAt, par.parameter, par.parLen))
         {
@@ -171,15 +198,15 @@ const cParameter* cParameterList::findParameter (const cParameter* startAfter, c
     return NULL;
 }
 
-const cParameter* cParameterList::findParameter (const char* parameter, bool isOptional)
+cParameter* cParameterList::findParameter (const char* parameter, bool isOptional)
 {
     return findParameter (nullptr, nullptr, parameter, isOptional);
 }
 
 
-const cParameter* cParameterList::findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, uint32_t optionalValue)
+cParameter* cParameterList::findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, uint32_t optionalValue)
 {
-    const cParameter* p = findParameter (startAfter, stopAt, parameter, true);
+    cParameter* p = findParameter (startAfter, stopAt, parameter, true);
     if (p)
     {
         return p;
@@ -192,9 +219,9 @@ const cParameter* cParameterList::findParameter (const cParameter* startAfter, c
 }
 
 
-const cParameter* cParameterList::findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, const cMacAddress& optionalValue)
+cParameter* cParameterList::findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, const cMacAddress& optionalValue)
 {
-    const cParameter* p = findParameter (startAfter, stopAt, parameter, true);
+    cParameter* p = findParameter (startAfter, stopAt, parameter, true);
     if (p)
     {
         return p;
@@ -207,9 +234,9 @@ const cParameter* cParameterList::findParameter (const cParameter* startAfter, c
 }
 
 
-const cParameter* cParameterList::findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, const cIpAddress& optionalValue)
+cParameter* cParameterList::findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, const cIpAddress& optionalValue)
 {
-    const cParameter* p = findParameter (startAfter, stopAt, parameter, true);
+    cParameter* p = findParameter (startAfter, stopAt, parameter, true);
     if (p)
     {
         return p;
@@ -222,19 +249,19 @@ const cParameter* cParameterList::findParameter (const cParameter* startAfter, c
 }
 
 
-const cParameter* cParameterList::findParameter (const char* parameter, uint32_t optionalValue)
+cParameter* cParameterList::findParameter (const char* parameter, uint32_t optionalValue)
 {
     return findParameter (nullptr, nullptr, parameter, optionalValue);
 }
 
 
-const cParameter* cParameterList::findParameter (const char* parameter, const cMacAddress& optionalValue)
+cParameter* cParameterList::findParameter (const char* parameter, const cMacAddress& optionalValue)
 {
     return findParameter (nullptr, nullptr, parameter, optionalValue);
 }
 
 
-const cParameter* cParameterList::findParameter (const char* parameter, const cIpAddress& optionalValue)
+cParameter* cParameterList::findParameter (const char* parameter, const cIpAddress& optionalValue)
 {
     return findParameter (nullptr, nullptr, parameter, optionalValue);
 }
@@ -479,8 +506,8 @@ void cParameterList::unitTest ()
             cMacAddress mac = obj.findParameter("mac")->asMac();
             assert (!memcmp (&mac, &mac2, sizeof (mac2)));
             size_t len = 0;
-            assert (!strncmp (obj.findParameter("payload")->asRaw(len), "012345", len));
-            assert (len == 6);
+            assert (!memcmp (obj.findParameter("payload")->asStream(len), "\x01\x23\x45", len));
+            assert (len == 3);
         }
         catch (FormatException& )
         {
