@@ -113,7 +113,7 @@ bool cInterface::getMAC (cMacAddress& mac)
         return false;
 
     assert (pAdapterInfo->PhysicalAddressLength == cMacAddress::size());
-    mac.set (pAdapterInfo->PhysicalAddress, pAdapterInfo->PhysicalAddressLength);
+    mac.set ((void*)pAdapterInfo->PhysicalAddress, pAdapterInfo->PhysicalAddressLength);
 
     return true;
 }

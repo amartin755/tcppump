@@ -142,7 +142,7 @@ bool cInterface::getMAC (cMacAddress &mac)
             return false;
 
         // Copy source MAC address
-        mac.set (ifr.ifr_hwaddr.sa_data, mac.size());
+        mac.set ((void*)ifr.ifr_hwaddr.sa_data, mac.size());
     }
     else
     {
