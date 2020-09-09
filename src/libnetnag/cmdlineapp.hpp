@@ -33,8 +33,10 @@ public:
             this->usage = usage;
             this->description = description;
             this->help = 0;
+            this->version = 0;
 
             addCmdLineOption (true, 'h', "help", "Display this text", &help);
+            addCmdLineOption (true, 0, "version", "Show detailed version infos", &version);
     }
     virtual ~cCmdlineApp ()
     {
@@ -47,6 +49,11 @@ public:
         if (help)
         {
             printUsage ();
+            return 0;
+        }
+        if (version)
+        {
+            printVersion ();
             return 0;
         }
 
@@ -64,12 +71,15 @@ protected:
     void printUsage ()
     {
         const char* version = "";
-#ifdef APP_VERSION
         version = " V" APP_VERSION;
-#endif
         nn::Console::Print ("\n%s%s - %s\n\nUsage: %s\n\nOptions:\n", name, version, brief, usage);
         cmdline.printOptions ();
         nn::Console::Print ("\n%s\n\n", description);
+    }
+    void printVersion ()
+    {
+        const char* version = "V" APP_VERSION;
+        nn::Console::Print ("\n%s-%s-%s\n", version, BUILD_TYPE, GIT_COMMIT);
     }
 
     // adds (optional) integer option with argument
@@ -108,6 +118,7 @@ private:
     const char* usage;
     const char* description;
     int help;
+    int version;
     cCmdline cmdline;
 };
 

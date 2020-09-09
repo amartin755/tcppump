@@ -67,10 +67,10 @@ else ()
     set (PCAPDIR ${PCAP_LIBRARY})
     unset (PCAP_LIBRARY CACHE)
 endif ()
-find_library (_PCAP_LIBRARY NAMES wpcap pcap PATHS ${PCAPDIR})
+find_library (__PCAP_LIBRARY NAMES wpcap pcap PATHS ${PCAPDIR})
 message (STATUS "PCAP_INCLUDE_DIR = ${PCAP_INCLUDE_DIR}")
-message (STATUS "_PCAP_LIBRARY     = ${_PCAP_LIBRARY}")
-set (CMAKE_REQUIRED_LIBRARIES ${_PCAP_LIBRARY})
+message (STATUS "PCAP_LIBRARY     = ${__PCAP_LIBRARY}")
+set (CMAKE_REQUIRED_LIBRARIES ${__PCAP_LIBRARY})
 set (CMAKE_REQUIRED_INCLUDES ${PCAP_INCLUDE_DIR})
 check_symbol_exists (pcap_open_offline "stdio.h;pcap.h" HAVE_PCAP)
 set (CMAKE_REQUIRED_LIBRARIES "")
@@ -161,6 +161,37 @@ if (WIN32)
 
 endif ()
 
+# generate build numbers
+###############################################################################
+execute_process (COMMAND git rev-parse --short HEAD	OUTPUT_VARIABLE GIT_COMMIT_SHORT ERROR_QUIET)
+
+if (NOT "${GIT_COMMIT_SHORT}" STREQUAL "")
+	execute_process (COMMAND git describe --exact-match --tags OUTPUT_VARIABLE GIT_TAG ERROR_QUIET)
+	execute_process (COMMAND git rev-parse --abbrev-ref HEAD OUTPUT_VARIABLE GIT_BRANCH)
+	execute_process (COMMAND git rev-parse HEAD OUTPUT_VARIABLE GIT_COMMIT)
+    execute_process(
+        COMMAND git diff --quiet --exit-code
+        RESULT_VARIABLE GIT_HAS_LOCAL_CHANGES
+        )
+
+    if (${GIT_HAS_LOCAL_CHANGES} EQUAL 1)
+    	set (GIT_HAS_LOCAL_CHANGES "+")
+    endif ()
+
+	string (STRIP "${GIT_COMMIT_SHORT}" GIT_COMMIT_SHORT)
+	string (STRIP "${GIT_COMMIT}" GIT_COMMIT)
+	string (STRIP "${GIT_TAG}" GIT_TAG)
+	string (STRIP "${GIT_BRANCH}" GIT_BRANCH)
+	set (GIT_COMMIT_SHORT ${GIT_COMMIT_SHORT}${GIT_HAS_LOCAL_CHANGES})
+	set (GIT_COMMIT ${GIT_COMMIT}${GIT_HAS_LOCAL_CHANGES})
+endif()
+
+add_compile_definitions (GIT_COMMIT_SHORT="${GIT_COMMIT_SHORT}")
+add_compile_definitions (GIT_TAG="${GIT_TAG}")
+add_compile_definitions (GIT_BRANCH="${GIT_BRANCH}")
+add_compile_definitions (GIT_COMMIT="${GIT_COMMIT}")
+add_compile_definitions (BUILD_TYPE="${CMAKE_BUILD_TYPE}")
+message (STATUS "Build: type = '${CMAKE_BUILD_TYPE}' tag = '${GIT_TAG}' branch = '${GIT_BRANCH}' commit = '${GIT_COMMIT}'")
 
 # source files
 ###############################################################################
@@ -178,7 +209,7 @@ endif ()
 
 # includes and libs
 if (HAVE_PCAP)
-    set (libs ${libs} ${_PCAP_LIBRARY})
+    set (libs ${libs} ${__PCAP_LIBRARY})
     if (PCAP_INCLUDE_DIR)
         include_directories (${PCAP_INCLUDE_DIR})
     endif ()
@@ -212,6 +243,7 @@ target_link_libraries (tcppump LINK_PUBLIC ${libs})
 target_include_directories (tcppump PUBLIC ${os_specific})
 target_include_directories (tcppump PUBLIC os)
 target_include_directories (tcppump PUBLIC libnetnag)
+
 
 # unit test code
 ###############################################################################
