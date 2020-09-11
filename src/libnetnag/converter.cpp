@@ -17,12 +17,12 @@
  */
 
 
-#include <cassert>
 #include <cstring>
 #include <cctype>
 #include <cstdlib>
 #include <climits>
 
+#include "bugon.h"
 #include "console.hpp"
 #include "inet.h"
 #include "converter.hpp"
@@ -56,8 +56,8 @@ uint8_t* Converter::hexStringToBin (const char* hexString, size_t* binLength)
 
 bool Converter::hexStringToBin (const char* hexString, size_t hexStringLen, uint8_t* bin, size_t* binLength)
 {
-    assert (hexString);
-    assert (binLength);
+    BUG_ON (hexString);
+    BUG_ON (binLength);
 
     size_t length = hexStringLen ? hexStringLen : strlen (hexString);
 
@@ -74,7 +74,7 @@ bool Converter::hexStringToBin (const char* hexString, size_t hexStringLen, uint
         return false;
     }
 
-    assert ((length / 2) <= *binLength);
+    BUG_ON ((length / 2) <= *binLength);
 
     for (size_t n = 0; n < length; n++)
     {
@@ -106,34 +106,34 @@ void Converter::unitTest ()
     size_t binLen;
     uint8_t* bin;
     binLen = -1;
-    assert (!hexStringToBin ("", &binLen));
-    assert (!binLen);
+    BUG_ON (!hexStringToBin ("", &binLen));
+    BUG_ON (!binLen);
     binLen = -1;
-    assert (!hexStringToBin ("1abcdef", &binLen));
-    assert (!binLen);
+    BUG_ON (!hexStringToBin ("1abcdef", &binLen));
+    BUG_ON (!binLen);
     binLen = -1;
-    assert (!hexStringToBin ("abcdefg", &binLen));
-    assert (!binLen);
+    BUG_ON (!hexStringToBin ("abcdefg", &binLen));
+    BUG_ON (!binLen);
     binLen = -1;
-    assert (!hexStringToBin ("1abcdefg", &binLen));
-    assert (!binLen);
+    BUG_ON (!hexStringToBin ("1abcdefg", &binLen));
+    BUG_ON (!binLen);
     binLen = -1;
-    assert ((bin = hexStringToBin ("0123456789abcdef", &binLen)));
-    assert (binLen == 8);
-    assert (!memcmp (bin, "\x01\x23\x45\x67\x89\xab\xcd\xef", binLen));
+    BUG_ON ((bin = hexStringToBin ("0123456789abcdef", &binLen)));
+    BUG_ON (binLen == 8);
+    BUG_ON (!memcmp (bin, "\x01\x23\x45\x67\x89\xab\xcd\xef", binLen));
     binLen = -1;
     delete[] bin;
 
     uint8_t binbuf[16] = {0};
     binLen = sizeof (binbuf);
-    assert (hexStringToBin ("0123456789abcdef", 0, binbuf, &binLen));
-    assert (binLen == 8);
-    assert (!memcmp (binbuf, "\x01\x23\x45\x67\x89\xab\xcd\xef\00", binLen+1));
+    BUG_ON (hexStringToBin ("0123456789abcdef", 0, binbuf, &binLen));
+    BUG_ON (binLen == 8);
+    BUG_ON (!memcmp (binbuf, "\x01\x23\x45\x67\x89\xab\xcd\xef\00", binLen+1));
     binLen = sizeof (binbuf);
     binbuf [2] = 0;
-    assert (hexStringToBin ("0123456789abcdef", 4, binbuf, &binLen));
-    assert (binLen == 2);
-    assert (!memcmp (binbuf, "\x01\x23\x00\x67\x89\xab\xcd\xef\00", 9));
+    BUG_ON (hexStringToBin ("0123456789abcdef", 4, binbuf, &binLen));
+    BUG_ON (binLen == 2);
+    BUG_ON (!memcmp (binbuf, "\x01\x23\x00\x67\x89\xab\xcd\xef\00", 9));
     binLen = 4;
 }
 #endif

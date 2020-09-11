@@ -19,9 +19,9 @@
 
 #include "dissector.hpp"
 
-#include <cassert>
 #include <string>
 
+#include "bugon.h"
 #include "libnetnag/inet.h"
 #include "libnetnag/console.hpp"
 #include "libnetnag/ipv4packet.hpp"
@@ -92,7 +92,7 @@ bool cDissector::dissect () const
     }
     catch (...)
     {
-        assert ("???" == 0);
+        BUG_ON ("???" == 0);
     }
     nn::Console::Print("\n");
     dump (packet, packetLength);
@@ -360,8 +360,8 @@ const char* cDissector::ethertypeToString (uint16_t ethertype) const
 
 bool cDissector::isWithinPacket (const void* p, size_t size) const
 {
-    assert (p >= packet);
-    assert (size > 0);
+    BUG_ON (p >= packet);
+    BUG_ON (size > 0);
     return ((uint8_t*)p + size) <= (packet + packetLength);
 }
 

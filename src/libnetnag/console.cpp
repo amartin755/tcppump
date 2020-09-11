@@ -17,10 +17,10 @@
  */
 
 
-#include <cassert>
 #include <cstdarg>
 #include <cstdio>
 
+#include "bugon.h"
 #include "console.hpp"
 
 namespace nn
@@ -29,7 +29,7 @@ namespace nn
 
     void Console::SetPrintLevel (out_level lvl)
     {
-        assert ((lvl >= Silent) && (lvl <= Debug));
+        BUG_ON ((lvl >= Silent) && (lvl <= Debug));
         level = lvl;
     }
 

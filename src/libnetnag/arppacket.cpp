@@ -17,9 +17,9 @@
  */
 
 
-#include <cassert>
 #include <cstring>
 
+#include "bugon.h"
 #include "arppacket.hpp"
 
 

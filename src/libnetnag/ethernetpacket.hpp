@@ -22,7 +22,7 @@
 
 #include <cstdint>
 #include <cstddef>    // size_t
-#include <cassert>
+#include "bugon.h"
 #include "formatexception.hpp"
 #include "inet.h"
 #include "macaddress.hpp"

@@ -18,8 +18,9 @@
 
 
 #include <windows.h>
-#include <cassert>
 
+
+#include "bugon.h"
 #include "timeval.hpp"
 #ifdef WITH_UNITTESTS
 #include "console.hpp"
@@ -72,7 +73,7 @@ cTimeval SleepInit ()
 
 void Sleep (const cTimeval& t)
 {
-    assert (!resolution.isNull());
+    BUG_ON (!resolution.isNull());
 
     if (t < resolution)
     {

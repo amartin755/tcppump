@@ -18,8 +18,8 @@
 
 
 #include <cstdio>
-#include <cassert>
 
+#include "bugon.h"
 #include "converter.hpp"
 #include "console.hpp"
 #include "timeval.hpp"
@@ -74,7 +74,7 @@ int main (void)
     }
     catch (...)
     {
-        assert ("unhandled exception" == 0);
+        BUG_ON ("unhandled exception" == 0);
     }
     // every failure will lead to assert, thus if we see this output, all tests have passed
     printf ("\n --- unit tests finished successfully !!! --- \n");

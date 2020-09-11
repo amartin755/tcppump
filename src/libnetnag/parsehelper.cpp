@@ -18,10 +18,10 @@
 
 
 #include <cctype>
-#include <cassert>
 #include <cstring>
 #include <cstdlib>
 
+#include "bugon.h"
 #include "parsehelper.hpp"
 
 
@@ -64,7 +64,7 @@ const char* cParseHelper::nextCharIgnoreWhitspaces (const char* p, char c)
 
 int cParseHelper::isOneOf (char c, const char* accept)
 {
-    assert (accept);
+    BUG_ON (accept);
 
     while (*accept != '\0')
         if (*accept++ == c)
@@ -76,7 +76,7 @@ int cParseHelper::isOneOf (char c, const char* accept)
 // the function will alloc a buffer. The caller has to free this buffer!
 uint8_t* cParseHelper::hexStringToBin (const char* hexString, size_t hexStringLen, size_t& binLength)
 {
-    assert (hexString);
+    BUG_ON (hexString);
 
     binLength = 0;
 
@@ -129,99 +129,99 @@ void cParseHelper::unitTest ()
     size_t binLen;
     uint8_t* bin;
     binLen = -1;
-    assert (!hexStringToBin ("", 0, binLen));
-    assert (!binLen);
+    BUG_ON (!hexStringToBin ("", 0, binLen));
+    BUG_ON (!binLen);
     binLen = -1;
-    assert (!hexStringToBin ("1abcdef", 0, binLen));
-    assert (!binLen);
+    BUG_ON (!hexStringToBin ("1abcdef", 0, binLen));
+    BUG_ON (!binLen);
     binLen = -1;
-    assert (!hexStringToBin ("abcdefg", 0, binLen));
-    assert (!binLen);
+    BUG_ON (!hexStringToBin ("abcdefg", 0, binLen));
+    BUG_ON (!binLen);
     binLen = -1;
-    assert (!hexStringToBin ("1abcdefg", 0, binLen));
-    assert (!binLen);
+    BUG_ON (!hexStringToBin ("1abcdefg", 0, binLen));
+    BUG_ON (!binLen);
     binLen = -1;
-    assert ((bin = hexStringToBin ("0123456789abcdef", 0, binLen)));
-    assert (binLen == 8);
-    assert (!memcmp (bin, "\x01\x23\x45\x67\x89\xab\xcd\xef", binLen));
+    BUG_ON ((bin = hexStringToBin ("0123456789abcdef", 0, binLen)));
+    BUG_ON (binLen == 8);
+    BUG_ON (!memcmp (bin, "\x01\x23\x45\x67\x89\xab\xcd\xef", binLen));
     binLen = -1;
     delete[] bin;
 
 
-    assert (isOneOf ('a', "abcdef"));
-    assert (isOneOf ('c', "abcdef"));
-    assert (isOneOf ('f', "abcdef"));
-    assert (!isOneOf ('r', "abcdef"));
-    assert (!isOneOf ('r', ""));
+    BUG_ON (isOneOf ('a', "abcdef"));
+    BUG_ON (isOneOf ('c', "abcdef"));
+    BUG_ON (isOneOf ('f', "abcdef"));
+    BUG_ON (!isOneOf ('r', "abcdef"));
+    BUG_ON (!isOneOf ('r', ""));
 
-    assert (*skipWhitespaces ("abc") == 'a');
-    assert (*skipWhitespaces (" abc") == 'a');
-    assert (*skipWhitespaces (" \t\nabc") == 'a');
-    assert (*skipWhitespaces ("") == '\0');
+    BUG_ON (*skipWhitespaces ("abc") == 'a');
+    BUG_ON (*skipWhitespaces (" abc") == 'a');
+    BUG_ON (*skipWhitespaces (" \t\nabc") == 'a');
+    BUG_ON (*skipWhitespaces ("") == '\0');
 
-    assert (!nextCharIgnoreWhitspaces (" abcd\tef\ng", 'f'));
-    assert (!nextCharIgnoreWhitspaces (" abcd\tef\ng", 'b'));
-    assert (*nextCharIgnoreWhitspaces (" abcd\tef\ng", 'a') == 'a');
+    BUG_ON (!nextCharIgnoreWhitspaces (" abcd\tef\ng", 'f'));
+    BUG_ON (!nextCharIgnoreWhitspaces (" abcd\tef\ng", 'b'));
+    BUG_ON (*nextCharIgnoreWhitspaces (" abcd\tef\ng", 'a') == 'a');
 
     {
         const char s[] = "abc de-0f  ghi";
         const char* p = nullptr;
         p = nextKeyStart (s);
-        assert (p == &s[0]);
+        BUG_ON (p == &s[0]);
         p = nextKeyEnd (p);
-        assert (p == &s[3]);
+        BUG_ON (p == &s[3]);
         p = nextKeyStart (p);
-        assert (p == &s[4]);
+        BUG_ON (p == &s[4]);
         p = nextKeyEnd (p);
-        assert (p == &s[9]);
+        BUG_ON (p == &s[9]);
         p = nextKeyStart (p);
-        assert (p == &s[11]);
+        BUG_ON (p == &s[11]);
         p = nextKeyEnd (p);
-        assert (p == &s[14]);
+        BUG_ON (p == &s[14]);
     }
     {
         const char s[] = "  abc \tde-0f  ghi";
         const char* p = nullptr;
         p = nextKeyStart (s);
-        assert (p == &s[2]);
+        BUG_ON (p == &s[2]);
         p = nextKeyEnd (p);
-        assert (p == &s[5]);
+        BUG_ON (p == &s[5]);
         p = nextKeyStart (p);
-        assert (p == &s[7]);
+        BUG_ON (p == &s[7]);
         p = nextKeyEnd (p);
-        assert (p == &s[12]);
+        BUG_ON (p == &s[12]);
         p = nextKeyStart (p);
-        assert (p == &s[14]);
+        BUG_ON (p == &s[14]);
         p = nextKeyEnd (p);
-        assert (p == &s[17]);
+        BUG_ON (p == &s[17]);
     }
     {
         const char s[] = "a b c ";
         const char* p = nullptr;
         p = nextKeyStart (s);
-        assert (p == &s[0]);
+        BUG_ON (p == &s[0]);
         p = nextKeyEnd (p);
-        assert (p == &s[1]);
+        BUG_ON (p == &s[1]);
         p = nextKeyStart (p);
-        assert (p == &s[2]);
+        BUG_ON (p == &s[2]);
         p = nextKeyEnd (p);
-        assert (p == &s[3]);
+        BUG_ON (p == &s[3]);
         p = nextKeyStart (p);
-        assert (p == &s[4]);
+        BUG_ON (p == &s[4]);
         p = nextKeyEnd (p);
-        assert (p == &s[5]);
+        BUG_ON (p == &s[5]);
     }
     {
         const char s[] = "-a";
         const char* p = nullptr;
         p = nextKeyStart (s);
-        assert (!p);
+        BUG_ON (!p);
     }
     {
         const char s[] = "5a";
         const char* p = nullptr;
         p = nextKeyStart (s);
-        assert (!p);
+        BUG_ON (!p);
     }
 
     // TODO much more detailed tests

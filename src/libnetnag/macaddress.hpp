@@ -20,11 +20,12 @@
 #ifndef MACADDRESS_HPP
 #define MACADDRESS_HPP
 
-#include <cassert>
 #include <cstdint>
 #include <cstring>
 #include <cctype>
 #include <string>
+
+#include "bugon.h"
 
 class cMacAddress
 {
@@ -93,12 +94,12 @@ public:
     }
     void set (const void* b, size_t len)
     {
-        assert (len >= size());
+        BUG_ON (len >= size());
         ::memcpy(mac, b, size());
     }
     void setAt (int offset, uint8_t value)
     {
-        assert (offset <= 5);
+        BUG_ON (offset <= 5);
         if (offset <= 5)
         {
             mac[offset] = value;
@@ -110,7 +111,7 @@ public:
     }
     void get (char* s, size_t len) const
     {
-        assert (len > MACSTRLEN);
+        BUG_ON (len > MACSTRLEN);
         ::snprintf (s, len, "%02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     }
     void get (mac_t* mac) const
@@ -145,24 +146,24 @@ public:
 #ifdef WITH_UNITTESTS
     static void unitTest ()
     {
-        assert (!isValidString(""));
-        assert (!isValidString("11:22:33:44:55:66:77"));
-        assert (isValidString("11:22:33:44:55:66"));
-        assert (isValidString("11-22-33-44-55-66"));
-        assert (isValidString("11:a2:33:44:55:66"));
-        assert (!isValidString("11:a2:3g:44:55:66"));
-        assert (!isValidString("11:a2:g3:44:55:66"));
+        BUG_ON (!isValidString(""));
+        BUG_ON (!isValidString("11:22:33:44:55:66:77"));
+        BUG_ON (isValidString("11:22:33:44:55:66"));
+        BUG_ON (isValidString("11-22-33-44-55-66"));
+        BUG_ON (isValidString("11:a2:33:44:55:66"));
+        BUG_ON (!isValidString("11:a2:3g:44:55:66"));
+        BUG_ON (!isValidString("11:a2:g3:44:55:66"));
 
         uint8_t a[] = {1,2,3,4,5,6};
         cMacAddress b("01:02:03:04:05:06");
-        assert (b.size() == 6);
-        assert (!::memcmp(a, b.mac, sizeof(a)));
+        BUG_ON (b.size() == 6);
+        BUG_ON (!::memcmp(a, b.mac, sizeof(a)));
 
-        assert (cMacAddress().isNull());
-        assert (cMacAddress("ff:ff:ff:ff:ff:ff").isBroadcast());
-        assert (!cMacAddress("ff:ff:ff:ff:ff:ff").isMulticast());
-        assert (cMacAddress("01:ff:ff:ff:ff:ff").isMulticast());
-        assert (!cMacAddress("80:ff:ff:ff:ff:ff").isMulticast());
+        BUG_ON (cMacAddress().isNull());
+        BUG_ON (cMacAddress("ff:ff:ff:ff:ff:ff").isBroadcast());
+        BUG_ON (!cMacAddress("ff:ff:ff:ff:ff:ff").isMulticast());
+        BUG_ON (cMacAddress("01:ff:ff:ff:ff:ff").isMulticast());
+        BUG_ON (!cMacAddress("80:ff:ff:ff:ff:ff").isMulticast());
     }
 #endif
 

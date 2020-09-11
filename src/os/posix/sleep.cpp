@@ -17,11 +17,11 @@
  */
 
 
-#include <cassert>
 #include <ctime>
 #include <chrono>
 #include <thread>
 
+#include "bugon.h"
 #include "timeval.hpp"
 #include "sleep.hpp"
 
@@ -85,7 +85,7 @@ cTimeval SleepInit ()
 
 void Sleep (const cTimeval& t)
 {
-    assert (!resolution.isNull());
+    BUG_ON (!resolution.isNull());
 
     if (t < resolution)
     {

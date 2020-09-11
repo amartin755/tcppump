@@ -17,7 +17,6 @@
  */
 
 
-#include <cassert>
 #include <cstring>
 #include <string>
 #include <errno.h>
@@ -31,6 +30,7 @@
 #include <netinet/in.h>
 #include <net/if_arp.h>       // ARPHRD_ETHER
 
+#include "bugon.h"
 #include "interface.hpp"
 #include "console.hpp"
 

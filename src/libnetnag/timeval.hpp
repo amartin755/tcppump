@@ -23,7 +23,7 @@
 #include <cstdint>
 #include "timeval.h" // struct timeval
 #ifdef WITH_UNITTESTS
-#include <cassert>
+#include "bugon.h"
 #endif
 
 class cTimeval
@@ -150,48 +150,48 @@ public:
         tv2.tv_sec = 0;
         tv2.tv_usec = 1;
 
-        assert (cTimeval (tv1).s() == 0);
-        assert (cTimeval (tv2).s() == 0);
-        assert (cTimeval (tv1).ms() == 999);
-        assert (cTimeval (tv2).ms() == 0);
-        assert (cTimeval (tv1).us() == 999999);
-        assert (cTimeval (tv2).us() == 1);
+        BUG_ON (cTimeval (tv1).s() == 0);
+        BUG_ON (cTimeval (tv2).s() == 0);
+        BUG_ON (cTimeval (tv1).ms() == 999);
+        BUG_ON (cTimeval (tv2).ms() == 0);
+        BUG_ON (cTimeval (tv1).us() == 999999);
+        BUG_ON (cTimeval (tv2).us() == 1);
 
         cTimeval v;
-        assert (v.s() == 0);
-        assert (v.ms() == 0);
-        assert (v.us() == 0);
+        BUG_ON (v.s() == 0);
+        BUG_ON (v.ms() == 0);
+        BUG_ON (v.us() == 0);
         v.set (tv1);
-        assert (v.s() == 0);
-        assert (v.ms() == 999);
-        assert (v.us() == 999999);
+        BUG_ON (v.s() == 0);
+        BUG_ON (v.ms() == 999);
+        BUG_ON (v.us() == 999999);
         v.add(tv2);
-        assert (v.s() == 1);
-        assert (v.ms() == 1000);
-        assert (v.us() == 1000000);
+        BUG_ON (v.s() == 1);
+        BUG_ON (v.ms() == 1000);
+        BUG_ON (v.us() == 1000000);
         v.add(v).sub(tv2);
-        assert (v.s() == 1);
-        assert (v.ms() == 1999);
-        assert (v.us() == 1999999);
+        BUG_ON (v.s() == 1);
+        BUG_ON (v.ms() == 1999);
+        BUG_ON (v.us() == 1999999);
         v.sub(tv2);
         struct timeval tv3 = v.timeval();
-        assert (tv3.tv_sec == 1);
-        assert (tv3.tv_usec == 999998);
+        BUG_ON (tv3.tv_sec == 1);
+        BUG_ON (tv3.tv_usec == 999998);
         v.sub(v);
-        assert (v.s() == 0);
-        assert (v.ms() == 0);
-        assert (v.us() == 0);
+        BUG_ON (v.s() == 0);
+        BUG_ON (v.ms() == 0);
+        BUG_ON (v.us() == 0);
         struct timeval tv4 = v.timeval();
-        assert (tv4.tv_sec == 0);
-        assert (tv4.tv_usec == 0);
+        BUG_ON (tv4.tv_sec == 0);
+        BUG_ON (tv4.tv_usec == 0);
 
-        assert (cTimeval() == v);
-        assert (!(cTimeval() != v));
-        assert (!(cTimeval(tv1) == cTimeval(tv2)));
-        assert (cTimeval(tv1) != cTimeval(tv2));
+        BUG_ON (cTimeval() == v);
+        BUG_ON (!(cTimeval() != v));
+        BUG_ON (!(cTimeval(tv1) == cTimeval(tv2)));
+        BUG_ON (cTimeval(tv1) != cTimeval(tv2));
 
-        assert (cTimeval(2) < cTimeval(3));
-        assert (cTimeval(1) > cTimeval(0));
+        BUG_ON (cTimeval(2) < cTimeval(3));
+        BUG_ON (cTimeval(1) > cTimeval(0));
     }
 #endif
 };

@@ -18,10 +18,10 @@
 
 
 #include <cstdio>
-#include <cassert>
 #include <cctype>
 #include <cstring>
 
+#include "bugon.h"
 #include "fileparser.hpp"
 
 #include "instructionparser.hpp"
@@ -46,7 +46,7 @@ cFileParser::~cFileParser ()
 
 void cFileParser::init (FILE* fp, uint64_t defaultDelay, const cMacAddress& ownMac, const cIpAddress& ownIPv4)
 {
-    assert (fp);
+    BUG_ON (fp);
 
     this->fp      = fp;
 

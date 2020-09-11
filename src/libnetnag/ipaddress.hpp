@@ -110,12 +110,12 @@ public:
 #ifdef WITH_UNITTESTS
     static void unitTest ()
     {
-        assert (cIpAddress() == cIpAddress("0.0.0.0"));
-        assert (cIpAddress() != cIpAddress("0.0.0.1"));
+        BUG_ON (cIpAddress() == cIpAddress("0.0.0.0"));
+        BUG_ON (cIpAddress() != cIpAddress("0.0.0.1"));
         const char x[] = "1.2.3.4dfadfasd";
         cIpAddress a; a.set(x, 7);
-        assert (cIpAddress("1.2.3.4") == a);
-        assert (!a.set("laskdfj"));
+        BUG_ON (cIpAddress("1.2.3.4") == a);
+        BUG_ON (!a.set("laskdfj"));
     }
 #endif
 

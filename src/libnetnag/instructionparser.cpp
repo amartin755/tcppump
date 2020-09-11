@@ -18,10 +18,10 @@
 
 
 #include <cstdio>
-#include <cassert>
 #include <cctype>
 #include <cstring>
 
+#include "bugon.h"
 #include "instructionparser.hpp"
 
 #include "parameterlist.hpp"
@@ -95,11 +95,11 @@ int cInstructionParser::parse (const char* instruction, uint64_t& timestamp, boo
         case exParFormat:
             throw ParseException ("Invalid parameter value", e.value ());
         default:
-            assert ("BUG: unexpected compile exception" == 0);
+            BUG_ON ("BUG: unexpected compile exception" == 0);
         }
     }
 
-    assert ("BUG: unreachable code" == 0);
+    BUG_ON ("BUG: unreachable code" == 0);
 
     return 0;
 }
@@ -255,7 +255,7 @@ int cInstructionParser::compileARP (cParameterList& params, std::list <cEthernet
 {
     cArpPacket  arp;
 
-    assert ((!isProbe && !isGratuitous) || (isProbe != isGratuitous));
+    BUG_ON ((!isProbe && !isGratuitous) || (isProbe != isGratuitous));
 
     if (isProbe)
     {
@@ -574,8 +574,8 @@ void cInstructionParser::unitTest ()
         {
             catched = true;
         }
-        assert (!catched);
-        assert (p == &s[2]);
+        BUG_ON (!catched);
+        BUG_ON (p == &s[2]);
     }
     {
         const char s[] = "1000";
@@ -592,8 +592,8 @@ void cInstructionParser::unitTest ()
         {
             catched = true;
         }
-        assert (catched);
-        assert (!p);
+        BUG_ON (catched);
+        BUG_ON (!p);
     }
     {
         const char s[] = "+1000";
@@ -610,8 +610,8 @@ void cInstructionParser::unitTest ()
         {
             catched = true;
         }
-        assert (catched);
-        assert (!p);
+        BUG_ON (catched);
+        BUG_ON (!p);
     }
     {
         const char s[] = "1000:";
@@ -628,10 +628,10 @@ void cInstructionParser::unitTest ()
         {
             catched = true;
         }
-        assert (!catched);
-        assert (abs);
-        assert (p == &s[sizeof(s)]-1);
-        assert (t == 1000);
+        BUG_ON (!catched);
+        BUG_ON (abs);
+        BUG_ON (p == &s[sizeof(s)]-1);
+        BUG_ON (t == 1000);
     }
     {
         const char s[] = "+1000:";
@@ -648,10 +648,10 @@ void cInstructionParser::unitTest ()
         {
             catched = true;
         }
-        assert (!catched);
-        assert (!abs);
-        assert (p == &s[sizeof(s)]-1);
-        assert (t == 1000);
+        BUG_ON (!catched);
+        BUG_ON (!abs);
+        BUG_ON (p == &s[sizeof(s)]-1);
+        BUG_ON (t == 1000);
     }
     {
         const char s[] = " 1000 : ";
@@ -668,10 +668,10 @@ void cInstructionParser::unitTest ()
         {
             catched = true;
         }
-        assert (!catched);
-        assert (abs);
-        assert (p == &s[7]);
-        assert (t == 1000);
+        BUG_ON (!catched);
+        BUG_ON (abs);
+        BUG_ON (p == &s[7]);
+        BUG_ON (t == 1000);
     }
     {
         const char s[] = " +1000 : ";
@@ -688,10 +688,10 @@ void cInstructionParser::unitTest ()
         {
             catched = true;
         }
-        assert (!catched);
-        assert (!abs);
-        assert (p == &s[8]);
-        assert (t == 1000);
+        BUG_ON (!catched);
+        BUG_ON (!abs);
+        BUG_ON (p == &s[8]);
+        BUG_ON (t == 1000);
     }
     {
         const char s[] = " 1asd000 : ";
@@ -708,10 +708,10 @@ void cInstructionParser::unitTest ()
         {
             catched = true;
         }
-        assert (catched);
-        assert (abs);
-        assert (!p);
-        assert (t==1);
+        BUG_ON (catched);
+        BUG_ON (abs);
+        BUG_ON (!p);
+        BUG_ON (t==1);
     }
     {
         const char s[] = " abcd(";
@@ -728,10 +728,10 @@ void cInstructionParser::unitTest ()
         {
             catched = true;
         }
-        assert (!catched);
-        assert (len == 4);
-        assert (!strncmp("abcd", prot, len));
-        assert (*p=='(');
+        BUG_ON (!catched);
+        BUG_ON (len == 4);
+        BUG_ON (!strncmp("abcd", prot, len));
+        BUG_ON (*p=='(');
     }
     {
         const char s[] = " abcd (";
@@ -748,10 +748,10 @@ void cInstructionParser::unitTest ()
         {
             catched = true;
         }
-        assert (!catched);
-        assert (len == 4);
-        assert (!strncmp("abcd", prot, len));
-        assert (*p=='(');
+        BUG_ON (!catched);
+        BUG_ON (len == 4);
+        BUG_ON (!strncmp("abcd", prot, len));
+        BUG_ON (*p=='(');
     }
     {
         const char s[] = "abcd(";
@@ -768,10 +768,10 @@ void cInstructionParser::unitTest ()
         {
             catched = true;
         }
-        assert (!catched);
-        assert (len == 4);
-        assert (!strncmp("abcd", prot, len));
-        assert (*p=='(');
+        BUG_ON (!catched);
+        BUG_ON (len == 4);
+        BUG_ON (!strncmp("abcd", prot, len));
+        BUG_ON (*p=='(');
     }
     {
         const char s[] = "abcd( ";
@@ -788,10 +788,10 @@ void cInstructionParser::unitTest ()
         {
             catched = true;
         }
-        assert (!catched);
-        assert (len == 4);
-        assert (!strncmp("abcd", prot, len));
-        assert (*p=='(');
+        BUG_ON (!catched);
+        BUG_ON (len == 4);
+        BUG_ON (!strncmp("abcd", prot, len));
+        BUG_ON (*p=='(');
     }
     {
         const char s[] = " ab42cd-ef(";
@@ -808,10 +808,10 @@ void cInstructionParser::unitTest ()
         {
             catched = true;
         }
-        assert (!catched);
-        assert (len == 9);
-        assert (!strncmp("ab42cd-ef", prot, len));
-        assert (*p=='(');
+        BUG_ON (!catched);
+        BUG_ON (len == 9);
+        BUG_ON (!strncmp("ab42cd-ef", prot, len));
+        BUG_ON (*p=='(');
     }
     {
         const char* prot = nullptr;
@@ -841,9 +841,9 @@ void cInstructionParser::unitTest ()
             {
                 catched = true;
             }
-            assert (catched);
-            assert (!len);
-            assert (!p);
+            BUG_ON (catched);
+            BUG_ON (!len);
+            BUG_ON (!p);
         }
     }
 
@@ -863,9 +863,9 @@ void cInstructionParser::unitTest ()
     {
         nn::Console::PrintDebug("packet %d", n);
         cInstructionParser obj (ownMac, ownIPv4);
-        assert (1 == obj.parse (tests[n].tokens, timestamp, isAbsolute, packets));
-        assert (packets.size () == n + 1);
-        assert (tests[n].packetSize == packets.back().getLength());
+        BUG_ON (1 == obj.parse (tests[n].tokens, timestamp, isAbsolute, packets));
+        BUG_ON (packets.size () == n + 1);
+        BUG_ON (tests[n].packetSize == packets.back().getLength());
         if (memcmp (packets.back().get(), tests[n].packet, tests[n].packetSize))
         {
             const uint8_t* p = packets.back().get();
@@ -876,7 +876,7 @@ void cInstructionParser::unitTest ()
             }
             printf ("\n");
         }
-        assert (!memcmp (packets.back().get(), tests[n].packet, tests[n].packetSize));
+        BUG_ON (!memcmp (packets.back().get(), tests[n].packet, tests[n].packetSize));
         nn::Console::PrintDebug("\r");
     }
 }

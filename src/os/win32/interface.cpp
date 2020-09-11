@@ -17,12 +17,12 @@
  */
 
 
-#include <cassert>
 #include <string>
 #include <pcap.h>
 #include <iphlpapi.h>
 #include <winerror.h>
 
+#include "bugon.h"
 #include "interface.hpp"
 #include "console.hpp"
 
@@ -112,7 +112,7 @@ bool cInterface::getMAC (cMacAddress& mac)
     if (!pAdapterInfo)
         return false;
 
-    assert (pAdapterInfo->PhysicalAddressLength == cMacAddress::size());
+    BUG_ON (pAdapterInfo->PhysicalAddressLength == cMacAddress::size());
     mac.set ((void*)pAdapterInfo->PhysicalAddress, pAdapterInfo->PhysicalAddressLength);
 
     return true;

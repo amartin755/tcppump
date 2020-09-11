@@ -17,9 +17,9 @@
  */
 
 
-#include <cassert>
 #include <cstring>
 
+#include "bugon.h"
 #include "inet.h"
 #include "ipv4packet.hpp"
 #include "inetchecksum.hpp"
@@ -39,7 +39,7 @@ cIPv4Packet::cIPv4Packet ()
 
 cEthernetPacket& cIPv4Packet::getFirstEthernetPacket ()
 {
-    assert (packets.size() > 0);
+    BUG_ON (packets.size() > 0);
     return packets.front();
 }
 
@@ -129,7 +129,7 @@ size_t cIPv4Packet::getPayloadLength () const
     const cEthernetPacket &packet = packets.front();
     size_t len = packet.getPayloadLength ();
 
-    assert (len > sizeof (ipHeader));
+    BUG_ON (len > sizeof (ipHeader));
 
     return len > sizeof (ipHeader) ? len - sizeof (ipHeader) : 0;
 }
@@ -138,7 +138,7 @@ void cIPv4Packet::updateL4Header (const uint8_t* l4header, size_t l4headerLen)
 {
     cEthernetPacket &packet = packets.front();
 
-    assert (packet.getPayloadLength () > sizeof (ipHeader));
+    BUG_ON (packet.getPayloadLength () > sizeof (ipHeader));
 
     packet.updatePayloadAt((unsigned)sizeof (ipHeader), l4header, l4headerLen);
 }

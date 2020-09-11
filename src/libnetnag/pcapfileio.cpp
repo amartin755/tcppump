@@ -20,10 +20,10 @@
 #if HAVE_PCAP
 
 #include <cstdio>
-#include <cassert>
 
 #include <pcap.h>
 
+#include "bugon.h"
 #include "pcapfileio.hpp"
 #include "console.hpp"
 
@@ -47,7 +47,7 @@ cPcapFileIO::~cPcapFileIO ()
 
 bool cPcapFileIO::open (const char* path, bool write)
 {
-    assert (!fileHandle);
+    BUG_ON (!fileHandle);
 
     char errbuf[PCAP_ERRBUF_SIZE] = {0};
 
@@ -107,8 +107,8 @@ void cPcapFileIO::close ()
 
 bool cPcapFileIO::read (struct pcap_pkthdr **header, const u_char **data)
 {
-    assert (fileHandle);
-    assert (!modeWrite);
+    BUG_ON (fileHandle);
+    BUG_ON (!modeWrite);
 
     if (!fileError && !eof)
     {
@@ -151,9 +151,9 @@ uint8_t* cPcapFileIO::read (cTimeval* timestamp, int* len)
 
 bool cPcapFileIO::write (const cTimeval& timestamp, const uint8_t* frame, int len, bool absoluteTimestamp)
 {
-    assert (fileHandle);
-    assert (dumper);
-    assert (modeWrite);
+    BUG_ON (fileHandle);
+    BUG_ON (dumper);
+    BUG_ON (modeWrite);
 
     if (!fileError)
     {
@@ -194,28 +194,28 @@ void cPcapFileIO::unitTest (const char* file)
 
     cPcapFileIO obj;
 
-    assert (!obj.modeWrite);
-    assert (!obj.fileHandle);
-    assert (!obj.dumper);
-    assert (!obj.path);
-    assert (!obj.fileError);
-    assert (!obj.eof);
+    BUG_ON (!obj.modeWrite);
+    BUG_ON (!obj.fileHandle);
+    BUG_ON (!obj.dumper);
+    BUG_ON (!obj.path);
+    BUG_ON (!obj.fileError);
+    BUG_ON (!obj.eof);
 
-    assert (!obj.open("nofile"));
-    assert (!obj.modeWrite);
-    assert (!obj.fileHandle);
-    assert (!obj.dumper);
-    assert (!obj.path);
-    assert (!obj.fileError);
-    assert (!obj.eof);
+    BUG_ON (!obj.open("nofile"));
+    BUG_ON (!obj.modeWrite);
+    BUG_ON (!obj.fileHandle);
+    BUG_ON (!obj.dumper);
+    BUG_ON (!obj.path);
+    BUG_ON (!obj.fileError);
+    BUG_ON (!obj.eof);
 
-    assert (!obj.open("nofile", false));
-    assert (!obj.modeWrite);
-    assert (!obj.fileHandle);
-    assert (!obj.dumper);
-    assert (!obj.path);
-    assert (!obj.fileError);
-    assert (!obj.eof);
+    BUG_ON (!obj.open("nofile", false));
+    BUG_ON (!obj.modeWrite);
+    BUG_ON (!obj.fileHandle);
+    BUG_ON (!obj.dumper);
+    BUG_ON (!obj.path);
+    BUG_ON (!obj.fileError);
+    BUG_ON (!obj.eof);
 
     typedef struct
     {
@@ -236,7 +236,7 @@ void cPcapFileIO::unitTest (const char* file)
     for (unsigned n = 0; n < sizeof (indata) / sizeof (indata[0]); n++)
     {
         indata[n].bin = nn::Converter::hexStringToBin (indata[n].txt, &indata[n].binlen);
-        assert (indata[n].bin);
+        BUG_ON (indata[n].bin);
     }
 
     uint8_t* f;
@@ -244,34 +244,34 @@ void cPcapFileIO::unitTest (const char* file)
     cTimeval t;
     int n = 0;
 
-    assert (obj.open(file, false));
-    assert (!obj.modeWrite);
-    assert (obj.fileHandle);
-    assert (!obj.dumper);
-    assert (obj.path);
-    assert (!obj.fileError);
-    assert (!obj.eof);
-    assert (obj.offset.isNull());
+    BUG_ON (obj.open(file, false));
+    BUG_ON (!obj.modeWrite);
+    BUG_ON (obj.fileHandle);
+    BUG_ON (!obj.dumper);
+    BUG_ON (obj.path);
+    BUG_ON (!obj.fileError);
+    BUG_ON (!obj.eof);
+    BUG_ON (obj.offset.isNull());
 
     while ((f = obj.read (&t, &len)) != NULL)
     {
-        assert (t.us() == indata[n].t);
-        assert ((size_t)len == indata[n].binlen);
-        assert (!memcmp (f, indata[n].bin, indata[n].binlen));
+        BUG_ON (t.us() == indata[n].t);
+        BUG_ON ((size_t)len == indata[n].binlen);
+        BUG_ON (!memcmp (f, indata[n].bin, indata[n].binlen));
         n++;
     }
 
-    assert (!obj.fileError);
-    assert (obj.eof);
-    assert (n == (sizeof (indata) / sizeof (indata[0])));
+    BUG_ON (!obj.fileError);
+    BUG_ON (obj.eof);
+    BUG_ON (n == (sizeof (indata) / sizeof (indata[0])));
 
     obj.close ();
-    assert (!obj.modeWrite);
-    assert (!obj.fileHandle);
-    assert (!obj.dumper);
-    assert (!obj.path);
-    assert (!obj.fileError);
-    assert (!obj.eof);
+    BUG_ON (!obj.modeWrite);
+    BUG_ON (!obj.fileHandle);
+    BUG_ON (!obj.dumper);
+    BUG_ON (!obj.path);
+    BUG_ON (!obj.fileError);
+    BUG_ON (!obj.eof);
 
     for (unsigned n = 0; n < sizeof (indata) / sizeof (indata[0]); n++)
     {

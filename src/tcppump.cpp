@@ -19,9 +19,9 @@
 
 #include <cstring>
 #include <cstdint>
-#include <cassert>
 #include <stdexcept>
 
+#include "bugon.h"
 #include "tcppump.hpp"
 #include "sleep.hpp"
 #include "getch.hpp"
@@ -228,7 +228,7 @@ int cTcpPump::execute (int argc, char* argv[])
 
     if (!options.interactive)
     {
-        assert (packets.size() == delays.size());
+        BUG_ON (packets.size() == delays.size());
         Console::PrintMoreVerbose ("Sending %d packets, each delayed by %" PRIu64 " usecs. Repeating %d times.\n\n", packets.size(), activeDelay, options.repeat);
         while (options.repeat--)
         {
@@ -280,7 +280,7 @@ bool cTcpPump::parsePackets (const cMacAddress& ownMac, const cIpAddress& ownIP,
                     else
                     {
                         if (timestamp < currtime) // fixme Was tun wenn ein absoluter timestamp < currtime ist? delay = 0 oder Fehler melden?
-                            assert ("fixme" == 0);
+                            BUG_ON ("fixme" == 0);
                         else
                         {
                             cTimeval delta(timestamp);
@@ -335,7 +335,7 @@ bool cTcpPump::parseScripts (const cMacAddress& ownMac, const cIpAddress& ownIP,
     {
         Console::PrintDebug ("Open '%s'\n", *scripts);
 
-        if (scriptsCnt && ((fp = fopen (*scripts, "rt")) == NULL))
+        if ((fp = fopen (*scripts, "rt")) == NULL)
         {
             Console::PrintError ("Unable to open the script file %s.\n", *scripts);
             return false;
@@ -365,7 +365,7 @@ bool cTcpPump::parseScripts (const cMacAddress& ownMac, const cIpAddress& ownIP,
                         timestamp.add(scriptStartTime);
 
                         if (timestamp < currtime) // fixme Was tun wenn ein absoluter timestamp < currtime ist? delay = 0 oder Fehler melden?
-                            assert ("fixme" == 0);
+                            BUG_ON ("fixme" == 0);
                         else
                         {
                             cTimeval delta(timestamp);
