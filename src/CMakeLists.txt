@@ -163,34 +163,39 @@ endif ()
 
 # generate build numbers
 ###############################################################################
-execute_process (COMMAND git rev-parse --short HEAD	OUTPUT_VARIABLE GIT_COMMIT_SHORT ERROR_QUIET)
+execute_process (COMMAND git rev-parse --short HEAD    OUTPUT_VARIABLE GIT_COMMIT_SHORT ERROR_QUIET)
 
 if (NOT "${GIT_COMMIT_SHORT}" STREQUAL "")
-	execute_process (COMMAND git describe --exact-match --tags OUTPUT_VARIABLE GIT_TAG ERROR_QUIET)
-	execute_process (COMMAND git rev-parse --abbrev-ref HEAD OUTPUT_VARIABLE GIT_BRANCH)
-	execute_process (COMMAND git rev-parse HEAD OUTPUT_VARIABLE GIT_COMMIT)
+    execute_process (COMMAND git describe --exact-match --tags OUTPUT_VARIABLE GIT_TAG ERROR_QUIET)
+    execute_process (COMMAND git rev-parse --abbrev-ref HEAD OUTPUT_VARIABLE GIT_BRANCH)
+    execute_process (COMMAND git rev-parse HEAD OUTPUT_VARIABLE GIT_COMMIT)
     execute_process(
         COMMAND git diff --quiet --exit-code
         RESULT_VARIABLE GIT_HAS_LOCAL_CHANGES
         )
 
     if (${GIT_HAS_LOCAL_CHANGES} EQUAL 1)
-    	set (GIT_HAS_LOCAL_CHANGES "+")
+        set (GIT_HAS_LOCAL_CHANGES "+")
     endif ()
 
-	string (STRIP "${GIT_COMMIT_SHORT}" GIT_COMMIT_SHORT)
-	string (STRIP "${GIT_COMMIT}" GIT_COMMIT)
-	string (STRIP "${GIT_TAG}" GIT_TAG)
-	string (STRIP "${GIT_BRANCH}" GIT_BRANCH)
-	set (GIT_COMMIT_SHORT ${GIT_COMMIT_SHORT}${GIT_HAS_LOCAL_CHANGES})
-	set (GIT_COMMIT ${GIT_COMMIT}${GIT_HAS_LOCAL_CHANGES})
+    string (STRIP "${GIT_COMMIT_SHORT}" GIT_COMMIT_SHORT)
+    string (STRIP "${GIT_COMMIT}" GIT_COMMIT)
+    string (STRIP "${GIT_TAG}" GIT_TAG)
+    string (STRIP "${GIT_BRANCH}" GIT_BRANCH)
+
+    set (GIT_COMMIT_SHORT ${GIT_COMMIT_SHORT}${GIT_HAS_LOCAL_CHANGES})
+    set (GIT_COMMIT ${GIT_COMMIT}${GIT_HAS_LOCAL_CHANGES})
+
+    add_compile_definitions (GIT_COMMIT_SHORT="${GIT_COMMIT_SHORT}")
+    add_compile_definitions (GIT_TAG="${GIT_TAG}")
+    add_compile_definitions (GIT_BRANCH="${GIT_BRANCH}")
+    add_compile_definitions (GIT_COMMIT="${GIT_COMMIT}")
 endif()
 
-add_compile_definitions (GIT_COMMIT_SHORT="${GIT_COMMIT_SHORT}")
-add_compile_definitions (GIT_TAG="${GIT_TAG}")
-add_compile_definitions (GIT_BRANCH="${GIT_BRANCH}")
-add_compile_definitions (GIT_COMMIT="${GIT_COMMIT}")
+string(TIMESTAMP BUILD_TIME "%Y-%m-%d %H:%M" UTC)
+add_compile_definitions(BUILD_TIME="${BUILD_TIME}")
 add_compile_definitions (BUILD_TYPE="${CMAKE_BUILD_TYPE}")
+
 message (STATUS "Build: type = '${CMAKE_BUILD_TYPE}' tag = '${GIT_TAG}' branch = '${GIT_BRANCH}' commit = '${GIT_COMMIT}'")
 
 # source files

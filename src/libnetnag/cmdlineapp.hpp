@@ -78,8 +78,11 @@ protected:
     }
     void printVersion ()
     {
-        const char* version = "V" APP_VERSION;
-        nn::Console::Print ("\n%s-%s-%s\n", version, BUILD_TYPE, GIT_COMMIT);
+        const char* version = APP_VERSION;
+        nn::Console::Print ("%s version %s (%s)\n", name, version, BUILD_TIME);
+#ifdef GIT_COMMIT
+        nn::Console::Print ("build: %s-%s (%s)\n", GIT_BRANCH, GIT_COMMIT, BUILD_TYPE);
+#endif
     }
 
     // adds (optional) integer option with argument

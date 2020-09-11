@@ -512,6 +512,10 @@ bool cTcpPump::interactiveMode (cInterface &ifc)
 
 int main(int argc, char* argv[])
 {
-    cTcpPump app ("tcppump", "An Ethernet packet generator", "tcppump -i IFC [OPTIONS] packets/infiles", "TODO description");
+    cTcpPump app (
+            "tcppump",
+            "An Ethernet packet generator",
+            "tcppump -i IFC [OPTIONS] packets/infiles",
+            "Homepage: <https://github.com/amartin755/tcppump>");
     return app.main (argc, argv);
 }
