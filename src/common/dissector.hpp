@@ -22,7 +22,7 @@
 
 #include <cstddef> // size_t
 
-#include "libnetnag/ethernetpacket.hpp"
+#include "ethernetpacket.hpp"
 
 class cDissector
 {

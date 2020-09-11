@@ -30,7 +30,7 @@
 #include "ipv4packet.hpp"
 #include "parameterlist.hpp"
 #include "instructionparser.hpp"
-#include "../sleep.hpp"
+#include "sleep.hpp"
 #include "ipaddress.hpp"
 #include "macaddress.hpp"
 #include "parsehelper.hpp"

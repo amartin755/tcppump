@@ -24,9 +24,9 @@
 #include <list>
 #include <map>
 #include <cstddef>
-#include "libnetnag/cmdlineapp.hpp"
-#include "libnetnag/ethernetpacket.hpp"
-#include "libnetnag/pcapfileio.hpp"
+#include "cmdlineapp.hpp"
+#include "ethernetpacket.hpp"
+#include "pcapfileio.hpp"
 
 typedef struct
 {

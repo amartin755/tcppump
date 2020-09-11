@@ -27,14 +27,14 @@
 #include "getch.hpp"
 #include "interface.hpp"
 #include "dissector.hpp"
-#include "libnetnag/ipaddress.hpp"
-#include "libnetnag/macaddress.hpp"
-#include "libnetnag/converter.hpp"
-#include "libnetnag/instructionparser.hpp"
-#include "libnetnag/fileparser.hpp"
-#include "libnetnag/ethernetpacket.hpp"
+#include "ipaddress.hpp"
+#include "macaddress.hpp"
+#include "converter.hpp"
+#include "instructionparser.hpp"
+#include "fileparser.hpp"
+#include "ethernetpacket.hpp"
 #if HAVE_PCAP
-#include "libnetnag/pcapfileio.hpp"
+#include "pcapfileio.hpp"
 #endif
 #include "parsehelper.hpp"
 

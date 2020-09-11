@@ -220,34 +220,18 @@ if (HAVE_PCAP)
     endif ()
 endif ()
 
-# note: include only source files here, that are used by all targets
-set (sourcefiles
-     dissector.cpp
-     libnetnag/cmdline.cpp
-     libnetnag/console.cpp
-     libnetnag/converter.cpp
-     libnetnag/ethernetpacket.cpp
-     libnetnag/arppacket.cpp
-     libnetnag/ipv4packet.cpp
-     libnetnag/instructionparser.cpp
-     libnetnag/fileparser.cpp
-     libnetnag/parameterlist.cpp
-     libnetnag/parsehelper.cpp
-     libnetnag/pcapfileio.cpp
-     libnetnag/udppacket.cpp
-     libnetnag/vrrppacket.cpp
-     ${os_specific}/interface.cpp
-     ${os_specific}/getch.cpp
-     ${os_specific}/sleep.cpp
-     )
 
-
-add_executable (tcppump tcppump.cpp ${sourcefiles})
+add_executable (tcppump)
+add_subdirectory (common)
+add_subdirectory (os)
+add_subdirectory (packets)
+add_subdirectory (parser)
+add_subdirectory (pcap)
 
 target_link_libraries (tcppump LINK_PUBLIC ${libs})
-target_include_directories (tcppump PUBLIC ${os_specific})
-target_include_directories (tcppump PUBLIC os)
-target_include_directories (tcppump PUBLIC libnetnag)
+target_sources(tcppump PRIVATE tcppump.cpp ${SOURCES})
+target_include_directories (tcppump PRIVATE ${INCLUDES})
+
 
 if (UNIX)
     # add raw capablities in oder to be runable without root
@@ -261,7 +245,8 @@ endif()
 # unit test code
 ###############################################################################
 if (WITH_UNITTESTS)
-    add_executable (unittest test/unittest.cpp ${sourcefiles})
+
+    add_executable (unittest)
     target_link_libraries (unittest PRIVATE ${libs})
 
     target_compile_definitions (unittest PRIVATE WITH_UNITTESTS)
@@ -270,9 +255,8 @@ if (WITH_UNITTESTS)
         target_link_libraries (unittest PRIVATE gcov)
     endif()
 
-    target_include_directories (unittest PUBLIC ${os_specific})
-    target_include_directories (unittest PUBLIC os)
-    target_include_directories (unittest PUBLIC libnetnag)
+    target_sources(unittest PRIVATE unittest.cpp ${SOURCES})
+    target_include_directories (unittest PRIVATE ${INCLUDES})
 endif ()
 
 
