@@ -1,4 +1,4 @@
-name: Test-on-windows-MSVC-64bit
+name: build-release-binary-windows
 
 # TODO: should be merged with linux workflow as matrix build
 
