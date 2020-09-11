@@ -58,11 +58,11 @@ include (CheckIncludeFiles)
 
 # try to find pcap library; can be set via PCAP_INCLUDE_DIR and PCAP_LIBRARY
 if (NOT PCAP_INCLUDE_DIR)
-    set (PCAPDIR ${PROJECT_SOURCE_DIR}/../pcap/include)
+    set (PCAPDIR ${PROJECT_SOURCE_DIR}/../libpcap/include)
     find_path (PCAP_INCLUDE_DIR NAMES pcap/pcap.h pcap.h PATHS ${PCAPDIR})
 endif ()
 if (NOT PCAP_LIBRARY)
-    set (PCAPDIR ${PROJECT_SOURCE_DIR}/../pcap/lib)
+    set (PCAPDIR ${PROJECT_SOURCE_DIR}/../libpcap/lib)
 else ()
     set (PCAPDIR ${PCAP_LIBRARY})
     unset (PCAP_LIBRARY CACHE)
