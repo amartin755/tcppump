@@ -38,6 +38,7 @@ typedef struct
     // usage depends on the type
     void* arg;
     int*        pOptSet;
+    bool        dontFailIfSet;
 }argument;
 
 class cCmdline
@@ -52,7 +53,7 @@ public:
 #endif
 
     bool addOption (bool optional, char shortname, const char* longname, const char* description, int* isOptionSet,
-            const char* argname = nullptr, arg_type type = ARG_NO, void* arg = nullptr, bool hasOptionalArg = false);
+            const char* argname = nullptr, arg_type type = ARG_NO, void* arg = nullptr, bool hasOptionalArg = false, bool dontFailIfSet = false);
 
     bool parse (int* optind = 0);
     bool parse (int argc, char* argv[], int* optind = 0);

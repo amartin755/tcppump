@@ -35,8 +35,8 @@ public:
             this->help = 0;
             this->version = 0;
 
-            addCmdLineOption (true, 'h', "help", "Display this text", &help);
-            addCmdLineOption (true, 0, "version", "Show detailed version infos", &version);
+            cmdline.addOption  (true, 'h', "help", "Display this text", &help, nullptr, ARG_NO, nullptr, false, true);
+            cmdline.addOption  (true, 0, "version", "Show detailed version infos", &version, nullptr, ARG_NO, nullptr, false, true);
     }
     virtual ~cCmdlineApp ()
     {

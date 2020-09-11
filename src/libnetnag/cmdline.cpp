@@ -141,10 +141,20 @@ bool cCmdline::parse (int* optind)
         }
     }
 
+    // first check whether options like --help or --version are set. If yes, we don't fail if mandatory options are missing
+    bool enforceMandatoryOptions = true;
+    for (const auto &currOpt : options)
+    {
+        if (currOpt.dontFailIfSet && currOpt.isSet)
+        {
+            enforceMandatoryOptions = false;
+            break;
+        }
+    }
     for (const auto &currOpt : options)
     {
         // check if all mandatory options are present
-        if (!currOpt.optional && !currOpt.isSet)
+        if (enforceMandatoryOptions && !currOpt.optional && !currOpt.isSet)
         {
             nn::Console::PrintError ("mandatory option -%c --%s not set\n", currOpt.shortname, currOpt.longname);
             ret = false;
@@ -198,7 +208,7 @@ void cCmdline::printOptions ()
 
 // NOTE 'longname', 'description' and 'argname' are assumed to be static!
 bool cCmdline::addOption (bool optional, char shortname, const char* longname, const char* description, int* isOptionSet,
-        const char* argname, arg_type type, void* arg, bool hasOptionalArg)
+        const char* argname, arg_type type, void* arg, bool hasOptionalArg, bool dontFailIfSet)
 {
     if (hasOptionalArg && shortname)
         assert ("optional arguments are only possible with long options" == 0);
@@ -220,6 +230,7 @@ bool cCmdline::addOption (bool optional, char shortname, const char* longname, c
     a.shortname      = shortname ? shortname : NO_SHORTNAME + (int)options.size();
     a.longname       = longname;
     a.description    = description;
+    a.dontFailIfSet  = dontFailIfSet;
     if (argname) // option has argument?
     {
         a.hasArg         = true;
