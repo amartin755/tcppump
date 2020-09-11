@@ -249,6 +249,14 @@ target_include_directories (tcppump PUBLIC ${os_specific})
 target_include_directories (tcppump PUBLIC os)
 target_include_directories (tcppump PUBLIC libnetnag)
 
+if (UNIX)
+    # add raw capablities in oder to be runable without root
+    add_custom_command(TARGET tcppump
+                       POST_BUILD
+                       COMMAND sudo setcap cap_net_raw+eip ./tcppump
+                       WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+endif()
+
 
 # unit test code
 ###############################################################################
