@@ -1,0 +1,44 @@
+name: Test-on-windows-MSVC-64bit
+
+# TODO: should be merged with linux workflow as matrix build
+
+on: [workflow_dispatch]
+
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: release
+
+jobs:
+  build-and-test:
+    # The CMake configure and build commands are platform agnostic and should work equally
+    # well on Windows or Mac.  You can convert this to a matrix build if you need
+    # cross-platform coverage.
+    # See: https://docs.github.com/en/actions/configuring-and-managing-workflows/configuring-a-workflow#configuring-a-build-matrix
+    runs-on: windows-latest
+    timeout-minutes: 15
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        ref: ${{ github.ref }}
+
+    - name: Install Dependencies
+      # install libpcap and its development files
+      run: vcpkg install winpcap:x64-windows
+
+    - name: Configure CMake
+      # Use a bash shell so we can use the same syntax for environment variable
+      # access regardless of the host operating system
+      shell: bash
+      working-directory: ${{runner.workspace}}/tcppump
+      run: cmake -S src -B build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DPCAP_INCLUDE_DIR=C:/vcpkg/packages/winpcap_x64-windows/include/ -DPCAP_LIBRARY=C:/vcpkg/packages/winpcap_x64-windows/lib/
+
+    - name: Build
+      working-directory: ${{runner.workspace}}/tcppump
+      shell: bash
+      run: cmake --build build
+
+    - uses: actions/upload-artifact@v2
+      with: 
+        name: release-windows-x64
+        path: ${{runner.workspace}}/tcppump/bin/

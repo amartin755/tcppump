@@ -1,0 +1,39 @@
+name: build-release-binary-ubuntu
+
+# Note: currently only linux is address. Later on this will be changed to a matrix build
+
+on: [workflow_dispatch]
+
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: release
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        ref: ${{ github.ref }}
+
+    - name: Install Dependencies
+      # install libpcap and its development files
+      run: sudo apt-get --assume-yes install libpcap-dev
+
+    - name: Configure CMake
+      # Use a bash shell so we can use the same syntax for environment variable
+      # access regardless of the host operating system
+      shell: bash
+      working-directory: ${{runner.workspace}}/tcppump
+      run: cmake -S src -B build -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+
+    - name: Build
+      working-directory: ${{runner.workspace}}/tcppump
+      shell: bash
+      run: cmake --build build
+      
+    - uses: actions/upload-artifact@v2
+      with:
+        name: release-ubuntu-x64
+        path: ${{runner.workspace}}/tcppump/bin/
