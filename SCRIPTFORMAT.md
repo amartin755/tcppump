@@ -10,10 +10,12 @@ Optional parameters are market with []
 * `timestamp` relative time as integer followed by ':' (us since beginning of the file) e.g. 123456 if time starts with '+', time is relative to the previous packet; e.g. +100
 * `protocol` protocol specifier , see PROTOCOLS
 * `parameters` protocol parameters in parantheses as comma separated parameter-value pairs. e.g. (hugo=123, egon=456)
-  comments start with #
 
-examples:
+Comments start with '#'
 
+Examples:
+
+    # this is a comment
     +1234:   theProtocol(parameter-x = 3333333333333333333333333333333333333333);
     1000000: theProtocol(parameter-x = 3333333333333333333333333333333333333333);
 
@@ -57,9 +59,9 @@ Ethertype or length of the packet (range 0 - 0xffff). If ommited or LLC header i
 
     ethertype (optional)
 
-__VLAN tags__
+__VLAN tags__ (IEEE 802.1Q)
 
-note: for vlan tagged packets parameter 'vid' is mandatory, if ommitted all other vlan parameters will be ignored and a untagged packet is compiled.
+For vlan tagged packets parameter 'vid' is mandatory, if ommitted all other vlan parameters will be ignored and an untagged packet is compiled.
 Multiple vlan tags are also allowed. 'vid' must be the first parameter of a vlan tag.
 
 VLAN id (TCI.VID) (range 0-4095)
@@ -78,9 +80,9 @@ VLAN type (1 = Customer VLAN, 2 = Provider VLAN; default 1)
 
     vtype (optional)
 
-__LLC header__
+__LLC header__ (IEEE 802.2)
 
-note: for packets with llc header both parameters 'dsap' and 'ssap' have to be defined
+For packets with LLC header both parameters 'dsap' and 'ssap' have to be defined,
 
 Destination Service Access point (range 0 - 0xff)
 
@@ -96,7 +98,7 @@ Control word (range 0 - 0xffff; default 3); will be compiled to a 8 bit value, i
 
 __LLC header with SNAP extension__
 
-note: LLC header parameters must not be defined for snap packets. Their content is filled automatically. Otherwise a normal LLC packet is compiled.
+LLC header parameters must not be defined for snap packets. Their content is filled automatically. Otherwise a normal LLC packet is compiled.
 Organizationally Unique Identifier (range 0 - 0xffffff)
 
     oui
@@ -129,29 +131,32 @@ Protocol type (range 0 - 0xffff)
 #### Protocol Specifier
 
     arp
+    arp-probe
+    arp-announce
 
 #### Parameters
-destination IPv4 address
+Destination IPv4 address
 
     dip
 
-opcode (1 = request, 2 = reply, whole 16bit range allowed; default 1)
+Opcode (1 = request, 2 = reply, range 0 - 0xffff; default 1)
 
     op (optional)
 
-source EUI-48 MAC address; If ommited, address of the network interface is used
+Source EUI-48 MAC address; If ommited, address of the network interface is used
 
     smac (optional)
 
-source IPv4 address; If ommited, address of the network interface is used
+Source IPv4 address; If ommited, address of the network interface is used
 
     sip (optional)
 
-destination EUI-48 MAC address (default 00:00:00:00:00:00)
+Destination EUI-48 MAC address (default 00:00:00:00:00:00)
 
     dmac (optional)
 
-NOTE: Optionally all vlan tag parameters (see above) are also allowed.
+`arp-probe` and `arp-announce` accept only parameter `dip`.
+Optionally all vlan tag parameters (see above) are also allowed.
 
 #### Examples
 
@@ -170,47 +175,47 @@ NOTE: Optionally all vlan tag parameters (see above) are also allowed.
     ipv4
 
 #### Parameters
-destination EUI-48 MAC address
+Destination EUI-48 MAC address
 
     dmac
 
-source EUI-48 MAC address. If ommited, address of the network interface is used
+Source EUI-48 MAC address. If ommited, address of the network interface is used
 
     smac (optional)
 
-destination IPv4 address
+Destination IPv4 address
 
     dip
 
-source IPv4 address; If ommited, address of the network interface is used
+Source IPv4 address; If ommited, address of the network interface is used
 
     sip (optional)
 
-differentiated services code point (range 0 - 0x3f; default 0)
+Differentiated services code point (range 0 - 0x3f; default 0)
 
     dscp (optional)
 
-explicit congestion notification (range 0 - 3; default 0)
+Explicit congestion notification (range 0 - 3; default 0)
 
     ecn (optional)
 
-time to life (range 0 - 255; default 64)
+Time to life (range 0 - 255; default 64)
 
     ttl (optional)
 
-don't fragment (default 0; 1 = don't fragment)
+Don't fragment (default 0; 1 = don't fragment)
 
     df (optional)
 
-protocol number (range 0 - 255) see https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml
+Protocol number (range 0 - 255) see https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml
 
     protocol
 
-payload in ascii hex
+Payload in ascii hex
 
     payload
 
-NOTE: Optionally all vlan tag parameters (see above) are also allowed.
+Optionally all vlan tag parameters (see above) are also allowed.
 
 #### Examples
 
@@ -228,39 +233,39 @@ NOTE: Optionally all vlan tag parameters (see above) are also allowed.
     udp
 
 #### Parameters
-destination EUI-48 MAC address
+Destination EUI-48 MAC address
 
     dmac
 
-destination IPv4 address
+Destination IPv4 address
 
     dip
 
-source EUI-48 MAC address. If ommited, address of the network interface is used
+Source EUI-48 MAC address. If ommited, address of the network interface is used
 
     smac (optional)
 
-source IPv4 address; If ommited, address of the network interface is used
+Source IPv4 address; If ommited, address of the network interface is used
 
     sip (optional)
 
-source port (range 0 - 0xffff)
+Source port (range 0 - 0xffff)
 
     sport
 
-destination port (range 0 - 0xffff)
+Destination port (range 0 - 0xffff)
 
     dport
 
-checksum (range 0 - 0xffff) If ommited, checksum is calculated automatically. Setting the checksum manually is only useful to force creation of malformed packets.
+Checksum (range 0 - 0xffff) If ommited, checksum is calculated automatically. Setting the checksum manually is only useful to force creation of malformed packets.
 
     chksum (optional)
 
-payload in ascii hex
+Payload in ascii hex
 
     payload (optional)
 
-NOTE: Optionally all vlan tag parameters and all optional ipv4 parameters (see above) are also allowed.
+Optionally all vlan tag parameters and all optional ipv4 parameters (see above) are also allowed.
 
 #### Examples
 
@@ -270,11 +275,12 @@ NOTE: Optionally all vlan tag parameters and all optional ipv4 parameters (see a
     udp(dmac=12:23:34:34:44:44, dip=1.2.3.4, smac=80:12:34:45:67:89, sip=192.168.0.1, sport=1234, dport=2345, payload=12345678);
 
 ### VRRP Virtual Router Redundancy Protocol
-Supported are the protocol versions 2 (RFC3768) and 3 (RFC5798)
+Supported are the protocol versions 2 according to RFC3768 (vrrp) and version 3 according to RFC5798 (vrrp3).
 
 #### Protocol Specifier
 
     vrrp
+    vrrp3
 
 #### Parameters
 Source EUI-48 MAC Address. If ommited, address of the network interface is used
@@ -284,10 +290,6 @@ Source EUI-48 MAC Address. If ommited, address of the network interface is used
 Source IPv4 Address. If ommited, address of the network interface is used
 
     sip (optional)
-
-Protocol Version (range 2 - 3, default 3)
-
-    vers (optional)
 
 Virtual Router ID (range 1 - 255)
 
@@ -301,17 +303,17 @@ Virtual Router Priority (range 0 - 255, default 100)
 
     prio (optional)
 
-VRRP Packet Type (range 0 - 255; default 1). Note: According to RFC3768 only 1 is a valid value
-
-    type (optional)
-
-Checksum (range 0 - 0xffff) If ommited, checksum is calculated automatically
-
-    chksum (optional)
-
 Advertisement Interval. Note: Value range and unit depends on the specified protocol version. V2: seconds (range: 0 - 255, default 1), V3: centiseconds (range: 0 - 4095, default 100)
 
     aint (optional)
+
+VRRP Packet Type (range 0 - 15; default 1). Note: According to RFC3768 only 1 is a valid value
+
+    type (optional)
+
+Checksum (range 0 - 0xffff). If ommited, checksum is calculated automatically
+
+    chksum (optional)
 
 
 NOTE: Optionally all vlan tag parameters and all optional ipv4 parameters (see above) are also allowed.

@@ -80,7 +80,9 @@ int cInstructionParser::parse (const char* instruction, uint64_t& timestamp, boo
         if (!strncmp ("udp", keyword, keywordLen))
             return compileUDP (params, packets);
         if (!strncmp ("vrrp", keyword, keywordLen))
-            return compileVRRP (params, packets);
+            return compileVRRP (params, packets, 2);
+        if (!strncmp ("vrrp3", keyword, keywordLen))
+            return compileVRRP (params, packets, 3);
 
         throw ParseException ("Unknown protocol type", keyword);
     }
@@ -341,7 +343,7 @@ int cInstructionParser::compileUDP (cParameterList& params, std::list <cEthernet
 }
 
 
-int cInstructionParser::compileVRRP (cParameterList& params, std::list <cEthernetPacket> &packets)
+int cInstructionParser::compileVRRP (cParameterList& params, std::list <cEthernetPacket> &packets, int version)
 {
     bool userDefinedChecksum = false;
     cVrrpPacket vrrp;
@@ -350,14 +352,13 @@ int cInstructionParser::compileVRRP (cParameterList& params, std::list <cEtherne
     compileVLANTags   (params, eth);
     compileIPv4Header (params, vrrp, true);
 
-    uint8_t version = params.findParameter ("vers", (uint32_t)3)->asInt8(2, 3);
     const cParameter* firstVRIP = params.findParameter ("vrip");
 
     vrrp.setVersion(version);
     vrrp.setVRID(params.findParameter ("vrid")->asInt8(1, 255));
     vrrp.addVirtualIP(firstVRIP->asIPv4());
     vrrp.setPrio(params.findParameter ("prio", (uint32_t)100)->asInt8());
-    vrrp.setType(params.findParameter ("type", (uint32_t)1)->asInt8());
+    vrrp.setType(params.findParameter ("type", (uint32_t)1)->asInt8(0, 15));
     if (version == 2)
         vrrp.setInterval(params.findParameter ("aint", (uint32_t)1)->asInt8());
     else
@@ -372,7 +373,7 @@ int cInstructionParser::compileVRRP (cParameterList& params, std::list <cEtherne
     // additional virtual IPs (optional)
     optionalPar = firstVRIP;
     int vripCount = 1;
-    while ((vripCount++ <= 255 ) &&
+    while ((++vripCount <= 255 ) &&
            ((optionalPar = params.findParameter(optionalPar, nullptr, "vrip", true)) != nullptr))
     {
         vrrp.addVirtualIP (optionalPar->asIPv4());
