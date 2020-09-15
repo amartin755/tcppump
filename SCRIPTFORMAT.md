@@ -322,11 +322,11 @@ NOTE: Optionally all vlan tag parameters and all optional ipv4 parameters (see a
 
     # VRRP V3 packet with default values; virtual router with id 42 and ip address 1.2.3.4
     # Source-mac and ip are taken from network interface
-    vrrp(vrid=42, vrip=1.2.3.4);
+    vrrp3(vrid=42, vrip=1.2.3.4);
     # The same as above with protocol version 2
-    vrrp(vers=2, vrid=42, vrip=1.2.3.4);
+    vrrp(vrid=42, vrip=1.2.3.4);
     # full defined VRRP2 packet with two virtual router ip addresses
-    vrrp(vers=2, smac=80:12:34:45:67:89, sip=192.168.0.1, vrid=42, prio=120, vrip=1.2.3.4, vrip=1.2.3.5, aint=3);
+    vrrp(smac=80:12:34:45:67:89, sip=192.168.0.1, vrid=42, prio=120, vrip=1.2.3.4, vrip=1.2.3.5, aint=3);
     # malformed vrrp packet (undefined type)
     vrrp(vrid=42, vrip=1.2.3.4, type=3);
     # malformed vrrp packet (wrong checksum)
