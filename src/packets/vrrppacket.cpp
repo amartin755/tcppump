@@ -54,7 +54,7 @@ void cVrrpPacket::setType (uint8_t type)
 void cVrrpPacket::setInterval (uint16_t interval)
 {
     if (header.getVersion() == 2)
-        header.v2.adverInt = interval;
+        header.v2.adverInt = (uint8_t)interval;
     else
         header.v3.maxAdverInt = htons(interval);
 }
