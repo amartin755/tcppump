@@ -29,7 +29,6 @@
 #include "dissector.hpp"
 #include "ipaddress.hpp"
 #include "macaddress.hpp"
-#include "converter.hpp"
 #include "instructionparser.hpp"
 #include "fileparser.hpp"
 #include "ethernetpacket.hpp"

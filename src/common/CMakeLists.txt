@@ -21,7 +21,6 @@ set (SOURCES
      ${SOURCES}
      ${CMAKE_CURRENT_SOURCE_DIR}/cmdline.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/console.cpp
-     ${CMAKE_CURRENT_SOURCE_DIR}/converter.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/dissector.cpp
      PARENT_SCOPE
 )

@@ -187,7 +187,7 @@ void cPcapFileIO::printError (const char* err)
 #ifdef WITH_UNITTESTS
 #include <cstring>
 #include <cstdlib>
-#include "converter.hpp"
+#include "parsehelper.hpp"
 void cPcapFileIO::unitTest (const char* file)
 {
     Console::PrintDebug("-- " __FILE__ " --\n");
@@ -235,7 +235,7 @@ void cPcapFileIO::unitTest (const char* file)
 
     for (unsigned n = 0; n < sizeof (indata) / sizeof (indata[0]); n++)
     {
-        indata[n].bin = Converter::hexStringToBin (indata[n].txt, &indata[n].binlen);
+        indata[n].bin = cParseHelper::hexStringToBin (indata[n].txt, 0, indata[n].binlen);
         BUG_ON (indata[n].bin);
     }
 

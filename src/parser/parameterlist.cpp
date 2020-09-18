@@ -24,7 +24,6 @@
 #include "bugon.h"
 #include "parameterlist.hpp"
 #include "parsehelper.hpp"
-#include "converter.hpp"
 
 
 

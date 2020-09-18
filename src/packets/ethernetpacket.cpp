@@ -21,7 +21,6 @@
 
 #include "bugon.h"
 #include "ethernetpacket.hpp"
-#include "converter.hpp"
 
 
 

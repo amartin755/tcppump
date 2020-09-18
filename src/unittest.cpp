@@ -20,7 +20,6 @@
 #include <cstdio>
 
 #include "bugon.h"
-#include "converter.hpp"
 #include "console.hpp"
 #include "timeval.hpp"
 #include "cmdline.hpp"
@@ -57,7 +56,6 @@ int main (void)
         tcppump::SleepUnitTest ();
         cIpAddress::unitTest ();
         cMacAddress::unitTest ();
-        Converter::unitTest ();
         cTimeval::unitTest ();
         cCmdline::unitTest ();
         cInetChecksum::unitTest();
