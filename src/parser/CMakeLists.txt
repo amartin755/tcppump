@@ -22,6 +22,7 @@ set (SOURCES
      ${SOURCES}
      ${CMAKE_CURRENT_SOURCE_DIR}/instructionparser.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/fileparser.cpp
+     ${CMAKE_CURRENT_SOURCE_DIR}/parameterlist.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/parsehelper.cpp
      PARENT_SCOPE
 )

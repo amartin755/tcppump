@@ -23,7 +23,6 @@ set (SOURCES
      ${CMAKE_CURRENT_SOURCE_DIR}/console.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/converter.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/dissector.cpp
-     ${CMAKE_CURRENT_SOURCE_DIR}/parameterlist.cpp
      PARENT_SCOPE
 )
 set (INCLUDES
