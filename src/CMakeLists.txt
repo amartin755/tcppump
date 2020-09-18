@@ -40,7 +40,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # warning level
 if (MSVC)
     add_compile_options (/W3 /wd5208)
-    add_compile_options (
 else()
     add_compile_options (-Wall -Wextra)
 endif()
