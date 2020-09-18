@@ -118,6 +118,6 @@ uint32_t cUdpPacket::csum () const
 
 void cUdpPacket::unitTest ()
 {
-    nn::Console::PrintDebug("-- " __FILE__ " --\n");
+    Console::PrintDebug("-- " __FILE__ " --\n");
 }
 #endif

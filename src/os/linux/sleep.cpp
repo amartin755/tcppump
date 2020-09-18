@@ -124,7 +124,7 @@ static double measure (uint64_t us)
 
     deviation = (((double)elapsedUs.count() - (double)us) / (double)us) * 100.0;
 
-    ::nn::Console::PrintDebug ("measure %u = %.3f usec (error = %.1f%%)\n", (unsigned) us, (double)elapsedUs.count(), deviation);
+    ::Console::PrintDebug ("measure %u = %.3f usec (error = %.1f%%)\n", (unsigned) us, (double)elapsedUs.count(), deviation);
 
     return deviation;
 }

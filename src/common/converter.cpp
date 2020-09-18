@@ -27,8 +27,6 @@
 #include "inet.h"
 #include "converter.hpp"
 
-namespace nn
-{
 
 // the function will alloc a buffer. The caller has to free this buffer!
 uint8_t* Converter::hexStringToBin (const char* hexString, size_t* binLength)
@@ -101,7 +99,7 @@ bool Converter::hexStringToBin (const char* hexString, size_t hexStringLen, uint
 #ifdef WITH_UNITTESTS
 void Converter::unitTest ()
 {
-    nn::Console::PrintDebug("-- " __FILE__ " --\n");
+    Console::PrintDebug("-- " __FILE__ " --\n");
 
     size_t binLen;
     uint8_t* bin;
@@ -137,4 +135,3 @@ void Converter::unitTest ()
     binLen = 4;
 }
 #endif
-}

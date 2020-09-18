@@ -38,7 +38,6 @@
 #endif
 #include "parsehelper.hpp"
 
-using namespace nn;
 
 cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const char* description)
 : cCmdlineApp (name, brief, usage, description)

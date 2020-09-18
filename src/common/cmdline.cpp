@@ -66,7 +66,7 @@ bool cCmdline::parse (int* optind)
     char* pShort = shortopts;
     if (!shortopts)
     {
-        nn::Console::PrintError ("Not enough memory\n");
+        Console::PrintError ("Not enough memory\n");
         return false;
     }
 
@@ -75,7 +75,7 @@ bool cCmdline::parse (int* optind)
     if (!longopts)
     {
         delete[] shortopts;
-        nn::Console::PrintError ("Not enough memory\n");
+        Console::PrintError ("Not enough memory\n");
         return false;
     }
 
@@ -111,12 +111,12 @@ bool cCmdline::parse (int* optind)
     {
         if (result == '?')
         {
-            nn::Console::PrintError ("Unknown option `%s'.\n", opt.ind - 1 <= argc ? argv[opt.ind - 1] : "???");
+            Console::PrintError ("Unknown option `%s'.\n", opt.ind - 1 <= argc ? argv[opt.ind - 1] : "???");
             ret = false;
         }
         else if (result == ':')
         {
-            nn::Console::PrintError ("Option %s requires an argument.\n", opt.ind - 1 <= argc ? argv[opt.ind - 1] : "???");
+            Console::PrintError ("Option %s requires an argument.\n", opt.ind - 1 <= argc ? argv[opt.ind - 1] : "???");
             ret = false;
         }
         else
@@ -156,7 +156,7 @@ bool cCmdline::parse (int* optind)
         // check if all mandatory options are present
         if (enforceMandatoryOptions && !currOpt.optional && !currOpt.isSet)
         {
-            nn::Console::PrintError ("mandatory option -%c --%s not set\n", currOpt.shortname, currOpt.longname);
+            Console::PrintError ("mandatory option -%c --%s not set\n", currOpt.shortname, currOpt.longname);
             ret = false;
         }
 
@@ -182,26 +182,26 @@ void cCmdline::printOptions ()
     {
         if (options.at (n).shortname < NO_SHORTNAME)
         {
-            nn::Console::Print ("-%c ", options.at (n).shortname);
+            Console::Print ("-%c ", options.at (n).shortname);
             if (options.at (n).hasArg)
-                nn::Console::Print ("%s ", options.at (n).argname);
+                Console::Print ("%s ", options.at (n).argname);
         }
         if (options.at (n).longname)
         {
-            nn::Console::Print ("--%s", options.at (n).longname);
+            Console::Print ("--%s", options.at (n).longname);
             if (options.at (n).hasArg)
             {
                 if (options.at (n).hasOptionalArg)
-                    nn::Console::Print ("[=%s] ", options.at (n).argname);
+                    Console::Print ("[=%s] ", options.at (n).argname);
                 else
-                    nn::Console::Print ("=%s ", options.at (n).argname);
+                    Console::Print ("=%s ", options.at (n).argname);
             }
 
-            nn::Console::Print ("\n\t");
+            Console::Print ("\n\t");
         }
         if (options.at (n).description)
-            nn::Console::Print ("%s", options.at (n).description);
-        nn::Console::Print ("\n");
+            Console::Print ("%s", options.at (n).description);
+        Console::Print ("\n");
     }
 }
 
@@ -258,7 +258,7 @@ int cCmdline::findOption (int shortname)
 #ifdef WITH_UNITTESTS
 void cCmdline::unitTest ()
 {
-    nn::Console::PrintDebug("-- " __FILE__ " --\n");
+    Console::PrintDebug("-- " __FILE__ " --\n");
 
     // parsing rules:
     // - short options without args -a -b -c == -abc

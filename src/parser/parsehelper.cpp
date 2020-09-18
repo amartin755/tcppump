@@ -124,7 +124,7 @@ uint8_t* cParseHelper::hexStringToBin (const char* hexString, size_t hexStringLe
 
 void cParseHelper::unitTest ()
 {
-    nn::Console::PrintDebug("-- " __FILE__ " --\n");
+    Console::PrintDebug("-- " __FILE__ " --\n");
 
     size_t binLen;
     uint8_t* bin;

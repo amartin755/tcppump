@@ -63,7 +63,7 @@ bool cPcapFileIO::open (const char* path, bool write)
             dumper = pcap_dump_open (fileHandle, path);
             if (!dumper)
             {
-                nn::Console::PrintError ("Unable to open the file %s.\n", path);
+                Console::PrintError ("Unable to open the file %s.\n", path);
                 printError (pcap_geterr (fileHandle));
                 pcap_close (fileHandle);
                 fileHandle = NULL;
@@ -75,7 +75,7 @@ bool cPcapFileIO::open (const char* path, bool write)
 
     if (!fileHandle)
     {
-        nn::Console::PrintError ("Unable to open the file %s.\n", path);
+        Console::PrintError ("Unable to open the file %s.\n", path);
         printError (errbuf);
 
         return false;
@@ -118,7 +118,7 @@ bool cPcapFileIO::read (struct pcap_pkthdr **header, const u_char **data)
 
         if (fileError)
         {
-            nn::Console::PrintError ("Could not read file %s.\n", path);
+            Console::PrintError ("Could not read file %s.\n", path);
             printError (pcap_geterr (fileHandle));
         }
         if (offset.isNull ())
@@ -172,7 +172,7 @@ bool cPcapFileIO::write (const cTimeval& timestamp, const uint8_t* frame, int le
         fileError = ferror (pcap_dump_file (dumper));
         if (fileError)
         {
-            nn::Console::PrintError ("Could not write file %s.\n", path);
+            Console::PrintError ("Could not write file %s.\n", path);
         }
     }
     return !fileError;
@@ -181,7 +181,7 @@ bool cPcapFileIO::write (const cTimeval& timestamp, const uint8_t* frame, int le
 // FIXME same code as in cPcap!
 void cPcapFileIO::printError (const char* err)
 {
-    nn::Console::PrintError ("pcap error: %s\n", err);
+    Console::PrintError ("pcap error: %s\n", err);
 }
 
 #ifdef WITH_UNITTESTS
@@ -190,7 +190,7 @@ void cPcapFileIO::printError (const char* err)
 #include "converter.hpp"
 void cPcapFileIO::unitTest (const char* file)
 {
-    nn::Console::PrintDebug("-- " __FILE__ " --\n");
+    Console::PrintDebug("-- " __FILE__ " --\n");
 
     cPcapFileIO obj;
 
@@ -235,7 +235,7 @@ void cPcapFileIO::unitTest (const char* file)
 
     for (unsigned n = 0; n < sizeof (indata) / sizeof (indata[0]); n++)
     {
-        indata[n].bin = nn::Converter::hexStringToBin (indata[n].txt, &indata[n].binlen);
+        indata[n].bin = Converter::hexStringToBin (indata[n].txt, &indata[n].binlen);
         BUG_ON (indata[n].bin);
     }
 

@@ -59,7 +59,7 @@ bool cInterface::open ()
     PIP_ADAPTER_ADDRESSES adapter = getAdapterInfo ();
     if (!adapter)
     {
-        nn::Console::PrintError ("Unknown network interface '%s'\n", name.c_str());
+        Console::PrintError ("Unknown network interface '%s'\n", name.c_str());
         return false;
     }
 
@@ -72,8 +72,8 @@ bool cInterface::open ()
 
     if (!ifcHandle)
     {
-        nn::Console::PrintError ("Unable to open the network interface. %s(%s) is not supported by WinPcap\n", name.c_str(), pcapIfName.c_str());
-        nn::Console::PrintError ("pcap error: %s\n", errbuf);
+        Console::PrintError ("Unable to open the network interface. %s(%s) is not supported by WinPcap\n", name.c_str(), pcapIfName.c_str());
+        Console::PrintError ("pcap error: %s\n", errbuf);
     }
 
     return ifcHandle != NULL;
@@ -101,7 +101,7 @@ bool cInterface::sendPacket (const uint8_t* payload, size_t length) const
     int ret = pcap_sendpacket (ifcHandle, (u_char*)payload, (int)length);
 
     if (ret == -1)
-        nn::Console::PrintError ("pcap error: %s\n", pcap_geterr (ifcHandle));
+        Console::PrintError ("pcap error: %s\n", pcap_geterr (ifcHandle));
 
     return ret == 0;
 }
@@ -151,14 +151,14 @@ PIP_ADAPTER_ADDRESSES cInterface::getAdapterAddresses ()
     ret = GetAdaptersAddresses (AF_UNSPEC, 0, NULL, NULL, &size);
     if (!size)
     {
-        nn::Console::PrintError ("Could not determine size of adapter data\n");
+        Console::PrintError ("Could not determine size of adapter data\n");
     }
     else
     {
         addresses = (IP_ADAPTER_ADDRESSES *)malloc (size);
         if (!addresses)
         {
-            nn::Console::PrintError ("Not enough memory\n");
+            Console::PrintError ("Not enough memory\n");
         }
         else
         {
@@ -167,7 +167,7 @@ PIP_ADAPTER_ADDRESSES cInterface::getAdapterAddresses ()
             ret = GetAdaptersAddresses (AF_UNSPEC, 0, NULL, addresses, &size);
             if (ret != NO_ERROR)
             {
-                nn::Console::PrintError ("Call to GetAdaptersAddresses failed with error\n");
+                Console::PrintError ("Call to GetAdaptersAddresses failed with error\n");
                 free (addresses);
                 addresses = NULL;
             }

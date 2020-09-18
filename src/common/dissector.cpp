@@ -27,8 +27,6 @@
 #include "ipv4packet.hpp"
 
 
-using namespace nn;
-
 cDissector::cDissector (const cEthernetPacket& p)
     : packet (p.get()), packetLength(p.getLength())
 {
@@ -53,7 +51,7 @@ bool cDissector::dissect () const
             throw "Packet too short (< 14 bytes)";
         }
         // first, we print the mac header
-        nn::Console::Print("%02x:%02x:%02x:%02x:%02x:%02x > %02x:%02x:%02x:%02x:%02x:%02x (packet length %d)\n  ",
+        Console::Print("%02x:%02x:%02x:%02x:%02x:%02x > %02x:%02x:%02x:%02x:%02x:%02x (packet length %d)\n  ",
                 header->src.mac[0], header->src.mac[1], header->src.mac[2], header->src.mac[3], header->src.mac[4], header->src.mac[5],
                 header->dest.mac[0], header->dest.mac[1], header->dest.mac[2], header->dest.mac[3], header->dest.mac[4], header->dest.mac[5],
                 packetLength);
@@ -87,16 +85,16 @@ bool cDissector::dissect () const
     }
     catch (const char *malformed)    // malformed packet?
     {
-        nn::Console::Print ("%s\n  ", malformed);
+        Console::Print ("%s\n  ", malformed);
         ok = false;
     }
     catch (...)
     {
         BUG_ON ("???" == 0);
     }
-    nn::Console::Print("\n");
+    Console::Print("\n");
     dump (packet, packetLength);
-    nn::Console::PrintVerbose("\n");
+    Console::PrintVerbose("\n");
 
     return ok;
 }
@@ -108,11 +106,11 @@ const void* cDissector::dissectVLAN (const void * pTypeLength) const
 
     if (!tag->isVlan()) return pTypeLength;
 
-    tag->isCVlan() ? nn::Console::Print ("C-VLAN ") : nn::Console::Print ("P-VLAN ");
+    tag->isCVlan() ? Console::Print ("C-VLAN ") : Console::Print ("P-VLAN ");
 
     if (isWithinPacket (tag + 1, sizeof (tag->tpid)))
     {
-        nn::Console::Print ("id %u, prio %u, DEI %u\n  ", tag->getId(), tag->getPrio(), tag->getDEI());
+        Console::Print ("id %u, prio %u, DEI %u\n  ", tag->getId(), tag->getPrio(), tag->getDEI());
         return dissectVLAN (tag + 1);
     }
 
@@ -129,7 +127,7 @@ const void* cDissector::dissectLLC (const void * pTypeLength) const
         return pTypeLength;
 
 
-    nn::Console::Print("LLC (length %d) ", typeLength);
+    Console::Print("LLC (length %d) ", typeLength);
 
 
     size_t payloadLen = packetLength - ((uint8_t*)((uint16_t*)pTypeLength + 1) - packet);
@@ -143,17 +141,17 @@ const void* cDissector::dissectLLC (const void * pTypeLength) const
     {
         size_t llcHeaderLength;
         llc_t* llc = (llc_t*)((uint16_t*)pTypeLength + 1);
-        nn::Console::Print("DSAP 0x%02x, SSAP 0x%02x, ", llc->dsap, llc->ssap);
+        Console::Print("DSAP 0x%02x, SSAP 0x%02x, ", llc->dsap, llc->ssap);
         if ((llc->control.c8 & 0x03) == 3)
         {
             llcHeaderLength = sizeof (llc_t) - 1;
-            nn::Console::Print("Control 0x%02x\n  ", llc->control.c8);
+            Console::Print("Control 0x%02x\n  ", llc->control.c8);
         }
         else
         {
             llcHeaderLength = sizeof (llc_t);
             if (payloadLen >= llcHeaderLength)
-                nn::Console::Print("Control 0x%04x\n  ", ntohs(llc->control.c16));
+                Console::Print("Control 0x%04x\n  ", ntohs(llc->control.c16));
             else
                 throw "malformed packet";
         }
@@ -164,7 +162,7 @@ const void* cDissector::dissectLLC (const void * pTypeLength) const
             snap_t* snap = (snap_t*)((uint8_t*)llc + llcHeaderLength);
             if (payloadLen >= (llcHeaderLength + sizeof(snap_t)))
             {
-                nn::Console::Print("SNAP OUI 0x%02x%02x%02x protocol 0x%04x\n  ", snap->oui.a, snap->oui.b, snap->oui.c, ntohs(snap->protocol));
+                Console::Print("SNAP OUI 0x%02x%02x%02x protocol 0x%04x\n  ", snap->oui.a, snap->oui.b, snap->oui.c, ntohs(snap->protocol));
                 return &snap->protocol;
             }
             else
@@ -181,7 +179,7 @@ const void* cDissector::dissectLLC (const void * pTypeLength) const
 
 const void* cDissector::dissectARP (const void * p) const
 {
-    nn::Console::Print("ARP\n  ");
+    Console::Print("ARP\n  ");
     return p;
 }
 
@@ -189,7 +187,7 @@ const void* cDissector::dissectARP (const void * p) const
 const void* cDissector::dissectIPv4 (const void * p) const
 {
     //FIXME only a hack to show at least the ip addresses and L4 protocol
-    nn::Console::Print("IPv4 ");
+    Console::Print("IPv4 ");
 
     const ipv4_header_t* header = (const ipv4_header_t*)p;
 
@@ -234,7 +232,7 @@ const void* cDissector::dissectIPv4 (const void * p) const
 
 const void* cDissector::dissectPN (const void * p) const
 {
-    nn::Console::Print("PN\n  ");
+    Console::Print("PN\n  ");
     return p;
 }
 

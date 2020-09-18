@@ -59,7 +59,7 @@ public:
 
         if (!parseOk)
         {
-            nn::Console::PrintError ("try %s -h\n", argv[0]);
+            Console::PrintError ("try %s -h\n", argv[0]);
             return -1;
         }
 
@@ -72,16 +72,16 @@ protected:
     {
         const char* version = "";
         version = " V" APP_VERSION;
-        nn::Console::Print ("\n%s%s - %s\n\nUsage: %s\n\nOptions:\n", name, version, brief, usage);
+        Console::Print ("\n%s%s - %s\n\nUsage: %s\n\nOptions:\n", name, version, brief, usage);
         cmdline.printOptions ();
-        nn::Console::Print ("\n%s\n\n", description);
+        Console::Print ("\n%s\n\n", description);
     }
     void printVersion ()
     {
         const char* version = APP_VERSION;
-        nn::Console::Print ("%s version %s (%s)\n", name, version, BUILD_TIME);
+        Console::Print ("%s version %s (%s)\n", name, version, BUILD_TIME);
 #ifdef GIT_COMMIT
-        nn::Console::Print ("build: %s-%s (%s)\n", GIT_BRANCH, GIT_COMMIT, BUILD_TYPE);
+        Console::Print ("build: %s-%s (%s)\n", GIT_BRANCH, GIT_COMMIT, BUILD_TYPE);
 #endif
     }
 

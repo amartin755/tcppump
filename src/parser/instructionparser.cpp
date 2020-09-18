@@ -559,7 +559,7 @@ static const testcase_t tests[] = {
 
 void cInstructionParser::unitTest ()
 {
-    nn::Console::PrintDebug("-- " __FILE__ " --\n");
+    Console::PrintDebug("-- " __FILE__ " --\n");
     {
         const char s[] = "  abc \tde_0f  ghi";
         const char* p = nullptr;
@@ -862,7 +862,7 @@ void cInstructionParser::unitTest ()
 
     for (unsigned n = 0; n < sizeof(tests)/sizeof(tests[0]); n++)
     {
-        nn::Console::PrintDebug("packet %d", n);
+        Console::PrintDebug("packet %d", n);
         cInstructionParser obj (ownMac, ownIPv4);
         BUG_ON (1 == obj.parse (tests[n].tokens, timestamp, isAbsolute, packets));
         BUG_ON (packets.size () == n + 1);
@@ -878,7 +878,7 @@ void cInstructionParser::unitTest ()
             printf ("\n");
         }
         BUG_ON (!memcmp (packets.back().get(), tests[n].packet, tests[n].packetSize));
-        nn::Console::PrintDebug("\r");
+        Console::PrintDebug("\r");
     }
 }
 #endif /*WITH_UNITTESTS*/

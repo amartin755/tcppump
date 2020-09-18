@@ -23,21 +23,16 @@
 #include <cstdint>
 #include <cstddef>    // size_t
 
-namespace nn
+
+class Converter
 {
-
-    // FIXME MAC and IP address converters should be moved to cMacAddress and cIpAddress!
-
-    class Converter
-    {
-    public:
-        static uint8_t* hexStringToBin (const char* hexString, size_t* binLength);
-        static bool hexStringToBin (const char* hexString, size_t hexStringLen, uint8_t* bin, size_t* binLength);
+public:
+    static uint8_t* hexStringToBin (const char* hexString, size_t* binLength);
+    static bool hexStringToBin (const char* hexString, size_t hexStringLen, uint8_t* bin, size_t* binLength);
 
 #ifdef WITH_UNITTESTS
-        static void unitTest ();
+    static void unitTest ();
 #endif
-    };
+};
 
-}
 #endif /* TOOLS_HPP_ */

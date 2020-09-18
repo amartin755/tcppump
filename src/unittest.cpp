@@ -50,14 +50,14 @@ int main (void)
         }
 #endif
 
-    nn::Console::SetPrintLevel(nn::Console::Debug);
+    Console::SetPrintLevel(Console::Debug);
     try
     {
         tcppump::SleepInit ();
         tcppump::SleepUnitTest ();
         cIpAddress::unitTest ();
         cMacAddress::unitTest ();
-        nn::Converter::unitTest ();
+        Converter::unitTest ();
         cTimeval::unitTest ();
         cCmdline::unitTest ();
         cInetChecksum::unitTest();

@@ -23,90 +23,86 @@
 #include "bugon.h"
 #include "console.hpp"
 
-namespace nn
+Console::out_level Console::level = Normal;
+
+void Console::SetPrintLevel (out_level lvl)
 {
-    Console::out_level Console::level = Normal;
+    BUG_ON ((lvl >= Silent) && (lvl <= Debug));
+    level = lvl;
+}
 
-    void Console::SetPrintLevel (out_level lvl)
-    {
-        BUG_ON ((lvl >= Silent) && (lvl <= Debug));
-        level = lvl;
-    }
+bool Console::PrintError (const char* format, ...)
+{
+    bool ret;
+    va_list args;
+    va_start (args, format);
 
-    bool Console::PrintError (const char* format, ...)
-    {
-        bool ret;
-        va_list args;
-        va_start (args, format);
+    ret = Console::print (Console::Error, format, args);
 
-        ret = Console::print (Console::Error, format, args);
+    va_end (args);
+    return ret;
+}
+bool Console::Print (const char* format, ...)
+{
+    bool ret;
+    va_list args;
+    va_start (args, format);
 
-        va_end (args);
-        return ret;
-    }
-    bool Console::Print (const char* format, ...)
-    {
-        bool ret;
-        va_list args;
-        va_start (args, format);
+    ret = Console::print (Console::Normal, format, args);
 
-        ret = Console::print (Console::Normal, format, args);
+    va_end (args);
+    return ret;
+}
+bool Console::PrintVerbose (const char* format, ...)
+{
+    bool ret;
+    va_list args;
+    va_start (args, format);
 
-        va_end (args);
-        return ret;
-    }
-    bool Console::PrintVerbose (const char* format, ...)
-    {
-        bool ret;
-        va_list args;
-        va_start (args, format);
+    ret = Console::print (Console::Verbose, format, args);
 
-        ret = Console::print (Console::Verbose, format, args);
+    va_end (args);
+    return ret;
+}
+bool Console::PrintMoreVerbose (const char* format, ...)
+{
+    bool ret;
+    va_list args;
+    va_start (args, format);
 
-        va_end (args);
-        return ret;
-    }
-    bool Console::PrintMoreVerbose (const char* format, ...)
-    {
-        bool ret;
-        va_list args;
-        va_start (args, format);
+    ret = Console::print (Console::MoreVerbose, format, args);
 
-        ret = Console::print (Console::MoreVerbose, format, args);
+    va_end (args);
+    return ret;
+}
+bool Console::PrintMostVerbose (const char* format, ...)
+{
+    bool ret;
+    va_list args;
+    va_start (args, format);
 
-        va_end (args);
-        return ret;
-    }
-    bool Console::PrintMostVerbose (const char* format, ...)
-    {
-        bool ret;
-        va_list args;
-        va_start (args, format);
+    ret = Console::print (Console::MostVerbose, format, args);
 
-        ret = Console::print (Console::MostVerbose, format, args);
+    va_end (args);
+    return ret;
+}
+bool Console::PrintDebug (const char* format, ...)
+{
+    bool ret;
+    va_list args;
+    va_start (args, format);
 
-        va_end (args);
-        return ret;
-    }
-    bool Console::PrintDebug (const char* format, ...)
-    {
-        bool ret;
-        va_list args;
-        va_start (args, format);
+    ret = Console::print (Console::Debug, format, args);
 
-        ret = Console::print (Console::Debug, format, args);
+    va_end (args);
+    return ret;
+}
 
-        va_end (args);
-        return ret;
-    }
+bool Console::print (out_level lvl, const char* format, va_list ap)
+{
+    if (lvl > level)
+        return false;
 
-    bool Console::print (out_level lvl, const char* format, va_list ap)
-    {
-        if (lvl > level)
-            return false;
-
-         // we always print to stderr to be able to separate piped in/output from console prints
-         return vfprintf (stderr, format, ap) >= 0;
-    }
-
+     // we always print to stderr to be able to separate piped in/output from console prints
+     return vfprintf (stderr, format, ap) >= 0;
 }

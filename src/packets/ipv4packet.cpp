@@ -154,7 +154,7 @@ void cIPv4Packet::updateHeaderChecksum ()
 
 void cIPv4Packet::unitTest ()
 {
-    nn::Console::PrintDebug("-- " __FILE__ " --\n");
+    Console::PrintDebug("-- " __FILE__ " --\n");
 
     // FIXME unit tests!
 }

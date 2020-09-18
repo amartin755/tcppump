@@ -56,13 +56,13 @@ bool cInterface::open ()
     ifIndex = if_nametoindex (name.c_str ());
     if (!ifIndex)
     {
-        nn::Console::PrintError ("Unknown interface %s\n", name.c_str());
+        Console::PrintError ("Unknown interface %s\n", name.c_str());
         close ();
     }
     errno = 0;
     if ((ifcHandle = socket (PF_PACKET, SOCK_RAW, htons (ETH_P_ALL))) < 0)
     {
-        nn::Console::PrintError ("Unable to open raw socket. %s.\n", strerror(errno));
+        Console::PrintError ("Unable to open raw socket. %s.\n", strerror(errno));
         ifIndex = 0;
     }
     getMAC (myMac);
@@ -70,7 +70,7 @@ bool cInterface::open ()
 
     std::string macAsString;
     myMac.get(macAsString);
-    nn::Console::PrintDebug ("Successfully openend %s mac=%s\n", macAsString.c_str());
+    Console::PrintDebug ("Successfully openend %s mac=%s\n", macAsString.c_str());
 
     return (ifcHandle != -1);
 }
@@ -103,11 +103,11 @@ bool cInterface::sendPacket (const uint8_t* payload, size_t length) const
     errno = 0;
     if (sendto (ifcHandle, payload, length, 0, (struct sockaddr *) &device, sizeof (device)) != (ssize_t)length)
     {
-        nn::Console::PrintError ("error: %s\n", strerror (errno));
+        Console::PrintError ("error: %s\n", strerror (errno));
         return false;
     }
 
-    nn::Console::PrintDebug ("sent %zu bytes\n", length);
+    Console::PrintDebug ("sent %zu bytes\n", length);
 
     return true;
 }
@@ -122,7 +122,7 @@ bool cInterface::getMAC (cMacAddress &mac)
         errno = 0;
         if ((s = socket (AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0)
         {
-            nn::Console::PrintError ("error: %s\n", strerror (errno));
+            Console::PrintError ("error: %s\n", strerror (errno));
             return false;
         }
 
@@ -132,7 +132,7 @@ bool cInterface::getMAC (cMacAddress &mac)
         snprintf (ifr.ifr_name, sizeof (ifr.ifr_name), "%s", name.c_str());
         if (ioctl (s, SIOCGIFHWADDR, &ifr) < 0)
         {
-            nn::Console::PrintError ("error: %s\n", strerror (errno));
+            Console::PrintError ("error: %s\n", strerror (errno));
             return false;
            }
 
@@ -161,7 +161,7 @@ bool cInterface::getIPv4 (cIpAddress &ip)
         errno = 0;
         if ((s = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
         {
-            nn::Console::PrintError ("error: %s\n", strerror (errno));
+            Console::PrintError ("error: %s\n", strerror (errno));
             return false;
         }
 
@@ -172,7 +172,7 @@ bool cInterface::getIPv4 (cIpAddress &ip)
         snprintf (ifr.ifr_name, sizeof (ifr.ifr_name), "%s", name.c_str());
         if (ioctl (s, SIOCGIFADDR, &ifr) < 0)
         {
-            nn::Console::PrintError ("error: %s\n", strerror (errno));
+            Console::PrintError ("error: %s\n", strerror (errno));
             return false;
            }
 

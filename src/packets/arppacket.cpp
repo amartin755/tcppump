@@ -67,7 +67,7 @@ void cArpPacket::setAll (uint16_t opcode, const cMacAddress& srcMac, const cIpAd
 #include "console.hpp"
 void cArpPacket::unitTest ()
 {
-    nn::Console::PrintDebug("-- " __FILE__ " --\n");
+    Console::PrintDebug("-- " __FILE__ " --\n");
 
 }
 #endif

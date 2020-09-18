@@ -280,7 +280,7 @@ void cEthernetPacket::updatePayloadAt (unsigned offset, const void* payload, siz
 
 void cEthernetPacket::unitTest ()
 {
-    nn::Console::PrintDebug("-- " __FILE__ " --\n");
+    Console::PrintDebug("-- " __FILE__ " --\n");
 
     cMacAddress src("12:34:56:78:9a:bc");
     cMacAddress dst("11:22:33:44:55:66");
