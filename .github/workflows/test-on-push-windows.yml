@@ -26,17 +26,16 @@ jobs:
       # install libpcap and its development files
       run: Invoke-WebRequest -Uri "https://nmap.org/dist/nmap-7.12-setup.exe" -OutFile "nmap.exe"; Start-Process -Filepath "nmap.exe" -ArgumentList /S
 
-    - name: Install Dependencies
-      # install libpcap and its development files
+#    - name: Install Dependencies
+#      # install libpcap and its development files
 #      run: vcpkg install winpcap:x64-windows
-      run: ls "c:/windows/System32/drivers"
       
     - name: Configure CMake
       # Use a bash shell so we can use the same syntax for environment variable
       # access regardless of the host operating system
       shell: bash
       working-directory: ${{runner.workspace}}/tcppump
-      run: cmake -S src -B build -DWITH_UNITTESTS=1 -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DPCAP_INCLUDE_DIR=C:/vcpkg/packages/winpcap_x64-windows/include/ -DPCAP_LIBRARY=C:/vcpkg/packages/winpcap_x64-windows/lib/ -DTEST_NET_ADAPTER=Ethernet
+      run: cmake -S src -B build -DWITH_UNITTESTS=1 -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DTEST_NET_ADAPTER=Ethernet
 
     - name: Build
       working-directory: ${{runner.workspace}}/tcppump
@@ -44,10 +43,10 @@ jobs:
       # Execute the build.  You can specify a specific target with "--target <NAME>"
       run: cmake --build build --config $BUILD_TYPE
 
-    - name: Prepare Test Environment
-      working-directory: ${{runner.workspace}}/tcppump/bin
-      shell: bash
-      run: cp C:/vcpkg/packages/winpcap_x64-windows/bin/*.dll .
+#    - name: Prepare Test Environment
+#      working-directory: ${{runner.workspace}}/tcppump/bin
+#      shell: bash
+#      run: cp C:/vcpkg/packages/winpcap_x64-windows/bin/*.dll .
       
     - name: Execute Unit Tests
       working-directory: ${{runner.workspace}}/tcppump/bin
