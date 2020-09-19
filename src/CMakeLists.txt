@@ -77,7 +77,7 @@ if (NOT PCAP_LIBRARY)
     if(CMAKE_SIZEOF_VOID_P EQUAL 8)
         # 64 bits
         set (PCAPDIR ${PROJECT_SOURCE_DIR}/../libpcap/lib/x64)
-    else
+    else ()
         # 32 bits
         set (PCAPDIR ${PROJECT_SOURCE_DIR}/../libpcap/lib)
     endif()
