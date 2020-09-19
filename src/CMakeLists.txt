@@ -74,7 +74,13 @@ if (NOT PCAP_INCLUDE_DIR)
     find_path (PCAP_INCLUDE_DIR NAMES pcap/pcap.h pcap.h PATHS ${PCAPDIR})
 endif ()
 if (NOT PCAP_LIBRARY)
-    set (PCAPDIR ${PROJECT_SOURCE_DIR}/../libpcap/lib)
+    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+        # 64 bits
+        set (PCAPDIR ${PROJECT_SOURCE_DIR}/../libpcap/lib/x64)
+    else
+        # 32 bits
+        set (PCAPDIR ${PROJECT_SOURCE_DIR}/../libpcap/lib)
+    endif()
 else ()
     set (PCAPDIR ${PCAP_LIBRARY})
     unset (PCAP_LIBRARY CACHE)
