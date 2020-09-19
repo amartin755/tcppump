@@ -305,6 +305,9 @@ add_test(NAME no-params--nok COMMAND tcppump WORKING_DIRECTORY ${CMAKE_RUNTIME_O
 set_tests_properties(no-params--nok PROPERTIES WILL_FAIL TRUE)
 
 add_test(NAME show-usage--ok COMMAND tcppump -h WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME show-version--ok COMMAND tcppump --version WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME show-version-output--ok COMMAND tcppump --version WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+set_tests_properties(show-version-output--ok PROPERTIES PASS_REGULAR_EXPRESSION "version ${PROJECT_VERSION}")
 
 add_test(NAME raw-1--ok COMMAND tcppump ${DEFAULT_PARAMS} -r "0123456789abcdef0123456789abcdef" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 add_test(NAME raw-1--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/raw-01.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
