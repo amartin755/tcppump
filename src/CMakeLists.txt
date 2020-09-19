@@ -49,6 +49,18 @@ if (MINGW)
     add_link_options (-static-libgcc -static-libstdc++)
 endif ()
 
+# download dependencies
+###############################################################################
+if (WIN32)
+    include (cmake/download.cmake)
+    download_file(https://www.winpcap.org/install/bin/WpdPack_4_1_2.zip ./winpcap.zip
+       SHA1 f5c80885bd48f07f41833d0f65bf85da1ef1727a)
+    execute_process (COMMAND ${CMAKE_COMMAND} -E tar xzf ./winpcap.zip WORKING_DIRECTORY .)
+    execute_process (COMMAND ${CMAKE_COMMAND} -E copy_directory ./WpdPack/Lib ${PROJECT_SOURCE_DIR}/../libpcap/lib)
+    execute_process (COMMAND ${CMAKE_COMMAND} -E copy_directory ./WpdPack/Include ${PROJECT_SOURCE_DIR}/../libpcap/include)
+    execute_process (COMMAND ${CMAKE_COMMAND} -E remove_directory ./WpdPack)
+endif ()
+
 # check dependencies
 ###############################################################################
 include (CheckLibraryExists)
