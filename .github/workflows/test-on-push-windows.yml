@@ -29,7 +29,7 @@ jobs:
     - name: Install Dependencies
       # install libpcap and its development files
 #      run: vcpkg install winpcap:x64-windows
-      run: ls "c:\program*"
+      run: ls "c:\Program Files (x86)"; ls "c:\Program Files"
       
     - name: Configure CMake
       # Use a bash shell so we can use the same syntax for environment variable
