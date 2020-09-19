@@ -25,7 +25,7 @@ jobs:
     - name: Install Dependencies
       # install libpcap and its development files
 #      run: vcpkg install winpcap:x64-windows
-      run: wget https://nmap.org/dist/nmap-7.12-setup.exe -OutFile nmap.exe; nmap.exe /S
+      run: Invoke-WebRequest -Uri "https://nmap.org/dist/nmap-7.12-setup.exe" -OutFile "nmap.exe"; nmap.exe /S
 
     - name: Configure CMake
       # Use a bash shell so we can use the same syntax for environment variable
