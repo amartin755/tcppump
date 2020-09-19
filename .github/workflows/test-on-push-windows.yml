@@ -22,11 +22,14 @@ jobs:
       with:
         ref: ${{ github.ref }}
 
+    - name: Install winpcap
+      # install libpcap and its development files
+      run: Invoke-WebRequest -Uri "https://nmap.org/dist/nmap-7.12-setup.exe" -OutFile "nmap.exe"; Start-Process -Filepath "nmap.exe" -ArgumentList /S
+
     - name: Install Dependencies
       # install libpcap and its development files
-#      run: vcpkg install winpcap:x64-windows
-      run: Invoke-WebRequest -Uri "https://nmap.org/dist/nmap-7.12-setup.exe" -OutFile "nmap.exe"; Start-Process -Filepath "nmap2.exe" -ArgumentList /S
-
+      run: vcpkg install winpcap:x64-windows
+      
     - name: Configure CMake
       # Use a bash shell so we can use the same syntax for environment variable
       # access regardless of the host operating system
@@ -52,12 +55,12 @@ jobs:
       run: ./unittest
 
 # always fails because of missing installed winpcap
-#    - name: Test
-#      working-directory: ${{runner.workspace}}/tcppump/build
-#      shell: bash
+    - name: Test
+      working-directory: ${{runner.workspace}}/tcppump/build
+      shell: bash
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-#      run: ctest -C $BUILD_TYPE
+      run: ctest
       
     - uses: actions/upload-artifact@v2
       with: 
