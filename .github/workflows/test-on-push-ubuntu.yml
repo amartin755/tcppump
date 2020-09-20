@@ -23,7 +23,7 @@ jobs:
 
     - name: Install Dependencies
       # install libpcap and its development files
-      run: sudo apt-get --assume-yes install libpcap-dev
+      run: sudo apt-get --assume-yes install libpcap-dev; ip addr
 
     - name: Configure CMake
       # Use a bash shell so we can use the same syntax for environment variable
