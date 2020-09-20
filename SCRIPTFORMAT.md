@@ -331,3 +331,53 @@ NOTE: Optionally all vlan tag parameters and all optional ipv4 parameters (see a
     vrrp(vrid=42, vrip=1.2.3.4, type=3);
     # malformed vrrp packet (wrong checksum)
     vrrp(vrid=42, vrip=1.2.3.4, chksum=0x4321);
+
+
+### (Rapid) Spanning Tree Protocol (STP, RSTP)
+IEEE802.1D-2004
+
+#### Protocol Specifier
+
+    stp
+    rstp
+
+#### Parameters
+Source EUI-48 MAC Address. If ommited, address of the network interface is used
+
+    smac (optional)
+
+Root Bridge Priority (range 0 - 15, default 0)
+
+    rbprio (optional)
+
+Root Bridge System ID Extension (range 0 - 4095, default 0)
+
+    rbidext (optional)
+
+Root Bridge EUI-48 MAC Address. If ommited, address of the network interface is used
+
+    rbmac (optional)
+
+Root Path Cost (STP: range 2 - 250, default 4; RSTP: range 20 - 5000000, default 20000)
+
+    rpathcost (optional)
+
+Bridge Priority (range 0 - 15, default 0)
+
+    bprio (optional)
+
+Bridge System ID Extension (range 0 - 4095, default 0)
+
+    bidext (optional)
+
+Bridge EUI-48 MAC Address. If ommited, address of the network interface is used
+
+    bmac (optional)
+
+Port Priority (range 0 - 15, default 0)
+
+    pprio (optional)
+
+Port Number (range 1 - 4095, default 1)
+
+    pnum (optional)
