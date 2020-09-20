@@ -23,14 +23,14 @@ jobs:
 
     - name: Install Dependencies
       # install libpcap and its development files
-      run: sudo apt-get --assume-yes install libpcap-dev; ip addr
+      run: sudo apt-get --assume-yes install libpcap-dev
 
     - name: Configure CMake
       # Use a bash shell so we can use the same syntax for environment variable
       # access regardless of the host operating system
       shell: bash
       working-directory: ${{runner.workspace}}/tcppump
-      run: cmake -S src -B build -DWITH_UNITTESTS=1 -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DTEST_NET_ADAPTER=enp2s0
+      run: cmake -S src -B build -DWITH_UNITTESTS=1 -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DTEST_NET_ADAPTER=eth0
 
     - name: Build
       working-directory: ${{runner.workspace}}/tcppump
