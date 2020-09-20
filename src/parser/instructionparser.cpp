@@ -30,6 +30,7 @@
 #include "ipv4packet.hpp"
 #include "udppacket.hpp"
 #include "vrrppacket.hpp"
+#include "stppacket.hpp"
 #include "parsehelper.hpp"
 
 
@@ -83,6 +84,8 @@ int cInstructionParser::parse (const char* instruction, uint64_t& timestamp, boo
             return compileVRRP (params, packets, 2);
         if (!strncmp ("vrrp3", keyword, keywordLen))
             return compileVRRP (params, packets, 3);
+        if (!strncmp ("stp", keyword, keywordLen))
+            return compileSTP (params, packets);
 
         throw ParseException ("Unknown protocol type", keyword);
     }
@@ -382,6 +385,19 @@ int cInstructionParser::compileVRRP (cParameterList& params, std::list <cEtherne
     vrrp.compile (params.findParameter ("smac", ownMac)->asMac (), !userDefinedChecksum);
 
     return (int)vrrp.getAllEthernetPackets(packets);
+}
+
+
+int cInstructionParser::compileSTP (cParameterList& params, std::list <cEthernetPacket> &packets)
+{
+    cStpPacket  stp;
+
+    // compile VLAN tags
+    compileVLANTags (params, stp);
+    stp.compile (params.findParameter ("smac", ownMac)->asMac ());
+    packets.push_back (std::move(stp));
+
+    return 1; // one packet was added to the list
 }
 
 

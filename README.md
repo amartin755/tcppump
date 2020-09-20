@@ -21,7 +21,7 @@ Features
 Supported protocols and packet formats
 * Raw packets as bytestream
 * Ethernet II packets
-* IEEE802.3 (aka LLC) packets; including SNAP
+* IEEE802.3 packets, with IEEE802.2 header (aka LLC) including SNAP
 * VLAN tagging; including multiple tagging
 * ARP
 * Raw IPv4 (fragmentation is currently not supported)
