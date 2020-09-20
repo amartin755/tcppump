@@ -20,6 +20,7 @@
 #include <cctype>
 #include <cstring>
 #include <cerrno>
+#include <stdexcept>      // std::invalid_argument
 
 #include "bugon.h"
 #include "parameterlist.hpp"
@@ -100,9 +101,42 @@ uint16_t cParameter::asInt16 (uint16_t rangeBegin, uint16_t rangeEnd) const
 }
 
 
-uint8_t  cParameter::asInt8 (uint8_t  rangeBegin, uint8_t rangeEnd) const
+uint8_t cParameter::asInt8 (uint8_t  rangeBegin, uint8_t rangeEnd) const
 {
     return (uint8_t) asInt32 (rangeBegin, rangeEnd);
+}
+
+
+double cParameter::asDouble (double rangeBegin, double rangeEnd) const
+{
+    BUG_ON (rangeEnd >= rangeBegin);
+
+    size_t end;
+    double v = 0;
+
+    try
+    {
+        v = std::stod (value, &end);
+    }
+    catch (const std::out_of_range&)
+    {
+        throw FormatException (exParRange, value);
+    }
+    catch (...)
+    {
+        throw FormatException (exParFormat, value);
+    }
+
+    if (end != valLen)
+    {
+        throw FormatException (exParFormat, value);
+    }
+    else if ((v < rangeBegin) || (v > rangeEnd))
+    {
+        throw FormatException (exParRange, value);
+    }
+
+    return v;
 }
 
 
@@ -218,6 +252,21 @@ cParameter* cParameterList::findParameter (const cParameter* startAfter, const c
 }
 
 
+cParameter* cParameterList::findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, double optionalValue)
+{
+    cParameter* p = findParameter (startAfter, stopAt, parameter, true);
+    if (p)
+    {
+        return p;
+    }
+    else
+    {
+        defaultParameter.dbl = optionalValue;
+        return &defaultParameter;
+    }
+}
+
+
 cParameter* cParameterList::findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, const cMacAddress& optionalValue)
 {
     cParameter* p = findParameter (startAfter, stopAt, parameter, true);
@@ -249,6 +298,12 @@ cParameter* cParameterList::findParameter (const cParameter* startAfter, const c
 
 
 cParameter* cParameterList::findParameter (const char* parameter, uint32_t optionalValue)
+{
+    return findParameter (nullptr, nullptr, parameter, optionalValue);
+}
+
+
+cParameter* cParameterList::findParameter (const char* parameter, double optionalValue)
 {
     return findParameter (nullptr, nullptr, parameter, optionalValue);
 }
@@ -664,6 +719,69 @@ void cParameterList::unitTest ()
         {
             BUG_ON (0);
         }
+    }
+    {
+        cParameterList obj ("(good=0.1, good2=1, good3=1.0e3, bad=abcd, bad2=3.4., bad3=1.0e400)");
+        BUG_ON (obj.isValid ());
+        try
+        {
+            BUG_ON (obj.findParameter("good")->asDouble()  == 0.1);
+        }
+        catch (...)
+        {
+            BUG_ON (0);
+        }
+        try
+        {
+            BUG_ON (obj.findParameter("good2")->asDouble() == 1.0);
+        }
+        catch (...)
+        {
+            BUG_ON (0);
+        }
+        try
+        {
+            BUG_ON (obj.findParameter("good3")->asDouble() == 1000.0);
+        }
+        catch (...)
+        {
+            BUG_ON (0);
+        }
+        catched = false;
+        try
+        {
+            obj.findParameter("bad")->asDouble();
+        }
+        catch (FormatException& e)
+        {
+            catched = true;
+            BUG_ON (e.what () == exParFormat);
+            BUG_ON (e.value ());
+        }
+        BUG_ON (catched);
+        catched = false;
+        try
+        {
+            obj.findParameter("bad2")->asDouble();
+        }
+        catch (FormatException& e)
+        {
+            catched = true;
+            BUG_ON (e.what () == exParFormat);
+            BUG_ON (e.value ());
+        }
+        BUG_ON (catched);
+        try
+        {
+            obj.findParameter("bad3")->asDouble();
+        }
+        catch (FormatException& e)
+        {
+            catched = true;
+            BUG_ON (e.what () == exParRange);
+            BUG_ON (e.value ());
+        }
+        BUG_ON (catched);
     }
 
     // TODO fuzzing

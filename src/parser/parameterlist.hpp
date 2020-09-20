@@ -21,6 +21,7 @@
 #define PARAMETERLIST_HPP_
 
 #include <vector>
+#include <limits>
 
 #include "ipaddress.hpp"
 #include "macaddress.hpp"
@@ -37,6 +38,7 @@ public:
     virtual uint32_t    asInt32 (uint32_t rangeBegin = 0, uint32_t rangeEnd = 0xffffffff) const;
     virtual uint16_t    asInt16 (uint16_t rangeBegin = 0, uint16_t rangeEnd = 0xffff) const;
     virtual uint8_t     asInt8  (uint8_t  rangeBegin = 0, uint8_t rangeEnd = 0xff) const;
+    virtual double      asDouble(double rangeBegin = std::numeric_limits<double>::min(), double rangeEnd = std::numeric_limits<double>::max()) const;
     virtual cMacAddress asMac   () const;
     virtual const uint8_t* asStream   (size_t& len);
     virtual cIpAddress  asIPv4  () const;
@@ -64,6 +66,7 @@ public:
     virtual uint32_t    asInt32 (uint32_t, uint32_t) const {return int32;}
     virtual uint16_t    asInt16 (uint16_t, uint16_t) const {return (uint16_t)int32;}
     virtual uint8_t     asInt8  (uint8_t,  uint8_t) const {return (uint8_t)int32;}
+    virtual couble      asDouble(uint8_t,  uint8_t) const {return dbl;}
     virtual cMacAddress asMac   () const {return mac;}
     virtual const uint8_t* asStream   (size_t&)
     {
@@ -76,6 +79,7 @@ private:
     uint32_t    int32;
     cMacAddress mac;
     cIpAddress  ip;
+    double      dbl;
 };
 
 
@@ -88,9 +92,11 @@ public:
     cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, bool isOptional = false);
     cParameter* findParameter (const char* parameter, bool isOptional = false);
     cParameter* findParameter (const char* parameter, uint32_t optionalValue);
+    cParameter* findParameter (const char* parameter, double optionalValue);
     cParameter* findParameter (const char* parameter, const cMacAddress& optionalValue);
     cParameter* findParameter (const char* parameter, const cIpAddress& optionalValue);
     cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, uint32_t optionalValue);
+    cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, double optionalValue);
     cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, const cMacAddress& optionalValue);
     cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, const cIpAddress& optionalValue);
 
