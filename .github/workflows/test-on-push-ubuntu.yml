@@ -30,7 +30,7 @@ jobs:
       # access regardless of the host operating system
       shell: bash
       working-directory: ${{runner.workspace}}/tcppump
-      run: cmake -S src -B build -DWITH_UNITTESTS=1 -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+      run: cmake -S src -B build -DWITH_UNITTESTS=1 -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DTEST_NET_ADAPTER=enp2s0
 
     - name: Build
       working-directory: ${{runner.workspace}}/tcppump

@@ -22,14 +22,10 @@ jobs:
       with:
         ref: ${{ github.ref }}
 
-    - name: Install winpcap
-      # install libpcap and its development files
+    - name: Install Dependencies
+      # install winpcap, we use an old version of nmap which offers an silent installer and includes winpcap
       run: Invoke-WebRequest -Uri "https://nmap.org/dist/nmap-7.12-setup.exe" -OutFile "nmap.exe"; Start-Process -Filepath "nmap.exe" -ArgumentList /S
 
-#    - name: Install Dependencies
-#      # install libpcap and its development files
-#      run: vcpkg install winpcap:x64-windows
-      
     - name: Configure CMake
       # Use a bash shell so we can use the same syntax for environment variable
       # access regardless of the host operating system
@@ -43,18 +39,12 @@ jobs:
       # Execute the build.  You can specify a specific target with "--target <NAME>"
       run: cmake --build build --config $BUILD_TYPE
 
-#    - name: Prepare Test Environment
-#      working-directory: ${{runner.workspace}}/tcppump/bin
-#      shell: bash
-#      run: cp C:/vcpkg/packages/winpcap_x64-windows/bin/*.dll .
-      
     - name: Execute Unit Tests
       working-directory: ${{runner.workspace}}/tcppump/bin
       shell: bash
       # Execute unittest binary  
       run: ./unittest
 
-# always fails because of missing installed winpcap
     - name: Test
       working-directory: ${{runner.workspace}}/tcppump/build
       shell: bash
