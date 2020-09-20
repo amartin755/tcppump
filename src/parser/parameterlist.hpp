@@ -21,7 +21,7 @@
 #define PARAMETERLIST_HPP_
 
 #include <vector>
-#include <limits>
+#include <cfloat>
 
 #include "ipaddress.hpp"
 #include "macaddress.hpp"
@@ -38,7 +38,7 @@ public:
     virtual uint32_t    asInt32 (uint32_t rangeBegin = 0, uint32_t rangeEnd = 0xffffffff) const;
     virtual uint16_t    asInt16 (uint16_t rangeBegin = 0, uint16_t rangeEnd = 0xffff) const;
     virtual uint8_t     asInt8  (uint8_t  rangeBegin = 0, uint8_t rangeEnd = 0xff) const;
-    virtual double      asDouble(double rangeBegin = std::numeric_limits<double>::min(), double rangeEnd = std::numeric_limits<double>::max()) const;
+    virtual double      asDouble(double rangeBegin = DBL_MIN, double rangeEnd = DBL_MAX) const;
     virtual cMacAddress asMac   () const;
     virtual const uint8_t* asStream   (size_t& len);
     virtual cIpAddress  asIPv4  () const;
