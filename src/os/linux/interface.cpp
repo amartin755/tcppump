@@ -141,7 +141,7 @@ bool cInterface::getMAC (cMacAddress &mac)
 
         ::close (s);
 
-        if (ifr.ifr_hwaddr.sa_family != ARPHRD_ETHER)
+        if (ifr.ifr_hwaddr.sa_family != ARPHRD_ETHER && ifr.ifr_hwaddr.sa_family != ARPHRD_LOOPBACK)
             return false;
 
         // Copy source MAC address
