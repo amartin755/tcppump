@@ -73,6 +73,10 @@ public:
         return (ipv4.s_addr = inet_addr (ip)) != INADDR_NONE;
 #endif
     }
+    void clear ()
+    {
+        ipv4.s_addr = 0;
+    }
     struct in_addr get () const
     {
         return ipv4;

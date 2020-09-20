@@ -58,19 +58,21 @@ bool cInterface::open ()
     {
         Console::PrintError ("Unknown interface %s\n", name.c_str());
         close ();
+        return false;
     }
     errno = 0;
     if ((ifcHandle = socket (PF_PACKET, SOCK_RAW, htons (ETH_P_ALL))) < 0)
     {
         Console::PrintError ("Unable to open raw socket. %s.\n", strerror(errno));
-        ifIndex = 0;
+        close ();
+        return false;
     }
     getMAC (myMac);
     getIPv4 (myIP);
 
     std::string macAsString;
     myMac.get(macAsString);
-    Console::PrintDebug ("Successfully openend %s mac=%s\n", macAsString.c_str());
+    Console::PrintDebug ("Successfully openend %s mac=%s\n", name.c_str(), macAsString.c_str());
 
     return (ifcHandle != -1);
 }
@@ -84,7 +86,8 @@ bool cInterface::close ()
     ::close (ifcHandle);
     ifcHandle = -1;
     ifIndex = 0;
-    myMac.clear();
+    myMac.clear ();
+    myIP.clear ();
 
     return true;
 }
