@@ -394,7 +394,27 @@ int cInstructionParser::compileSTP (cParameterList& params, std::list <cEthernet
 
     // compile VLAN tags
     compileVLANTags (params, stp);
-    stp.compile (params.findParameter ("smac", ownMac)->asMac ());
+
+    const cMacAddress& srcMac        = params.findParameter ("smac", ownMac)->asMac ();
+    unsigned rootBridgePrio          = params.findParameter ("rbprio", (uint32_t)0)->asInt8 (0, 15);
+    unsigned rootBridgeId            = params.findParameter ("rbidext", (uint32_t)0)->asInt16 (0, 4095);
+    const cMacAddress& rootBridgeMac = params.findParameter ("rbmac",  ownMac)->asMac ();
+    uint32_t pathCost                = params.findParameter ("rpathcost", (uint32_t)4)->asInt32 (2, 250);
+    unsigned bridgePrio              = params.findParameter ("bprio", (uint32_t)0)->asInt8 (0, 15);
+    unsigned bridgeId                = params.findParameter ("bidext", (uint32_t)0)->asInt16 (0, 4095);
+    const cMacAddress& bridgeMac     = params.findParameter ("bmac",  ownMac)->asMac ();
+    unsigned portPrio                = params.findParameter ("pprio", (uint32_t)0)->asInt8 (0, 15);
+    unsigned portNumber              = params.findParameter ("pnum", (uint32_t)1)->asInt16 (1, 4095);
+    double msgAge                    = params.findParameter ("msgage", 0.0)->asDouble (0.0, 255.996);
+    double maxAge                    = params.findParameter ("maxage", 20.0)->asDouble (0.0, 255.996);
+    double helloTime                 = params.findParameter ("hello", 2.0)->asDouble (0.0, 255.996);
+    double forwardDelay              = params.findParameter ("delay", 15.0)->asDouble (0.0, 255.996);
+    bool topoChange                = !!params.findParameter ("tc", (uint32_t)0)->asInt8(0, 1);
+    bool topoChangeAck             = !!params.findParameter ("tca", (uint32_t)0)->asInt8(0, 1);
+
+    stp.compile (srcMac, rootBridgePrio, rootBridgeId, rootBridgeMac, pathCost, bridgePrio, bridgeId,
+    		bridgeMac, portPrio, portNumber, msgAge, maxAge, helloTime, forwardDelay, topoChange, topoChangeAck);
+
     packets.push_back (std::move(stp));
 
     return 1; // one packet was added to the list

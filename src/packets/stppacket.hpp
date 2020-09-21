@@ -95,6 +95,11 @@ typedef struct
     {
     	portId = htons (((prio & 0x0f) << 12) | (number & 0x0fff));
     }
+    void setFlags (bool topoChange, bool topoChangeAck)
+    {
+    	flags &= 0x81;
+    	flags |= (((int)topoChangeAck) << 7) | (int)topoChange;
+    }
 
 }bpdu_t;
 
@@ -110,11 +115,14 @@ class cStpPacket : public cEthernetPacket
 {
 public:
 	cStpPacket();
-    void compile (const cMacAddress& srcMac);
+    void compile (const cMacAddress& srcMac, unsigned rootBridgePrio, unsigned rootBridgeId, const cMacAddress& rootBridgeMac, uint32_t pathCost,
+    		unsigned bridgePrio, unsigned bridgeId, const cMacAddress& bridgeMac, unsigned portPrio, unsigned portNumber,
+    		double msgAge, double maxAge, double helloTime, double forwardDelay, bool topoChange, bool topoChangeAck);
 
 
 
 private:
+    uint16_t toTime (double seconds) const;
 };
 
 #endif /* VRRP_PACKET_H_ */

@@ -66,7 +66,7 @@ public:
     virtual uint32_t    asInt32 (uint32_t, uint32_t) const {return int32;}
     virtual uint16_t    asInt16 (uint16_t, uint16_t) const {return (uint16_t)int32;}
     virtual uint8_t     asInt8  (uint8_t,  uint8_t) const {return (uint8_t)int32;}
-    virtual double      asDouble(uint8_t,  uint8_t) const {return dbl;}
+    virtual double      asDouble(double,  double) const {return dbl;}
     virtual cMacAddress asMac   () const {return mac;}
     virtual const uint8_t* asStream   (size_t&)
     {

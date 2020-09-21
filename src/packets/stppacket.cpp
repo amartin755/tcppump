@@ -26,7 +26,9 @@ cStpPacket::cStpPacket ()
 {
 }
 
-void cStpPacket::compile (const cMacAddress& srcMac)
+void cStpPacket::compile (const cMacAddress& srcMac, unsigned rootBridgePrio, unsigned rootBridgeId, const cMacAddress& rootBridgeMac, uint32_t pathCost,
+		unsigned bridgePrio, unsigned bridgeId, const cMacAddress& bridgeMac, unsigned portPrio, unsigned portNumber,
+		double msgAge, double maxAge, double helloTime, double forwardDelay, bool topoChange, bool topoChangeAck)
 {
     // set mac header destination multicast mac address 01:80:C2:00:00:0
     setMacHeader(srcMac, cMacAddress(1, 0x80, 0xc2, 0, 0, 0));
@@ -36,16 +38,22 @@ void cStpPacket::compile (const cMacAddress& srcMac)
 	bpdu_t bpdu;
 	std::memset (&bpdu, 0, sizeof (bpdu));
 
-	bpdu.root.set (8, 0, srcMac);
-	bpdu.rootPathCost = htonl (4);
-	bpdu.bridge.set (8, 0, srcMac);
-	bpdu.setPortId (0, 1);
-	bpdu.messageAge = htons (0);
-	bpdu.maxAge = htons (20);
-	bpdu.forwardDelay = htons (15);
-	bpdu.helloTime = htons (123);
+	bpdu.root.set (rootBridgePrio, rootBridgeId, rootBridgeMac);
+	bpdu.rootPathCost = htonl (pathCost);
+	bpdu.bridge.set (bridgePrio, bridgeId, bridgeMac);
+	bpdu.setPortId (portPrio, portNumber);
+	bpdu.messageAge = htons (toTime (msgAge));
+	bpdu.maxAge = htons (toTime (maxAge));
+	bpdu.forwardDelay = htons (toTime (forwardDelay));
+	bpdu.helloTime = htons (toTime (helloTime));
+	bpdu.setFlags (topoChange, topoChangeAck);
+
 	setPayload ((uint8_t*)&bpdu, sizeof (bpdu));
 	setLength ();
 }
 
+uint16_t cStpPacket::toTime (double seconds) const
+{
+	return (uint16_t)(seconds / (1.0/256.0));
+}
 

@@ -381,3 +381,28 @@ Port Priority (range 0 - 15, default 0)
 Port Number (range 1 - 4095, default 1)
 
     pnum (optional)
+
+Message Age (seconds)(range 0.0 - 255.996, default 0)
+
+    msgage (optional)
+
+Max Age (seconds)(range 0.0 - 255.996, default 20)
+
+    maxage (optional)
+
+Hello Time (seconds)(range 0.0 - 255.996, default 2)
+
+    hello (optional)
+
+Forward Delay (seconds)(range 0.0 - 255.996, default 15)
+
+    delay (optional)
+
+Topology Change (default 0; 1 = Topology Change)
+
+    tc (optional)
+
+Topology Change Acknowledgement (default 0; 1 = Topology Change Acknowledgement)
+
+    tca (optional)
+
