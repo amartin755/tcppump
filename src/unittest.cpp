@@ -75,7 +75,7 @@ int main (void)
         BUG_ON ("unhandled exception" == 0);
     }
     // every failure will lead to assert, thus if we see this output, all tests have passed
-    printf ("\n --- unit tests finished successfully !!! --- \n");
+    fprintf (stderr, "\n --- unit tests finished successfully !!! --- \n");
 
     return 0;
 }
