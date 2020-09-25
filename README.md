@@ -27,8 +27,9 @@ Supported protocols and packet formats
 * Raw IPv4 (fragmentation is currently not supported)
 * UDP
 * VRRP
+* STP/RSTP
 
-**Note: This tool is in alpha state. Use at your own risk. Currently there are no binaries available.**
+**Note: This tool is in alpha state. Use at your own risk.**
 
 ## Build instructions
 tcppump has been successfully compiled on ubuntu linux (x64) with gcc and on windows 10 with mingw32 and MSVC.

@@ -333,10 +333,10 @@ NOTE: Optionally all vlan tag parameters and all optional ipv4 parameters (see a
     vrrp(vrid=42, vrip=1.2.3.4, chksum=0x4321);
 
 
-### (Rapid) Spanning Tree Protocol (STP, RSTP)
+### Spanning Tree Protocol family (STP, RSTP)
 IEEE802.1D-2004
 
-#### Protocol Specifier
+#### Protocol Specifier (Configuration BPDU)
 
     stp
     rstp
@@ -358,11 +358,11 @@ Root Bridge EUI-48 MAC Address. If ommited, address of the network interface is 
 
     rbmac (optional)
 
-Root Path Cost (STP: range 2 - 250, default 4; RSTP: range 20 - 5000000, default 20000)
+Root Path Cost (STP: range 1 - 65535, default 4; RSTP: range 1 - 4294967295, default 20000)
 
     rpathcost (optional)
 
-Bridge Priority (range 0 - 15, default 0)
+Bridge Priority (range 0 - 15, default 8)
 
     bprio (optional)
 
@@ -374,7 +374,7 @@ Bridge EUI-48 MAC Address. If ommited, address of the network interface is used
 
     bmac (optional)
 
-Port Priority (range 0 - 15, default 0)
+Port Priority (range 0 - 15, default 8)
 
     pprio (optional)
 
@@ -386,7 +386,7 @@ Message Age (seconds)(range 0.0 - 255.996, default 0)
 
     msgage (optional)
 
-Max Age (seconds)(range 0.0 - 255.996, default 20)
+Max Age in seconds (range 0.0 - 255.996, default 20) Note: According to IEEE802.1D-2004 only range 6 - 40 is allowed
 
     maxage (optional)
 
@@ -394,15 +394,47 @@ Hello Time (seconds)(range 0.0 - 255.996, default 2)
 
     hello (optional)
 
-Forward Delay (seconds)(range 0.0 - 255.996, default 15)
+Forward Delay (seconds)(range 0.0 - 255.996, default 15)  Note: According to IEEE802.1D-2004 only range 4 - 30 is allowed
 
     delay (optional)
 
-Topology Change (default 0; 1 = Topology Change)
+Topology Change Flag(default 0; 1 = Topology Change)
 
-    tc (optional)
+    topochange (optional)
 
-Topology Change Acknowledgement (default 0; 1 = Topology Change Acknowledgement)
+Topology Change Acknowledgement Flag(default 0; 1 = Topology Change Acknowledgement)
 
-    tca (optional)
+    topochangeack (optional)
 
+RSTP only: Port Role (range 1 - 3, default 3; 1 = Alternate or Backup, 2 = Root, 3 = Designated)
+
+    portrole (optional)
+
+RSTP only: Proposal Flag (default 0; 1 = proposal)
+
+    proposal (optional)
+
+RSTP only: Learning Flag (default 1; 0 = no learning, 1 = learning)
+
+    learning (optional)
+
+RSTP only: Forwarding Flag (default 1; 0 = no forwarding, 1 = forwarding)
+
+    forwarding (optional)
+
+RSTP only: Agreement Flag (default 0; 1 = agreement)
+
+    agreement (optional)
+
+#### Examples
+
+    # STP config BPDU with default parameters. MAC address of network interface is used as
+    # source address, bridge address and root bridge address
+    stp();
+
+#### Protocol Specifier (TCN BPDU)
+
+    stp-tcn
+
+#### Parameters
+This packet has no parameters.

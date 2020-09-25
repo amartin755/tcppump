@@ -26,34 +26,77 @@ cStpPacket::cStpPacket ()
 {
 }
 
-void cStpPacket::compile (const cMacAddress& srcMac, unsigned rootBridgePrio, unsigned rootBridgeId, const cMacAddress& rootBridgeMac, uint32_t pathCost,
-		unsigned bridgePrio, unsigned bridgeId, const cMacAddress& bridgeMac, unsigned portPrio, unsigned portNumber,
-		double msgAge, double maxAge, double helloTime, double forwardDelay, bool topoChange, bool topoChangeAck)
+void cStpPacket::compileConfigPdu (const cMacAddress& srcMac, unsigned rootBridgePrio, unsigned rootBridgeId, const cMacAddress& rootBridgeMac, uint32_t pathCost,
+        unsigned bridgePrio, unsigned bridgeId, const cMacAddress& bridgeMac, unsigned portPrio, unsigned portNumber,
+        double msgAge, double maxAge, double helloTime, double forwardDelay, int flags)
 {
-    // set mac header destination multicast mac address 01:80:C2:00:00:0
-    setMacHeader(srcMac, cMacAddress(1, 0x80, 0xc2, 0, 0, 0));
+    stp_bpdu_t bpdu;
 
-    addLlcHeader (0x42, 0x42, 3);
+    compileConfigPdu (bpdu, srcMac, rootBridgePrio, rootBridgeId, rootBridgeMac, pathCost,
+            bridgePrio, bridgeId, bridgeMac, portPrio, portNumber, msgAge, maxAge, helloTime, forwardDelay, flags);
 
-	bpdu_t bpdu;
-	std::memset (&bpdu, 0, sizeof (bpdu));
+    setPayload ((uint8_t*)&bpdu, sizeof (bpdu));
+    setLength ();
+}
 
-	bpdu.root.set (rootBridgePrio, rootBridgeId, rootBridgeMac);
-	bpdu.rootPathCost = htonl (pathCost);
-	bpdu.bridge.set (bridgePrio, bridgeId, bridgeMac);
-	bpdu.setPortId (portPrio, portNumber);
-	bpdu.messageAge = htons (toTime (msgAge));
-	bpdu.maxAge = htons (toTime (maxAge));
-	bpdu.forwardDelay = htons (toTime (forwardDelay));
-	bpdu.helloTime = htons (toTime (helloTime));
-	bpdu.setFlags (topoChange, topoChangeAck);
+void cStpPacket::compileConfigPduRstp (const cMacAddress& srcMac, unsigned rootBridgePrio, unsigned rootBridgeId, const cMacAddress& rootBridgeMac, uint32_t pathCost,
+        unsigned bridgePrio, unsigned bridgeId, const cMacAddress& bridgeMac, unsigned portPrio, unsigned portNumber,
+        double msgAge, double maxAge, double helloTime, double forwardDelay, int flags, unsigned portRole)
+{
+    rstp_bpdu_t bpdu;
 
-	setPayload ((uint8_t*)&bpdu, sizeof (bpdu));
-	setLength ();
+    compileConfigPdu (bpdu.stp, srcMac, rootBridgePrio, rootBridgeId, rootBridgeMac, pathCost,
+            bridgePrio, bridgeId, bridgeMac, portPrio, portNumber, msgAge, maxAge, helloTime, forwardDelay, flags);
+    bpdu.stp.version = 2;
+    bpdu.stp.type    = 2;
+    bpdu.version1Len = 0;
+    bpdu.stp.setRstpFlags (flags & PROPOSAL, flags & FORWARDING, flags & LEARNING, flags & AGREEMENT, portRole);
+
+    setPayload ((uint8_t*)&bpdu, sizeof (bpdu));
+    setLength ();
+}
+
+void cStpPacket::compileTcnPdu (const cMacAddress& srcMac)
+{
+    prepareMacHeader (srcMac);
+    tcnpdu_t tcn;
+
+    tcn.protocol = 0;
+    tcn.version  = 0;
+    tcn.type     = 0x80;
+    setPayload ((uint8_t*)&tcn, sizeof (tcn));
+    setLength ();
 }
 
 uint16_t cStpPacket::toTime (double seconds) const
 {
-	return (uint16_t)(seconds / (1.0/256.0));
+    return (uint16_t)(seconds / (1.0/256.0));
 }
 
+void cStpPacket::prepareMacHeader (const cMacAddress& srcMac)
+{
+    // set Ethernet header destination multicast mac address 01:80:C2:00:00:0
+    setMacHeader(srcMac, cMacAddress(1, 0x80, 0xc2, 0, 0, 0));
+
+    // 802.2 header
+    addLlcHeader (0x42, 0x42, 3);
+}
+
+inline void cStpPacket::compileConfigPdu (stp_bpdu_t& bpdu, const cMacAddress& srcMac, unsigned rootBridgePrio, unsigned rootBridgeId, const cMacAddress& rootBridgeMac, uint32_t pathCost,
+        unsigned bridgePrio, unsigned bridgeId, const cMacAddress& bridgeMac, unsigned portPrio, unsigned portNumber,
+        double msgAge, double maxAge, double helloTime, double forwardDelay, int flags)
+{
+    prepareMacHeader (srcMac);
+
+    std::memset (&bpdu, 0, sizeof (bpdu));
+
+    bpdu.root.set (rootBridgePrio, rootBridgeId, rootBridgeMac);
+    bpdu.rootPathCost = htonl (pathCost);
+    bpdu.bridge.set (bridgePrio, bridgeId, bridgeMac);
+    bpdu.setPortId (portPrio, portNumber);
+    bpdu.messageAge = htons (toTime (msgAge));
+    bpdu.maxAge = htons (toTime (maxAge));
+    bpdu.forwardDelay = htons (toTime (forwardDelay));
+    bpdu.helloTime = htons (toTime (helloTime));
+    bpdu.setStpFlags (flags & TOPO_CHANGE, flags & TOPO_CHANGE_ACK);
+}

@@ -62,6 +62,12 @@
  The TCN BPDU includes fields 1-3 only.
 */
 
+/* useful links
+ * https://www.cisco.com/c/en/us/support/docs/lan-switching/spanning-tree-protocol/24062-146.html
+ * http://mesh.calit2.net/calmesh/one/linux_kernel_modifications/bridge_ignoring_bpdus/802.1D-2004.pdf
+ * http://www.abdorefky.com/wp-content/uploads/2016/11/bpdu.png
+ */
+
 
 #pragma pack(1)
 typedef struct
@@ -71,11 +77,12 @@ typedef struct
 
     void set (unsigned prio, unsigned ext, const cMacAddress& mac)
     {
-    	prio_ext = htons (((prio & 0x0f) << 12) | (ext & 0x0fff));
-    	mac.get (&systemId);
+        prio_ext = htons (((prio & 0x0f) << 12) | (ext & 0x0fff));
+        mac.get (&systemId);
     }
 }bridge_id_t;
 
+// STP config BPDU
 typedef struct
 {
     uint16_t    protocol;
@@ -93,16 +100,33 @@ typedef struct
 
     void setPortId (unsigned prio, uint16_t number)
     {
-    	portId = htons (((prio & 0x0f) << 12) | (number & 0x0fff));
+        portId = htons (((prio & 0x0f) << 12) | (number & 0x0fff));
     }
-    void setFlags (bool topoChange, bool topoChangeAck)
+    void setStpFlags (bool topoChange, bool topoChangeAck)
     {
-    	flags &= 0x81;
-    	flags |= (((int)topoChangeAck) << 7) | (int)topoChange;
+        flags &= 0x81;
+        flags |= (((int)topoChangeAck) << 7) | (int)topoChange;
+    }
+    void setRstpFlags (bool proposal, bool forwarding, bool learning, bool aggreement, int role)
+    {
+        role &= 3;
+        flags |= ( (((int)aggreement) << 6) |
+                   (((int)forwarding) << 5) |
+                   (((int)learning)   << 4) |
+                   (((int)role)       << 2) |
+                   (((int)proposal)   << 1) );
     }
 
-}bpdu_t;
+}stp_bpdu_t;
 
+// RSTP config BPDU
+typedef struct
+{
+    stp_bpdu_t stp;
+    uint8_t    version1Len;
+}rstp_bpdu_t;
+
+// only for STP
 typedef struct
 {
     uint16_t    protocol;
@@ -114,15 +138,26 @@ typedef struct
 class cStpPacket : public cEthernetPacket
 {
 public:
-	cStpPacket();
-    void compile (const cMacAddress& srcMac, unsigned rootBridgePrio, unsigned rootBridgeId, const cMacAddress& rootBridgeMac, uint32_t pathCost,
-    		unsigned bridgePrio, unsigned bridgeId, const cMacAddress& bridgeMac, unsigned portPrio, unsigned portNumber,
-    		double msgAge, double maxAge, double helloTime, double forwardDelay, bool topoChange, bool topoChangeAck);
+    cStpPacket();
+    void compileConfigPdu (const cMacAddress& srcMac, unsigned rootBridgePrio, unsigned rootBridgeId, const cMacAddress& rootBridgeMac, uint32_t pathCost,
+            unsigned bridgePrio, unsigned bridgeId, const cMacAddress& bridgeMac, unsigned portPrio, unsigned portNumber,
+            double msgAge, double maxAge, double helloTime, double forwardDelay, int flags);
+    void compileConfigPduRstp (const cMacAddress& srcMac, unsigned rootBridgePrio, unsigned rootBridgeId, const cMacAddress& rootBridgeMac, uint32_t pathCost,
+            unsigned bridgePrio, unsigned bridgeId, const cMacAddress& bridgeMac, unsigned portPrio, unsigned portNumber,
+            double msgAge, double maxAge, double helloTime, double forwardDelay, int flags, unsigned portRole);
 
+    void compileTcnPdu (const cMacAddress& srcMac);
+
+    enum flags {TOPO_CHANGE = 1, PROPOSAL = 2, LEARNING = 4, FORWARDING = 8, AGREEMENT = 16, TOPO_CHANGE_ACK = 32};
 
 
 private:
     uint16_t toTime (double seconds) const;
+    void prepareMacHeader (const cMacAddress& srcMac);
+    inline void compileConfigPdu (stp_bpdu_t& bpdu, const cMacAddress& srcMac, unsigned rootBridgePrio, unsigned rootBridgeId, const cMacAddress& rootBridgeMac, uint32_t pathCost,
+            unsigned bridgePrio, unsigned bridgeId, const cMacAddress& bridgeMac, unsigned portPrio, unsigned portNumber,
+            double msgAge, double maxAge, double helloTime, double forwardDelay, int flags);
+
 };
 
 #endif /* VRRP_PACKET_H_ */

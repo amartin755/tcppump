@@ -86,6 +86,10 @@ int cInstructionParser::parse (const char* instruction, uint64_t& timestamp, boo
             return compileVRRP (params, packets, 3);
         if (!strncmp ("stp", keyword, keywordLen))
             return compileSTP (params, packets);
+        if (!strncmp ("stp-tcn", keyword, keywordLen))
+            return compileSTP (params, packets, false, true);
+        if (!strncmp ("rstp", keyword, keywordLen))
+            return compileSTP (params, packets, true);
 
         throw ParseException ("Unknown protocol type", keyword);
     }
@@ -388,35 +392,62 @@ int cInstructionParser::compileVRRP (cParameterList& params, std::list <cEtherne
 }
 
 
-int cInstructionParser::compileSTP (cParameterList& params, std::list <cEthernetPacket> &packets)
+int cInstructionParser::compileSTP (cParameterList& params, std::list <cEthernetPacket> &packets, bool isRSTP, bool isTCN)
 {
     cStpPacket  stp;
 
     // compile VLAN tags
     compileVLANTags (params, stp);
 
-    const cMacAddress& srcMac        = params.findParameter ("smac", ownMac)->asMac ();
-    unsigned rootBridgePrio          = params.findParameter ("rbprio", (uint32_t)0)->asInt8 (0, 15);
-    unsigned rootBridgeId            = params.findParameter ("rbidext", (uint32_t)0)->asInt16 (0, 4095);
-    const cMacAddress& rootBridgeMac = params.findParameter ("rbmac",  ownMac)->asMac ();
-    uint32_t pathCost                = params.findParameter ("rpathcost", (uint32_t)4)->asInt32 (2, 250);
-    unsigned bridgePrio              = params.findParameter ("bprio", (uint32_t)0)->asInt8 (0, 15);
-    unsigned bridgeId                = params.findParameter ("bidext", (uint32_t)0)->asInt16 (0, 4095);
-    const cMacAddress& bridgeMac     = params.findParameter ("bmac",  ownMac)->asMac ();
-    unsigned portPrio                = params.findParameter ("pprio", (uint32_t)0)->asInt8 (0, 15);
-    unsigned portNumber              = params.findParameter ("pnum", (uint32_t)1)->asInt16 (1, 4095);
-    double msgAge                    = params.findParameter ("msgage", 0.0)->asDouble (0.0, 255.996);
-    double maxAge                    = params.findParameter ("maxage", 20.0)->asDouble (0.0, 255.996);
-    double helloTime                 = params.findParameter ("hello", 2.0)->asDouble (0.0, 255.996);
-    double forwardDelay              = params.findParameter ("delay", 15.0)->asDouble (0.0, 255.996);
-    bool topoChange                = !!params.findParameter ("tc", (uint32_t)0)->asInt8(0, 1);
-    bool topoChangeAck             = !!params.findParameter ("tca", (uint32_t)0)->asInt8(0, 1);
+    const cMacAddress& srcMac = params.findParameter ("smac", ownMac)->asMac ();
 
-    stp.compile (srcMac, rootBridgePrio, rootBridgeId, rootBridgeMac, pathCost, bridgePrio, bridgeId,
-    		bridgeMac, portPrio, portNumber, msgAge, maxAge, helloTime, forwardDelay, topoChange, topoChangeAck);
+    if (!isTCN)
+    {
+        int flags = 0;
+        uint32_t pathCost;
+        unsigned rootBridgePrio          = params.findParameter ("rbprio", (uint32_t)8)->asInt8 (0, 15);
+        unsigned rootBridgeId            = params.findParameter ("rbidext", (uint32_t)0)->asInt16 (0, 4095);
+        const cMacAddress& rootBridgeMac = params.findParameter ("rbmac",  ownMac)->asMac ();
+        unsigned bridgePrio              = params.findParameter ("bprio", (uint32_t)8)->asInt8 (0, 15);
+        unsigned bridgeId                = params.findParameter ("bidext", (uint32_t)0)->asInt16 (0, 4095);
+        const cMacAddress& bridgeMac     = params.findParameter ("bmac",  ownMac)->asMac ();
+        unsigned portPrio                = params.findParameter ("pprio", (uint32_t)8)->asInt8 (0, 15);
+        unsigned portNumber              = params.findParameter ("pnum", (uint32_t)1)->asInt16 (1, 4095);
+        double msgAge                    = params.findParameter ("msgage", 0.0)->asDouble (0.0, 255.996);
+        double maxAge                    = params.findParameter ("maxage", 20.0)->asDouble (0.0, 255.996);
+        double helloTime                 = params.findParameter ("hello", 2.0)->asDouble (0.0, 255.996);
+        double forwardDelay              = params.findParameter ("delay", 15.0)->asDouble (0.0, 255.996);
+
+        flags |= params.findParameter ("topochange",    (uint32_t)0)->asInt8 (0, 1) ? cStpPacket::TOPO_CHANGE : 0;
+        flags |= params.findParameter ("topochangeack", (uint32_t)0)->asInt8 (0, 1) ? cStpPacket::TOPO_CHANGE_ACK : 0;
+
+        if (isRSTP)
+        {
+            pathCost      = params.findParameter ("rpathcost", (uint32_t)20000)->asInt32 (1, 4294967295);
+            unsigned role = params.findParameter ("portrole",  (uint32_t)3)->asInt8 (1, 3);
+
+            flags |= params.findParameter ("proposal",   (uint32_t)0)->asInt8 (0, 1) ? cStpPacket::PROPOSAL   : 0;
+            flags |= params.findParameter ("learning",   (uint32_t)1)->asInt8 (0, 1) ? cStpPacket::LEARNING   : 0;
+            flags |= params.findParameter ("forwarding", (uint32_t)1)->asInt8 (0, 1) ? cStpPacket::FORWARDING : 0;
+            flags |= params.findParameter ("agreement",  (uint32_t)0)->asInt8 (0, 1) ? cStpPacket::AGREEMENT  : 0;
+
+            stp.compileConfigPduRstp (srcMac, rootBridgePrio, rootBridgeId, rootBridgeMac, pathCost, bridgePrio, bridgeId,
+                    bridgeMac, portPrio, portNumber, msgAge, maxAge, helloTime, forwardDelay, flags, role);
+        }
+        else
+        {
+            pathCost = params.findParameter ("rpathcost", (uint32_t)4)->asInt32 (1, 65535);
+
+            stp.compileConfigPdu (srcMac, rootBridgePrio, rootBridgeId, rootBridgeMac, pathCost, bridgePrio, bridgeId,
+                    bridgeMac, portPrio, portNumber, msgAge, maxAge, helloTime, forwardDelay, flags);
+        }
+    }
+    else
+    {
+        stp.compileTcnPdu (srcMac);
+    }
 
     packets.push_back (std::move(stp));
-
     return 1; // one packet was added to the list
 }
 
