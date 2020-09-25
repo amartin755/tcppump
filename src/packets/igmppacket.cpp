@@ -16,15 +16,41 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <cstring>
 
-#ifndef GETCH_HPP_
-#define GETCH_HPP_
+#include "bugon.h"
+#include "inet.h"
+#include "igmppacket.hpp"
+#include "inetchecksum.hpp"
 
 
-namespace tcppump
+
+cIgmpPacket::cIgmpPacket ()
 {
-    extern int getch (void);
 }
 
 
-#endif /* GETCH_HPP_ */
+void cIgmpPacket::compile (uint8_t type, uint8_t time)
+{
+    compile (type, time, cIpAddress (getHeader ().dstIp));
+}
+
+
+void cIgmpPacket::compile (uint8_t type, uint8_t time, const cIpAddress& group)
+{
+    // update TTL
+    setTimeToLive (1);
+
+    igmpv2_packet_t igmp;
+    std::memset (&igmp, 0, sizeof (igmp));
+
+    igmp.type = type;
+    igmp.maxRespTime = time;
+    igmp.groupAddress = group.get();
+
+    igmp.checksum = cInetChecksum::rfc1071 (&igmp, sizeof (igmp));
+
+    cIPv4Packet::compile (PROTO_IGMP, (const uint8_t*)&igmp, sizeof (igmp), nullptr, 0, true);
+}
+
+

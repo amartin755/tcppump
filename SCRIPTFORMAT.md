@@ -165,9 +165,9 @@ Optionally all vlan tag parameters (see above) are also allowed.
     # who has 11.22.33.44, tell IP of host
     arp(dip=11.22.33.44);
     # arp-probe as specified in rfc 5227; same as "who has" above, but sender IP set to zero
-    arp-probe(dip=1.2.3.4); # short for arp: .op=1 .sip=0.0.0.0 .dmac=00:00:00:00:00:00 .dip=1.2.3.4
+    arp-probe(dip=1.2.3.4); # short for arp(op=1, sip=0.0.0.0, dmac=00:00:00:00:00:00, dip=1.2.3.4)
     # arp-announce as specified in rfc 5227; so-called gratitious arp
-    arp-announce(dip=1.2.3.4); # short for arp: .op=1 .sip=1.2.3.4 .dmac=00:00:00:00:00:00 .dip=1.2.3.4
+    arp-announce(dip=1.2.3.4); # short for arp(op=1, sip=1.2.3.4, dmac=00:00:00:00:00:00, dip=1.2.3.4)
 
 ### IPv4
 #### Protocol Specifier
@@ -225,6 +225,41 @@ Optionally all vlan tag parameters (see above) are also allowed.
     ipv4(vid=42, dmac = 11:22:33:44:55:66, dip=1.2.3.4, protocol=254, payload=12345678);
     # raw fully defined IPv4 packet
     ipv4(smac=80:12:34:45:67:89, dmac = 11:22:33:44:55:66, sip=192.168.0.1, dip=172.16.1.2, ttl=200, dscp=16, ecn=1, df=1, protocol=254, payload=12345678);
+
+
+### IGMP
+#### Protocol Specifier
+
+    igmp
+
+#### Parameters
+Destination IPv4 address
+
+    dip
+
+Source EUI-48 MAC address. If ommited, address of the network interface is used
+
+    smac (optional)
+
+Source IPv4 address; If ommited, address of the network interface is used
+
+    sip (optional)
+
+IGMP Message Type (range 0 - 255, default 0x11)
+
+    type (optional)
+
+Max. Respnd Time in 1/10 seconds (range: 0 - 255, default 0)
+
+    time (optional)
+
+Group IPv4 Address. If ommited, value of parameter `dip` is used.
+
+    group (optional)
+
+#### Examples
+
+    # TODO
 
 
 ### UDP

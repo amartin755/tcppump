@@ -95,10 +95,19 @@ public:
     void setDontFragment (bool df);
     void setSource (const cIpAddress& ip);
     void setDestination (const cIpAddress& ip);
-    void setPayload (uint8_t protocol, const uint8_t* l4header, size_t l4headerLen, const uint8_t* payload, size_t payloadLen);
     void updateHeaderChecksum ();
     cEthernetPacket& getFirstEthernetPacket ();
     size_t getAllEthernetPackets (std::list<cEthernetPacket>&) const;
+    void compile (uint8_t protocol, const uint8_t* l4header, size_t l4headerLen, const uint8_t* payload, size_t payloadLen, bool mapIpMulticast2Mac = false);
+
+    enum protocols
+    {
+        PROTO_ICMP = 1,
+        PROTO_IGMP = 2,
+        PROTO_TCP  = 6,
+        PROTO_UDP  = 17,
+        PROTO_VRRP = 112,
+    };
 
 #ifdef WITH_UNITTESTS
     static void unitTest ();
@@ -118,14 +127,6 @@ protected:
 private:
     ipv4_header_t              ipHeader;
     std::list<cEthernetPacket> packets;
-};
-
-enum ipprotocols_t
-{
-    PROTO_ICMP = 1,
-    PROTO_TCP  = 6,
-    PROTO_UDP  = 17,
-    PROTO_VRRP = 112,
 };
 
 

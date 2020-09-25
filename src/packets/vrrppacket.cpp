@@ -69,10 +69,10 @@ void cVrrpPacket::addVirtualIP (const cIpAddress& vip)
     vrIPs.push_back(vip.get());
 }
 
-void cVrrpPacket::compile (const cMacAddress& srcMac, bool calcChecksum)
+void cVrrpPacket::compile (bool calcChecksum)
 {
     // set mac header with vrrp ietf mac address 00:00:5e:00:01:VRID
-    getFirstEthernetPacket().setMacHeader(srcMac, cMacAddress(0, 0, 0x5e, 0, 1, header.vrid));
+    getFirstEthernetPacket().setDestMac (cMacAddress(0, 0, 0x5e, 0, 1, header.vrid));
 
     // set IPv4 Header
     setTimeToLive(255);
@@ -110,7 +110,7 @@ void cVrrpPacket::compile (const cMacAddress& srcMac, bool calcChecksum)
     }
 
 
-    setPayload (PROTO_VRRP, (const uint8_t*)&header, sizeof(header), (const uint8_t*)vrIPs.data(), vrIPs.size() * sizeof(struct in_addr));
+    cIPv4Packet::compile (PROTO_VRRP, (const uint8_t*)&header, sizeof(header), (const uint8_t*)vrIPs.data(), vrIPs.size() * sizeof(struct in_addr));
 }
 
 

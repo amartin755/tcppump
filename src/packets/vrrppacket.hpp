@@ -123,7 +123,7 @@ public:
     void setInterval (uint16_t interval);
     void setChecksum (uint16_t checksum);
     void addVirtualIP (const cIpAddress& vip);
-    void compile (const cMacAddress& srcMac, bool calcChecksum);
+    void compile (bool calcChecksum);
 
 
 

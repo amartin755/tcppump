@@ -24,6 +24,7 @@
 #include "bugon.h"
 #include "instructionparser.hpp"
 
+#include "parsehelper.hpp"
 #include "parameterlist.hpp"
 #include "ethernetpacket.hpp"
 #include "arppacket.hpp"
@@ -31,7 +32,7 @@
 #include "udppacket.hpp"
 #include "vrrppacket.hpp"
 #include "stppacket.hpp"
-#include "parsehelper.hpp"
+#include "igmppacket.hpp"
 
 
 cInstructionParser::cInstructionParser (const cMacAddress& ownMac, const cIpAddress& ownIPv4)
@@ -90,6 +91,8 @@ int cInstructionParser::parse (const char* instruction, uint64_t& timestamp, boo
             return compileSTP (params, packets, false, true);
         if (!strncmp ("rstp", keyword, keywordLen))
             return compileSTP (params, packets, true);
+        if (!strncmp ("igmp", keyword, keywordLen))
+            return compileIGMP (params, packets);
 
         throw ParseException ("Unknown protocol type", keyword);
     }
@@ -184,11 +187,12 @@ int cInstructionParser::compileRAW (cParameterList& params, std::list <cEthernet
 }
 
 
-void cInstructionParser::compileMacHeader (cParameterList& params, cEthernetPacket &packet)
+void cInstructionParser::compileMacHeader (cParameterList& params, cEthernetPacket &packet, bool noDestination)
 {
     // default value of source mac is our own mac address
-    packet.setMacHeader (params.findParameter ("smac", ownMac)->asMac (),
-                         params.findParameter ("dmac")->asMac ());
+    packet.setSrcMac (params.findParameter ("smac", ownMac)->asMac ());
+    if (!noDestination)
+        packet.setDestMac (params.findParameter ("dmac")->asMac ());
 }
 
 
@@ -317,7 +321,7 @@ int cInstructionParser::compileIPv4 (cParameterList& params, std::list <cEtherne
 
     size_t len;
     const uint8_t* payload = params.findParameter ("payload")->asStream(len);
-    ippacket.setPayload (params.findParameter ("protocol")->asInt8(), nullptr, 0, payload, len);
+    ippacket.compile (params.findParameter ("protocol")->asInt8(), nullptr, 0, payload, len);
 
     return (int)ippacket.getAllEthernetPackets(packets);
 }
@@ -356,6 +360,7 @@ int cInstructionParser::compileVRRP (cParameterList& params, std::list <cEtherne
     cVrrpPacket vrrp;
     cEthernetPacket& eth = vrrp.getFirstEthernetPacket();
 
+    compileMacHeader  (params, eth, true);
     compileVLANTags   (params, eth);
     compileIPv4Header (params, vrrp, true);
 
@@ -386,7 +391,7 @@ int cInstructionParser::compileVRRP (cParameterList& params, std::list <cEtherne
         vrrp.addVirtualIP (optionalPar->asIPv4());
     }
 
-    vrrp.compile (params.findParameter ("smac", ownMac)->asMac (), !userDefinedChecksum);
+    vrrp.compile (!userDefinedChecksum);
 
     return (int)vrrp.getAllEthernetPackets(packets);
 }
@@ -396,10 +401,8 @@ int cInstructionParser::compileSTP (cParameterList& params, std::list <cEthernet
 {
     cStpPacket  stp;
 
-    // compile VLAN tags
-    compileVLANTags (params, stp);
-
-    const cMacAddress& srcMac = params.findParameter ("smac", ownMac)->asMac ();
+    compileMacHeader (params, stp, true);
+    compileVLANTags  (params, stp);
 
     if (!isTCN)
     {
@@ -431,24 +434,47 @@ int cInstructionParser::compileSTP (cParameterList& params, std::list <cEthernet
             flags |= params.findParameter ("forwarding", (uint32_t)1)->asInt8 (0, 1) ? cStpPacket::FORWARDING : 0;
             flags |= params.findParameter ("agreement",  (uint32_t)0)->asInt8 (0, 1) ? cStpPacket::AGREEMENT  : 0;
 
-            stp.compileConfigPduRstp (srcMac, rootBridgePrio, rootBridgeId, rootBridgeMac, pathCost, bridgePrio, bridgeId,
+            stp.compileConfigPduRstp (rootBridgePrio, rootBridgeId, rootBridgeMac, pathCost, bridgePrio, bridgeId,
                     bridgeMac, portPrio, portNumber, msgAge, maxAge, helloTime, forwardDelay, flags, role);
         }
         else
         {
             pathCost = params.findParameter ("rpathcost", (uint32_t)4)->asInt32 (1, 65535);
 
-            stp.compileConfigPdu (srcMac, rootBridgePrio, rootBridgeId, rootBridgeMac, pathCost, bridgePrio, bridgeId,
+            stp.compileConfigPdu (rootBridgePrio, rootBridgeId, rootBridgeMac, pathCost, bridgePrio, bridgeId,
                     bridgeMac, portPrio, portNumber, msgAge, maxAge, helloTime, forwardDelay, flags);
         }
     }
     else
     {
-        stp.compileTcnPdu (srcMac);
+        stp.compileTcnPdu ();
     }
 
     packets.push_back (std::move(stp));
     return 1; // one packet was added to the list
+}
+
+
+int cInstructionParser::compileIGMP  (cParameterList& params, std::list <cEthernetPacket> &packets)
+{
+    cIgmpPacket igmp;
+    cEthernetPacket& eth = igmp.getFirstEthernetPacket ();
+
+    compileMacHeader  (params, eth, true);
+    compileVLANTags   (params, eth);
+    compileIPv4Header (params, igmp);
+
+    uint8_t type = params.findParameter ("type", (uint32_t)0x11)->asInt8();
+    uint8_t time = params.findParameter ("time", (uint32_t)0)->asInt8();
+
+    cParameter* optionalPar = params.findParameter ("group", true);
+
+    if (optionalPar)
+        igmp.compile (type, time, optionalPar->asIPv4 ());
+    else
+        igmp.compile (type, time);
+
+    return (int)igmp.getAllEthernetPackets(packets);
 }
 
 

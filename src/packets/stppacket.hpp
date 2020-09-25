@@ -139,22 +139,22 @@ class cStpPacket : public cEthernetPacket
 {
 public:
     cStpPacket();
-    void compileConfigPdu (const cMacAddress& srcMac, unsigned rootBridgePrio, unsigned rootBridgeId, const cMacAddress& rootBridgeMac, uint32_t pathCost,
+    void compileConfigPdu (unsigned rootBridgePrio, unsigned rootBridgeId, const cMacAddress& rootBridgeMac, uint32_t pathCost,
             unsigned bridgePrio, unsigned bridgeId, const cMacAddress& bridgeMac, unsigned portPrio, unsigned portNumber,
             double msgAge, double maxAge, double helloTime, double forwardDelay, int flags);
-    void compileConfigPduRstp (const cMacAddress& srcMac, unsigned rootBridgePrio, unsigned rootBridgeId, const cMacAddress& rootBridgeMac, uint32_t pathCost,
+    void compileConfigPduRstp (unsigned rootBridgePrio, unsigned rootBridgeId, const cMacAddress& rootBridgeMac, uint32_t pathCost,
             unsigned bridgePrio, unsigned bridgeId, const cMacAddress& bridgeMac, unsigned portPrio, unsigned portNumber,
             double msgAge, double maxAge, double helloTime, double forwardDelay, int flags, unsigned portRole);
 
-    void compileTcnPdu (const cMacAddress& srcMac);
+    void compileTcnPdu (void);
 
     enum flags {TOPO_CHANGE = 1, PROPOSAL = 2, LEARNING = 4, FORWARDING = 8, AGREEMENT = 16, TOPO_CHANGE_ACK = 32};
 
 
 private:
     uint16_t toTime (double seconds) const;
-    void prepareMacHeader (const cMacAddress& srcMac);
-    inline void compileConfigPdu (stp_bpdu_t& bpdu, const cMacAddress& srcMac, unsigned rootBridgePrio, unsigned rootBridgeId, const cMacAddress& rootBridgeMac, uint32_t pathCost,
+    void prepareMacHeader ();
+    inline void compileConfigPdu (stp_bpdu_t& bpdu, unsigned rootBridgePrio, unsigned rootBridgeId, const cMacAddress& rootBridgeMac, uint32_t pathCost,
             unsigned bridgePrio, unsigned bridgeId, const cMacAddress& bridgeMac, unsigned portPrio, unsigned portNumber,
             double msgAge, double maxAge, double helloTime, double forwardDelay, int flags);
 

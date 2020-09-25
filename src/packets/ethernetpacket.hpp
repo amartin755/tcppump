@@ -39,6 +39,8 @@ public:
     cEthernetPacket& operator=(cEthernetPacket&& other);
     void operator=(const cEthernetPacket&) = delete;       // no copy-assignment operator
 
+    void setSrcMac (const cMacAddress& src);
+    void setDestMac (const cMacAddress& dest);
     void setMacHeader (const cMacAddress& src, const cMacAddress& dest);
     void addLlcHeader (uint8_t dsap, uint8_t ssap, uint16_t control);
     void addSnapHeader (uint32_t oui, uint16_t protocol);

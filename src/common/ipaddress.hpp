@@ -97,10 +97,18 @@ public:
         s = ipAsString;
         return ret;
     }
+    const uint8_t* getAsArray () const
+    {
+        return (const uint8_t*)&ipv4.s_addr;
+    }
 
     bool isNull (void) const
     {
         return !ipv4.s_addr;
+    }
+    bool isMulticast (void) const
+    {
+        return (ntohl (ipv4.s_addr) & 0xF0000000) == 0xE0000000;
     }
     bool operator ==(const cIpAddress &b) const
     {
@@ -120,6 +128,10 @@ public:
         cIpAddress a; a.set(x, 7);
         BUG_ON (cIpAddress("1.2.3.4") == a);
         BUG_ON (!a.set("laskdfj"));
+        BUG_ON (!cIpAddress("223.255.255.255").isMulticast());
+        BUG_ON (cIpAddress("224.0.0.0").isMulticast());
+        BUG_ON (cIpAddress("239.255.255.255").isMulticast());
+        BUG_ON (!cIpAddress("240.0.0.0").isMulticast());
     }
 #endif
 

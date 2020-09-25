@@ -152,10 +152,24 @@ void cEthernetPacket::setLength ()
 
 void cEthernetPacket::setMacHeader (const cMacAddress& src, const cMacAddress& dest)
 {
+    setSrcMac (src);
+    setDestMac (dest);
+}
+
+
+void cEthernetPacket::setDestMac (const cMacAddress& dest)
+{
     // mac header contains source and destination mac and is always at the begin of the packet
     mac_header_t* header = (mac_header_t*)packet;
-    ::memcpy(&header->src, src.get(), src.size());
-    ::memcpy(&header->dest, dest.get(), dest.size());
+    std::memcpy(&header->dest, dest.get(), dest.size());
+}
+
+
+void cEthernetPacket::setSrcMac (const cMacAddress& src)
+{
+    // mac header contains source and destination mac and is always at the begin of the packet
+    mac_header_t* header = (mac_header_t*)packet;
+    std::memcpy(&header->src, src.get(), src.size());
 }
 
 

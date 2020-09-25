@@ -86,7 +86,7 @@ void cIPv4Packet::setDestination (const cIpAddress& ip)
     ipHeader.dstIp = ip.get();
 }
 
-void cIPv4Packet::setPayload (uint8_t protocol, const uint8_t* l4header, size_t l4headerLen, const uint8_t* payload, size_t payloadLen)
+void cIPv4Packet::compile (uint8_t protocol, const uint8_t* l4header, size_t l4headerLen, const uint8_t* payload, size_t payloadLen, bool mapIpMulticast2Mac)
 {
     // FIXME fragmentation
 
@@ -96,6 +96,14 @@ void cIPv4Packet::setPayload (uint8_t protocol, const uint8_t* l4header, size_t 
 
     cEthernetPacket &packet = packets.front();
 
+    if (mapIpMulticast2Mac)
+    {
+        cIpAddress dstIp (ipHeader.dstIp);
+        if (dstIp.isMulticast ())
+        {
+            packet.setDestMac (cMacAddress (1, 0, 0x5e, dstIp.getAsArray()[1] & 0x7f, dstIp.getAsArray()[2], dstIp.getAsArray()[3]));
+        }
+    }
     packet.setPayload ((uint8_t*)&ipHeader, sizeof (ipHeader)); // write IP header
     if (l4headerLen && l4header)
         packet.appendPayload(l4header, l4headerLen);            // copy L4 header (e.g. udp header)

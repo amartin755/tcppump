@@ -26,26 +26,26 @@ cStpPacket::cStpPacket ()
 {
 }
 
-void cStpPacket::compileConfigPdu (const cMacAddress& srcMac, unsigned rootBridgePrio, unsigned rootBridgeId, const cMacAddress& rootBridgeMac, uint32_t pathCost,
+void cStpPacket::compileConfigPdu (unsigned rootBridgePrio, unsigned rootBridgeId, const cMacAddress& rootBridgeMac, uint32_t pathCost,
         unsigned bridgePrio, unsigned bridgeId, const cMacAddress& bridgeMac, unsigned portPrio, unsigned portNumber,
         double msgAge, double maxAge, double helloTime, double forwardDelay, int flags)
 {
     stp_bpdu_t bpdu;
 
-    compileConfigPdu (bpdu, srcMac, rootBridgePrio, rootBridgeId, rootBridgeMac, pathCost,
+    compileConfigPdu (bpdu, rootBridgePrio, rootBridgeId, rootBridgeMac, pathCost,
             bridgePrio, bridgeId, bridgeMac, portPrio, portNumber, msgAge, maxAge, helloTime, forwardDelay, flags);
 
     setPayload ((uint8_t*)&bpdu, sizeof (bpdu));
     setLength ();
 }
 
-void cStpPacket::compileConfigPduRstp (const cMacAddress& srcMac, unsigned rootBridgePrio, unsigned rootBridgeId, const cMacAddress& rootBridgeMac, uint32_t pathCost,
+void cStpPacket::compileConfigPduRstp (unsigned rootBridgePrio, unsigned rootBridgeId, const cMacAddress& rootBridgeMac, uint32_t pathCost,
         unsigned bridgePrio, unsigned bridgeId, const cMacAddress& bridgeMac, unsigned portPrio, unsigned portNumber,
         double msgAge, double maxAge, double helloTime, double forwardDelay, int flags, unsigned portRole)
 {
     rstp_bpdu_t bpdu;
 
-    compileConfigPdu (bpdu.stp, srcMac, rootBridgePrio, rootBridgeId, rootBridgeMac, pathCost,
+    compileConfigPdu (bpdu.stp, rootBridgePrio, rootBridgeId, rootBridgeMac, pathCost,
             bridgePrio, bridgeId, bridgeMac, portPrio, portNumber, msgAge, maxAge, helloTime, forwardDelay, flags);
     bpdu.stp.version = 2;
     bpdu.stp.type    = 2;
@@ -56,9 +56,9 @@ void cStpPacket::compileConfigPduRstp (const cMacAddress& srcMac, unsigned rootB
     setLength ();
 }
 
-void cStpPacket::compileTcnPdu (const cMacAddress& srcMac)
+void cStpPacket::compileTcnPdu (void)
 {
-    prepareMacHeader (srcMac);
+    prepareMacHeader ();
     tcnpdu_t tcn;
 
     tcn.protocol = 0;
@@ -73,20 +73,20 @@ uint16_t cStpPacket::toTime (double seconds) const
     return (uint16_t)(seconds / (1.0/256.0));
 }
 
-void cStpPacket::prepareMacHeader (const cMacAddress& srcMac)
+void cStpPacket::prepareMacHeader (void)
 {
     // set Ethernet header destination multicast mac address 01:80:C2:00:00:0
-    setMacHeader(srcMac, cMacAddress(1, 0x80, 0xc2, 0, 0, 0));
+    this->setDestMac (cMacAddress(1, 0x80, 0xc2, 0, 0, 0));
 
     // 802.2 header
     addLlcHeader (0x42, 0x42, 3);
 }
 
-inline void cStpPacket::compileConfigPdu (stp_bpdu_t& bpdu, const cMacAddress& srcMac, unsigned rootBridgePrio, unsigned rootBridgeId, const cMacAddress& rootBridgeMac, uint32_t pathCost,
+inline void cStpPacket::compileConfigPdu (stp_bpdu_t& bpdu, unsigned rootBridgePrio, unsigned rootBridgeId, const cMacAddress& rootBridgeMac, uint32_t pathCost,
         unsigned bridgePrio, unsigned bridgeId, const cMacAddress& bridgeMac, unsigned portPrio, unsigned portNumber,
         double msgAge, double maxAge, double helloTime, double forwardDelay, int flags)
 {
-    prepareMacHeader (srcMac);
+    prepareMacHeader ();
 
     std::memset (&bpdu, 0, sizeof (bpdu));
 
