@@ -467,6 +467,10 @@ add_test(NAME ipv4-20--ok COMMAND tcppump ${DEFAULT_PARAMS} "ipv4(sip=11.22.33.4
 add_test(NAME ipv4-20--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/ipv4-20.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 add_test(NAME ipv4-21--ok COMMAND tcppump ${DEFAULT_PARAMS} "ipv4(vid=42, prio=4, sip=11.22.33.44, dip=10.20.30.40, smac=90:91:92:93:94:95, dmac=11:22:33:44:55:66, df=1, ttl=255, dscp=0x0, ecn=3, protocol=255, payload = 0123456789abcdef0123456789abcdef)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 add_test(NAME ipv4-21--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/ipv4-21.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME ipv4-22--ok COMMAND tcppump ${DEFAULT_PARAMS} "ipv4(dip=224.20.30.40, protocol=255, payload = 0123456789abcdef0123456789abcdef)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME ipv4-22--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/ipv4-22.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME ipv4-23--ok COMMAND tcppump ${DEFAULT_PARAMS} "ipv4(dip=224.20.30.40, dmac=11:22:33:44:55:66, protocol=255, payload = 0123456789abcdef0123456789abcdef)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME ipv4-23--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/ipv4-23.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 add_test(NAME udp-1--nok COMMAND tcppump ${DEFAULT_PARAMS} "udp()" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 set_tests_properties(udp-1--nok PROPERTIES WILL_FAIL TRUE)
@@ -502,6 +506,10 @@ add_test(NAME udp-16--ok COMMAND tcppump ${DEFAULT_PARAMS} "udp(dscp=42, ecn=2, 
 add_test(NAME udp-16--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/udp-16.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 add_test(NAME udp-17--ok COMMAND tcppump ${DEFAULT_PARAMS} "udp(vid=42, vtype=2, dei=1, prio=4, vid=43, prio=5, dscp=42, ecn=2, ttl=10, df=1, sip=11.22.33.44, smac=90:91:92:93:94:95, dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=1, dport=2, payload = 0123456789abcdef0123456789abcdef)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 add_test(NAME udp-17--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/udp-17.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME udp-18--ok COMMAND tcppump ${DEFAULT_PARAMS} "udp(dip=224.20.30.40, dmac=11:22:33:44:55:66, sport=0, dport=0)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME udp-18--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/udp-18.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME udp-19--ok COMMAND tcppump ${DEFAULT_PARAMS} "udp(dip=224.20.30.40, sport=0, dport=0)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME udp-19--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/udp-18.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 add_test(NAME vrrp-1--nok COMMAND tcppump ${DEFAULT_PARAMS} "vrrp()" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 set_tests_properties(vrrp-1--nok PROPERTIES WILL_FAIL TRUE)
