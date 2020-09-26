@@ -57,9 +57,9 @@ private:
     int compileSTP  (cParameterList& params, std::list <cEthernetPacket> &packets, bool isRSTP = false, bool isTCN = false);
     int compileIGMP (cParameterList& params, std::list <cEthernetPacket> &packets);
 
-    void   compileMacHeader (cParameterList& params, cEthernetPacket& packet, bool noDestination = false);
+    bool   compileMacHeader (cParameterList& params, cEthernetPacket& packet, bool noDestination, bool destIsOptional = false);
     size_t compileVLANTags (cParameterList& params, cEthernetPacket& packet);
-    void   compileIPv4Header (cParameterList& params, cIPv4Packet& packet, bool noDestinationIP = false);
+    bool   parseIPv4Params (cParameterList& params, cIPv4Packet& packet, bool noDestinationIP = false);
 
     cMacAddress ownMac;
     cIpAddress  ownIPv4;

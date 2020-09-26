@@ -187,12 +187,21 @@ int cInstructionParser::compileRAW (cParameterList& params, std::list <cEthernet
 }
 
 
-void cInstructionParser::compileMacHeader (cParameterList& params, cEthernetPacket &packet, bool noDestination)
+// returns true, if destination MAC address is set
+bool cInstructionParser::compileMacHeader (cParameterList& params, cEthernetPacket &packet, bool noDestination, bool destIsOptional)
 {
     // default value of source mac is our own mac address
     packet.setSrcMac (params.findParameter ("smac", ownMac)->asMac ());
     if (!noDestination)
-        packet.setDestMac (params.findParameter ("dmac")->asMac ());
+    {
+        const cParameter* destMacPar = params.findParameter ("dmac", destIsOptional);
+        if (destMacPar)
+        {
+            packet.setDestMac (destMacPar->asMac ());
+            return true;
+        }
+    }
+    return false;
 }
 
 
@@ -202,7 +211,7 @@ int cInstructionParser::compileETH (cParameterList& params, std::list <cEthernet
     const cParameter* optionalPar = nullptr;
 
     // MAC header
-    compileMacHeader (params, eth);
+    compileMacHeader (params, eth, false);
 
     // compile VLAN tags
     compileVLANTags (params, eth);
@@ -297,16 +306,24 @@ int cInstructionParser::compileARP (cParameterList& params, std::list <cEthernet
     return 1; // one packet was added to the list
 }
 
-
-void cInstructionParser::compileIPv4Header (cParameterList& params, cIPv4Packet& packet, bool noDestinationIP)
+// returns true, if destination IP address is a multicast address
+bool cInstructionParser::parseIPv4Params (cParameterList& params, cIPv4Packet& packet, bool noDestinationIP)
 {
+    bool isMulticast = false;
+
     packet.setDSCP         (params.findParameter ("dscp", (uint32_t)0)->asInt8(0, 0x3f));
     packet.setECN          (params.findParameter ("ecn", (uint32_t)0)->asInt8(0, 3));
     packet.setTimeToLive   (params.findParameter ("ttl", (uint32_t)64)->asInt8());
     packet.setDontFragment (params.findParameter ("df", (uint32_t)0)->asInt8(0, 1));
     if (!noDestinationIP)
-        packet.setDestination  (params.findParameter ("dip")->asIPv4());
+    {
+        const cIpAddress destIP = params.findParameter ("dip")->asIPv4();
+        packet.setDestination (destIP);
+        isMulticast = destIP.isMulticast();
+    }
     packet.setSource       (params.findParameter ("sip", ownIPv4)->asIPv4());
+
+    return isMulticast;
 }
 
 
@@ -314,14 +331,16 @@ int cInstructionParser::compileIPv4 (cParameterList& params, std::list <cEtherne
 {
     cIPv4Packet ippacket;
     cEthernetPacket& eth = ippacket.getFirstEthernetPacket();
+    bool destIsMulticast = parseIPv4Params (params, ippacket);
 
-    compileMacHeader  (params, eth);
+    // destination mac is optional, if destination IP is a multicast address
+    // --> dest mac is set automatically, if dest IP is a multicast AND user has NOT provided a dest MAC
+    bool hasDestMac = compileMacHeader  (params, eth, false, destIsMulticast);
     compileVLANTags   (params, eth);
-    compileIPv4Header (params, ippacket);
 
     size_t len;
     const uint8_t* payload = params.findParameter ("payload")->asStream(len);
-    ippacket.compile (params.findParameter ("protocol")->asInt8(), nullptr, 0, payload, len);
+    ippacket.compile (params.findParameter ("protocol")->asInt8(), nullptr, 0, payload, len, !hasDestMac);
 
     return (int)ippacket.getAllEthernetPackets(packets);
 }
@@ -331,10 +350,11 @@ int cInstructionParser::compileUDP (cParameterList& params, std::list <cEthernet
 {
     cUdpPacket udppacket;
     cEthernetPacket& eth = udppacket.getFirstEthernetPacket();
+    bool destIsMulticast = parseIPv4Params (params, udppacket);
 
-    compileMacHeader  (params, eth);
+    // destination mac is set automatically, if destination IP is a multicast address
+    compileMacHeader  (params, eth, destIsMulticast);
     compileVLANTags   (params, eth);
-    compileIPv4Header (params, udppacket);
 
     udppacket.setSourcePort(params.findParameter ("sport")->asInt16());
     udppacket.setDestinationPort(params.findParameter ("dport")->asInt16());
@@ -360,9 +380,9 @@ int cInstructionParser::compileVRRP (cParameterList& params, std::list <cEtherne
     cVrrpPacket vrrp;
     cEthernetPacket& eth = vrrp.getFirstEthernetPacket();
 
+    parseIPv4Params   (params, vrrp, true);
     compileMacHeader  (params, eth, true);
     compileVLANTags   (params, eth);
-    compileIPv4Header (params, vrrp, true);
 
     const cParameter* firstVRIP = params.findParameter ("vrip");
 
@@ -462,7 +482,7 @@ int cInstructionParser::compileIGMP  (cParameterList& params, std::list <cEthern
 
     compileMacHeader  (params, eth, true);
     compileVLANTags   (params, eth);
-    compileIPv4Header (params, igmp);
+    parseIPv4Params (params, igmp);
 
     uint8_t type = params.findParameter ("type", (uint32_t)0x11)->asInt8();
     uint8_t time = params.findParameter ("time", (uint32_t)0)->asInt8();

@@ -32,7 +32,7 @@ Payload in ascii hex
 
     payload
 
-#### example
+#### Example
 
     raw(payload = 112233445566aabbccddeeff08001234567890abcdef);
 
@@ -175,9 +175,9 @@ Optionally all vlan tag parameters (see above) are also allowed.
     ipv4
 
 #### Parameters
-Destination EUI-48 MAC address
+Destination EUI-48 MAC address. Note: Optional if `dip` is a multicast address
 
-    dmac
+    dmac (optional if dip is multicast)
 
 Source EUI-48 MAC address. If ommited, address of the network interface is used
 
@@ -225,6 +225,10 @@ Optionally all vlan tag parameters (see above) are also allowed.
     ipv4(vid=42, dmac = 11:22:33:44:55:66, dip=1.2.3.4, protocol=254, payload=12345678);
     # raw fully defined IPv4 packet
     ipv4(smac=80:12:34:45:67:89, dmac = 11:22:33:44:55:66, sip=192.168.0.1, dip=172.16.1.2, ttl=200, dscp=16, ecn=1, df=1, protocol=254, payload=12345678);
+    # raw simple ipv4 packet with multicast destination (dmac is therefore set automatically)
+    ipv4(dip=224.2.3.4, protocol=254, payload=12345678);
+    # same as above, but dmac is forced to 11:22:33:44:55:66
+    ipv4(dmac = 11:22:33:44:55:66, dip=224.2.3.4, protocol=254, payload=12345678);
 
 
 ### IGMP
@@ -268,9 +272,9 @@ Group IPv4 Address. If ommited, value of parameter `dip` is used.
     udp
 
 #### Parameters
-Destination EUI-48 MAC address
+Destination EUI-48 MAC address. Note: If `dip` is a multicast address `dmac` will be set automatically.
 
-    dmac
+    dmac (optional if dip is multicast)
 
 Destination IPv4 address
 
@@ -308,6 +312,8 @@ Optionally all vlan tag parameters and all optional ipv4 parameters (see above) 
     udp(dmac=12:23:34:34:44:44, dip=1.2.3.4, sport=1234, dport=2345, payload=12345678);
     # UDP packet with explicit source-mac and ip
     udp(dmac=12:23:34:34:44:44, dip=1.2.3.4, smac=80:12:34:45:67:89, sip=192.168.0.1, sport=1234, dport=2345, payload=12345678);
+    # UDP packet with to multicast destination and source ip taken from network interface
+    udp(dip=224.2.3.4, sport=1234, dport=2345, payload=12345678);
 
 ### VRRP Virtual Router Redundancy Protocol
 Supported are the protocol versions 2 according to RFC3768 (vrrp) and version 3 according to RFC5798 (vrrp3).
