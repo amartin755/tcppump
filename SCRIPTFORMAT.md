@@ -232,7 +232,7 @@ Optionally all vlan tag parameters (see above) are also allowed.
 
 
 ### IGMP
-#### Protocol Specifier
+#### Protocol Specifier (raw IGMPv1/v2 packet)
 
     igmp
 
@@ -251,7 +251,7 @@ Source IPv4 address; If ommited, address of the network interface is used
 
 IGMP Message Type (range 0 - 255, default 0x11)
 
-    type (optional)
+    type
 
 Max. Respnd Time in 1/10 seconds (range: 0 - 255, default 0)
 
@@ -260,6 +260,45 @@ Max. Respnd Time in 1/10 seconds (range: 0 - 255, default 0)
 Group IPv4 Address. If ommited, value of parameter `dip` is used.
 
     group (optional)
+
+#### Protocol Specifier (IGMPv2 General/Group-Specific Membership Query)
+
+    igmp-query
+
+#### Parameters
+Source EUI-48 MAC address. If ommited, address of the network interface is used
+
+    smac (optional)
+
+Source IPv4 address; If ommited, address of the network interface is used
+
+    sip (optional)
+
+Max. Respnd Time in 1/10 seconds (range: 0 - 255, default 100 = 10 sec.)
+
+    time (optional)
+
+Group IPv4 Address. If ommited --> General-Membership-Query
+
+    group (optional)
+
+#### Protocol Specifier (IGMPv2 Membership Report / IGMPv2 Leave Group)
+
+    igmp-report
+    igmp-leave
+
+#### Parameters
+Source EUI-48 MAC address. If ommited, address of the network interface is used
+
+    smac (optional)
+
+Source IPv4 address; If ommited, address of the network interface is used
+
+    sip (optional)
+
+Group IPv4 Address.
+
+    group
 
 #### Examples
 

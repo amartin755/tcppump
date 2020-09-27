@@ -29,12 +29,29 @@ cIgmpPacket::cIgmpPacket ()
 {
 }
 
-
-void cIgmpPacket::compile (uint8_t type, uint8_t time)
+void cIgmpPacket::compileGeneralQuery (uint8_t time)
 {
-    compile (type, time, cIpAddress (getHeader ().dstIp));
+    setDestination (cIpAddress ("224.0.0.1"));
+    compile (0x11, time, cIpAddress ());
 }
 
+void cIgmpPacket::compileGroupQuery (uint8_t time, const cIpAddress& group)
+{
+    setDestination (group);
+    compile (0x11, time, group);
+}
+
+void cIgmpPacket::compileReport (const cIpAddress& group)
+{
+    setDestination (group);
+    compile (0x16, 0, group);
+}
+
+void cIgmpPacket::compileLeaveGroup (const cIpAddress& group)
+{
+    setDestination (cIpAddress ("224.0.0.2"));
+    compile (0x17, 0, group);
+}
 
 void cIgmpPacket::compile (uint8_t type, uint8_t time, const cIpAddress& group)
 {

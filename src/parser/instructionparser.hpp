@@ -55,7 +55,7 @@ private:
     int compileUDP  (cParameterList& params, std::list <cEthernetPacket> &packets);
     int compileVRRP (cParameterList& params, std::list <cEthernetPacket> &packets, int version);
     int compileSTP  (cParameterList& params, std::list <cEthernetPacket> &packets, bool isRSTP = false, bool isTCN = false);
-    int compileIGMP (cParameterList& params, std::list <cEthernetPacket> &packets);
+    int compileIGMP (cParameterList& params, std::list <cEthernetPacket> &packets, bool query, bool report, bool leave);
 
     bool   compileMacHeader (cParameterList& params, cEthernetPacket& packet, bool noDestination, bool destIsOptional = false);
     size_t compileVLANTags (cParameterList& params, cEthernetPacket& packet);

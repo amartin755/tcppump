@@ -71,9 +71,11 @@ class cIgmpPacket : public cIPv4Packet
 {
 public:
     cIgmpPacket();
-    void compile (uint8_t type, uint8_t time);
     void compile (uint8_t type, uint8_t time, const cIpAddress& group);
-
+    void compileGeneralQuery (uint8_t time);
+    void compileGroupQuery (uint8_t time, const cIpAddress& group);
+    void compileReport (const cIpAddress& group);
+    void compileLeaveGroup (const cIpAddress& group);
 };
 
 #endif /* IGMP_PACKET_H_ */

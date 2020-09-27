@@ -92,7 +92,13 @@ int cInstructionParser::parse (const char* instruction, uint64_t& timestamp, boo
         if (!strncmp ("rstp", keyword, keywordLen))
             return compileSTP (params, packets, true);
         if (!strncmp ("igmp", keyword, keywordLen))
-            return compileIGMP (params, packets);
+            return compileIGMP (params, packets, false, false, false);
+        if (!strncmp ("igmp-query", keyword, keywordLen))
+            return compileIGMP (params, packets, true, false, false);
+        if (!strncmp ("igmp-report", keyword, keywordLen))
+            return compileIGMP (params, packets, false, true, false);
+        if (!strncmp ("igmp-leave", keyword, keywordLen))
+            return compileIGMP (params, packets, false, false, true);
 
         throw ParseException ("Unknown protocol type", keyword);
     }
@@ -475,25 +481,42 @@ int cInstructionParser::compileSTP (cParameterList& params, std::list <cEthernet
 }
 
 
-int cInstructionParser::compileIGMP  (cParameterList& params, std::list <cEthernetPacket> &packets)
+int cInstructionParser::compileIGMP  (cParameterList& params, std::list <cEthernetPacket> &packets, bool query, bool report, bool leave)
 {
     cIgmpPacket igmp;
     cEthernetPacket& eth = igmp.getFirstEthernetPacket ();
 
     compileMacHeader  (params, eth, true);
     compileVLANTags   (params, eth);
-    parseIPv4Params (params, igmp);
+    parseIPv4Params (params, igmp, query || report || leave);
 
-    uint8_t type = params.findParameter ("type", (uint32_t)0x11)->asInt8();
-    uint8_t time = params.findParameter ("time", (uint32_t)0)->asInt8();
-
-    cParameter* optionalPar = params.findParameter ("group", true);
-
-    if (optionalPar)
-        igmp.compile (type, time, optionalPar->asIPv4 ());
+    if (query)
+    {
+        uint8_t time = params.findParameter ("time", (uint32_t)100)->asInt8();
+        cParameter* optionalPar = params.findParameter ("group", true);
+        if (optionalPar)
+            igmp.compileGroupQuery(time, optionalPar->asIPv4 ());
+        else
+            igmp.compileGeneralQuery (time);
+    }
     else
-        igmp.compile (type, time);
-
+    {
+        cIpAddress group = params.findParameter ("group")->asIPv4 ();
+        if (report)
+        {
+            igmp.compileReport (group);
+        }
+        else if (leave)
+        {
+            igmp.compileLeaveGroup (group);
+        }
+        else
+        {
+            uint8_t type = params.findParameter ("type")->asInt8();
+            uint8_t time = params.findParameter ("time", (uint32_t)0)->asInt8();
+            igmp.compile (type, time, group);
+        }
+    }
     return (int)igmp.getAllEthernetPackets(packets);
 }
 
