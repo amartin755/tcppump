@@ -31,6 +31,9 @@ cIPv4Packet::cIPv4Packet ()
     memset (&ipHeader, 0, sizeof (ipHeader));
     ipHeader.setVersion (4);
     ipHeader.setHeaderLenght (5);
+    ipHeader.routerAlert.type   = 0x94;
+    ipHeader.routerAlert.length = 4;
+    ipHeader.routerAlert.value  = 0;
 
     cEthernetPacket firstPacket;
     firstPacket.setTypeLength (ETHERTYPE_IPV4);
@@ -104,7 +107,7 @@ void cIPv4Packet::compile (uint8_t protocol, const uint8_t* l4header, size_t l4h
             packet.setDestMac (cMacAddress (1, 0, 0x5e, dstIp.getAsArray()[1] & 0x7f, dstIp.getAsArray()[2], dstIp.getAsArray()[3]));
         }
     }
-    packet.setPayload ((uint8_t*)&ipHeader, sizeof (ipHeader)); // write IP header
+    packet.setPayload ((uint8_t*)&ipHeader, getHeaderLength()); // write IP header
     if (l4headerLen && l4header)
         packet.appendPayload(l4header, l4headerLen);            // copy L4 header (e.g. udp header)
     if (payloadLen && payload)
@@ -118,7 +121,7 @@ uint8_t cIPv4Packet::getPayloadAt8 (unsigned offset) const
     // FIXME fragmentation
 
     const cEthernetPacket &packet = packets.front();
-    return packet.getPayloadAt8 (offset + sizeof (ipHeader));
+    return packet.getPayloadAt8 (offset + getHeaderLength());
 }
 
 // note: offset is a byte offset!!!
@@ -127,7 +130,7 @@ uint16_t cIPv4Packet::getPayloadAt16 (unsigned offset) const
     // FIXME fragmentation
 
     const cEthernetPacket &packet = packets.front();
-    return packet.getPayloadAt16 (offset + sizeof (ipHeader));
+    return packet.getPayloadAt16 (offset + getHeaderLength());
 }
 
 size_t cIPv4Packet::getPayloadLength () const
@@ -137,23 +140,28 @@ size_t cIPv4Packet::getPayloadLength () const
     const cEthernetPacket &packet = packets.front();
     size_t len = packet.getPayloadLength ();
 
-    BUG_ON (len > sizeof (ipHeader));
+    BUG_ON (len > getHeaderLength());
 
-    return len > sizeof (ipHeader) ? len - sizeof (ipHeader) : 0;
+    return len > getHeaderLength() ? len - getHeaderLength() : 0;
 }
 
 void cIPv4Packet::updateL4Header (const uint8_t* l4header, size_t l4headerLen)
 {
     cEthernetPacket &packet = packets.front();
 
-    BUG_ON (packet.getPayloadLength () > sizeof (ipHeader));
+    BUG_ON (packet.getPayloadLength () > getHeaderLength());
 
-    packet.updatePayloadAt((unsigned)sizeof (ipHeader), l4header, l4headerLen);
+    packet.updatePayloadAt((unsigned)getHeaderLength(), l4header, l4headerLen);
 }
 
 void cIPv4Packet::updateHeaderChecksum ()
 {
-    ipHeader.chksum = cInetChecksum::rfc1071((const uint16_t*)&ipHeader, sizeof (ipHeader), nullptr, 0);
+    ipHeader.chksum = cInetChecksum::rfc1071((const uint16_t*)&ipHeader, getHeaderLength(), nullptr, 0);
+}
+
+void cIPv4Packet::addRouterAlertOption (void)
+{
+    ipHeader.setHeaderLenght(ipHeader.getHeaderLenght() + sizeof (ipv4_option_router_alert_t) / 4);
 }
 
 

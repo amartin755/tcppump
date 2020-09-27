@@ -41,6 +41,9 @@ void cIgmpPacket::compile (uint8_t type, uint8_t time, const cIpAddress& group)
     // update TTL
     setTimeToLive (1);
 
+    // add RouterOption to ip header
+    addRouterAlertOption ();
+
     igmpv2_packet_t igmp;
     std::memset (&igmp, 0, sizeof (igmp));
 

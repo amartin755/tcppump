@@ -28,6 +28,15 @@
 #include "ipaddress.hpp"
 
 #pragma pack(1)
+// RFC2113
+typedef struct
+{
+    uint8_t  type;   // 0x94
+    uint8_t  length; // 4
+    uint16_t value;  // 0 -> Router shall examine packet
+
+}ipv4_option_router_alert_t;
+
 typedef struct
 {
     uint8_t  vers_ihl; // version (bit 0 - 3) | ip header length (bit 4 - 7)
@@ -40,6 +49,7 @@ typedef struct
     uint16_t chksum;
     struct in_addr srcIp;
     struct in_addr dstIp;
+    ipv4_option_router_alert_t routerAlert;
 
     void setVersion (int version)
     {
@@ -49,7 +59,7 @@ typedef struct
     {
         vers_ihl = (length & 0x0F) | (vers_ihl & 0xF0);
     }
-    int getHeaderLenght ()
+    int getHeaderLenght () const
     {
         return (int)(vers_ihl & 0x0F);
     }
@@ -122,6 +132,11 @@ protected:
     uint16_t getPayloadAt16 (unsigned offset) const; // note: offset is a byte offset!!!
     size_t   getPayloadLength () const;
     void     updateL4Header (const uint8_t* l4header, size_t l4headerLen);
+    void     addRouterAlertOption (void);
+    size_t   getHeaderLength () const
+    {
+        return ipHeader.getHeaderLenght() * 4;
+    }
 
 
 private:
