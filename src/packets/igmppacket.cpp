@@ -55,8 +55,10 @@ void cIgmpPacket::compileLeaveGroup (const cIpAddress& group)
 
 void cIgmpPacket::compile (uint8_t type, uint8_t time, const cIpAddress& group)
 {
-    // update TTL
+    // set IPv4 header flags
     setTimeToLive (1);
+    setDSCP (48);
+    setDontFragment (true);
 
     // add RouterOption to ip header
     addRouterAlertOption ();
