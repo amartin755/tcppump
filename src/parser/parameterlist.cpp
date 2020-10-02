@@ -159,9 +159,17 @@ const uint8_t* cParameter::asStream (size_t& len)
 {
     if (!data)
     {
-        data = cParseHelper::hexStringToBin(value, valLen, dataLen);
-        if (!data)
-            throw FormatException (exParFormat, value);
+        if (*value != '"')
+        {
+            data = cParseHelper::hexStringToBin(value, valLen, dataLen);
+            if (!data)
+                throw FormatException (exParFormat, value);
+        }
+        else
+        {
+            len = valLen - 2; // don't count " at the begin an end of string
+            return (uint8_t*)value + 1;
+        }
     }
 
     len = dataLen;
@@ -325,6 +333,7 @@ const char* cParameterList::parseParameters (const char* parameters)
 {
     const char* p = parameters;
     cParameter v;
+    bool isString = false;
 
     list.clear ();
 
@@ -371,9 +380,19 @@ const char* cParameterList::parseParameters (const char* parameters)
             return p; // syntax error
         else
             p = token;
+        isString = *p == '"';
 
         // find end of value
-        p = cParseHelper::nextValueEnd (p);
+        if (isString)
+        {
+            p++;
+            const char* end = std::strchr (p, '"');
+            if (!end)
+                return p;
+            p = *end == '\0' ? end : end + 1;
+        }
+        else
+            p = cParseHelper::nextValueEnd (p);
         v.value  = token;
         v.valLen = p - token;
 
@@ -782,6 +801,20 @@ void cParameterList::unitTest ()
             BUG_ON (e.value ());
         }
         BUG_ON (catched);
+    }
+
+    try
+    {
+        size_t len = 0;
+        cParameterList obj ("(first=\"Hello World\", second = 200, third   =300)");
+        BUG_ON (obj.isValid ());
+        BUG_ON (!std::memcmp (obj.findParameter("first")->asStream(len), "Hello World", len));
+        BUG_ON (obj.findParameter("second")->asInt32() == (uint32_t)200);
+        BUG_ON (obj.findParameter("third")->asInt32()  == (uint32_t)300);
+    }
+    catch (FormatException& )
+    {
+        BUG_ON (0);
     }
 
     // TODO fuzzing
