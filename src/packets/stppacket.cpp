@@ -19,7 +19,7 @@
 #include <cstring>
 
 #include "stppacket.hpp"
-#include "../common/bug.h"
+#include "bug.h"
 
 
 cStpPacket::cStpPacket ()

@@ -20,7 +20,7 @@
 #include <cstring>
 
 #include "arppacket.hpp"
-#include "../common/bug.h"
+#include "bug.h"
 
 
 

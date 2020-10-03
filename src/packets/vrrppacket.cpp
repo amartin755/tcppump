@@ -21,7 +21,7 @@
 #include "inet.h"
 #include "vrrppacket.hpp"
 
-#include "../common/bug.h"
+#include "bug.h"
 #include "inetchecksum.hpp"
 
 

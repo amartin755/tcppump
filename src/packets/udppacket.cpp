@@ -21,7 +21,7 @@
 
 #include "inet.h"
 #include "udppacket.hpp"
-#include "../common/bug.h"
+#include "bug.h"
 
 
 

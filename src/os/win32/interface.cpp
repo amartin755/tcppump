@@ -24,7 +24,7 @@
 
 #include "interface.hpp"
 
-#include "../../common/bug.h"
+#include "bug.h"
 #include "console.hpp"
 
 /*

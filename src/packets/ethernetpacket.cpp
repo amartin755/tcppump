@@ -20,7 +20,7 @@
 #include <cstring>
 
 #include "ethernetpacket.hpp"
-#include "../common/bug.h"
+#include "bug.h"
 
 
 

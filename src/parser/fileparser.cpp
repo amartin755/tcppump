@@ -23,7 +23,7 @@
 
 #include "fileparser.hpp"
 
-#include "../common/bug.h"
+#include "bug.h"
 #include "instructionparser.hpp"
 #include "ethernetpacket.hpp"
 

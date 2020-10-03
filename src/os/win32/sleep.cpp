@@ -19,7 +19,7 @@
 
 #include <windows.h>
 
-#include "../../common/bug.h"
+#include "bug.h"
 
 #include "timeval.hpp"
 #ifdef WITH_UNITTESTS

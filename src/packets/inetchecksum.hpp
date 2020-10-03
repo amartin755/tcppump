@@ -22,7 +22,7 @@
 #include <cstdint>
 #include <cstddef>    // size_t
 
-#include "../common/bug.h"
+#include "bug.h"
 
 class cInetChecksum
 {

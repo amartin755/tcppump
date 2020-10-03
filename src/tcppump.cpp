@@ -23,7 +23,7 @@
 
 #include "tcppump.hpp"
 
-#include "common/bug.h"
+#include "bug.h"
 #include "sleep.hpp"
 #include "getch.hpp"
 #include "interface.hpp"
