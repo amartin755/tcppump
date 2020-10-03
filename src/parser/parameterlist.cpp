@@ -806,11 +806,21 @@ void cParameterList::unitTest ()
     try
     {
         size_t len = 0;
-        cParameterList obj ("(first=\"Hello World\", second = 200, third   =300)");
+        cParameterList obj ("(first=\"Hello World\", second = \"\", third   =300)");
         BUG_ON (obj.isValid ());
         BUG_ON (!std::memcmp (obj.findParameter("first")->asStream(len), "Hello World", len));
-        BUG_ON (obj.findParameter("second")->asInt32() == (uint32_t)200);
+        obj.findParameter("second")->asStream(len);
+        BUG_ON (len == 0);
         BUG_ON (obj.findParameter("third")->asInt32()  == (uint32_t)300);
+    }
+    catch (FormatException& )
+    {
+        BUG_ON (0);
+    }
+    try
+    {
+        cParameterList obj ("(first=\"Hello World, second = 2, third   =300)");
+        BUG_ON (!obj.isValid ());
     }
     catch (FormatException& )
     {
