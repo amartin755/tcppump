@@ -44,8 +44,8 @@ public:
 #endif
 
 private:
-    static const char* parseTimestamp (const char* p, uint64_t& timestamp, bool& isAbsolute);
-    static const char* parseProtocollIdentifier (const char* p, const char** identifier, size_t *len);
+    const char* parseTimestamp (const char* p, uint64_t& timestamp, bool& isAbsolute);
+    const char* parseProtocollIdentifier (const char* p, const char** identifier, size_t *len);
 
     int compileRAW  (cParameterList& params, std::list <cEthernetPacket> &packets);
     int compileETH  (cParameterList& params, std::list <cEthernetPacket> &packets);
@@ -61,32 +61,66 @@ private:
     size_t compileVLANTags (cParameterList& params, cEthernetPacket& packet);
     bool   parseIPv4Params (cParameterList& params, cIPv4Packet& packet, bool noDestinationIP = false);
 
+    void throwParseException (const char* msg, const char* val, size_t valLen = 0, const char* details = nullptr);
+
     cMacAddress ownMac;
     cIpAddress  ownIPv4;
+    const char* currentInstruction;
 };
 
 class ParseException
 {
 public:
-    ParseException (const char* msg, const char* val)
+    ParseException (const char* inst, const char* errMsg, const char* errBegin, int errLen = 0)
     {
-        this->msg = msg;
-        this->val = val;
+        this->errMsg  = errMsg;
+        this->p    = errBegin;
+        this->inst = inst;
+        this->l    = errLen;
+        this->d    = nullptr;
+    }
+    ParseException (const char* inst, const char* errMsg, const char* details, const char* errBegin, int errLen)
+    {
+        this->errMsg  = errMsg;
+        this->p    = errBegin;
+        this->inst = inst;
+        this->l    = errLen;
+        this->d    = details;
     }
 
-    const char* what ()
+    const char* errorMsg () const
     {
-        return msg;
+        return errMsg;
     }
 
-    const char* value ()
+    const char* instruction () const
     {
-        return val;
+        return inst;
     }
+
+    const char* errorBegin () const
+    {
+        return p;
+    }
+
+    int errorLen () const
+    {
+        return l;
+    }
+
+    const char* details () const
+    {
+        return d;
+    }
+
+
 
 private:
-    const char* msg;
-    const char* val;
+    const char* errMsg;
+    const char* p;
+    const char* inst;
+    const char* d;
+    int l;
 };
 
 

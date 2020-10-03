@@ -35,7 +35,6 @@ cFileParser::cFileParser ()
 
     fp           = NULL;
     lineNbr      = 1;
-    lastError[0] = '\0';
     delay        = 0;
 }
 
@@ -51,7 +50,6 @@ void cFileParser::init (FILE* fp, uint64_t defaultDelay, const cMacAddress& ownM
     this->fp      = fp;
 
     lineNbr       =  1;
-    lastError[0]  = '\0';
 
     delay         = defaultDelay;
     this->ownMac.set (ownMac);
@@ -80,7 +78,8 @@ int cFileParser::parse (uint64_t& timestamp, bool& isAbsolute, std::list <cEther
             }
             else
             {
-                return parseError ("Could not allocate memory! Line too long?!");
+                // Could not allocate memory! Line too long?!
+                throw std::bad_alloc();
             }
         }
 
@@ -120,7 +119,7 @@ int cFileParser::parse (uint64_t& timestamp, bool& isAbsolute, std::list <cEther
                         }
                         catch (ParseException &e)
                         {
-                            return parseError (e.what (), e.value ());
+                            throw FileParseException (lineNbr, e.instruction(), e.errorMsg(), e.details(), e.errorBegin(), e.errorLen());
                         }
                     }
                     else
@@ -135,20 +134,3 @@ int cFileParser::parse (uint64_t& timestamp, bool& isAbsolute, std::list <cEther
 
     return EOF;
 }
-
-int cFileParser::parseError (const char* errmsg, const char* pos)
-{
-    const char* position = "";
-    if (pos)
-        position = pos;
-    snprintf (lastError, sizeof (lastError), "(line %u) %s\n\t %s", lineNbr, errmsg, position);
-    if (pos)
-        strncat (lastError, "\n\t^", sizeof (lastError));
-    return PARSE_ERROR;
-}
-
-const char* cFileParser::getLastError ()
-{
-    return lastError;
-}
-

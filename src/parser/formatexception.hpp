@@ -27,10 +27,11 @@ const int exParFormat  = 3;
 class FormatException
 {
 public:
-    FormatException (int cause, const char* val)
+    FormatException (int cause, const char* val, int valLen = 0)
     {
-        this->cause = cause;
-        this->val   = val;
+        this->cause  = cause;
+        this->val    = val;
+        this->valLen = valLen;
     }
 
     int what ()
@@ -56,9 +57,15 @@ public:
         return val;
     }
 
+    int valueLength ()
+    {
+        return valLen;
+    }
+
 private:
     int cause;
     const char* val;
+    int valLen;
 };
 
 

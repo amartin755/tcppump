@@ -27,6 +27,7 @@
 #include "ethernetpacket.hpp"
 #include "ipaddress.hpp"
 #include "macaddress.hpp"
+#include "instructionparser.hpp"
 
 const int PARSE_ERROR = -100;
 
@@ -39,11 +40,9 @@ public:
     ~cFileParser ();
     void init (FILE* fp, uint64_t defaultDelay, const cMacAddress& ownMac, const cIpAddress&  ownIPv4);
     int parse (uint64_t&, bool&, std::list <cEthernetPacket> &packets);
-    const char* getLastError ();
 
 
 private:
-    int parseError (const char* errmsg, const char* pos = NULL);
 
     char*  instructionBuffer;
     int    instructionBufferSize;
@@ -53,8 +52,23 @@ private:
     cIpAddress   ownIPv4;
     FILE*        fp;
 
-    char         lastError[1024];
     unsigned     lineNbr;
+};
+
+class FileParseException : public ParseException
+{
+public:
+    FileParseException (int lineNbr, const char* inst, const char* errMsg, const char* details, const char* errBegin, int errLen) :
+        ParseException(inst, errMsg, details, errBegin, errLen)
+    {
+        this->lineNbr = lineNbr;
+    }
+    int lineNumber () const
+    {
+        return lineNbr;
+    }
+private:
+    int lineNbr;
 };
 
 #endif /* FILEPARSER_HPP_ */

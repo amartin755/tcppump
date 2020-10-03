@@ -39,6 +39,7 @@ cInstructionParser::cInstructionParser (const cMacAddress& ownMac, const cIpAddr
 {
     this->ownMac.set(ownMac);
     this->ownIPv4.set(ownIPv4);
+    currentInstruction = nullptr;
 }
 
 
@@ -49,9 +50,12 @@ cInstructionParser::~cInstructionParser ()
 // returns the number of added packets to the list 'packets'
 int cInstructionParser::parse (const char* instruction, uint64_t& timestamp, bool& isAbsolute,  std::list <cEthernetPacket> &packets)
 {
+    currentInstruction = instruction;
+
     const char* p = instruction;
     const char* keyword;
     size_t      keywordLen;
+
 
     p = parseTimestamp (p, timestamp, isAbsolute);
     p = parseProtocollIdentifier (p, &keyword, &keywordLen);
@@ -60,7 +64,7 @@ int cInstructionParser::parse (const char* instruction, uint64_t& timestamp, boo
     cParameterList params (p);
     if (!params.isValid ())
     {
-        throw ParseException ("Syntax error", params.getParseError ());
+        throwParseException ("Syntax error", params.getParseError ());
     }
 
     // compile frames
@@ -102,18 +106,21 @@ int cInstructionParser::parse (const char* instruction, uint64_t& timestamp, boo
         if (!strncmp ("igmp-leave", keyword, keywordLen))
             return compileIGMP (params, packets, false, false, false, true);
 
-        throw ParseException ("Unknown protocol type", keyword);
+        throwParseException ("Unknown protocol type", keyword, keywordLen);
     }
     catch (FormatException& e)
     {
         switch (e.what ())
         {
         case exParUnknown:
-            throw ParseException ("Missing parameter", e.value ());
+            throwParseException ("Missing parameter", p, std::strlen (p), e.value ());// todo Klammern unterringeln, parameter mit ausgeben
+            break;
         case exParRange:
-            throw ParseException ("Range of parameter violated", e.value ());
+            throwParseException ("Range of parameter violated", e.value (), e.valueLength ());
+            break;
         case exParFormat:
-            throw ParseException ("Invalid parameter value", e.value ());
+            throwParseException ("Invalid parameter value", e.value (), e.valueLength ());
+            break;
         default:
             BUG ("BUG: unexpected compile exception");
         }
@@ -144,12 +151,12 @@ const char* cInstructionParser::parseTimestamp (const char* p, uint64_t& timesta
             // timestamp must be terminated with ':'
             p = cParseHelper::nextCharIgnoreWhitspaces (end, ':');
             if (!p)
-                throw ParseException ("Expected ':' after timestamp", end);
+                throwParseException ("Expected ':' after timestamp", end);
             p++;
         }
         else
         {
-            throw ParseException ("Invalid timestamp", p);
+            throwParseException ("Invalid timestamp", p);
         }
     }
 
@@ -167,12 +174,12 @@ const char* cInstructionParser::parseProtocollIdentifier (const char* p, const c
     if (keyword)
         p = keywordEnd = cParseHelper::nextKeyEnd (p);
     if (!keyword && !keywordEnd)
-        throw ParseException ("Missing protocol specifier", p);
+        throwParseException ("Missing protocol specifier", p);
 
     // find begin of parameter list --> '('
     p = cParseHelper::nextCharIgnoreWhitspaces (p, '(');
     if (!p)
-        throw ParseException ("Expected '(' after protocol specifier", keyword);
+        throwParseException ("Expected '(' after protocol specifier", keyword);
 
 
 
@@ -546,6 +553,15 @@ int cInstructionParser::compileIGMP  (cParameterList& params, std::list <cEthern
 }
 
 
+void cInstructionParser::throwParseException (const char* msg, const char* val, size_t valLen, const char* details)
+{
+    if (details)
+        throw ParseException (currentInstruction, msg, details, val, (int)valLen);
+    else
+        throw ParseException (currentInstruction, msg, val, (int)valLen);
+}
+
+
 #ifdef WITH_UNITTESTS
 
 #include "console.hpp"
@@ -721,6 +737,16 @@ static const testcase_t tests[] = {
 void cInstructionParser::unitTest ()
 {
     Console::PrintDebug("-- " __FILE__ " --\n");
+
+    uint64_t timestamp;
+    bool isAbsolute;
+    cMacAddress ownMac("ba:ba:ba:ba:ba:ba");
+    cIpAddress ownIPv4;
+    std::list <cEthernetPacket> packets;
+    cInstructionParser obj (ownMac, ownIPv4);
+
+    ownIPv4.set("10.10.10.10");
+
     {
         const char s[] = "  abc \tde_0f  ghi";
         const char* p = nullptr;
@@ -730,7 +756,7 @@ void cInstructionParser::unitTest ()
 
         try
         {
-            p = parseTimestamp (s, t, abs);
+            p = obj.parseTimestamp (s, t, abs);
         }
         catch (ParseException& )
         {
@@ -748,7 +774,7 @@ void cInstructionParser::unitTest ()
 
         try
         {
-            p = parseTimestamp (s, t, abs);
+            p = obj.parseTimestamp (s, t, abs);
         }
         catch (ParseException& )
         {
@@ -766,7 +792,7 @@ void cInstructionParser::unitTest ()
 
         try
         {
-            p = parseTimestamp (s, t, abs);
+            p = obj.parseTimestamp (s, t, abs);
         }
         catch (ParseException& )
         {
@@ -784,7 +810,7 @@ void cInstructionParser::unitTest ()
 
         try
         {
-            p = parseTimestamp (s, t, abs);
+            p = obj.parseTimestamp (s, t, abs);
         }
         catch (ParseException& )
         {
@@ -804,7 +830,7 @@ void cInstructionParser::unitTest ()
 
         try
         {
-            p = parseTimestamp (s, t, abs);
+            p = obj.parseTimestamp (s, t, abs);
         }
         catch (ParseException& )
         {
@@ -824,7 +850,7 @@ void cInstructionParser::unitTest ()
 
         try
         {
-            p = parseTimestamp (s, t, abs);
+            p = obj.parseTimestamp (s, t, abs);
         }
         catch (ParseException& )
         {
@@ -844,7 +870,7 @@ void cInstructionParser::unitTest ()
 
         try
         {
-            p = parseTimestamp (s, t, abs);
+            p = obj.parseTimestamp (s, t, abs);
         }
         catch (ParseException& )
         {
@@ -864,7 +890,7 @@ void cInstructionParser::unitTest ()
 
         try
         {
-            p = parseTimestamp (s, t, abs);
+            p = obj.parseTimestamp (s, t, abs);
         }
         catch (ParseException& )
         {
@@ -884,7 +910,7 @@ void cInstructionParser::unitTest ()
 
         try
         {
-            p = parseProtocollIdentifier (s, &prot, &len);
+            p = obj.parseProtocollIdentifier (s, &prot, &len);
         }
         catch (ParseException& )
         {
@@ -904,7 +930,7 @@ void cInstructionParser::unitTest ()
 
         try
         {
-            p = parseProtocollIdentifier (s, &prot, &len);
+            p = obj.parseProtocollIdentifier (s, &prot, &len);
         }
         catch (ParseException& )
         {
@@ -924,7 +950,7 @@ void cInstructionParser::unitTest ()
 
         try
         {
-            p = parseProtocollIdentifier (s, &prot, &len);
+            p = obj.parseProtocollIdentifier (s, &prot, &len);
         }
         catch (ParseException& )
         {
@@ -944,7 +970,7 @@ void cInstructionParser::unitTest ()
 
         try
         {
-            p = parseProtocollIdentifier (s, &prot, &len);
+            p = obj.parseProtocollIdentifier (s, &prot, &len);
         }
         catch (ParseException& )
         {
@@ -964,7 +990,7 @@ void cInstructionParser::unitTest ()
 
         try
         {
-            p = parseProtocollIdentifier (s, &prot, &len);
+            p = obj.parseProtocollIdentifier (s, &prot, &len);
         }
         catch (ParseException& )
         {
@@ -997,7 +1023,7 @@ void cInstructionParser::unitTest ()
 
             try
             {
-                p = parseProtocollIdentifier (wrongstrings[n], &prot, &len);
+                p = obj.parseProtocollIdentifier (wrongstrings[n], &prot, &len);
             }
             catch (ParseException& )
             {
@@ -1012,14 +1038,6 @@ void cInstructionParser::unitTest ()
 
     //TODO fuzzing of parseTimestamp and parseProtocollIdentifier
 
-
-    uint64_t timestamp;
-    bool isAbsolute;
-    cMacAddress ownMac("ba:ba:ba:ba:ba:ba");
-    cIpAddress ownIPv4;
-    std::list <cEthernetPacket> packets;
-
-    ownIPv4.set("10.10.10.10");
 
     for (unsigned n = 0; n < sizeof(tests)/sizeof(tests[0]); n++)
     {

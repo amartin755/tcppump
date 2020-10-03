@@ -85,11 +85,11 @@ uint32_t cParameter::asInt32 (uint32_t rangeBegin, uint32_t rangeEnd) const
     v = strtoul (value, &end, 0);
     if (end != (value + valLen))
     {
-        throw FormatException (exParFormat, value);
+        throw FormatException (exParFormat, value, (int)valLen);
     }
     else if ((!((v >= rangeBegin) && (v <= rangeEnd))) || (errno == ERANGE))
     {
-        throw FormatException (exParRange, value);
+        throw FormatException (exParRange, value, (int)valLen);
     }
 
     return (uint32_t)v;
@@ -121,20 +121,20 @@ double cParameter::asDouble (double rangeBegin, double rangeEnd) const
     }
     catch (const std::out_of_range&)
     {
-        throw FormatException (exParRange, value);
+        throw FormatException (exParRange, value, (int)valLen);
     }
     catch (...)
     {
-        throw FormatException (exParFormat, value);
+        throw FormatException (exParFormat, value, (int)valLen);
     }
 
     if (end != valLen)
     {
-        throw FormatException (exParFormat, value);
+        throw FormatException (exParFormat, value, (int)valLen);
     }
     else if ((v < rangeBegin) || (v > rangeEnd))
     {
-        throw FormatException (exParRange, value);
+        throw FormatException (exParRange, value, (int)valLen);
     }
 
     return v;
@@ -151,7 +151,7 @@ cMacAddress cParameter::asMac () const
     }
     else
     {
-        throw FormatException(exParFormat, value);
+        throw FormatException(exParFormat, value, (int)valLen);
     }
 }
 
@@ -164,7 +164,7 @@ const uint8_t* cParameter::asStream (size_t& len)
         {
             data = cParseHelper::hexStringToBin(value, valLen, dataLen);
             if (!data)
-                throw FormatException (exParFormat, value);
+                throw FormatException (exParFormat, value, (int)valLen);
         }
         else
         {
@@ -188,7 +188,7 @@ cIpAddress cParameter::asIPv4 () const
     }
     else
     {
-        throw FormatException (exParFormat, value);
+        throw FormatException (exParFormat, value, (int)valLen);
     }
 }
 
@@ -235,7 +235,7 @@ cParameter* cParameterList::findParameter (const cParameter* startAfter, const c
     }
 
     if (!isOptional)
-        throw FormatException (exParUnknown, parameter);
+        throw FormatException (exParUnknown, parameter, (int)len);
 
     return NULL;
 }

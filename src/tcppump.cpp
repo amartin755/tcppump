@@ -306,7 +306,7 @@ bool cTcpPump::parsePackets (const cMacAddress& ownMac, const cIpAddress& ownIP,
         }
         catch (ParseException &e)
         {
-            Console::PrintError ("%s %s\n", e.what (), e.value ());
+            printParseError (e);
             return false;
         }
         catch (FormatException& e)
@@ -363,8 +363,8 @@ bool cTcpPump::parseScripts (const cMacAddress& ownMac, const cIpAddress& ownIP,
                     {
                         timestamp.add(scriptStartTime);
 
-                        if (timestamp < currtime) // fixme Was tun wenn ein absoluter timestamp < currtime ist? delay = 0 oder Fehler melden?
-                            BUG_ON ("fixme" == 0);
+                        if (timestamp < currtime) // FIXME What to do if timestamp < currtime? delay = 0 or parse exception?
+                            BUG ("FIXME");
                         else
                         {
                             cTimeval delta(timestamp);
@@ -373,6 +373,11 @@ bool cTcpPump::parseScripts (const cMacAddress& ownMac, const cIpAddress& ownIP,
                         }
                     }
                 }
+            }
+            catch (FileParseException &e)
+            {
+                printParseError (*scripts, e);
+                count = PARSE_ERROR;
             }
             catch (...)
             {
@@ -384,8 +389,6 @@ bool cTcpPump::parseScripts (const cMacAddress& ownMac, const cIpAddress& ownIP,
 
         fclose (fp);
 
-        if (count == PARSE_ERROR)
-            Console::PrintError ("%s %s\n", *scripts, parser.getLastError ());
         if (count != EOF)
             return false;
 
@@ -395,6 +398,33 @@ bool cTcpPump::parseScripts (const cMacAddress& ownMac, const cIpAddress& ownIP,
 
     return true;
 }
+
+
+void cTcpPump::printParseError (const ParseException &e) const
+{
+    BUG_ON (e.errorMsg());
+    BUG_ON (e.instruction());
+    std::string s, b;
+    if (e.instruction() && e.errorBegin())
+    {
+        BUG_ON ((e.errorBegin() - e.instruction()) >= 0);
+        s.assign(e.errorBegin() - e.instruction(), ' ');
+    }
+    if (e.errorLen())
+        b.assign(e.errorLen()-1, '~');
+    if (e.details())
+        Console::PrintError ("error: %s '%s'\n  %s\n  %s^%s\n", e.errorMsg (), e.details (), e.instruction (), s.c_str(), b.c_str());
+    else
+        Console::PrintError ("error: %s\n  %s\n  %s^%s\n", e.errorMsg (), e.instruction (), s.c_str(), b.c_str());
+}
+
+
+void cTcpPump::printParseError (const char* filename, const FileParseException &e) const
+{
+    Console::PrintError ("%s (line %d) ", filename, e.lineNumber());
+    printParseError (e);
+}
+
 
 
 #if HAVE_PCAP

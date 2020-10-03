@@ -51,6 +51,8 @@ class cInterface;
 class cTimeval;
 class cIpAddress;
 class cMacAddress;
+class ParseException;
+class FileParseException;
 
 class cTcpPump : public cCmdlineApp
 {
@@ -68,6 +70,8 @@ private:
 #endif
     bool sendPacket (cInterface &ifc, const cTimeval &delay, const cEthernetPacket &p);
     bool interactiveMode (cInterface &ifc);
+    void printParseError (const ParseException &e) const;
+    void printParseError (const char* filename, const FileParseException &e) const;
 
     appOptions options;
     std::list <cEthernetPacket> packets;
