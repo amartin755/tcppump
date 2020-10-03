@@ -122,7 +122,7 @@ uint8_t cIPv4Packet::getPayloadAt8 (unsigned offset) const
     // FIXME fragmentation
 
     const cEthernetPacket &packet = packets.front();
-    return packet.getPayloadAt8 (offset + getHeaderLength());
+    return packet.getPayloadAt8 (offset + (unsigned)getHeaderLength());
 }
 
 // note: offset is a byte offset!!!
@@ -131,7 +131,7 @@ uint16_t cIPv4Packet::getPayloadAt16 (unsigned offset) const
     // FIXME fragmentation
 
     const cEthernetPacket &packet = packets.front();
-    return packet.getPayloadAt16 (offset + getHeaderLength());
+    return packet.getPayloadAt16 (offset + (unsigned)getHeaderLength());
 }
 
 size_t cIPv4Packet::getPayloadLength () const
