@@ -20,27 +20,18 @@
 #ifndef BUGON_H
 #define BUGON_H
 
-#ifdef assert
-#error do not combine assert.h and bug.h
-#endif
+#include <cstdio>
+#include <cstdlib>
 
-#ifdef NDEBUG
-#define NDEBUG_WAS_DEFINED 1
-#endif
-
-#undef NDEBUG
-#include <assert.h>
-#include <stdio.h>
-
-//FIXME get rid of assert dependency
-
-#define BUG_ON(expr) do{if (!(expr))fprintf (stderr, "Oops, you may found a bug!!!\n  "); assert ((expr));}while(0)
-#define BUG(msg) BUG_ON(msg == 0)
-
-#ifdef NDEBUG_WAS_DEFINED
-#define NDEBUG 1
-#endif
-
-#undef NDEBUG_WAS_DEFINED
+static inline void __game_over (const char* expr, const char* file, int line)
+{
+    std::fprintf (stderr, "Oops, you may found a bug!!!\n %s %d: '%s'\n", file, line, expr);
+    std::abort ();
+}
+#define BUG_ON(expr)                            \
+     (static_cast <bool> (expr)                        \
+      ? void (0)                            \
+      : __game_over (#expr, __FILE__, __LINE__))
+#define BUG(msg) __game_over (#msg, __FILE__, __LINE__)
 
 #endif /* BUGON_H */
