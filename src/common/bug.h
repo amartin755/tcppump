@@ -32,7 +32,9 @@
 #include <assert.h>
 #include <stdio.h>
 
-#define BUG_ON(expr) do{fprintf (stderr, "Oops, you may found a bug!!!\n  "); assert ((expr));}while(0)
+//FIXME get rid of assert dependency
+
+#define BUG_ON(expr) do{if (!(expr))fprintf (stderr, "Oops, you may found a bug!!!\n  "); assert ((expr));}while(0)
 #define BUG(msg) BUG_ON(msg == 0)
 
 #ifdef NDEBUG_WAS_DEFINED
