@@ -92,13 +92,15 @@ int cInstructionParser::parse (const char* instruction, uint64_t& timestamp, boo
         if (!strncmp ("rstp", keyword, keywordLen))
             return compileSTP (params, packets, true);
         if (!strncmp ("igmp", keyword, keywordLen))
-            return compileIGMP (params, packets, false, false, false);
+            return compileIGMP (params, packets, false, false, false, false);
         if (!strncmp ("igmp-query", keyword, keywordLen))
-            return compileIGMP (params, packets, true, false, false);
+            return compileIGMP (params, packets, false, true, false, false);
+        if (!strncmp ("igmp3-query", keyword, keywordLen))
+            return compileIGMP (params, packets, true, true, false, false);
         if (!strncmp ("igmp-report", keyword, keywordLen))
-            return compileIGMP (params, packets, false, true, false);
+            return compileIGMP (params, packets, false, false, true, false);
         if (!strncmp ("igmp-leave", keyword, keywordLen))
-            return compileIGMP (params, packets, false, false, true);
+            return compileIGMP (params, packets, false, false, false, true);
 
         throw ParseException ("Unknown protocol type", keyword);
     }
@@ -481,7 +483,7 @@ int cInstructionParser::compileSTP (cParameterList& params, std::list <cEthernet
 }
 
 
-int cInstructionParser::compileIGMP  (cParameterList& params, std::list <cEthernetPacket> &packets, bool query, bool report, bool leave)
+int cInstructionParser::compileIGMP  (cParameterList& params, std::list <cEthernetPacket> &packets, bool v3, bool query, bool report, bool leave)
 {
     cIgmpPacket igmp;
     cEthernetPacket& eth = igmp.getFirstEthernetPacket ();
@@ -492,12 +494,35 @@ int cInstructionParser::compileIGMP  (cParameterList& params, std::list <cEthern
 
     if (query)
     {
-        uint8_t time = params.findParameter ("time", (uint32_t)100)->asInt8();
+        bool s        = false;
+        unsigned qrv  = 0;
+        double   qqic = 0;
+        double   time = 0;
+
+        if (v3)
+        {
+            cParameter* optionalPar = nullptr;
+            s    = !!params.findParameter ("s", (uint32_t)0)->asInt8 (0, 1);
+            qrv  =   params.findParameter ("qrv", (uint32_t)2)->asInt8 (0, 7);
+            qqic =   params.findParameter ("qqic", 125.0)->asDouble (0, 31744.0);
+            time =   params.findParameter ("time", 10.0)->asDouble (0, 3174.4);
+
+            int sources = 0;
+            while ((++sources <= 366 ) &&
+                   ((optionalPar = params.findParameter(optionalPar, nullptr, "rsip", true)) != nullptr))
+            {
+                igmp.v3addSource (optionalPar->asIPv4());
+            }
+        }
+        else
+        {
+            time = params.findParameter ("time", 10.0)->asDouble (0, 25.5);
+        }
         cParameter* optionalPar = params.findParameter ("group", true);
         if (optionalPar)
-            igmp.compileGroupQuery(time, optionalPar->asIPv4 ());
+            igmp.compileGroupQuery(v3, time, s, qrv, qqic, optionalPar->asIPv4 ());
         else
-            igmp.compileGeneralQuery (time);
+            igmp.compileGeneralQuery (v3, time, s, qrv, qqic);
     }
     else
     {
@@ -508,13 +533,13 @@ int cInstructionParser::compileIGMP  (cParameterList& params, std::list <cEthern
         }
         else if (leave)
         {
-            igmp.compileLeaveGroup (group);
+            igmp.v2compileLeaveGroup (group);
         }
         else
         {
             uint8_t type = params.findParameter ("type")->asInt8();
             uint8_t time = params.findParameter ("time", (uint32_t)0)->asInt8();
-            igmp.compile (type, time, group);
+            igmp.v12compile (type, time, group);
         }
     }
     return (int)igmp.getAllEthernetPackets(packets);

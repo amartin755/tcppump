@@ -25,8 +25,8 @@
 /*
    V1 (RFC1112)
 
-   0                   1                   2                   3
-   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    |Version| Type  |    Unused     |           Checksum            |
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -42,6 +42,84 @@
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    |                         Group Address                         |
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+   V3 (RFC3376)
+
+   Query
+
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |  Type = 0x11  | Max Resp Code |           Checksum            |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                         Group Address                         |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   | Resv  |S| QRV |     QQIC      |     Number of Sources (N)     |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                       Source Address [1]                      |
+   +-                                                             -+
+   |                       Source Address [2]                      |
+   +-                              .                              -+
+   .                               .                               .
+   .                               .                               .
+   +-                                                             -+
+   |                       Source Address [N]                      |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+   Report
+
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |  Type = 0x22  |    Reserved   |           Checksum            |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |           Reserved            |  Number of Group Records (M)  |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                                                               |
+   .                                                               .
+   .                        Group Record [1]                       .
+   .                                                               .
+   |                                                               |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                                                               |
+   .                                                               .
+   .                        Group Record [2]                       .
+   .                                                               .
+   |                                                               |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                               .                               |
+   .                               .                               .
+   |                               .                               |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                                                               |
+   .                                                               .
+   .                        Group Record [M]                       .
+   .                                                               .
+   |                                                               |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+    Group Record
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |  Record Type  |  Aux Data Len |     Number of Sources (N)     |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                       Multicast Address                       |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                       Source Address [1]                      |
+    +-                                                             -+
+    |                       Source Address [2]                      |
+    +-                                                             -+
+    .                               .                               .
+    .                               .                               .
+    .                               .                               .
+    +-                                                             -+
+    |                       Source Address [N]                      |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                                                               |
+    .                                                               .
+    .                         Auxiliary Data                        .
+    .                                                               .
+    |                                                               |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 */
 
@@ -65,17 +143,73 @@ typedef struct
 
 }igmpv2_packet_t;
 
+typedef struct
+{
+    uint8_t  type;
+    uint8_t  maxRespCode;
+    uint16_t checksum;
+    struct in_addr groupAddress;
+
+    uint8_t flags;
+    uint8_t qqic;
+    uint16_t numberOfSources;
+
+    //    struct in_addr sources [numberOfSources]; see member v3sourceAddresses
+
+    void setS (bool s)
+    {
+        flags &= 0x08;
+        flags |= (((uint8_t)s) << 3);
+    }
+    void setQRV (unsigned qrv)
+    {
+        flags &= 0xf8;
+        flags |= (qrv & 7);
+    }
+}igmpv3_query_t;
+
+typedef struct
+{
+    uint8_t  type;
+    uint8_t  reserved1;
+    uint16_t checksum;
+    uint16_t reserved2;
+    uint16_t numbOfGroupRecords;
+
+    //    struct igmpv3_group_record_t groupRecords [numbOfGroupRecords];
+
+}igmpv3_report_t;
+
+typedef struct
+{
+    uint8_t  type;
+    uint8_t  auxDataLen;
+    uint16_t numberOfSources;
+    struct in_addr groupAddress;
+    //    struct in_addr sources [numberOfSources];
+
+}igmpv3_group_record_t;
+
 #pragma pack()
 
 class cIgmpPacket : public cIPv4Packet
 {
 public:
     cIgmpPacket();
-    void compile (uint8_t type, uint8_t time, const cIpAddress& group);
-    void compileGeneralQuery (uint8_t time);
-    void compileGroupQuery (uint8_t time, const cIpAddress& group);
+    void v12compile (uint8_t type, uint8_t time, const cIpAddress& group);
+    void compileGeneralQuery (bool v3, double maxRespCode, bool s, unsigned qrv, double qqic);
+    void compileGroupQuery (bool v3, double maxRespCode, bool s, unsigned qrv, double qqic, const cIpAddress& group);
     void compileReport (const cIpAddress& group);
-    void compileLeaveGroup (const cIpAddress& group);
+    void v2compileLeaveGroup (const cIpAddress& group);
+
+    void v3addSource (const cIpAddress& source);
+
+private:
+    void v3compileGeneralQuery (double maxRespCode, bool s, unsigned qrv, double qqic);
+    void v3compileGroupQuery (double maxRespCode, bool s, unsigned qrv, double qqic, const cIpAddress& group);
+    void setIpHeaderOptions (void);
+    uint8_t floatToTime (double d) const;
+    std::vector<struct in_addr> v3sourceAddresses;
 };
 
 #endif /* IGMP_PACKET_H_ */

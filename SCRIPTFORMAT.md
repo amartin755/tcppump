@@ -300,6 +300,68 @@ Group IPv4 Address.
 
     group
 
+#### Protocol Specifier (IGMPv3 General/Group-Specific/Group-and-Source-Specific Membership Query)
+
+    igmp3-query
+
+#### Parameters
+Source EUI-48 MAC address. If ommited, address of the network interface is used
+
+    smac (optional)
+
+Source IPv4 address; If ommited, address of the network interface is used
+
+    sip (optional)
+
+Max. Respnd Time in seconds (range: 0 - 3174.4, default 10)
+
+    time (optional)
+
+S Flag (Suppress Router-Side Processing) (range: 0 - 1, default 0)
+
+    s (optional)
+
+Querier's Robustness Variable (range: 0 - 7, default 2) Note: According to RFC3376 zero is an invalid value
+
+    qrv (optional)
+
+Querier's Query Interval Code in seconds (range: 0 - 31744, default 125)
+
+    qqic (optional)
+
+Group IPv4 Address. If ommited --> General-Membership-Query
+
+    group (optional)
+
+Router Source IPv4 Address; Zero to 366 IP addresses are allowed. If you provide more addresses they will be silently ignored.
+
+    rsip (optional)
+
+#### Protocol Specifier (IGMPv3 Membership Report)
+
+    igmp3-report
+
+#### Parameters
+Source EUI-48 MAC address. If ommited, address of the network interface is used
+
+    smac (optional)
+
+Source IPv4 address; If ommited, address of the network interface is used
+
+    sip (optional)
+
+IP multicast address to which this Group Record pertains.
+
+    multicast (optional)
+
+Record Type
+
+    type (optional)
+
+Router Source IPv4 Address; Zero to 366 IP addresses are allowed. If you provide more addresses they will be silently ignored.
+
+    rsip (optional)
+
 #### Examples
 
     # TODO
