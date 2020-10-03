@@ -19,13 +19,14 @@
 
 #include <cstdio>
 
-#include "bugon.h"
+#include "bug.h"
 #include "console.hpp"
 #include "timeval.hpp"
 #include "cmdline.hpp"
 #include "pcapfileio.hpp"
 #include "ethernetpacket.hpp"
 #include "arppacket.hpp"
+#include "common/bug.h"
 #include "ipv4packet.hpp"
 #include "parameterlist.hpp"
 #include "instructionparser.hpp"
@@ -72,7 +73,7 @@ int main (void)
     }
     catch (...)
     {
-        BUG_ON ("unhandled exception" == 0);
+        BUG ("unhandled exception");
     }
     // every failure will lead to assert, thus if we see this output, all tests have passed
     fprintf (stderr, "\n --- unit tests finished successfully !!! --- \n");

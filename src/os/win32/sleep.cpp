@@ -19,8 +19,8 @@
 
 #include <windows.h>
 
+#include "../../common/bug.h"
 
-#include "bugon.h"
 #include "timeval.hpp"
 #ifdef WITH_UNITTESTS
 #include "console.hpp"

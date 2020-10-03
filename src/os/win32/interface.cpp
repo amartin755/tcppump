@@ -22,8 +22,9 @@
 #include <iphlpapi.h>
 #include <winerror.h>
 
-#include "bugon.h"
 #include "interface.hpp"
+
+#include "../../common/bug.h"
 #include "console.hpp"
 
 /*

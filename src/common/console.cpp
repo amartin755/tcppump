@@ -20,8 +20,8 @@
 #include <cstdarg>
 #include <cstdio>
 
-#include "bugon.h"
 #include "console.hpp"
+#include "bug.h"
 
 Console::out_level Console::level = Normal;
 

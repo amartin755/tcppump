@@ -21,9 +21,9 @@
 #include <cctype>
 #include <cstring>
 
-#include "bugon.h"
 #include "instructionparser.hpp"
 
+#include "../common/bug.h"
 #include "parsehelper.hpp"
 #include "parameterlist.hpp"
 #include "ethernetpacket.hpp"
@@ -115,11 +115,11 @@ int cInstructionParser::parse (const char* instruction, uint64_t& timestamp, boo
         case exParFormat:
             throw ParseException ("Invalid parameter value", e.value ());
         default:
-            BUG_ON ("BUG: unexpected compile exception" == 0);
+            BUG ("BUG: unexpected compile exception");
         }
     }
 
-    BUG_ON ("BUG: unreachable code" == 0);
+    BUG ("BUG: unreachable code");
 
     return 0;
 }

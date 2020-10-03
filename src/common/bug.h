@@ -21,7 +21,7 @@
 #define BUGON_H
 
 #ifdef assert
-#error do not combine assert.h and bugon.h
+#error do not combine assert.h and bug.h
 #endif
 
 #ifdef NDEBUG
@@ -30,8 +30,10 @@
 
 #undef NDEBUG
 #include <assert.h>
+#include <stdio.h>
 
-#define BUG_ON assert
+#define BUG_ON(expr) do{fprintf (stderr, "Oops, you may found a bug!!!\n  "); assert ((expr));}while(0)
+#define BUG(msg) BUG_ON(msg == 0)
 
 #ifdef NDEBUG_WAS_DEFINED
 #define NDEBUG 1

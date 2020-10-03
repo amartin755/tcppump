@@ -26,7 +26,7 @@
 #include "ipaddress.hpp"
 #include "macaddress.hpp"
 #include "formatexception.hpp"
-
+#include "bug.h"
 
 class cParameter
 {
@@ -70,7 +70,7 @@ public:
     virtual cMacAddress asMac   () const {return mac;}
     virtual const uint8_t* asStream   (size_t&)
     {
-        BUG_ON ("no raw access for optional parameters" == 0);
+        BUG ("no raw access for optional parameters");
         return NULL;
     }
     virtual cIpAddress  asIPv4  () const {return ip;}

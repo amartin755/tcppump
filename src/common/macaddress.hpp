@@ -25,7 +25,7 @@
 #include <cctype>
 #include <string>
 
-#include "bugon.h"
+#include "bug.h"
 
 class cMacAddress
 {

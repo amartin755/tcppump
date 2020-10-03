@@ -21,8 +21,9 @@
 #include <cstdint>
 #include <stdexcept>
 
-#include "bugon.h"
 #include "tcppump.hpp"
+
+#include "common/bug.h"
 #include "sleep.hpp"
 #include "getch.hpp"
 #include "interface.hpp"

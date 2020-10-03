@@ -20,10 +20,11 @@
 #include <cstring>
 #include <cstdlib>
 
-#include "bugon.h"
 #include "ketopt.h"
 
 #include "cmdline.hpp"
+
+#include "bug.h"
 #include "console.hpp"
 
 
@@ -136,7 +137,7 @@ bool cCmdline::parse (int* optind)
             }
             else
             {
-                BUG_ON ("getopt returned unexpected value" == 0);
+                BUG ("getopt returned unexpected value");
             }
         }
     }
@@ -211,9 +212,9 @@ bool cCmdline::addOption (bool optional, char shortname, const char* longname, c
         const char* argname, arg_type type, void* arg, bool hasOptionalArg, bool dontFailIfSet)
 {
     if (hasOptionalArg && shortname)
-        BUG_ON ("optional arguments are only possible with long options" == 0);
+        BUG ("optional arguments are only possible with long options");
     if (!shortname && !longname)
-        BUG_ON ("either shortname or longname must be != null" == 0);
+        BUG ("either shortname or longname must be != null");
 
     if (longname)
     {

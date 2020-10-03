@@ -30,8 +30,9 @@
 #include <netinet/in.h>
 #include <net/if_arp.h>       // ARPHRD_ETHER
 
-#include "bugon.h"
 #include "interface.hpp"
+
+#include "../../common/bug.h"
 #include "console.hpp"
 
 

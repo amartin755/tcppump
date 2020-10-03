@@ -19,9 +19,9 @@
 
 #include <cstring>
 
-#include "bugon.h"
 #include "inet.h"
 #include "udppacket.hpp"
+#include "../common/bug.h"
 
 
 

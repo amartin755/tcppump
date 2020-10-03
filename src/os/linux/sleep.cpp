@@ -21,9 +21,9 @@
 #include <chrono>
 #include <thread>
 
-#include "bugon.h"
 #include "timeval.hpp"
 #include "sleep.hpp"
+#include "../../common/bug.h"
 
 #ifdef WITH_UNITTESTS
 #include "console.hpp"

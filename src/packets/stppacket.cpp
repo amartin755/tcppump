@@ -18,8 +18,8 @@
 
 #include <cstring>
 
-#include "bugon.h"
 #include "stppacket.hpp"
+#include "../common/bug.h"
 
 
 cStpPacket::cStpPacket ()

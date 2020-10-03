@@ -19,9 +19,10 @@
 
 #include <cstring>
 
-#include "bugon.h"
 #include "inet.h"
 #include "ipv4packet.hpp"
+
+#include "../common/bug.h"
 #include "inetchecksum.hpp"
 
 

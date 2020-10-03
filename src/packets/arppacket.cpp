@@ -19,8 +19,8 @@
 
 #include <cstring>
 
-#include "bugon.h"
 #include "arppacket.hpp"
+#include "../common/bug.h"
 
 
 

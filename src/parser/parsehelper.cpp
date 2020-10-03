@@ -21,8 +21,8 @@
 #include <cstring>
 #include <cstdlib>
 
-#include "bugon.h"
 #include "parsehelper.hpp"
+#include "../common/bug.h"
 
 
 const char* cParseHelper::skipWhitespaces (const char* p)

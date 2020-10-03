@@ -23,7 +23,7 @@
 
 #include <pcap.h>
 
-#include "bugon.h"
+#include "../common/bug.h"
 #include "pcapfileio.hpp"
 #include "console.hpp"
 

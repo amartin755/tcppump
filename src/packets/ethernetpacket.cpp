@@ -19,8 +19,8 @@
 
 #include <cstring>
 
-#include "bugon.h"
 #include "ethernetpacket.hpp"
+#include "../common/bug.h"
 
 
 

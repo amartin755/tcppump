@@ -23,7 +23,7 @@
 #include <cstdint>
 #include "timeval.h" // struct timeval
 #ifdef WITH_UNITTESTS
-#include "bugon.h"
+#include "bug.h"
 #endif
 
 class cTimeval

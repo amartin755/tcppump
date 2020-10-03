@@ -18,9 +18,10 @@
 
 #include <cstring>
 
-#include "bugon.h"
 #include "inet.h"
 #include "vrrppacket.hpp"
+
+#include "../common/bug.h"
 #include "inetchecksum.hpp"
 
 

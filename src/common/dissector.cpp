@@ -21,7 +21,7 @@
 
 #include <string>
 
-#include "bugon.h"
+#include "bug.h"
 #include "inet.h"
 #include "console.hpp"
 #include "ipv4packet.hpp"
@@ -90,7 +90,7 @@ bool cDissector::dissect () const
     }
     catch (...)
     {
-        BUG_ON ("???" == 0);
+        BUG ("unexpected exception");
     }
     Console::Print("\n");
     dump (packet, packetLength);

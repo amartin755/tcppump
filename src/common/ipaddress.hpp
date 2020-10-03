@@ -24,6 +24,9 @@
 #include <string>
 
 #include "inet.h"
+#ifdef WITH_UNITTESTS
+#include "bug.h"
+#endif
 
 
 class cIpAddress

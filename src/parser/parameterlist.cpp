@@ -22,8 +22,9 @@
 #include <cerrno>
 #include <stdexcept>      // std::invalid_argument
 
-#include "bugon.h"
 #include "parameterlist.hpp"
+
+#include "../common/bug.h"
 #include "parsehelper.hpp"
 
 
