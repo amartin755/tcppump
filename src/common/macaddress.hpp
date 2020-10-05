@@ -57,6 +57,10 @@ public:
         mac[4] = b4;
         mac[5] = b5;
     }
+    cMacAddress (bool randUnicast, bool randMulticast) // construct random MAC address
+    {
+        setRandom (randUnicast, randMulticast);
+    }
     void operator=(const cMacAddress& obj)
     {
         set (obj);
@@ -124,7 +128,22 @@ public:
         get (cstr, sizeof(cstr));
         s.assign(cstr);
     }
+    void setRandom (bool unicast = true, bool multicast = false)
+    {
+        BUG_ON (unicast || multicast);
 
+        mac[0] = uint8_t(rand () % 256);
+        mac[1] = uint8_t(rand () % 256);
+        mac[2] = uint8_t(rand () % 256);
+        mac[3] = uint8_t(rand () % 256);
+        mac[4] = uint8_t(rand () % 256);
+        mac[5] = uint8_t(rand () % 256);
+
+        if (unicast && !multicast)
+            mac[0] &= 0xfe;
+        else if (!unicast && multicast)
+            mac[0] |= 1;
+    }
     static size_t size ()
     {
         return sizeof(mac);

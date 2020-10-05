@@ -40,6 +40,14 @@ public:
     cEthernetPacket& operator=(cEthernetPacket&& other);
     void operator=(const cEthernetPacket&) = delete;       // no copy-assignment operator
 
+    void setRandomSrcMac (bool unicast = true, bool multicast = false)
+    {
+        setSrcMac (cMacAddress (unicast, multicast));
+    }
+    void setRandomDestMac (bool unicast = true, bool multicast = false)
+    {
+        setDestMac (cMacAddress (unicast, multicast));
+    }
     void setSrcMac (const cMacAddress& src);
     void setDestMac (const cMacAddress& dest);
     void setMacHeader (const cMacAddress& src, const cMacAddress& dest);

@@ -45,6 +45,8 @@ typedef struct
     const char*  myIP;
     const char*  myMAC;
     int          dissect;
+    int          randSrcMac;
+    int          randDstMac;
 }appOptions;
 
 class cInterface;

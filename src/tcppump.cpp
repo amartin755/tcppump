@@ -21,6 +21,8 @@
 #include <cstdint>
 #include <stdexcept>
 #include <csignal>
+#include <ctime>
+#include <cstdlib>
 
 #include "tcppump.hpp"
 
@@ -75,6 +77,10 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
             "Use IPV4 as source IPv4 address instead of the network adapters ip address", &options.myIP);
     addCmdLineOption (true, 0, "mymac", "MAC",
             "Use MAC as source MAC address instead of the network adapters MAC address", &options.myMAC);
+    addCmdLineOption (true, 0, "rand-smac",
+            "Use random source MAC address. Overwrites --mymac as well as explicitly defined addresses in packets.", &options.randSrcMac);
+    addCmdLineOption (true, 0, "rand-dmac",
+            "Use random destination MAC address. Overwrites all explicitly defined addresses in packets.", &options.randDstMac);
     addCmdLineOption (true, 'v', "verbose",
             "When parsing and printing, produce verbose output. This option can be supplied multiple times\n\t"
             "(max. 4 times, i.e. -vvvv) for even more debug output. "
@@ -126,6 +132,9 @@ int cTcpPump::execute (int argc, char* argv[])
 {
     cMacAddress ownMac;
     cIpAddress  ownIP;
+
+    std::srand (std::time (NULL));
+
 
     switch (options.verbosity)
     {
@@ -252,8 +261,12 @@ int cTcpPump::execute (int argc, char* argv[])
         {
             std::list<cTimeval>::const_iterator t = delays.cbegin();
 
-            for (const auto & p : packets)
+            for (auto & p : packets)
             {
+                if (options.randSrcMac)
+                    p.setRandomSrcMac();
+                if (options.randDstMac)
+                    p.setRandomDestMac();
                 if (!sendPacket (ifc, *t, p))
                     return -4;
                 t++;
