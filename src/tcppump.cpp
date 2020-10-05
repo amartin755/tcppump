@@ -20,6 +20,7 @@
 #include <cstring>
 #include <cstdint>
 #include <stdexcept>
+#include <csignal>
 
 #include "tcppump.hpp"
 
@@ -38,6 +39,13 @@
 #endif
 #include "parsehelper.hpp"
 
+
+volatile std::sig_atomic_t gSigIntStatus;
+void sigintHandler (int signal)
+{
+    if (signal == SIGINT)
+        gSigIntStatus = 1;
+}
 
 cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const char* description)
 : cCmdlineApp (name, brief, usage, description)
@@ -89,7 +97,9 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
 #if HAVE_PCAP
     addCmdLineOption (true, 'p', "pcap", "Short for --input=pcap", &options.pcap);
 #endif
-    addCmdLineOption (true, 'l', "loop", "N", "Send all files/packets N times. Default: N = 1", &options.repeat);
+    addCmdLineOption (true, 'l', "loop", "N",
+            "Send all files/packets N times. Default: N = 1. If N = 0, packets will be sent infinitely\n\t"
+            "until ctrl+c is pressed.", &options.repeat);
     addCmdLineOption (true, 'd', "delay", "TIME", "Packet transmission is delayed TIME."
             "Resolution depends on -t parameter. Default is no delay.", &options.delay);
     addCmdLineOption (true, 't', "resolution", "RESOLUTION",
@@ -225,11 +235,20 @@ int cTcpPump::execute (int argc, char* argv[])
     }
 #endif
 
+    // Install a signal handler
+    std::signal(SIGINT, sigintHandler);
+
     if (!options.interactive)
     {
         BUG_ON (packets.size() == delays.size());
-        Console::PrintMoreVerbose ("Sending %d packets, each delayed by %" PRIu64 " usecs. Repeating %d times.\n\n", packets.size(), activeDelay, options.repeat);
-        while (options.repeat--)
+        Console::PrintMoreVerbose ("Sending %d packets, each delayed by %" PRIu64 " usecs. ", packets.size(), activeDelay);
+        bool endless = !options.repeat;
+        if (!endless)
+            Console::PrintMoreVerbose ("Repeating %d times.\n\n", options.repeat);
+        else
+            Console::PrintMoreVerbose ("Repeating infinitely.\n\n", options.repeat);
+
+        while (gSigIntStatus == 0 && (endless || options.repeat--))
         {
             std::list<cTimeval>::const_iterator t = delays.cbegin();
 
@@ -523,6 +542,9 @@ bool cTcpPump::interactiveMode (cInterface &ifc)
 
     while ((key = tcppump::getch ()) != EOF)
     {
+        if (gSigIntStatus)
+            break;
+
         try
         {
             cEthernetPacket& p = keyBindings.at (key);
