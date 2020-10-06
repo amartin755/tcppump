@@ -23,6 +23,7 @@
 #include <csignal>
 #include <ctime>
 #include <cstdlib>
+#include <chrono>
 
 #include "tcppump.hpp"
 
@@ -247,6 +248,8 @@ int cTcpPump::execute (int argc, char* argv[])
     // Install a signal handler
     std::signal(SIGINT, sigintHandler);
 
+    uint64_t sentBytes = 0;
+    double seconds = 0;
     if (!options.interactive)
     {
         BUG_ON (packets.size() == delays.size());
@@ -257,6 +260,7 @@ int cTcpPump::execute (int argc, char* argv[])
         else
             Console::PrintMoreVerbose ("Repeating infinitely.\n\n", options.repeat);
 
+        auto t1 = std::chrono::high_resolution_clock::now();
         while (gSigIntStatus == 0 && (endless || options.repeat--))
         {
             std::list<cTimeval>::const_iterator t = delays.cbegin();
@@ -270,15 +274,23 @@ int cTcpPump::execute (int argc, char* argv[])
                 if (!sendPacket (ifc, *t, p))
                     return -4;
                 t++;
+                sentBytes += p.getLength ();
             }
         }
+        auto t2 = std::chrono::high_resolution_clock::now();
+        auto elapsedUs = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
+        seconds = (double)elapsedUs.count()/1000000.0;
     }
     else
     {
         interactiveMode(ifc);
     }
 
-    Console::PrintVerbose ("Successfully sent %u of %u packets. %u of them where malformed\n", sentPackets, triedToSendPackets, malformedPackets);
+    Console::PrintVerbose ("Successfully sent %u of %u packets. ", sentPackets, triedToSendPackets);
+    if (seconds > 0.0)
+        Console::PrintVerbose ("%" PRIu64 " bytes in %f seconds (= %f Mbit/s)", sentBytes, seconds, ((sentBytes*8)/seconds)/1000000.0);
+    Console::PrintVerbose ("\n");
+
     return !sentPackets;
 }
 
