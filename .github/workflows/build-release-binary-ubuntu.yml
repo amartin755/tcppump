@@ -6,7 +6,7 @@ on: [workflow_dispatch]
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
-  BUILD_TYPE: release
+  BUILD_TYPE: Release
 
 jobs:
   build-and-test:
@@ -31,7 +31,7 @@ jobs:
     - name: Build
       working-directory: ${{runner.workspace}}/tcppump
       shell: bash
-      run: cmake --build build
+      run: cmake --build build --config $BUILD_TYPE
       
     - uses: actions/upload-artifact@v2
       with:
