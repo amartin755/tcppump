@@ -6,7 +6,7 @@ on: [workflow_dispatch]
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
-  BUILD_TYPE: release
+  BUILD_TYPE: Release
 
 jobs:
   build-and-test:
@@ -23,20 +23,21 @@ jobs:
         ref: ${{ github.ref }}
 
     - name: Install Dependencies
-      # install libpcap and its development files
-      run: vcpkg install winpcap:x64-windows
+      # install winpcap, we use an old version of nmap which offers an silent installer and includes winpcap
+      run: Invoke-WebRequest -Uri "https://nmap.org/dist/nmap-7.12-setup.exe" -OutFile "nmap.exe"; Start-Process -Filepath "nmap.exe" -ArgumentList /S
 
     - name: Configure CMake
       # Use a bash shell so we can use the same syntax for environment variable
       # access regardless of the host operating system
       shell: bash
       working-directory: ${{runner.workspace}}/tcppump
-      run: cmake -S src -B build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DPCAP_INCLUDE_DIR=C:/vcpkg/packages/winpcap_x64-windows/include/ -DPCAP_LIBRARY=C:/vcpkg/packages/winpcap_x64-windows/lib/
+      run: cmake -S src -B build -DCMAKE_BUILD_TYPE=$BUILD_TYPE
 
     - name: Build
       working-directory: ${{runner.workspace}}/tcppump
       shell: bash
-      run: cmake --build build
+      # Execute the build.  You can specify a specific target with "--target <NAME>"
+      run: cmake --build build --config $BUILD_TYPE
 
     - uses: actions/upload-artifact@v2
       with: 
