@@ -134,7 +134,7 @@ int cTcpPump::execute (int argc, char* argv[])
     cMacAddress ownMac;
     cIpAddress  ownIP;
 
-    std::srand (std::time (NULL));
+    std::srand ((unsigned)std::time (NULL));
 
 
     switch (options.verbosity)
