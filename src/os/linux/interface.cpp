@@ -61,13 +61,18 @@ bool cInterface::open ()
         close ();
         return false;
     }
+    // open raw socket for tx only
+    // thus we set proto = 0 and size of receive buffer to zero
     errno = 0;
-    if ((ifcHandle = socket (PF_PACKET, SOCK_RAW, htons (ETH_P_ALL))) < 0)
+    if ((ifcHandle = socket (PF_PACKET, SOCK_RAW, 0)) < 0)
     {
         Console::PrintError ("Unable to open raw socket. %s.\n", strerror(errno));
         close ();
         return false;
     }
+    int opt = 0;
+    setsockopt (ifcHandle, SOL_SOCKET, SO_RCVBUF, &opt, sizeof (opt));
+
     getMAC (myMac);
     getIPv4 (myIP);
 

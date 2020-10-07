@@ -69,7 +69,8 @@ bool cInterface::open ()
     pcapIfName += adapter->AdapterName;
 
     char errbuf[PCAP_ERRBUF_SIZE] = {0};
-    ifcHandle = pcap_open_live(pcapIfName.c_str(), 65536,    1, 1000, errbuf);
+    // we don't want to receive any packets, thus we set the capbuf=0
+    ifcHandle = pcap_open_live(pcapIfName.c_str(), 0, 0, 1000, errbuf);
 
     if (!ifcHandle)
     {
