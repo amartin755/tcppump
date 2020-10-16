@@ -18,7 +18,9 @@
 
 
 #include <string>
+#include <thread>
 #include <pcap.h>
+#include <Win32-Extensions.h>
 #include <iphlpapi.h>
 #include <winerror.h>
 
@@ -26,9 +28,95 @@
 
 #include "bug.h"
 #include "console.hpp"
+#include "ethernetpacket.hpp"
+
+
+const int PCAP_Q_SIZE = 20*1024*1024;
+
+class cJob
+{
+    cQueue<pcap_send_queue*, 3> *pMsgQ;
+    pcap_send_queue *currSendQueue;
+    size_t bytesInCurrSendQueue;
+    std::thread *workerThread;
+    pcap_t *ifcHandle;
+    size_t bytesQueued;
+    size_t bytesSent;
+    int synchronized;
+
+public:
+    cJob (pcap_t *ifcHandle, int packetCnt, size_t totalBytes, int syn)
+    {
+        this->ifcHandle = ifcHandle;
+        pMsgQ = new cQueue<pcap_send_queue*, 3>();
+
+        const size_t wholeNeededMemory = packetCnt > 0 ? packetCnt * sizeof (pcap_pkthdr) + totalBytes : PCAP_Q_SIZE;
+
+        currSendQueue = pcap_sendqueue_alloc (wholeNeededMemory >= PCAP_Q_SIZE ? PCAP_Q_SIZE : wholeNeededMemory);
+        if (!currSendQueue)
+            throw std::bad_alloc();
+
+        bytesInCurrSendQueue = 0;
+        bytesSent            = 0;
+        bytesQueued          = 0;
+        synchronized         = sync;
+
+        workerThread = new std::thread (std::ref(*this));
+    }
+    bool addPacket (const uint8_t* payload, size_t length, const cTimeval& t)
+    {
+        if (!currSendQueue)
+        {
+            currSendQueue = pcap_sendqueue_alloc (PCAP_Q_SIZE);
+            bytesInCurrSendQueue = 0;
+        }
+        pcap_pkthdr hdr;
+        hdr.caplen = length;
+        hdr.len    = length;
+        hdr.ts     = t.timeval ();
+
+        BUG_ON (!pcap_sendqueue_queue (currSendQueue, &hdr, payload)); // can only fail if buffer calculation is wrong
+        bytesInCurrSendQueue += length + sizeof (pcap_pkthdr);
+        bytesQueued          += length + sizeof (pcap_pkthdr);
+
+        if (bytesInCurrSendQueue + cEthernetPacket::MAX_DOUBLE_TAGGED_PACKET + sizeof (pcap_pkthdr) >= PCAP_Q_SIZE) // don't know the size of next packet, assume maximum length
+        {
+            pMsgQ->push (currSendQueue);
+            currSendQueue = nullptr;
+        }
+
+        return true;
+    }
+    void operator ()()
+    {
+        pcap_send_queue *sendQueue;
+        while ((sendQueue = pMsgQ->pop ()))
+        {
+            bytesSent += pcap_sendqueue_transmit (ifcHandle, sendQueue, synchronized);
+            pcap_sendqueue_destroy (sendQueue);
+        }
+    }
+
+    ~cJob ()
+    {
+        if (currSendQueue) // is there something to send?
+        {
+            pMsgQ->push (currSendQueue);
+            currSendQueue = nullptr;
+        }
+        pMsgQ->push (nullptr); // send thread term signal
+        workerThread->join ();
+
+        delete pMsgQ;
+        delete workerThread;
+    }
+
+};
+
+
 
 /*
- * note: Because WINPCAPSs interface naming is weired, I try a more user friendly approach.
+ * note: Because WINPCAPSs interface naming is weird, I try a more user friendly approach.
  * On windows, ifname can either be the not changeable AdapterName (GUID), or the so-called FriendlyName, which is changeable by the user.
  * Both will be checked case-sensitive!
  * Examples: FriendlyName "WiFi" or "Local Area Connection 1."
@@ -37,8 +125,9 @@
 cInterface::cInterface(const char* ifname)
 : name (ifname)
 {
-    ifcHandle  = NULL;
-    winNetAdapters = NULL;
+    ifcHandle  = nullptr;
+    winNetAdapters = nullptr;
+    job = nullptr;
 }
 
 cInterface::~cInterface()
@@ -87,25 +176,52 @@ bool cInterface::close ()
     if (!ifcHandle)
         return true;
 
+    flushSendQueue();
+
     pcap_close(ifcHandle);
-    ifcHandle = NULL;
+    ifcHandle = nullptr;
 
     // free windows network adapter list
     if (winNetAdapters)
         free (winNetAdapters);
-    winNetAdapters = NULL;
+    winNetAdapters = nullptr;
+
 
     return true;
 }
 
-bool cInterface::sendPacket (const uint8_t* payload, size_t length) const
+bool cInterface::sendPacket (const uint8_t* payload, size_t length, const cTimeval& t)
 {
-    int ret = pcap_sendpacket (ifcHandle, (u_char*)payload, (int)length);
+    if (job) // queued send?
+    {
+        return job->addPacket (payload, length, t);
+    }
+    else
+    {
+        int ret = pcap_sendpacket (ifcHandle, (u_char*)payload, (int)length);
 
-    if (ret == -1)
-        Console::PrintError ("pcap error: %s\n", pcap_geterr (ifcHandle));
+        if (ret == -1)
+            Console::PrintError ("pcap error: %s\n", pcap_geterr (ifcHandle));
 
-    return ret == 0;
+        return ret == 0;
+    }
+}
+
+// packetCnt = 0 means endless loop
+bool cInterface::prepareSendQueue (int packetCnt, size_t totalBytes, bool synchronized)
+{
+    BUG_ON (!job); // we only support one job at a time
+    BUG_ON (ifcHandle);
+
+    job = new cJob (ifcHandle, packetCnt, totalBytes, synchronized);
+    return !!job;
+}
+
+bool cInterface::flushSendQueue (void)
+{
+    delete job;
+    job = nullptr;
+    return true;
 }
 
 bool cInterface::getMAC (cMacAddress& mac)
@@ -142,6 +258,11 @@ bool cInterface::getIPv4 (cIpAddress& ip)
          pUnicast = pUnicast->Next;
     }
     return false;
+}
+
+bool cInterface::isOpen () const
+{
+    return ifcHandle != NULL;
 }
 
 PIP_ADAPTER_ADDRESSES cInterface::getAdapterAddresses ()

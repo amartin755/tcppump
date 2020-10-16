@@ -104,5 +104,7 @@ bool Console::print (out_level lvl, const char* format, va_list ap)
         return false;
 
      // we always print to stderr to be able to separate piped in/output from console prints
-     return vfprintf (stderr, format, ap) >= 0;
+    bool ret = vfprintf (stderr, format, ap) >= 0;
+    fflush (stderr);
+    return ret;
 }

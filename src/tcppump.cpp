@@ -260,6 +260,8 @@ int cTcpPump::execute (int argc, char* argv[])
         else
             Console::PrintMoreVerbose ("Repeating infinitely.\n\n", options.repeat);
 
+        ifc.prepareSendQueue(packets.size() * options.repeat, packets.size() * options.repeat * cEthernetPacket::MAX_DOUBLE_TAGGED_PACKET);
+
         auto t1 = std::chrono::high_resolution_clock::now();
         while (gSigIntStatus == 0 && (endless || options.repeat--))
         {
@@ -277,6 +279,7 @@ int cTcpPump::execute (int argc, char* argv[])
                 sentBytes += p.getLength ();
             }
         }
+        ifc.flushSendQueue();
         auto t2 = std::chrono::high_resolution_clock::now();
         auto elapsedUs = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
         seconds = (double)elapsedUs.count()/1000000.0;

@@ -83,6 +83,7 @@ bool cInterface::open ()
     return (ifcHandle != -1);
 }
 
+
 bool cInterface::close ()
 {
     // aleady closed
@@ -194,4 +195,10 @@ bool cInterface::getIPv4 (cIpAddress &ip)
         ip.set(myIP);
     }
     return true;
+}
+
+
+bool cInterface::isOpen () const
+{
+    return (ifcHandle != -1);
 }

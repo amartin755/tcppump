@@ -35,9 +35,12 @@ public:
     virtual ~cInterface();
     bool open ();
     bool close ();
+    bool prepareSendQueue (int packetCnt, size_t totalBytes){return true;}
     bool sendPacket (const uint8_t* payload, size_t length) const;
+    bool flushSendQueue (void){return true;}
     bool getMAC (cMacAddress&);
     bool getIPv4 (cIpAddress&);
+    bool isOpen () const;
 
 private:
 

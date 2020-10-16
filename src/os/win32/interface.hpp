@@ -21,26 +21,38 @@
 #define INTERFACE_H_
 
 #include <string>
+#include <thread>
 #include <cstdint>
 #include <cstddef>
 #include <iphlpapi.h>
 
 #include "ipaddress.hpp"
 #include "macaddress.hpp"
+#include "queue.hpp"
+#include "timeval.hpp"
 
+// forward declarations
 typedef struct pcap pcap_t;
-//typedef struct _IP_ADAPTER_ADDRESSES *PIP_ADAPTER_ADDRESSES;
+struct pcap_send_queue;
+class cJob;
 
 class cInterface
 {
+
 public:
     cInterface(const char* ifname);
     virtual ~cInterface();
     bool open ();
     bool close ();
-    bool sendPacket (const uint8_t* payload, size_t length) const;
+    bool sendPacket (const uint8_t* payload, size_t length, const cTimeval& t);
+    bool prepareSendQueue (int packetCnt, size_t totalBytes, bool synchronized);
+    bool flushSendQueue (void);
     bool getMAC (cMacAddress&);
     bool getIPv4 (cIpAddress&);
+    bool isOpen () const;
+
+    void operator()();
+
 
 private:
     PIP_ADAPTER_ADDRESSES getAdapterInfo ();
@@ -50,6 +62,7 @@ private:
     pcap_t *ifcHandle;
     PIP_ADAPTER_ADDRESSES winNetAdapters;
 
+    cJob* job;
 };
 
 #endif /* INTERFACE_H_ */
