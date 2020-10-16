@@ -1,5 +1,10 @@
 ![Test-on-ubuntu-gcc-64bit](https://github.com/amartin755/tcppump/workflows/Test-on-ubuntu-gcc-64bit/badge.svg)
 ![Test-on-windows-MSVC-64bit](https://github.com/amartin755/tcppump/workflows/Test-on-windows-MSVC-64bit/badge.svg)
+(Master Branch)
+
+![Test-on-ubuntu-gcc-64bit](https://github.com/amartin755/tcppump/workflows/Test-on-ubuntu-gcc-64bit/badge.svg?branch=devel)
+![Test-on-windows-MSVC-64bit](https://github.com/amartin755/tcppump/workflows/Test-on-windows-MSVC-64bit/badge.svg?branch=devel)
+(Development Branch)
 
 # tcppump
 Simple Ethernet network packet generator
@@ -77,12 +82,18 @@ For debugging add:
     Options:
     -h --help
         Display this text
+    --version
+        Show detailed version infos
     -i IFC --interface=IFC
         Name of the network interface via which the packets are sent.
     --myip4=IPV4
         Use IPV4 as source IPv4 address instead of the network adapters ip address
     --mymac=MAC
         Use MAC as source MAC address instead of the network adapters MAC address
+    --rand-smac
+        Use random source MAC address. Overwrites --mymac as well as explicitly defined addresses in packets.
+    --rand-dmac
+        Use random destination MAC address. Overwrites all explicitly defined addresses in packets.
     -v --verbose
         When parsing and printing, produce verbose output. This option can be supplied multiple times
         (max. 4 times, i.e. -vvvv) for even more debug output.
@@ -102,20 +113,22 @@ For debugging add:
     -p --pcap
         Short for --input=pcap
     -l N --loop=N
-        Send all files/packets N times. Default: N = 1
+        Send all files/packets N times. Default: N = 1. If N = 0, packets will be sent infinitely
+        until ctrl+c is pressed.
     -d TIME --delay=TIME
-        Packet transmission is delayed TIME.Resolution depends on -t parameter. Default is microseconds.
+        Packet transmission is delayed TIME.Resolution depends on -t parameter. Default is no delay.
     -t RESOLUTION --resolution=RESOLUTION
-        Resolution of transmission time. This affects -d parameter as well as all timestamps in script files
-        Possible values are 'u'= microseconds (default), 'm'= milliseconds and 's'= seconds
+        Resolution of transmission time. This affects -d parameter as well as all timestamps in script files.
+        Possible values are 'u'= microseconds, 'm'= milliseconds(default), 'c'= centiseconds and 's'= seconds
     --interactive[=KEYLIST]
         Enable interactive mode (EXPERIMENTAL). In interactive mode no packets are sent automatically.
         Instead the packets are bound to keys and only sent when the corresponding key
         is pressed. The default implementation binds the first 10 packets to the keys 1, 2, ... 0.
-    --write-to-pcap=OUTFILE
-        Write generated packets to pcap file OUTFILE.
+    -o OUTFILE --write-to-file=OUTFILE
+        Write generated packets to pcap file OUTFILE instead of sending them to the network.
     --dissect
         Prints the dissected content of sent packets as known from tcpdump.
+
 
 ### Examples
 
