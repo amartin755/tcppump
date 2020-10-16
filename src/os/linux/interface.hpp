@@ -26,6 +26,7 @@
 
 #include "ipaddress.hpp"
 #include "macaddress.hpp"
+#include "timeval.hpp"
 
 
 class cInterface
@@ -35,8 +36,8 @@ public:
     virtual ~cInterface();
     bool open ();
     bool close ();
+    bool sendPacket (const uint8_t* payload, size_t length, const cTimeval& t);
     bool prepareSendQueue (int packetCnt, size_t totalBytes){return true;}
-    bool sendPacket (const uint8_t* payload, size_t length) const;
     bool flushSendQueue (void){return true;}
     bool getMAC (cMacAddress&);
     bool getIPv4 (cIpAddress&);
@@ -49,6 +50,7 @@ private:
     int ifIndex;
     cMacAddress myMac;
     cIpAddress myIP;
+    cTimeval lastSentPacket;
 };
 
 #endif /* INTERFACE_H_ */

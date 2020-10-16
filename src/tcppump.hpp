@@ -70,7 +70,7 @@ private:
 #if HAVE_PCAP
     bool parsePcapFiles (int cnt, char* pcaps[]);
 #endif
-    bool sendPacket (cInterface &ifc, const cTimeval &delay, const cEthernetPacket &p);
+    bool sendPacket (cInterface &ifc, const cTimeval &t, const cEthernetPacket &p);
     bool interactiveMode (cInterface &ifc);
     void printParseError (const ParseException &e) const;
     void printParseError (const char* filename, const FileParseException &e) const;

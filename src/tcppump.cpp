@@ -252,8 +252,11 @@ int cTcpPump::execute (int argc, char* argv[])
     double seconds = 0;
     if (!options.interactive)
     {
+        cTimeval currentTime;
         BUG_ON (packets.size() == delays.size());
+
         Console::PrintMoreVerbose ("Sending %d packets, each delayed by %" PRIu64 " usecs. ", packets.size(), activeDelay);
+
         bool endless = !options.repeat;
         if (!endless)
             Console::PrintMoreVerbose ("Repeating %d times.\n\n", options.repeat);
@@ -269,11 +272,12 @@ int cTcpPump::execute (int argc, char* argv[])
 
             for (auto & p : packets)
             {
+                currentTime.add (*t);
                 if (options.randSrcMac)
                     p.setRandomSrcMac();
                 if (options.randDstMac)
                     p.setRandomDestMac();
-                if (!sendPacket (ifc, *t, p))
+                if (!sendPacket (ifc, currentTime, p))
                     return -4;
                 t++;
                 sentBytes += p.getLength ();
@@ -304,9 +308,10 @@ bool cTcpPump::parsePackets (const cMacAddress& ownMac, const cIpAddress& ownIP,
     cTimeval timestamp, currtime;
     bool isAbsolute;
 
+    Console::PrintDebug ("Parsing %d packets (format='%s') ...\n", argc, options.raw ? "raw" : "tokens");
+
     for (int n = 0; n < argc; n++)
     {
-        Console::PrintDebug ("Parsing %d packets (format='%s') ...\n", argc, options.raw ? "raw" : "tokens");
         try
         {
             if (!options.raw)
@@ -325,7 +330,7 @@ bool cTcpPump::parsePackets (const cMacAddress& ownMac, const cIpAddress& ownIP,
                     }
                     else
                     {
-                        if (timestamp < currtime) // fixme Was tun wenn ein absoluter timestamp < currtime ist? delay = 0 oder Fehler melden?
+                        if (timestamp < currtime)  // FIXME What to do if timestamp < currtime? delay = 0 or parse exception?
                             BUG_ON ("fixme" == 0);
                         else
                         {
@@ -520,18 +525,13 @@ bool cTcpPump::parsePcapFiles (int pcapCnt, char* pcaps[])
 #endif
 
 
-bool cTcpPump::sendPacket (cInterface &ifc, const cTimeval &delay, const cEthernetPacket &p)
+bool cTcpPump::sendPacket (cInterface &ifc, const cTimeval &t, const cEthernetPacket &p)
 {
     triedToSendPackets++;
 
     if (!options.outpcap)
     {
-        if (!delay.isNull())
-        {
-            Console::PrintVerbose ("Waiting %u seconds\n", (unsigned)delay.s());
-            tcppump::Sleep (delay);
-        }
-        if(!ifc.sendPacket (p.get(), p.getLength()))
+        if(!ifc.sendPacket (p.get(), p.getLength(), t))
         {
             Console::PrintError ("Could not send packet.\n");
             return false;
@@ -540,7 +540,7 @@ bool cTcpPump::sendPacket (cInterface &ifc, const cTimeval &delay, const cEthern
 #if HAVE_PCAP
     else
     {
-        if (!outfile.write (delay, p.get(), (int)p.getLength(), false))
+        if (!outfile.write (t, p.get(), (int)p.getLength(), true))
             return false;
     }
 #endif

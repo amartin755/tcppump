@@ -34,6 +34,7 @@
 
 #include "bug.h"
 #include "console.hpp"
+#include "sleep.hpp"
 
 
 cInterface::cInterface(const char* ifname)
@@ -80,6 +81,8 @@ bool cInterface::open ()
     myMac.get(macAsString);
     Console::PrintDebug ("Successfully openend %s mac=%s\n", name.c_str(), macAsString.c_str());
 
+    lastSentPacket.clear();
+
     return (ifcHandle != -1);
 }
 
@@ -99,8 +102,17 @@ bool cInterface::close ()
     return true;
 }
 
-bool cInterface::sendPacket (const uint8_t* payload, size_t length) const
+bool cInterface::sendPacket (const uint8_t* payload, size_t length, const cTimeval& t)
 {
+    cTimeval sleepTime (t);
+    sleepTime.sub (lastSentPacket);
+
+    if (!sleepTime.isNull())
+    {
+        tcppump::Sleep (sleepTime);
+        lastSentPacket.add(sleepTime);
+    }
+
     struct sockaddr_ll device;
 
     memset (&device, 0, sizeof(device));
