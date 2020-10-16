@@ -45,7 +45,7 @@ class cJob
     int synchronized;
 
 public:
-    cJob (pcap_t *ifcHandle, int packetCnt, size_t totalBytes, int syn)
+    cJob (pcap_t *ifcHandle, int packetCnt, size_t totalBytes, int sync)
     {
         this->ifcHandle = ifcHandle;
         pMsgQ = new cQueue<pcap_send_queue*, 3>();

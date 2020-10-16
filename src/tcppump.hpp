@@ -87,6 +87,7 @@ private:
 #endif
     cTimeval activeDelay;
     unsigned timeScale; // 1 = us, 1000 = ms, 1000000 = sec
+    bool realtimeMode;  // if true, packets will be sent time triggered
 };
 
 #endif /* TCPPUMP_HPP */

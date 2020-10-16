@@ -48,7 +48,7 @@ cInstructionParser::~cInstructionParser ()
 }
 
 // returns the number of added packets to the list 'packets'
-int cInstructionParser::parse (const char* instruction, uint64_t& timestamp, bool& isAbsolute,  std::list <cEthernetPacket> &packets)
+int cInstructionParser::parse (const char* instruction, cResult& result)
 {
     currentInstruction = instruction;
 
@@ -57,7 +57,7 @@ int cInstructionParser::parse (const char* instruction, uint64_t& timestamp, boo
     size_t      keywordLen;
 
 
-    p = parseTimestamp (p, timestamp, isAbsolute);
+    p = parseTimestamp (p, result.timeValid, result.timestamp, result.isAbsolute);
     p = parseProtocollIdentifier (p, &keyword, &keywordLen);
 
     // parse protocol parameter list
@@ -72,39 +72,39 @@ int cInstructionParser::parse (const char* instruction, uint64_t& timestamp, boo
     {
         //TODO find better way for protocol selection (e.g. hash table)
         if (!strncmp ("raw", keyword, keywordLen))
-            return compileRAW (params, packets);
+            return compileRAW (params, result.packets);
         if (!strncmp ("eth", keyword, keywordLen))
-            return compileETH (params, packets);
+            return compileETH (params, result.packets);
         if (!strncmp ("arp", keyword, keywordLen))
-            return compileARP (params, packets);
+            return compileARP (params, result.packets);
         if (!strncmp ("arp-probe", keyword, keywordLen))
-            return compileARP (params, packets, true);
+            return compileARP (params, result.packets, true);
         if (!strncmp ("arp-announce", keyword, keywordLen))
-            return compileARP (params, packets, false, true);
+            return compileARP (params, result.packets, false, true);
         if (!strncmp ("ipv4", keyword, keywordLen))
-            return compileIPv4 (params, packets);
+            return compileIPv4 (params, result.packets);
         if (!strncmp ("udp", keyword, keywordLen))
-            return compileUDP (params, packets);
+            return compileUDP (params, result.packets);
         if (!strncmp ("vrrp", keyword, keywordLen))
-            return compileVRRP (params, packets, 2);
+            return compileVRRP (params, result.packets, 2);
         if (!strncmp ("vrrp3", keyword, keywordLen))
-            return compileVRRP (params, packets, 3);
+            return compileVRRP (params, result.packets, 3);
         if (!strncmp ("stp", keyword, keywordLen))
-            return compileSTP (params, packets);
+            return compileSTP (params, result.packets);
         if (!strncmp ("stp-tcn", keyword, keywordLen))
-            return compileSTP (params, packets, false, true);
+            return compileSTP (params, result.packets, false, true);
         if (!strncmp ("rstp", keyword, keywordLen))
-            return compileSTP (params, packets, true);
+            return compileSTP (params, result.packets, true);
         if (!strncmp ("igmp", keyword, keywordLen))
-            return compileIGMP (params, packets, false, false, false, false);
+            return compileIGMP (params, result.packets, false, false, false, false);
         if (!strncmp ("igmp-query", keyword, keywordLen))
-            return compileIGMP (params, packets, false, true, false, false);
+            return compileIGMP (params, result.packets, false, true, false, false);
         if (!strncmp ("igmp3-query", keyword, keywordLen))
-            return compileIGMP (params, packets, true, true, false, false);
+            return compileIGMP (params, result.packets, true, true, false, false);
         if (!strncmp ("igmp-report", keyword, keywordLen))
-            return compileIGMP (params, packets, false, false, true, false);
+            return compileIGMP (params, result.packets, false, false, true, false);
         if (!strncmp ("igmp-leave", keyword, keywordLen))
-            return compileIGMP (params, packets, false, false, false, true);
+            return compileIGMP (params, result.packets, false, false, false, true);
 
         throwParseException ("Unknown protocol type", keyword, keywordLen);
     }
@@ -131,8 +131,10 @@ int cInstructionParser::parse (const char* instruction, uint64_t& timestamp, boo
     return 0;
 }
 
-const char* cInstructionParser::parseTimestamp (const char* p, uint64_t& timestamp, bool& isAbsolute)
+const char* cInstructionParser::parseTimestamp (const char* p, bool& hasTimestamp, uint64_t& timestamp, bool& isAbsolute)
 {
+    hasTimestamp = false;
+
     // ignore whitespaces at begin of instruction
     p = cParseHelper::skipWhitespaces(p);
 
@@ -158,6 +160,7 @@ const char* cInstructionParser::parseTimestamp (const char* p, uint64_t& timesta
         {
             throwParseException ("Invalid timestamp", p);
         }
+        hasTimestamp = true;
     }
 
     return p;

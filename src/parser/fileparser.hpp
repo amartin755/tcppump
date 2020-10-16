@@ -39,7 +39,7 @@ public:
     cFileParser ();
     ~cFileParser ();
     void init (FILE* fp, uint64_t defaultDelay, const cMacAddress& ownMac, const cIpAddress&  ownIPv4);
-    int parse (uint64_t&, bool&, std::list <cEthernetPacket> &packets);
+    int parse (cInstructionParser::cResult& result);
 
 
 private:

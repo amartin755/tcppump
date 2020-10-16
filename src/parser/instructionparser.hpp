@@ -32,19 +32,40 @@
 class cParameterList;
 class cIPv4Packet;
 
+
 class cInstructionParser
 {
 public:
+    class cResult
+    {
+    public:
+        cResult (std::list <cEthernetPacket> &p) : packets (p)
+        {
+            clear ();
+        }
+        void clear (void)
+        {
+            timestamp = 0;
+            isAbsolute = false;
+            timeValid = false;
+        }
+
+        bool timeValid;
+        uint64_t timestamp;
+        bool isAbsolute;
+        std::list <cEthernetPacket> &packets;
+    };
+
     cInstructionParser (const cMacAddress& ownMac, const cIpAddress& ownIPv4);
     ~cInstructionParser ();
-    int parse (const char* instruction, uint64_t& timestamp, bool& isAbsolute, std::list <cEthernetPacket> &packets);
+    int parse (const char* instruction, cResult& result);
 
 #ifdef WITH_UNITTESTS
         static void unitTest ();
 #endif
 
 private:
-    const char* parseTimestamp (const char* p, uint64_t& timestamp, bool& isAbsolute);
+    const char* parseTimestamp (const char* p, bool& hasTimestamp, uint64_t& timestamp, bool& isAbsolute);
     const char* parseProtocollIdentifier (const char* p, const char** identifier, size_t *len);
 
     int compileRAW  (cParameterList& params, std::list <cEthernetPacket> &packets);

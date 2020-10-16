@@ -62,8 +62,8 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
     triedToSendPackets = 0;
     sentPackets        = 0;
     malformedPackets   = 0;
-
-    timeScale = 0;
+    timeScale          = 0;
+    realtimeMode       = false;
 
     addCmdLineOption (false, 'i', "interface", "IFC",
             "Name of the network interface via which the packets are sent."
@@ -247,23 +247,31 @@ int cTcpPump::execute (int argc, char* argv[])
 
     // Install a signal handler
     std::signal(SIGINT, sigintHandler);
+    // if user has set a default packet delay, real-time mode is ALWAYS enabled
+    if (!activeDelay.isNull ())
+        realtimeMode = true;
 
     uint64_t sentBytes = 0;
     double seconds = 0;
+
     if (!options.interactive)
     {
         cTimeval currentTime;
         BUG_ON (packets.size() == delays.size());
 
-        Console::PrintMoreVerbose ("Sending %d packets, each delayed by %" PRIu64 " usecs. ", packets.size(), activeDelay);
-
+        Console::PrintMoreVerbose ("Sending %d packets\n", packets.size());
         bool endless = !options.repeat;
         if (!endless)
-            Console::PrintMoreVerbose ("Repeating %d times.\n\n", options.repeat);
+            Console::PrintMoreVerbose ("Repeating %d times\n", options.repeat);
         else
-            Console::PrintMoreVerbose ("Repeating infinitely.\n\n", options.repeat);
+            Console::PrintMoreVerbose ("Repeating infinitely\n", options.repeat);
+        if (realtimeMode)
+            Console::PrintMoreVerbose ("Real-time mode with default delay between packets %" PRIu64 " usecs\n\n", activeDelay);
+        else
+            Console::PrintMoreVerbose ("Max. throughput mode\n\n");
 
-        ifc.prepareSendQueue(packets.size() * options.repeat, packets.size() * options.repeat * cEthernetPacket::MAX_DOUBLE_TAGGED_PACKET);
+
+        ifc.prepareSendQueue(packets.size() * options.repeat, packets.size() * options.repeat * cEthernetPacket::MAX_DOUBLE_TAGGED_PACKET, realtimeMode);
 
         auto t1 = std::chrono::high_resolution_clock::now();
         while (gSigIntStatus == 0 && (endless || options.repeat--))
@@ -304,9 +312,8 @@ int cTcpPump::execute (int argc, char* argv[])
 
 bool cTcpPump::parsePackets (const cMacAddress& ownMac, const cIpAddress& ownIP, int argc, char* argv[])
 {
-    uint64_t t = 0;
+    cInstructionParser::cResult result (packets);
     cTimeval timestamp, currtime;
-    bool isAbsolute;
 
     Console::PrintDebug ("Parsing %d packets (format='%s') ...\n", argc, options.raw ? "raw" : "tokens");
 
@@ -316,14 +323,15 @@ bool cTcpPump::parsePackets (const cMacAddress& ownMac, const cIpAddress& ownIP,
         {
             if (!options.raw)
             {
-                t = activeDelay.us()/timeScale;
-                isAbsolute = false;
-                int count = cInstructionParser (ownMac, ownIP).parse (argv[n], t, isAbsolute, packets);
-                timestamp.setUs(t * timeScale);
+                result.timestamp = activeDelay.us()/timeScale;
+                result.isAbsolute = false;
+                int count = cInstructionParser (ownMac, ownIP).parse (argv[n], result);
+                timestamp.setUs(result.timestamp * timeScale);
+                realtimeMode = realtimeMode || result.timeValid;
 
                 for (int n = 0; n < count; n++)
                 {
-                    if (!isAbsolute)
+                    if (!result.isAbsolute)
                     {
                         delays.push_back (timestamp);
                         currtime.add (timestamp);
@@ -373,12 +381,11 @@ bool cTcpPump::parsePackets (const cMacAddress& ownMac, const cIpAddress& ownIP,
 
 bool cTcpPump::parseScripts (const cMacAddress& ownMac, const cIpAddress& ownIP, int scriptsCnt, char* scripts[])
 {
-    uint64_t t = 0;
+    cInstructionParser::cResult result (packets);
     FILE *fp;
     int count;
     cFileParser parser;
     cTimeval timestamp, currtime, scriptStartTime;
-    bool isAbsolute;
 
     Console::PrintDebug ("Parsing %d script files ...\n", scriptsCnt);
 
@@ -401,12 +408,13 @@ bool cTcpPump::parseScripts (const cMacAddress& ownMac, const cIpAddress& ownIP,
             // allocate a new packet
             try
             {
-                count = parser.parse (t, isAbsolute, packets);
-                timestamp.setUs(t * timeScale);
+                count = parser.parse (result);
+                timestamp.setUs(result.timestamp * timeScale);
+                realtimeMode = realtimeMode || result.timeValid;
 
                 for (int n = 0; n < count; n++)
                 {
-                    if (!isAbsolute)
+                    if (!result.isAbsolute)
                     {
                         delays.push_back (timestamp);
                         currtime.add (timestamp);
