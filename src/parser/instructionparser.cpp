@@ -743,6 +743,7 @@ void cInstructionParser::unitTest ()
 
     uint64_t timestamp;
     bool isAbsolute;
+    bool hasTimestamp;
     cMacAddress ownMac("ba:ba:ba:ba:ba:ba");
     cIpAddress ownIPv4;
     std::list <cEthernetPacket> packets;
@@ -759,7 +760,7 @@ void cInstructionParser::unitTest ()
 
         try
         {
-            p = obj.parseTimestamp (s, t, abs);
+            p = obj.parseTimestamp (s, hasTimestamp, t, abs);
         }
         catch (ParseException& )
         {
@@ -777,7 +778,7 @@ void cInstructionParser::unitTest ()
 
         try
         {
-            p = obj.parseTimestamp (s, t, abs);
+            p = obj.parseTimestamp (s, hasTimestamp, t, abs);
         }
         catch (ParseException& )
         {
@@ -795,7 +796,7 @@ void cInstructionParser::unitTest ()
 
         try
         {
-            p = obj.parseTimestamp (s, t, abs);
+            p = obj.parseTimestamp (s, hasTimestamp, t, abs);
         }
         catch (ParseException& )
         {
@@ -813,7 +814,7 @@ void cInstructionParser::unitTest ()
 
         try
         {
-            p = obj.parseTimestamp (s, t, abs);
+            p = obj.parseTimestamp (s, hasTimestamp, t, abs);
         }
         catch (ParseException& )
         {
@@ -833,7 +834,7 @@ void cInstructionParser::unitTest ()
 
         try
         {
-            p = obj.parseTimestamp (s, t, abs);
+            p = obj.parseTimestamp (s, hasTimestamp, t, abs);
         }
         catch (ParseException& )
         {
@@ -853,7 +854,7 @@ void cInstructionParser::unitTest ()
 
         try
         {
-            p = obj.parseTimestamp (s, t, abs);
+            p = obj.parseTimestamp (s, hasTimestamp, t, abs);
         }
         catch (ParseException& )
         {
@@ -873,7 +874,7 @@ void cInstructionParser::unitTest ()
 
         try
         {
-            p = obj.parseTimestamp (s, t, abs);
+            p = obj.parseTimestamp (s, hasTimestamp, t, abs);
         }
         catch (ParseException& )
         {
@@ -893,7 +894,7 @@ void cInstructionParser::unitTest ()
 
         try
         {
-            p = obj.parseTimestamp (s, t, abs);
+            p = obj.parseTimestamp (s, hasTimestamp, t, abs);
         }
         catch (ParseException& )
         {
@@ -1044,9 +1045,11 @@ void cInstructionParser::unitTest ()
 
     for (unsigned n = 0; n < sizeof(tests)/sizeof(tests[0]); n++)
     {
+        cInstructionParser::cResult result (packets);
+
         Console::PrintDebug("packet %d", n);
         cInstructionParser obj (ownMac, ownIPv4);
-        BUG_ON (1 == obj.parse (tests[n].tokens, timestamp, isAbsolute, packets));
+        BUG_ON (1 == obj.parse (tests[n].tokens, result));
         BUG_ON (packets.size () == n + 1);
         BUG_ON (tests[n].packetSize == packets.back().getLength());
         if (memcmp (packets.back().get(), tests[n].packet, tests[n].packetSize))
