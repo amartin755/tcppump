@@ -57,13 +57,13 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
     options.repeat    = 1;
     options.inputmode = "token";
     options.keys      = "1234567890";
-    options.timeRes   = "u";
+    options.timeRes   = "m";
 
     triedToSendPackets = 0;
     sentPackets        = 0;
     malformedPackets   = 0;
 
-    timeScale = 1;
+    timeScale = 0;
 
     addCmdLineOption (false, 'i', "interface", "IFC",
             "Name of the network interface via which the packets are sent."
@@ -111,7 +111,7 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
             "Resolution depends on -t parameter. Default is no delay.", &options.delay);
     addCmdLineOption (true, 't', "resolution", "RESOLUTION",
             "Resolution of transmission time. This affects -d parameter as well as all timestamps in script files.\n\t"
-            "Possible values are 'u'= microseconds (default), 'm'= milliseconds, 'c'= centiseconds and 's'= seconds" , &options.timeRes);
+            "Possible values are 'u'= microseconds, 'm'= milliseconds(default), 'c'= centiseconds and 's'= seconds" , &options.timeRes);
     addCmdLineOption (true, "interactive", "KEYLIST",
             "Enable interactive mode (EXPERIMENTAL). In interactive mode no packets are sent automatically.\n\t"
             "Instead the packets are bound to keys and only sent when the corresponding key\n\t"
