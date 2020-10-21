@@ -57,10 +57,12 @@ public:
 private:
     PIP_ADAPTER_ADDRESSES getAdapterInfo ();
     PIP_ADAPTER_ADDRESSES getAdapterAddresses ();
+    uint64_t getLinkSpeed (const char* adapterName);
 
     std::string name;
     pcap_t *ifcHandle;
     PIP_ADAPTER_ADDRESSES winNetAdapters;
+    uint64_t linkSpeed;
 
     cJob* job;
 };

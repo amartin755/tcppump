@@ -18,6 +18,9 @@
 
 
 #include <string>
+#include <cctype>
+#include <cstdio>
+#include <cstdlib>
 #include <thread>
 #include <pcap.h>
 #include <Win32-Extensions.h>
@@ -31,7 +34,6 @@
 #include "ethernetpacket.hpp"
 
 
-const int PCAP_Q_SIZE = 20*1024*1024;
 
 class cJob
 {
@@ -43,16 +45,18 @@ class cJob
     size_t bytesQueued;
     size_t bytesSent;
     int synchronized;
+    unsigned pcapMaxQueueSize;
 
 public:
-    cJob (pcap_t *ifcHandle, int packetCnt, size_t totalBytes, int sync)
+    cJob (pcap_t *ifcHandle, int packetCnt, size_t totalBytes, int sync, uint64_t linkspeed)
     {
+        pcapMaxQueueSize = linkspeed/8;
         this->ifcHandle = ifcHandle;
         pMsgQ = new cQueue<pcap_send_queue*, 3>();
 
-        const size_t wholeNeededMemory = packetCnt > 0 ? packetCnt * sizeof (pcap_pkthdr) + totalBytes : PCAP_Q_SIZE;
+        const size_t wholeNeededMemory = packetCnt > 0 ? packetCnt * sizeof (pcap_pkthdr) + totalBytes : pcapMaxQueueSize;
 
-        currSendQueue = pcap_sendqueue_alloc (wholeNeededMemory >= PCAP_Q_SIZE ? PCAP_Q_SIZE : wholeNeededMemory);
+        currSendQueue = pcap_sendqueue_alloc (wholeNeededMemory >= pcapMaxQueueSize ? pcapMaxQueueSize : wholeNeededMemory);
         if (!currSendQueue)
             throw std::bad_alloc();
 
@@ -67,7 +71,7 @@ public:
     {
         if (!currSendQueue)
         {
-            currSendQueue = pcap_sendqueue_alloc (PCAP_Q_SIZE);
+            currSendQueue = pcap_sendqueue_alloc (pcapMaxQueueSize);
             bytesInCurrSendQueue = 0;
         }
         pcap_pkthdr hdr;
@@ -79,7 +83,7 @@ public:
         bytesInCurrSendQueue += length + sizeof (pcap_pkthdr);
         bytesQueued          += length + sizeof (pcap_pkthdr);
 
-        if (bytesInCurrSendQueue + cEthernetPacket::MAX_DOUBLE_TAGGED_PACKET + sizeof (pcap_pkthdr) >= PCAP_Q_SIZE) // don't know the size of next packet, assume maximum length
+        if (bytesInCurrSendQueue + cEthernetPacket::MAX_DOUBLE_TAGGED_PACKET + sizeof (pcap_pkthdr) >= pcapMaxQueueSize) // don't know the size of next packet, assume maximum length
         {
             pMsgQ->push (currSendQueue);
             currSendQueue = nullptr;
@@ -128,6 +132,7 @@ cInterface::cInterface(const char* ifname)
     ifcHandle  = nullptr;
     winNetAdapters = nullptr;
     job = nullptr;
+    linkSpeed = 0;
 }
 
 cInterface::~cInterface()
@@ -166,6 +171,8 @@ bool cInterface::open ()
         Console::PrintError ("Unable to open the network interface. %s(%s) is not supported by WinPcap\n", name.c_str(), pcapIfName.c_str());
         Console::PrintError ("pcap error: %s\n", errbuf);
     }
+
+    linkSpeed = getLinkSpeed (adapter->AdapterName);
 
     return ifcHandle != NULL;
 }
@@ -213,7 +220,7 @@ bool cInterface::prepareSendQueue (int packetCnt, size_t totalBytes, bool synchr
     BUG_ON (!job); // we only support one job at a time
     BUG_ON (ifcHandle);
 
-    job = new cJob (ifcHandle, packetCnt, totalBytes, synchronized);
+    job = new cJob (ifcHandle, packetCnt, totalBytes, synchronized, linkSpeed);
     return !!job;
 }
 
@@ -318,4 +325,40 @@ PIP_ADAPTER_ADDRESSES cInterface::getAdapterInfo ()
         pCurr = pCurr->Next;
     }
     return NULL;
+}
+
+uint64_t cInterface::getLinkSpeed (const char* guid)
+{
+    FILE *fp;
+    char speed[16] = {0};
+
+    // wmic NIC where GUID="{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}" get Speed | find /v "Speed"
+    std::string cmd = "wmic NIC where GUID=\"";
+    cmd.append (guid);
+    cmd.append ("\" get Speed");
+
+    fp = _popen(cmd.c_str (), "rt");
+    if (fp == NULL)
+        return 0;
+
+    int c;
+
+    while ((c = std::getc(fp)) != EOF)
+    {
+        if (std::isdigit(c))
+        {
+            unsigned cnt = 0;
+            do
+            {
+                speed[cnt++] = c;
+                if (cnt >= (sizeof (speed) - 1))
+                    break;
+            }
+            while (std::isdigit(c = std::getc(fp)));
+            break;
+        }
+    }
+    _pclose(fp);
+
+    return (uint64_t)std::strtoull(speed, NULL, 10);
 }
