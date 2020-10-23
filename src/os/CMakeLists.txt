@@ -33,6 +33,7 @@ set (SOURCES
      ${OS_SPECIFIC}/interface.cpp
      ${OS_SPECIFIC}/getch.cpp
      ${OS_SPECIFIC}/sleep.cpp
+     ${OS_SPECIFIC}/signal.cpp
      ${OS_SPECIFIC}/arp.cpp
      PARENT_SCOPE
 )

@@ -20,7 +20,6 @@
 #include <cstring>
 #include <cstdint>
 #include <stdexcept>
-#include <csignal>
 #include <ctime>
 #include <cstdlib>
 #include <chrono>
@@ -28,6 +27,7 @@
 #include "tcppump.hpp"
 
 #include "bug.h"
+#include "signal.hpp"
 #include "sleep.hpp"
 #include "getch.hpp"
 #include "interface.hpp"
@@ -42,13 +42,6 @@
 #endif
 #include "parsehelper.hpp"
 
-
-volatile std::sig_atomic_t gSigIntStatus;
-void sigintHandler (int signal)
-{
-    if (signal == SIGINT)
-        gSigIntStatus = 1;
-}
 
 cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const char* description)
 : cCmdlineApp (name, brief, usage, description)
@@ -246,7 +239,8 @@ int cTcpPump::execute (int argc, char* argv[])
 #endif
 
     // Install a signal handler
-    std::signal(SIGINT, sigintHandler);
+    cSignal::sigintEnable ();
+
     // if user has set a default packet delay, real-time mode is ALWAYS enabled
     if (!activeDelay.isNull ())
         realtimeMode = true;
@@ -274,7 +268,7 @@ int cTcpPump::execute (int argc, char* argv[])
         ifc.prepareSendQueue(packets.size() * options.repeat, packets.size() * options.repeat * cEthernetPacket::MAX_DOUBLE_TAGGED_PACKET, realtimeMode);
 
         auto t1 = std::chrono::high_resolution_clock::now();
-        while (gSigIntStatus == 0 && (endless || options.repeat--))
+        while (!cSignal::sigintSignalled() && (endless || options.repeat--))
         {
             std::list<cTimeval>::const_iterator t = delays.cbegin();
 
@@ -578,7 +572,7 @@ bool cTcpPump::interactiveMode (cInterface &ifc)
 
     while ((key = tcppump::getch ()) != EOF)
     {
-        if (gSigIntStatus)
+        if (cSignal::sigintSignalled())
             break;
 
         try
