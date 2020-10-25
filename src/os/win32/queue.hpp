@@ -25,26 +25,30 @@ public:
     cQueue() : in_pos(0), out_pos(0) {
         space_avail = CreateSemaphore(NULL, max, max, NULL);
         data_avail = CreateSemaphore(NULL, 0, max, NULL);
-        InitializeCriticalSection(&mutex);
+        InitializeCriticalSectionAndSpinCount(&mutex, 2000);
     }
 
-    void push(T data) {
+    bool push(T data)
+    {
         WaitForSingleObject(space_avail, INFINITE);
         EnterCriticalSection(&mutex);
         buffer[in_pos] = data;
         in_pos = (in_pos + 1) % max;
         LeaveCriticalSection(&mutex);
         ReleaseSemaphore(data_avail, 1, NULL);
+        return true;
     }
 
-    T pop() {
+    bool pop(T& data)
+    {
         WaitForSingleObject(data_avail,INFINITE);
         EnterCriticalSection(&mutex);
         T retval = buffer[out_pos];
         out_pos = (out_pos + 1) % max;
         LeaveCriticalSection(&mutex);
         ReleaseSemaphore(space_avail, 1, NULL);
-        return retval;
+        data = retval;
+        return true;
     }
 
     ~cQueue() {

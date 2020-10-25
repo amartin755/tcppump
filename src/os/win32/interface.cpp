@@ -21,7 +21,6 @@
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
-#include <thread>
 #include <pcap.h>
 #include <Win32-Extensions.h>
 #include <iphlpapi.h>
@@ -37,17 +36,17 @@
 
 class cJob
 {
+public:
     cQueue<pcap_send_queue*, 3> *pMsgQ;
     pcap_send_queue *currSendQueue;
     size_t bytesInCurrSendQueue;
-    std::thread *workerThread;
+    HANDLE workerThread;
     pcap_t *ifcHandle;
     size_t bytesQueued;
     size_t bytesSent;
     int synchronized;
     unsigned pcapMaxQueueSize;
 
-public:
     cJob (pcap_t *ifcHandle, int packetCnt, size_t totalBytes, int sync, uint64_t linkspeed)
     {
         pcapMaxQueueSize = linkspeed/8;
@@ -65,7 +64,7 @@ public:
         bytesQueued          = 0;
         synchronized         = sync;
 
-        workerThread = new std::thread (std::ref(*this));
+        workerThread = CreateThread (NULL, 0, (LPTHREAD_START_ROUTINE)cJob::thread, this, 0, NULL);
     }
     bool addPacket (const uint8_t* payload, size_t length, const cTimeval& t)
     {
@@ -91,14 +90,15 @@ public:
 
         return true;
     }
-    void operator ()()
+    static DWORD WINAPI thread (cJob* instance)
     {
         pcap_send_queue *sendQueue;
-        while ((sendQueue = pMsgQ->pop ()))
+        while (instance->pMsgQ->pop (sendQueue) && sendQueue)
         {
-            bytesSent += pcap_sendqueue_transmit (ifcHandle, sendQueue, synchronized);
+            instance->bytesSent += pcap_sendqueue_transmit (instance->ifcHandle, sendQueue, instance->synchronized);
             pcap_sendqueue_destroy (sendQueue);
         }
+        return 0;
     }
 
     ~cJob ()
@@ -109,10 +109,10 @@ public:
             currSendQueue = nullptr;
         }
         pMsgQ->push (nullptr); // send thread term signal
-        workerThread->join ();
+        ::WaitForSingleObject (workerThread, INFINITE);
 
         delete pMsgQ;
-        delete workerThread;
+        ::CloseHandle (workerThread);
     }
 
 };
