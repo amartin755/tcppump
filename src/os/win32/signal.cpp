@@ -19,6 +19,7 @@
 #include <windows.h>
 #include <cstdlib>
 
+#include "bug.h"
 #include "signal.hpp"
 #include "console.hpp"
 
@@ -30,6 +31,7 @@
  * WaitForMultipleObjects and must also listen to this event object. If the event has occurred we can gracefully stop packet
  * transmission jobs.
  */
+static HANDLE sigintEvent = INVALID_HANDLE_VALUE;
 static volatile int gSigIntStatus;
 static BOOL signalHandler(DWORD dwType)
 {
@@ -37,10 +39,9 @@ static BOOL signalHandler(DWORD dwType)
     {
     case CTRL_C_EVENT:
         gSigIntStatus++;
+        SetEvent (sigintEvent);
         if (gSigIntStatus == 1)
-            Console::PrintError ("Waiting for packet transmission job to finish. To force stopping immediately press ctrl+c again\n");
-        else
-            std::exit (-1);
+            Console::PrintError ("Waiting for packet transmission job to finish\n");
         break;
     default:
         return FALSE;
@@ -56,4 +57,14 @@ void cSignal::sigintEnable (void)
 bool cSignal::sigintSignalled (void)
 {
     return !!gSigIntStatus;
+}
+
+HANDLE cSignal::sigintGetEventHandle (void)
+{
+    if (sigintEvent != INVALID_HANDLE_VALUE)
+        return sigintEvent;
+
+    sigintEvent = CreateEvent (NULL, FALSE, FALSE, NULL);
+    BUG_ON (sigintEvent);
+    return sigintEvent;
 }

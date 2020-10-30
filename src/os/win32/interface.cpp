@@ -18,6 +18,7 @@
 
 
 #include <string>
+#include <vector>
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
@@ -29,90 +30,199 @@
 #include "interface.hpp"
 
 #include "bug.h"
+#include "signal.hpp"
 #include "console.hpp"
 #include "ethernetpacket.hpp"
 
-
+class cPcapSendQueue
+{
+public:
+    cPcapSendQueue (size_t qlen, int i) : index(i), bytesQueued(0), packetsQueued(0)
+    {
+        pcapQ = pcap_sendqueue_alloc ((u_int)qlen);
+        if (!pcapQ)
+            throw std::bad_alloc();
+    }
+    ~cPcapSendQueue ()
+    {
+        BUG_ON (pcapQ);
+        pcap_sendqueue_destroy (pcapQ);
+        pcapQ = nullptr;
+        bytesQueued = packetsQueued = 0;
+    }
+    void reset (void)
+    {
+        BUG_ON (pcapQ);
+        pcapQ->len = 0;
+        bytesQueued = packetsQueued = 0;
+    }
+    void add (const struct pcap_pkthdr *pkt_header, const u_char *pkt_data)
+    {
+        BUG_ON (!pcap_sendqueue_queue (pcapQ, pkt_header, pkt_data));  // can only fail if buffer calculation is wrong
+        packetsQueued++;
+        bytesQueued += pkt_header->caplen + sizeof (pcap_pkthdr);
+    }
+    bool flush (pcap_t *pcapIf, int sync)
+    {
+        bool success = (u_int)bytesQueued == pcap_sendqueue_transmit (pcapIf, pcapQ, sync);
+        reset ();
+        return success;
+    }
+    size_t queued (void)
+    {
+        return bytesQueued;
+    }
+    int index;
+private:
+    size_t bytesQueued;
+    size_t packetsQueued;
+    pcap_send_queue* pcapQ;
+};
 
 class cJob
 {
 public:
-    cQueue<pcap_send_queue*, 3> *pMsgQ;
-    pcap_send_queue *currSendQueue;
-    size_t bytesInCurrSendQueue;
+    static const int MAX_SEND_QUEUES = 3;
+    std::vector<cPcapSendQueue> allQueues;
+    unsigned currSendQueueIn;
+    unsigned currSendQueueOut;
+    HANDLE semSpaceAvail; // at least one slot empty
+    HANDLE semDataAvail;  // at least one slot full
+    HANDLE sigEvent;
     HANDLE workerThread;
+    HANDLE termEvent;
     pcap_t *ifcHandle;
-    size_t bytesQueued;
-    size_t bytesSent;
     int synchronized;
     unsigned pcapMaxQueueSize;
+    bool finished;
 
     cJob (pcap_t *ifcHandle, int packetCnt, size_t totalBytes, int sync, uint64_t linkspeed)
     {
+        semSpaceAvail    = CreateSemaphore(NULL, MAX_SEND_QUEUES - 1, MAX_SEND_QUEUES, NULL); // -1 --> first element is ready for input
+        semDataAvail     = CreateSemaphore(NULL, 0, MAX_SEND_QUEUES, NULL);
+        sigEvent         = cSignal::sigintGetEventHandle ();
+
+        finished         = false;
+        currSendQueueIn  = 0;
+        currSendQueueOut = 0;
+        synchronized     = sync;
         pcapMaxQueueSize = linkspeed/8;
-        this->ifcHandle = ifcHandle;
-        pMsgQ = new cQueue<pcap_send_queue*, 3>();
+        this->ifcHandle  = ifcHandle;
 
         const size_t wholeNeededMemory = packetCnt > 0 ? packetCnt * sizeof (pcap_pkthdr) + totalBytes : pcapMaxQueueSize;
 
-        currSendQueue = pcap_sendqueue_alloc (wholeNeededMemory >= pcapMaxQueueSize ? pcapMaxQueueSize : wholeNeededMemory);
-        if (!currSendQueue)
-            throw std::bad_alloc();
-
-        bytesInCurrSendQueue = 0;
-        bytesSent            = 0;
-        bytesQueued          = 0;
-        synchronized         = sync;
-
+        // pre-allocate pcap packet queues
+        if (wholeNeededMemory >= pcapMaxQueueSize)
+        {
+            allQueues.reserve (MAX_SEND_QUEUES);
+            for (size_t n = 0; n < MAX_SEND_QUEUES; n++)
+                allQueues.emplace_back (pcapMaxQueueSize, n);
+        }
+        else
+        {
+            allQueues.emplace_back (wholeNeededMemory, 0);
+        }
+        termEvent    = CreateEvent (NULL, FALSE, FALSE, NULL);
         workerThread = CreateThread (NULL, 0, (LPTHREAD_START_ROUTINE)cJob::thread, this, 0, NULL);
     }
     bool addPacket (const uint8_t* payload, size_t length, const cTimeval& t)
     {
-        if (!currSendQueue)
-        {
-            currSendQueue = pcap_sendqueue_alloc (pcapMaxQueueSize);
-            bytesInCurrSendQueue = 0;
-        }
         pcap_pkthdr hdr;
         hdr.caplen = length;
         hdr.len    = length;
         hdr.ts     = t.timeval ();
 
-        BUG_ON (!pcap_sendqueue_queue (currSendQueue, &hdr, payload)); // can only fail if buffer calculation is wrong
-        bytesInCurrSendQueue += length + sizeof (pcap_pkthdr);
-        bytesQueued          += length + sizeof (pcap_pkthdr);
+        cPcapSendQueue& q = allQueues.at (currSendQueueIn);
+        q.add (&hdr, payload);
 
-        if (bytesInCurrSendQueue + cEthernetPacket::MAX_DOUBLE_TAGGED_PACKET + sizeof (pcap_pkthdr) >= pcapMaxQueueSize) // don't know the size of next packet, assume maximum length
+        if (q.queued () + cEthernetPacket::MAX_DOUBLE_TAGGED_PACKET + sizeof (pcap_pkthdr) >= pcapMaxQueueSize) // don't know the size of next packet, assume maximum length
         {
-            pMsgQ->push (currSendQueue);
-            currSendQueue = nullptr;
+            ReleaseSemaphore (semDataAvail, 1, NULL);	// wake up worker thread
+
+            // acquire next send queue
+            HANDLE h[] = {sigEvent, semSpaceAvail};
+            DWORD ret = WaitForMultipleObjects(2, h, FALSE, INFINITE);
+            if (ret == WAIT_OBJECT_0 + 1)
+            {
+                // move in-pointer
+                currSendQueueIn = (currSendQueueIn + 1) % allQueues.size ();
+            }
+            else
+            {
+                // sigint event
+                finished = true;
+            }
         }
 
         return true;
     }
     static DWORD WINAPI thread (cJob* instance)
     {
-        pcap_send_queue *sendQueue;
-        while (instance->pMsgQ->pop (sendQueue) && sendQueue)
+        HANDLE h[] = {instance->semDataAvail, instance->termEvent};
+        while (1)
         {
-            instance->bytesSent += pcap_sendqueue_transmit (instance->ifcHandle, sendQueue, instance->synchronized);
-            pcap_sendqueue_destroy (sendQueue);
+            DWORD ret = WaitForMultipleObjects (2, h, FALSE, INFINITE);
+
+            switch (ret)
+            {
+            case WAIT_OBJECT_0: // data available
+                {
+                    cPcapSendQueue& q = instance->allQueues.at (instance->currSendQueueOut);
+                    q.flush (instance->ifcHandle, instance->synchronized); //FIXME return value
+
+                    // move out-pointer
+                    instance->currSendQueueOut = (instance->currSendQueueOut + 1) % instance->allQueues.size ();
+                    // release send queue
+                    ReleaseSemaphore (instance->semSpaceAvail, 1, NULL);
+
+                    break;
+                }
+            case WAIT_OBJECT_0 + 1: // terminate?
+                return 0;
+            default:
+                BUG ("???");
+                return -1;
+            }
         }
-        return 0;
     }
 
     ~cJob ()
     {
-        if (currSendQueue) // is there something to send?
-        {
-            pMsgQ->push (currSendQueue);
-            currSendQueue = nullptr;
-        }
-        pMsgQ->push (nullptr); // send thread term signal
-        ::WaitForSingleObject (workerThread, INFINITE);
+        cPcapSendQueue& q = allQueues.at (currSendQueueIn);
 
-        delete pMsgQ;
-        ::CloseHandle (workerThread);
+        if (!finished && q.queued()) // is there still something to send?
+        {
+            // wake up worker thread
+            ReleaseSemaphore (semDataAvail, 1, NULL);
+        }
+        SetEvent (termEvent); // tell worker thread to finish
+        Console::PrintDebug ("Waiting for worker thread completion\n");
+
+        // give worker thread time to cleanup, if SIGINT has appeared
+        if (cSignal::sigintSignalled() && WaitForSingleObject (workerThread, 6000) == WAIT_TIMEOUT)
+        {
+            Console::PrintDebug ("Timeout! Killing worker thread\n");
+            TerminateThread (workerThread, -2);
+            WaitForSingleObject (workerThread, INFINITE); // wait for thread
+        }
+        else
+        {
+            // wait until worker thread has finished or SIGINT appeared
+            HANDLE h[] = {sigEvent, workerThread};
+            DWORD ret = WaitForMultipleObjects(2, h, FALSE, INFINITE);
+            if (ret == WAIT_OBJECT_0)
+            {
+                Console::PrintError ("SIGINT, killing worker thread\n");
+                TerminateThread (workerThread, -2);
+                WaitForSingleObject (workerThread, INFINITE); // wait for thread
+            } else if (ret == WAIT_OBJECT_0 + 1)
+                Console::PrintDebug ("Worker thread finished\n");
+        }
+
+        CloseHandle (workerThread);
+        CloseHandle (termEvent);
+        CloseHandle (semSpaceAvail);
+        CloseHandle (semDataAvail);
     }
 
 };

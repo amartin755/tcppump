@@ -28,7 +28,6 @@
 
 #include "ipaddress.hpp"
 #include "macaddress.hpp"
-#include "queue.hpp"
 #include "timeval.hpp"
 
 // forward declarations

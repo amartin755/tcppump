@@ -25,6 +25,9 @@ class cSignal
 public:
     static void sigintEnable (void);
     static bool sigintSignalled (void);
+#if HAVE_WINDOWS
+    static HANDLE sigintGetEventHandle (void);
+#endif
 };
 
 
