@@ -44,7 +44,7 @@ public:
     bool open ();
     bool close ();
     bool sendPacket (const uint8_t* payload, size_t length, const cTimeval& t);
-    bool prepareSendQueue (int packetCnt, size_t totalBytes, bool synchronized);
+    bool prepareSendQueue (size_t packetCnt, size_t totalBytes, bool synchronized);
     bool flushSendQueue (void);
     bool getMAC (cMacAddress&);
     bool getIPv4 (cIpAddress&);

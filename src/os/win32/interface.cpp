@@ -37,7 +37,7 @@
 class cPcapSendQueue
 {
 public:
-    cPcapSendQueue (size_t qlen, int i) : index(i), bytesQueued(0), packetsQueued(0)
+    cPcapSendQueue (size_t qlen) : bytesQueued(0), packetsQueued(0)
     {
         pcapQ = pcap_sendqueue_alloc ((u_int)qlen);
         if (!pcapQ)
@@ -72,7 +72,6 @@ public:
     {
         return bytesQueued;
     }
-    int index;
 private:
     size_t bytesQueued;
     size_t packetsQueued;
@@ -93,10 +92,10 @@ public:
     HANDLE termEvent;
     pcap_t *ifcHandle;
     int synchronized;
-    unsigned pcapMaxQueueSize;
+    size_t pcapMaxQueueSize;
     bool finished;
 
-    cJob (pcap_t *ifcHandle, int packetCnt, size_t totalBytes, int sync, uint64_t linkspeed)
+    cJob (pcap_t *ifcHandle, size_t packetCnt, size_t totalBytes, int sync, uint64_t linkspeed)
     {
         semSpaceAvail    = CreateSemaphore(NULL, MAX_SEND_QUEUES - 1, MAX_SEND_QUEUES, NULL); // -1 --> first element is ready for input
         semDataAvail     = CreateSemaphore(NULL, 0, MAX_SEND_QUEUES, NULL);
@@ -106,7 +105,7 @@ public:
         currSendQueueIn  = 0;
         currSendQueueOut = 0;
         synchronized     = sync;
-        pcapMaxQueueSize = linkspeed/8;
+        pcapMaxQueueSize = size_t (linkspeed/8);
         this->ifcHandle  = ifcHandle;
 
         const size_t wholeNeededMemory = packetCnt > 0 ? packetCnt * sizeof (pcap_pkthdr) + totalBytes : pcapMaxQueueSize;
@@ -116,11 +115,11 @@ public:
         {
             allQueues.reserve (MAX_SEND_QUEUES);
             for (size_t n = 0; n < MAX_SEND_QUEUES; n++)
-                allQueues.emplace_back (pcapMaxQueueSize, n);
+                allQueues.emplace_back (pcapMaxQueueSize);
         }
         else
         {
-            allQueues.emplace_back (wholeNeededMemory, 0);
+            allQueues.emplace_back (wholeNeededMemory);
         }
         termEvent    = CreateEvent (NULL, FALSE, FALSE, NULL);
         workerThread = CreateThread (NULL, 0, (LPTHREAD_START_ROUTINE)cJob::thread, this, 0, NULL);
@@ -128,8 +127,8 @@ public:
     bool addPacket (const uint8_t* payload, size_t length, const cTimeval& t)
     {
         pcap_pkthdr hdr;
-        hdr.caplen = length;
-        hdr.len    = length;
+        hdr.caplen = (bpf_u_int32)length;
+        hdr.len    = (bpf_u_int32)length;
         hdr.ts     = t.timeval ();
 
         cPcapSendQueue& q = allQueues.at (currSendQueueIn);
@@ -325,7 +324,7 @@ bool cInterface::sendPacket (const uint8_t* payload, size_t length, const cTimev
 }
 
 // packetCnt = 0 means endless loop
-bool cInterface::prepareSendQueue (int packetCnt, size_t totalBytes, bool synchronized)
+bool cInterface::prepareSendQueue (size_t packetCnt, size_t totalBytes, bool synchronized)
 {
     BUG_ON (!job); // we only support one job at a time
     BUG_ON (ifcHandle);
