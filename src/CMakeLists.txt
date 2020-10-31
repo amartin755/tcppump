@@ -216,39 +216,40 @@ string(TIMESTAMP BUILD_TIME "%Y-%m-%d %H:%M" UTC)
 add_compile_definitions(BUILD_TIME="${BUILD_TIME}")
 add_compile_definitions (BUILD_TYPE="${CMAKE_BUILD_TYPE}")
 
-message (STATUS "Build: type = '${CMAKE_BUILD_TYPE}' tag = '${GIT_TAG}' branch = '${GIT_BRANCH}' commit = '${GIT_COMMIT}'")
+message (STATUS "Build infos:")
+message (STATUS "  type       = ${CMAKE_BUILD_TYPE}")
+message (STATUS "  timestamp  = ${BUILD_TIME}")
+message (STATUS "  git tag    = ${GIT_TAG}")
+message (STATUS "  git branch = ${GIT_BRANCH}")
+message (STATUS "  git commit = ${GIT_COMMIT}")
 
 # source files
 ###############################################################################
 
-# platform specific libs and files
+# platform specific libs
 if (WIN32)
-    set (os_specific os/win32)
-    set (libs
+    set (LIBS
          ws2_32
          IPHLPAPI)
-endif ()
-if (UNIX)
-    set (os_specific os/posix)
 endif ()
 
 # includes and libs
 if (HAVE_PCAP)
-    set (libs ${libs} ${__PCAP_LIBRARY})
+    set (LIBS ${LIBS} ${__PCAP_LIBRARY})
     if (PCAP_INCLUDE_DIR)
         include_directories (${PCAP_INCLUDE_DIR})
     endif ()
 endif ()
 
 
-add_executable (tcppump)
+add_executable   (tcppump)
 add_subdirectory (common)
 add_subdirectory (os)
 add_subdirectory (packets)
 add_subdirectory (parser)
 add_subdirectory (pcap)
 
-target_link_libraries (tcppump LINK_PUBLIC ${libs})
+target_link_libraries (tcppump LINK_PUBLIC ${LIBS})
 target_sources(tcppump PRIVATE tcppump.cpp ${SOURCES})
 target_include_directories (tcppump PRIVATE ${INCLUDES})
 
@@ -267,7 +268,7 @@ endif()
 if (WITH_UNITTESTS)
 
     add_executable (unittest)
-    target_link_libraries (unittest PRIVATE ${libs})
+    target_link_libraries (unittest PRIVATE ${LIBS})
 
     target_compile_definitions (unittest PRIVATE WITH_UNITTESTS)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -294,7 +295,7 @@ if (TEST_NET_ADAPTER)
     set (OUT_IFC ${TEST_NET_ADAPTER})
 endif ()
 
-message(STATUS "Using network adapter '${OUT_IFC}' for testing")
+message(STATUS "Using network adapter '${OUT_IFC}' for ctest")
 
 set (TEST_OUTPUT testoutput.pcap)
 set (DEFAULT_PARAMS -i ${OUT_IFC} --myip4=1.2.3.4 --mymac=80:23:45:67:89:AB -o ${TEST_OUTPUT})
