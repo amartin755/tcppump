@@ -12,16 +12,15 @@ Simple Ethernet network packet generator
 tcpdump is a simple command-line tool for generating Ethernet packets, with focus on low level protocols.
 
 Features
-* Definiton of packets either as ASCII hex string or via a token based language
-* Sending of single packets
-* time triggered send of packets
-* Script defined packets
+* Definiton of packets via a token based syntax
+* Transmission of packets either directly via command line parameters or script based
+* Time triggered transmission of packets (realtime mode). Note: Accuracy depends on host environment.
 * Loops
-* Delays between packets
-* Interactive-Mode (binding packets to key press events)
-* Replaying of PCAP files
-* Protocol-dissection of sent packets
+* User defined delays between packets
+* Realtime replaying of PCAP files
 * Source MAC and IPv4 address can be freely defined (using the addresses of the network adapter is also possible)
+* Random source and destination MAC addresses
+* Output on generated network traffic to PCAP files
 
 Supported protocols and packet formats
 * Raw packets as bytestream
@@ -35,7 +34,7 @@ Supported protocols and packet formats
 * STP/RSTP
 * IGMP (v1/v2 only, v3 is on the way)
 
-**Note: This tool is in alpha state. Use at your own risk.**
+**Note: This tool is in alpha state.**
 
 ## Build instructions
 tcppump has been successfully compiled on ubuntu linux (x64) with gcc and on windows 10 with mingw32 and MSVC.
@@ -50,7 +49,7 @@ Windows
 * WinPcap Developer' Pack (see http://www.winpcap.org/devel.htm and http://www.winpcap.org/install/bin/WpdPack_4_1_2.zip)
 
 Linux
-* optional: libpcap-devel (for pcap replay feature)
+* optional: libpcap-devel (for PCAP read and write)
 
 ### How to build
 #### Setup
@@ -116,14 +115,8 @@ For debugging add:
     -t RESOLUTION --resolution=RESOLUTION
         Resolution of transmission time. This affects -d parameter as well as all timestamps in script files.
         Possible values are 'u'= microseconds, 'm'= milliseconds(default), 'c'= centiseconds and 's'= seconds
-    --interactive[=KEYLIST]
-        Enable interactive mode (EXPERIMENTAL). In interactive mode no packets are sent automatically.
-        Instead the packets are bound to keys and only sent when the corresponding key
-        is pressed. The default implementation binds the first 10 packets to the keys 1, 2, ... 0.
     -o OUTFILE --write-to-file=OUTFILE
         Write generated packets to pcap file OUTFILE instead of sending them to the network.
-    --dissect
-        Prints the dissected content of sent packets as known from tcpdump.
 
 
 ### Examples
