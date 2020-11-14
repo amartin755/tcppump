@@ -121,6 +121,14 @@ public:
     {
         return ipv4.s_addr != b.ipv4.s_addr;
     }
+    bool operator< (const cIpAddress &val) const
+    {
+        return ntohl (ipv4.s_addr) < ntohl (val.ipv4.s_addr);
+    }
+    bool operator> (const cIpAddress &val) const
+    {
+        return ntohl (ipv4.s_addr) > ntohl (val.ipv4.s_addr);
+    }
 
 #ifdef WITH_UNITTESTS
     static void unitTest ()
@@ -135,6 +143,8 @@ public:
         BUG_ON (cIpAddress("224.0.0.0").isMulticast());
         BUG_ON (cIpAddress("239.255.255.255").isMulticast());
         BUG_ON (!cIpAddress("240.0.0.0").isMulticast());
+        BUG_ON (cIpAddress("1.2.3.4") < cIpAddress("1.3.3.4"));
+        BUG_ON (cIpAddress("2.2.3.4") > cIpAddress("1.3.3.4"));
     }
 #endif
 

@@ -62,8 +62,10 @@ public:
     const uint8_t* get () const;
     inline size_t getLength () const {return pPayload - packet + payloadLength;}
     inline void clear () {reset ();};
-    inline bool hasLlcHeader () const {return llcHeaderLength != 0;};
-    inline bool hasPayload () const {return payloadLength != 0;};
+    inline bool hasLlcHeader () const {return llcHeaderLength != 0;}
+    inline bool hasPayload () const {return payloadLength != 0;}
+    inline bool hasDestMac () const {return hasDMAC;}
+    inline const uint8_t * getPayload () const {return pPayload;}
     inline uint8_t getPayloadAt8 (unsigned offset) const
     {
         if (offset > payloadLength)
@@ -79,6 +81,7 @@ public:
         return ((uint16_t*)pPayload)[offset/2];
     }
     inline size_t getPayloadLength () const {return payloadLength;}
+    inline uint16_t getEthertype () const {return *pEthertypeLength;}
     void updatePayloadAt (unsigned offset, const void* payload, size_t len);
 
     static const size_t   MAX_ETHERNET_PAYLOAD     = 1500;
@@ -110,6 +113,7 @@ private:
     size_t    payloadLength;
     size_t    llcHeaderLength;
     int       vlanTags;
+    bool      hasDMAC;
 };
 
 enum ethertypes_t

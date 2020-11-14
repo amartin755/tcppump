@@ -57,6 +57,7 @@ cEthernetPacket::cEthernetPacket (cEthernetPacket&& other)
     payloadLength    = other.payloadLength;
     llcHeaderLength  = other.llcHeaderLength;
     vlanTags         = other.vlanTags;
+    hasDMAC          = other.hasDMAC;
 
     other.data             = nullptr;
     other.packet           = nullptr;
@@ -75,6 +76,7 @@ cEthernetPacket::cEthernetPacket (const cEthernetPacket& obj) : cEthernetPacket 
     payloadLength    = obj.payloadLength;
     llcHeaderLength  = obj.llcHeaderLength;
     vlanTags         = obj.vlanTags;
+    hasDMAC          = obj.hasDMAC;
 
     // copy packet data
     std::memcpy (packet, obj.packet, obj.getLength());
@@ -105,6 +107,7 @@ cEthernetPacket& cEthernetPacket::operator=(cEthernetPacket&& other)
         payloadLength    = other.payloadLength;
         llcHeaderLength  = other.llcHeaderLength;
         vlanTags         = other.vlanTags;
+        hasDMAC          = other.hasDMAC;
 
         other.data             = nullptr;
         other.packet           = nullptr;
@@ -127,6 +130,7 @@ void cEthernetPacket::reset ()
     payloadLength     = 0;
     llcHeaderLength   = 0;
     vlanTags          = 0;
+    hasDMAC           = false;
     *pEthertypeLength = 0;
 }
 
@@ -162,6 +166,7 @@ void cEthernetPacket::setDestMac (const cMacAddress& dest)
     // mac header contains source and destination mac and is always at the begin of the packet
     mac_header_t* header = (mac_header_t*)packet;
     std::memcpy(&header->dest, dest.get(), dest.size());
+    hasDMAC = true;
 }
 
 
@@ -270,6 +275,7 @@ void cEthernetPacket::setRaw (const uint8_t* payload, size_t len)
         throw FormatException (exParRange, NULL);
     std::memcpy (packet, payload, len);
     payloadLength = len - sizeof (mac_header_t);
+    hasDMAC       = true;
 }
 
 

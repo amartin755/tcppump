@@ -19,14 +19,23 @@
 #ifndef RESOLVER_HPP_
 #define RESOLVER_HPP_
 
+#include <map>
+
 #include "packetdata.hpp"
+#include "arp.hpp"
+#include "interface.hpp"
+#include "macaddress.hpp"
+#include "ipaddress.hpp"
 
 class cResolver
 {
 public:
-    cResolver();
+    cResolver (cInterface &netif);
     cPacketData& operator<< (cPacketData& input);
 
+private:
+    cArp arper;
+    std::map <cIpAddress, cMacAddress> cache;
 };
 
 #endif /* RESOLVER_HPP_ */

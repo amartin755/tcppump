@@ -15,10 +15,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-
+#include <utility>
 #include "resolver.hpp"
+#include "console.hpp"
+#include "macaddress.hpp"
+#include "ipv4packet.hpp"
 
-cResolver::cResolver()
+cResolver::cResolver (cInterface &netif) : arper (netif)
 {
     // TODO Auto-generated constructor stub
 
@@ -26,6 +29,44 @@ cResolver::cResolver()
 
 cPacketData& cResolver::operator<< (cPacketData& input)
 {
-    // TODO stub
+    Console::PrintDebug ("Resolving ...\n");
+
+    for (auto & p : input.packets)
+    {
+        if (!p.hasDestMac() && p.getEthertype() == ntohs(ETHERTYPE_IPV4))
+        {
+            cMacAddress dmac;
+            const ipv4_header_t* ipheader = (const ipv4_header_t*)p.getPayload ();
+            cIpAddress dip(ipheader->dstIp);
+
+            try
+            {
+                dmac = cache.at (dip);
+            }
+            catch (const std::out_of_range&)
+            {
+                Console::PrintMostVerbose ("Try to resolve MAC of host %d.%d.%d.%d. ",
+                        dip.getAsArray()[0], dip.getAsArray()[1], dip.getAsArray()[2], dip.getAsArray()[3]);
+                if (arper.resolve(dip, dmac))
+                {
+                    Console::PrintMostVerbose (" Found %02x:%02x:%02x:%02x:%02x:%02x \n",
+                            ((const uint8_t*)dmac.get())[0],
+                            ((const uint8_t*)dmac.get())[1],
+                            ((const uint8_t*)dmac.get())[2],
+                            ((const uint8_t*)dmac.get())[3],
+                            ((const uint8_t*)dmac.get())[4],
+                            ((const uint8_t*)dmac.get())[5]);
+                    cache.insert ({dip, dmac});
+                }
+                else
+                {
+                    Console::PrintError ("Error\n");
+                    //FIXME!!!!!!!!!!
+                }
+            }
+            p.setDestMac (dmac);
+        }
+    }
+
     return input;
 }

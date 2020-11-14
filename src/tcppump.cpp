@@ -219,8 +219,8 @@ int cTcpPump::execute (const std::list<std::string>& args)
 
     cCompiler compiler (options.script ? cCompiler::SCRIPT : options.pcap ? cCompiler::PCAP : cCompiler::PACKET,
             ownMac, ownIP, activeDelay, timeScale);
-    cResolver  resolver;
     cFilter    filter;
+    cResolver  resolver (ifc);
     cScheduler scheduler;
 
     try
