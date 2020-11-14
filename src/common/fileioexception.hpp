@@ -16,22 +16,54 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "arp.hpp"
 
-#include "bug.hpp"
-#include "inet.h"
-#include "console.hpp"
-#include "interface.hpp"
+#ifndef FILEIOEXCEPTION_HPP_
+#define FILEIOEXCEPTION_HPP_
 
-cArp::cArp (cInterface& i) : ifc(i)
+
+class FileIOException
 {
-    // We don't really need an "opened" interface here. This is a sanity check, to accept validated interfaces only.
-    BUG_ON (i.isOpen ());
-}
+public:
+    enum errorType
+    {
+        OPEN, READ, WRITE
+    };
 
-bool cArp::resolve (const cIpAddress& ip, cMacAddress& mac)
-{
-    // TODO implement me
-    mac.set("00:de:ad:be:ef:00");
-    return true;
-}
+    FileIOException (errorType cause, const char* val)
+    {
+        this->cause  = cause;
+        this->val    = val;
+    }
+
+    int what ()
+    {
+        return cause;
+    }
+    const char* why ()
+    {
+        switch (cause)
+        {
+        case OPEN:
+            return "Could not open file";
+        case READ:
+            return "Could not read file";
+        case WRITE:
+            return "Could not write file";
+        }
+        return "";
+    }
+
+    const char* value ()
+    {
+        return val;
+    }
+
+
+private:
+    errorType cause;
+    const char* val;
+};
+
+
+
+#endif /* FILEIOEXCEPTION_HPP_ */

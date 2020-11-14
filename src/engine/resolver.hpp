@@ -16,22 +16,17 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef RESOLVER_HPP_
+#define RESOLVER_HPP_
 
-#ifndef BUGON_H
-#define BUGON_H
+#include "packetdata.hpp"
 
-#include <cstdio>
-#include <cstdlib>
-
-static inline void __game_over (const char* expr, const char* file, int line)
+class cResolver
 {
-    std::fprintf (stderr, "Oops, you may found a bug!!!\n %s %d: '%s'\n", file, line, expr);
-    std::abort ();
-}
-#define BUG_ON(expr)                            \
-     (static_cast <bool> (expr)                        \
-      ? void (0)                            \
-      : __game_over (#expr, __FILE__, __LINE__))
-#define BUG(msg) __game_over (#msg, __FILE__, __LINE__)
+public:
+    cResolver();
+    cPacketData& operator<< (cPacketData& input);
 
-#endif /* BUGON_H */
+};
+
+#endif /* RESOLVER_HPP_ */

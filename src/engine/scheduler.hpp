@@ -16,22 +16,17 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "arp.hpp"
+#ifndef OPTIMIZER_HPP_
+#define OPTIMIZER_HPP_
 
-#include "bug.hpp"
-#include "inet.h"
-#include "console.hpp"
-#include "interface.hpp"
+#include "packetdata.hpp"
 
-cArp::cArp (cInterface& i) : ifc(i)
+class cScheduler
 {
-    // We don't really need an "opened" interface here. This is a sanity check, to accept validated interfaces only.
-    BUG_ON (i.isOpen ());
-}
+public:
+    cScheduler ();
+    cPacketData& operator<< (cPacketData& input);
 
-bool cArp::resolve (const cIpAddress& ip, cMacAddress& mac)
-{
-    // TODO implement me
-    mac.set("00:de:ad:be:ef:00");
-    return true;
-}
+};
+
+#endif /* OPTIMIZER_HPP_ */

@@ -20,10 +20,11 @@
 
 set (SOURCES
      ${SOURCES}
-     ${CMAKE_CURRENT_SOURCE_DIR}/instructionparser.cpp
-     ${CMAKE_CURRENT_SOURCE_DIR}/fileparser.cpp
-     ${CMAKE_CURRENT_SOURCE_DIR}/parameterlist.cpp
-     ${CMAKE_CURRENT_SOURCE_DIR}/parsehelper.cpp
+     ${CMAKE_CURRENT_SOURCE_DIR}/resolver.cpp
+     ${CMAKE_CURRENT_SOURCE_DIR}/filter.cpp
+     ${CMAKE_CURRENT_SOURCE_DIR}/scheduler.cpp
+     ${CMAKE_CURRENT_SOURCE_DIR}/output.cpp
+     ${CMAKE_CURRENT_SOURCE_DIR}/preprocessor.cpp
      PARENT_SCOPE
 )
 set (INCLUDES

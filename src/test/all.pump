@@ -1,7 +1,5 @@
 raw(payload = 0123456789abcdef0123456789abcdef);
 
-raw(payload = 0123456789abcdef0123456789abcdef);
-
 eth(dmac=11:22:33:44:55:66, payload = 0123456789abcdef0123456789abcdef);
 eth(dmac=11:22:33:44:55:66, ethertype=0x9000, payload = 0123456789abcdef0123456789abcdef);
 eth(dmac=11:22:33:44:55:66, smac=80:81:82:83:84:85, payload = 0123456789abcdef0123456789abcdef);

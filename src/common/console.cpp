@@ -21,7 +21,7 @@
 #include <cstdio>
 
 #include "console.hpp"
-#include "bug.h"
+#include "bug.hpp"
 
 Console::out_level Console::level = Normal;
 

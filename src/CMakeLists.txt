@@ -244,9 +244,10 @@ endif ()
 
 add_executable   (tcppump)
 add_subdirectory (common)
+add_subdirectory (compiler)
+add_subdirectory (engine)
 add_subdirectory (os)
 add_subdirectory (packets)
-add_subdirectory (parser)
 add_subdirectory (pcap)
 
 target_link_libraries (tcppump LINK_PUBLIC ${LIBS})
@@ -310,13 +311,10 @@ add_test(NAME show-version--ok COMMAND tcppump --version WORKING_DIRECTORY ${CMA
 add_test(NAME show-version-output--ok COMMAND tcppump --version WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 set_tests_properties(show-version-output--ok PROPERTIES PASS_REGULAR_EXPRESSION "version ${PROJECT_VERSION}")
 
-add_test(NAME raw-1--ok COMMAND tcppump ${DEFAULT_PARAMS} -r "0123456789abcdef0123456789abcdef" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME raw-1--ok COMMAND tcppump ${DEFAULT_PARAMS} "raw(payload = 0123456789abcdef0123456789abcdef)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 add_test(NAME raw-1--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/raw-01.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-add_test(NAME raw-2--nok COMMAND tcppump ${DEFAULT_PARAMS} -r "abcdf" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME raw-2--nok COMMAND tcppump ${DEFAULT_PARAMS} "raw(payload = abcdf)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 set_tests_properties(raw-2--nok PROPERTIES WILL_FAIL TRUE)
-
-add_test(NAME raw-3--ok COMMAND tcppump ${DEFAULT_PARAMS} "raw(payload = 0123456789abcdef0123456789abcdef)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-add_test(NAME raw-3--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/raw-03.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 add_test(NAME eth-1--ok COMMAND tcppump ${DEFAULT_PARAMS} "eth(dmac=11:22:33:44:55:66, payload = 0123456789abcdef0123456789abcdef)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 add_test(NAME eth-1--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/eth-01.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
@@ -696,4 +694,4 @@ add_test(NAME delay-32-ok COMMAND tcppump ${DEFAULT_PARAMS} -d50 -l3 "2: arp(dip
 add_test(NAME delay-32--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/delay-32.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 add_test(NAME online-1--ok COMMAND tcppump -i ${OUT_IFC} --dissect -vvvv "arp(dip=1.2.3.4)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-set_tests_properties(online-1--ok PROPERTIES PASS_REGULAR_EXPRESSION "Successfully sent 1 of 1 packets.")
+set_tests_properties(online-1--ok PROPERTIES PASS_REGULAR_EXPRESSION "Successfully sent 1 packet.")

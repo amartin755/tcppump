@@ -21,7 +21,7 @@
 
 #include <string>
 
-#include "bug.h"
+#include "bug.hpp"
 #include "inet.h"
 #include "console.hpp"
 #include "ipv4packet.hpp"

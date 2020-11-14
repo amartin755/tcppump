@@ -16,22 +16,23 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "arp.hpp"
+#ifndef PACKETDATA_HPP_
+#define PACKETDATA_HPP_
 
-#include "bug.hpp"
-#include "inet.h"
-#include "console.hpp"
-#include "interface.hpp"
+#include <list>
+#include "ethernetpacket.hpp"
+#include "timeval.hpp"
 
-cArp::cArp (cInterface& i) : ifc(i)
+class cPacketData
 {
-    // We don't really need an "opened" interface here. This is a sanity check, to accept validated interfaces only.
-    BUG_ON (i.isOpen ());
-}
+public:
+    cPacketData ()
+    {
+        hasUserTimestamps = false;
+    }
+    std::list <cEthernetPacket> packets;
+    std::list <cTimeval> timestamps;
+    bool hasUserTimestamps; // is true, if at least one timestamp in timestamp list is user defined (no default value)
+};
 
-bool cArp::resolve (const cIpAddress& ip, cMacAddress& mac)
-{
-    // TODO implement me
-    mac.set("00:de:ad:be:ef:00");
-    return true;
-}
+#endif /* PACKETDATA_HPP_ */

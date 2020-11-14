@@ -23,37 +23,53 @@
 
 #include "fileparser.hpp"
 
-#include "bug.h"
+#include "bug.hpp"
 #include "instructionparser.hpp"
 #include "ethernetpacket.hpp"
 
 
-cFileParser::cFileParser ()
+cFileParser::cFileParser (uint64_t defaultDelay, const cMacAddress& ownMac, const cIpAddress&  ownIPv4)
 {
     instructionBufferSize = 0;
-    instructionBuffer     = NULL;
+    instructionBuffer     = nullptr;
+    fp                    = nullptr;
+    lineNbr               = 1;
+    delay                 = defaultDelay;
+    path                  = nullptr;
 
-    fp           = NULL;
-    lineNbr      = 1;
-    delay        = 0;
+    this->ownMac .set (ownMac);
+    this->ownIPv4.set (ownIPv4);
 }
 
 cFileParser::~cFileParser ()
 {
-    free (instructionBuffer);
+    std::free (instructionBuffer);
+    close ();
 }
 
-void cFileParser::init (FILE* fp, uint64_t defaultDelay, const cMacAddress& ownMac, const cIpAddress& ownIPv4)
+bool cFileParser::open (const char* path)
 {
-    BUG_ON (fp);
+    BUG_ON (!fp);
 
-    this->fp      = fp;
+    if ((fp = std::fopen (path, "rt")) == NULL)
+    {
+        return false;
+    }
 
-    lineNbr       =  1;
+    lineNbr    =  1;
+    this->path = path;
 
-    delay         = defaultDelay;
-    this->ownMac.set (ownMac);
-    this->ownIPv4.set (ownIPv4);
+    return true;
+}
+
+void cFileParser::close (void)
+{
+    if (fp)
+    {
+        std::fclose(fp);
+        fp   = nullptr;
+        path = nullptr;
+    }
 }
 
 /**
@@ -62,16 +78,18 @@ void cFileParser::init (FILE* fp, uint64_t defaultDelay, const cMacAddress& ownM
  */
 int cFileParser::parse (cInstructionParser::cResult& result)
 {
+    BUG_ON (fp);
+
     int offset = 0;
     int c;
     bool comment = false;
 
-    while ((c = getc (fp)) != EOF)
+    while ((c = std::getc (fp)) != EOF)
     {
         if (offset >= instructionBufferSize)
         {
             instructionBufferSize += 10*1024;
-            void* newbuf = realloc (instructionBuffer, instructionBufferSize);
+            void* newbuf = std::realloc (instructionBuffer, instructionBufferSize);
             if (newbuf)
             {
                 instructionBuffer = (char*)newbuf;
@@ -119,7 +137,7 @@ int cFileParser::parse (cInstructionParser::cResult& result)
                         }
                         catch (ParseException &e)
                         {
-                            throw FileParseException (lineNbr, e.instruction(), e.errorMsg(), e.details(), e.errorBegin(), e.errorLen());
+                            throw FileParseException (path, lineNbr, e.instruction(), e.errorMsg(), e.details(), e.errorBegin(), e.errorLen());
                         }
                     }
                     else

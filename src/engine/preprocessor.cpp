@@ -16,22 +16,18 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "arp.hpp"
+#include "preprocessor.hpp"
 
-#include "bug.hpp"
-#include "inet.h"
-#include "console.hpp"
-#include "interface.hpp"
-
-cArp::cArp (cInterface& i) : ifc(i)
+cPreprocessor::cPreprocessor(bool randSrcMac, bool randDstMac) :
+    randomSrcMac (randSrcMac), randomDstMac (randDstMac)
 {
-    // We don't really need an "opened" interface here. This is a sanity check, to accept validated interfaces only.
-    BUG_ON (i.isOpen ());
+
 }
 
-bool cArp::resolve (const cIpAddress& ip, cMacAddress& mac)
+void cPreprocessor::process (cEthernetPacket& packet) const
 {
-    // TODO implement me
-    mac.set("00:de:ad:be:ef:00");
-    return true;
+    if (randomSrcMac)
+        packet.setRandomSrcMac();
+    if (randomDstMac)
+        packet.setRandomDestMac();
 }

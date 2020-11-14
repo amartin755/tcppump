@@ -16,22 +16,22 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "arp.hpp"
 
-#include "bug.hpp"
-#include "inet.h"
-#include "console.hpp"
-#include "interface.hpp"
+#ifndef BUGON_HPP
+#define BUGON_HPP
 
-cArp::cArp (cInterface& i) : ifc(i)
+#include <cstdio>
+#include <cstdlib>
+
+static inline void __game_over (const char* expr, const char* file, int line)
 {
-    // We don't really need an "opened" interface here. This is a sanity check, to accept validated interfaces only.
-    BUG_ON (i.isOpen ());
+    std::fprintf (stderr, "Oops, you may found a bug!!!\n %s %d: '%s'\n", file, line, expr);
+    std::abort ();
 }
+#define BUG_ON(expr)                            \
+     (static_cast <bool> (expr)                        \
+      ? void (0)                            \
+      : __game_over (#expr, __FILE__, __LINE__))
+#define BUG(msg) __game_over (#msg, __FILE__, __LINE__)
 
-bool cArp::resolve (const cIpAddress& ip, cMacAddress& mac)
-{
-    // TODO implement me
-    mac.set("00:de:ad:be:ef:00");
-    return true;
-}
+#endif /* BUGON_HPP */

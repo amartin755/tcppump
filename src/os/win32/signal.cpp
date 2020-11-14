@@ -19,7 +19,7 @@
 #include <windows.h>
 #include <cstdlib>
 
-#include "bug.h"
+#include "bug.hpp"
 #include "signal.hpp"
 #include "console.hpp"
 

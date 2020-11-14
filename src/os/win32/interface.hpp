@@ -46,6 +46,7 @@ public:
     bool sendPacket (const uint8_t* payload, size_t length, const cTimeval& t);
     bool prepareSendQueue (size_t packetCnt, size_t totalBytes, bool synchronized);
     bool flushSendQueue (void);
+    void getSendStatistic (uint64_t& sentPackets, uint64_t& sentBytes, double& duration) const;
     bool getMAC (cMacAddress&);
     bool getIPv4 (cIpAddress&);
     bool isOpen () const;
@@ -62,6 +63,10 @@ private:
     pcap_t *ifcHandle;
     PIP_ADAPTER_ADDRESSES winNetAdapters;
     uint64_t linkSpeed;
+
+    uint64_t sentPackets;
+    uint64_t sentBytes;
+    double   duration;
 
     cJob* job;
 };

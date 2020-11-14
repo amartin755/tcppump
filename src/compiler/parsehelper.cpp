@@ -22,7 +22,7 @@
 #include <cstdlib>
 
 #include "parsehelper.hpp"
-#include "bug.h"
+#include "bug.hpp"
 
 
 const char* cParseHelper::skipWhitespaces (const char* p)

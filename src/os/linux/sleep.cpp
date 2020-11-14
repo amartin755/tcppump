@@ -23,7 +23,7 @@
 
 #include "timeval.hpp"
 #include "sleep.hpp"
-#include "bug.h"
+#include "bug.hpp"
 
 #ifdef WITH_UNITTESTS
 #include "console.hpp"

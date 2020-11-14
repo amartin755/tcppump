@@ -23,7 +23,7 @@
 
 #include <pcap.h>
 
-#include "bug.h"
+#include "bug.hpp"
 #include "pcapfileio.hpp"
 #include "console.hpp"
 

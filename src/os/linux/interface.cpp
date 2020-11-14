@@ -32,7 +32,7 @@
 
 #include "interface.hpp"
 
-#include "bug.h"
+#include "bug.hpp"
 #include "console.hpp"
 #include "sleep.hpp"
 
@@ -40,8 +40,11 @@
 cInterface::cInterface(const char* ifname)
 : name (ifname)
 {
-    ifcHandle  = -1;
-    ifIndex    = 0;
+    ifcHandle   = -1;
+    ifIndex     = 0;
+    sentPackets = 0;
+    sentBytes   = 0;
+    firstPacket = true;
 }
 
 cInterface::~cInterface()
@@ -107,6 +110,12 @@ bool cInterface::sendPacket (const uint8_t* payload, size_t length, const cTimev
     cTimeval sleepTime (t);
     sleepTime.sub (lastSentPacket);
 
+    if (firstPacket)
+    {
+        firstPacket = false;
+        tStart = std::chrono::high_resolution_clock::now();
+    }
+
     if (!sleepTime.isNull())
     {
         tcppump::Sleep (sleepTime);
@@ -128,10 +137,24 @@ bool cInterface::sendPacket (const uint8_t* payload, size_t length, const cTimev
         Console::PrintError ("error: %s\n", strerror (errno));
         return false;
     }
+    // update statistics
+    sentPackets++;
+    sentBytes += (uint64_t)length;
 
     Console::PrintDebug ("sent %zu bytes\n", length);
 
     return true;
+}
+
+void cInterface::getSendStatistic (uint64_t& sentPackets, uint64_t& sentBytes, double& duration) const
+{
+    auto tEnd = std::chrono::high_resolution_clock::now();
+    auto elapsedUs = std::chrono::duration_cast<std::chrono::microseconds>(tEnd - tStart);
+    double seconds = (double)elapsedUs.count()/1000000.0;
+
+    sentPackets = this->sentPackets;
+    sentBytes   = this->sentBytes;
+    duration    = seconds;
 }
 
 bool cInterface::getMAC (cMacAddress &mac)

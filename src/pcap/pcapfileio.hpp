@@ -41,7 +41,8 @@ public:
     bool read (struct pcap_pkthdr **, const u_char **);
     uint8_t* read (cTimeval* timestamp, int* len);
     bool write (const cTimeval& timestamp, const uint8_t* frame, int len, bool absoluteTimestamp = true);
-    bool error (){return fileError;};
+    bool error () const {return fileError;};
+    const char* name (void) const {return path;};
 
 private:
     void printError (const char* err);

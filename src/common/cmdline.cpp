@@ -24,7 +24,7 @@
 
 #include "cmdline.hpp"
 
-#include "bug.h"
+#include "bug.hpp"
 #include "console.hpp"
 
 

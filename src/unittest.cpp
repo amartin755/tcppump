@@ -19,14 +19,14 @@
 
 #include <cstdio>
 
-#include "bug.h"
+#include "bug.hpp"
 #include "console.hpp"
 #include "timeval.hpp"
 #include "cmdline.hpp"
 #include "pcapfileio.hpp"
 #include "ethernetpacket.hpp"
 #include "arppacket.hpp"
-#include "common/bug.h"
+#include "common/bug.hpp"
 #include "ipv4packet.hpp"
 #include "parameterlist.hpp"
 #include "instructionparser.hpp"

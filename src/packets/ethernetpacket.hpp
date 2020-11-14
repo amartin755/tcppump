@@ -23,7 +23,7 @@
 #include <cstdint>
 #include <cstddef>    // size_t
 
-#include "bug.h"
+#include "bug.hpp"
 #include "formatexception.hpp"
 #include "inet.h"
 #include "macaddress.hpp"

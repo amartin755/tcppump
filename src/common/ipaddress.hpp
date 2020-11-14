@@ -25,7 +25,7 @@
 
 #include "inet.h"
 #ifdef WITH_UNITTESTS
-#include "bug.h"
+#include "bug.hpp"
 #endif
 
 

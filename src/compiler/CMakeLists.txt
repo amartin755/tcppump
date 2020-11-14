@@ -18,26 +18,17 @@
 #
 ###############################################################################
 
-# platform specific files
-if (WIN32)
-    set (OS_SPECIFIC ${CMAKE_CURRENT_SOURCE_DIR}/win32)
-endif ()
-if (UNIX)
-    set (OS_SPECIFIC ${CMAKE_CURRENT_SOURCE_DIR}/linux)
-endif ()
-
 set (SOURCES
      ${SOURCES}
-     ${OS_SPECIFIC}/interface.cpp
-     ${OS_SPECIFIC}/getch.cpp
-     ${OS_SPECIFIC}/sleep.cpp
-     ${OS_SPECIFIC}/signal.cpp
-     ${OS_SPECIFIC}/arp.cpp
+     ${CMAKE_CURRENT_SOURCE_DIR}/compiler.cpp
+     ${CMAKE_CURRENT_SOURCE_DIR}/instructionparser.cpp
+     ${CMAKE_CURRENT_SOURCE_DIR}/fileparser.cpp
+     ${CMAKE_CURRENT_SOURCE_DIR}/parameterlist.cpp
+     ${CMAKE_CURRENT_SOURCE_DIR}/parsehelper.cpp
      PARENT_SCOPE
 )
 set (INCLUDES
      ${INCLUDES}
      ${CMAKE_CURRENT_SOURCE_DIR}
-     ${OS_SPECIFIC}
      PARENT_SCOPE
 )

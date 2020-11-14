@@ -36,10 +36,11 @@ class cParameterList;
 class cFileParser
 {
 public:
-    cFileParser ();
+    cFileParser (uint64_t defaultDelay, const cMacAddress& ownMac, const cIpAddress&  ownIPv4);
     ~cFileParser ();
-    void init (FILE* fp, uint64_t defaultDelay, const cMacAddress& ownMac, const cIpAddress&  ownIPv4);
+    bool open (const char* path);
     int parse (cInstructionParser::cResult& result);
+    void close (void);
 
 
 private:
@@ -51,6 +52,7 @@ private:
     cMacAddress  ownMac;
     cIpAddress   ownIPv4;
     FILE*        fp;
+    const char*  path;
 
     unsigned     lineNbr;
 };
@@ -58,17 +60,23 @@ private:
 class FileParseException : public ParseException
 {
 public:
-    FileParseException (int lineNbr, const char* inst, const char* errMsg, const char* details, const char* errBegin, int errLen) :
+    FileParseException (const char* file, int lineNbr, const char* inst, const char* errMsg, const char* details, const char* errBegin, int errLen) :
         ParseException(inst, errMsg, details, errBegin, errLen)
     {
         this->lineNbr = lineNbr;
+        this->file    = file;
     }
     int lineNumber () const
     {
         return lineNbr;
     }
+    const char* filePath () const
+    {
+        return file;
+    }
 private:
     int lineNbr;
+    const char* file;
 };
 
 #endif /* FILEPARSER_HPP_ */

@@ -99,15 +99,11 @@ For debugging add:
         (max. 4 times, i.e. -vvvv) for even more debug output.
     --input=TYPE
         Input format of the packets to be sent. Possible values for TYPE (default is "token") are:
-        raw     Packets are defined as hex-ascii string, and will not be interpreted.
-                example: 0123456789ABCDEF001122334455667788
         token   Token based definition of packets. tcppump will compile it to Ethernet packets.
                 example: eth: .dest=44:22:33:44:55:66 .payload=1234567890abcdef
                 For complete description of the syntax, see documentation.
         script  Packets are defined in script files, that contain token based packets.
         pcap    pcap file of captured packets (e.g via wireshark or tcpdump) will be replayed.
-    -r --raw
-        Short for --input=raw
     -s --script
         Short for --input=script
     -p --pcap

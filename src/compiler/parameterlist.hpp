@@ -26,7 +26,7 @@
 #include "ipaddress.hpp"
 #include "macaddress.hpp"
 #include "formatexception.hpp"
-#include "bug.h"
+#include "bug.hpp"
 
 class cParameter
 {

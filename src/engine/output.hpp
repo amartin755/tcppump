@@ -16,22 +16,42 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "arp.hpp"
+#ifndef OUTPUT_HPP_
+#define OUTPUT_HPP_
 
-#include "bug.hpp"
-#include "inet.h"
-#include "console.hpp"
+#include <cstdint>
+
+#include "packetdata.hpp"
 #include "interface.hpp"
+#include "preprocessor.hpp"
+#if HAVE_PCAP
+#include "pcapfileio.hpp"
+#endif
 
-cArp::cArp (cInterface& i) : ifc(i)
-{
-    // We don't really need an "opened" interface here. This is a sanity check, to accept validated interfaces only.
-    BUG_ON (i.isOpen ());
-}
 
-bool cArp::resolve (const cIpAddress& ip, cMacAddress& mac)
+class cOutput
 {
-    // TODO implement me
-    mac.set("00:de:ad:be:ef:00");
-    return true;
-}
+public:
+    cOutput (const cPreprocessor &preproc);
+    void prepare (cInterface &netif, bool realtime, int repeat);
+#if HAVE_PCAP
+    void prepare (const char* pcapOutFile, int repeat);
+#endif
+    cPacketData& operator<< (cPacketData& input);
+    void statistic (uint64_t& sentPackets, uint64_t& sentBytes, double& duration) const;
+
+
+private:
+#if HAVE_PCAP
+    cPcapFileIO outfile;
+#endif
+    const cPreprocessor &preproc;
+    cInterface *netif;
+    bool realtimeMode;
+    int repeat;
+
+    uint64_t pcapWrittenPackets;
+    uint64_t pcapWrittenBytes;
+};
+
+#endif /* OUTPUT_HPP_ */

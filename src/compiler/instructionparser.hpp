@@ -47,10 +47,10 @@ public:
         {
             timestamp = 0;
             isAbsolute = false;
-            timeValid = false;
+            hasTimestamp = false;
         }
 
-        bool timeValid;
+        bool hasTimestamp;
         uint64_t timestamp;
         bool isAbsolute;
         std::list <cEthernetPacket> &packets;

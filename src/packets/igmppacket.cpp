@@ -21,7 +21,7 @@
 #include "inet.h"
 #include "igmppacket.hpp"
 
-#include "bug.h"
+#include "bug.hpp"
 #include "inetchecksum.hpp"
 
 

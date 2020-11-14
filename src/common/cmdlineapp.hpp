@@ -22,6 +22,8 @@
 
 #include "cmdline.hpp"
 #include "console.hpp"
+#include <string>
+#include <list>
 
 class cCmdlineApp
 {
@@ -63,11 +65,18 @@ public:
             return -1;
         }
 
-        return this->execute (argc - index, &argv[index]);
+        std::list <std::string> args;
+
+        for (int n = index; n < argc; n++)
+        {
+            args.emplace_back(argv[n]);
+        }
+
+        return this->execute (args);
     }
 
 protected:
-    virtual int execute (int argc, char* argv[]) = 0;
+    virtual int execute (const std::list<std::string>& args) = 0;
     void printUsage ()
     {
         const char* version = "";

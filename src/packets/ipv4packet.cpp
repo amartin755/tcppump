@@ -22,7 +22,7 @@
 #include "inet.h"
 #include "ipv4packet.hpp"
 
-#include "bug.h"
+#include "bug.hpp"
 #include "inetchecksum.hpp"
 
 

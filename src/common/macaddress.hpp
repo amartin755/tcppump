@@ -25,7 +25,7 @@
 #include <cctype>
 #include <string>
 
-#include "bug.h"
+#include "bug.hpp"
 
 class cMacAddress
 {
@@ -99,7 +99,7 @@ public:
     void set (const void* b, size_t len)
     {
         BUG_ON (len >= size());
-        ::memcpy(mac, b, size());
+        std::memcpy(mac, b, size());
     }
     void setAt (int offset, uint8_t value)
     {
@@ -116,11 +116,11 @@ public:
     void get (char* s, size_t len) const
     {
         BUG_ON (len > MACSTRLEN);
-        ::snprintf (s, len, "%02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+        std::snprintf (s, len, "%02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     }
     void get (mac_t* mac) const
     {
-        ::memcpy(mac, this->mac, size());
+        std::memcpy(mac, this->mac, size());
     }
     void get (std::string& s) const
     {
@@ -176,7 +176,7 @@ public:
         uint8_t a[] = {1,2,3,4,5,6};
         cMacAddress b("01:02:03:04:05:06");
         BUG_ON (b.size() == 6);
-        BUG_ON (!::memcmp(a, b.mac, sizeof(a)));
+        BUG_ON (!std::memcmp(a, b.mac, sizeof(a)));
 
         BUG_ON (cMacAddress().isNull());
         BUG_ON (cMacAddress("ff:ff:ff:ff:ff:ff").isBroadcast());
@@ -190,7 +190,7 @@ private:
     static bool isValidString (const char* mac, size_t len = 0)
     {
         if (!len)
-            len = ::strlen (mac);
+            len = std::strlen (mac);
 
         // 11:22:33:44:55:66 or 11-22-33-44-55-66
 
@@ -199,7 +199,7 @@ private:
 
         for (size_t n = 0; n < len; n += 3)
         {
-            if (!isxdigit (mac[n]) || !isxdigit (mac[n + 1]))
+            if (!std::isxdigit (mac[n]) || !std::isxdigit (mac[n + 1]))
                 return false;
             if ((n + 2) < len)
                 if (mac[n + 2] != '-' && mac[n + 2] != ':')

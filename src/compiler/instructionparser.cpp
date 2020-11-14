@@ -23,7 +23,7 @@
 
 #include "instructionparser.hpp"
 
-#include "bug.h"
+#include "bug.hpp"
 #include "parsehelper.hpp"
 #include "parameterlist.hpp"
 #include "ethernetpacket.hpp"
@@ -57,7 +57,7 @@ int cInstructionParser::parse (const char* instruction, cResult& result)
     size_t      keywordLen;
 
 
-    p = parseTimestamp (p, result.timeValid, result.timestamp, result.isAbsolute);
+    p = parseTimestamp (p, result.hasTimestamp, result.timestamp, result.isAbsolute);
     p = parseProtocollIdentifier (p, &keyword, &keywordLen);
 
     // parse protocol parameter list
@@ -741,8 +741,6 @@ void cInstructionParser::unitTest ()
 {
     Console::PrintDebug("-- " __FILE__ " --\n");
 
-    uint64_t timestamp;
-    bool isAbsolute;
     bool hasTimestamp;
     cMacAddress ownMac("ba:ba:ba:ba:ba:ba");
     cIpAddress ownIPv4;

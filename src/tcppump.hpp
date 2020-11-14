@@ -22,7 +22,6 @@
 
 
 #include <list>
-#include <map>
 #include <cstddef>
 #include "cmdlineapp.hpp"
 #include "ethernetpacket.hpp"
@@ -35,12 +34,9 @@ typedef struct
     int          verbosity;
     int          delay;
     const char*  timeRes;
-    int          interactive;
-    int          raw;
     int          script;
     int          pcap;
     const char*  inputmode; // raw, token, script, pcap
-    const char*  keys;      // key bindings for interactive mode
     const char*  outpcap;
     const char*  myIP;
     const char*  myMAC;
@@ -62,26 +58,13 @@ public:
     cTcpPump (const char* name, const char* brief, const char* usage, const char* description);
     virtual ~cTcpPump();
 
-    int execute (int argc, char* argv[]);
+    int execute (const std::list<std::string>& args);
 
 private:
-    bool parsePackets (const cMacAddress& ownMac, const cIpAddress& ownIP, int cnt, char* packets[]);
-    bool parseScripts (const cMacAddress& ownMac, const cIpAddress& ownIP , int cnt, char* scripts[]);
-#if HAVE_PCAP
-    bool parsePcapFiles (int cnt, char* pcaps[]);
-#endif
-    bool sendPacket (cInterface &ifc, const cTimeval &t, const cEthernetPacket &p);
-    bool interactiveMode (cInterface &ifc);
     void printParseError (const ParseException &e) const;
-    void printParseError (const char* filename, const FileParseException &e) const;
+    void printParseError (const FileParseException &e) const;
 
     appOptions options;
-    std::list <cEthernetPacket> packets;
-    std::list <cTimeval> delays;
-    std::map <int, cEthernetPacket&> keyBindings;
-    unsigned triedToSendPackets;
-    unsigned sentPackets;
-    unsigned malformedPackets;
 #if HAVE_PCAP
     cPcapFileIO outfile;
 #endif

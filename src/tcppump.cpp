@@ -26,7 +26,7 @@
 
 #include "tcppump.hpp"
 
-#include "bug.h"
+#include "bug.hpp"
 #include "signal.hpp"
 #include "sleep.hpp"
 #include "getch.hpp"
@@ -36,11 +36,17 @@
 #include "macaddress.hpp"
 #include "instructionparser.hpp"
 #include "fileparser.hpp"
-#include "ethernetpacket.hpp"
 #if HAVE_PCAP
 #include "pcapfileio.hpp"
 #endif
 #include "parsehelper.hpp"
+#include "common/fileioexception.hpp"
+#include "compiler.hpp"
+#include "resolver.hpp"
+#include "filter.hpp"
+#include "scheduler.hpp"
+#include "preprocessor.hpp"
+#include "output.hpp"
 
 
 cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const char* description)
@@ -49,12 +55,8 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
     memset (&options, 0, sizeof(options));
     options.repeat    = 1;
     options.inputmode = "token";
-    options.keys      = "1234567890";
     options.timeRes   = "m";
 
-    triedToSendPackets = 0;
-    sentPackets        = 0;
-    malformedPackets   = 0;
     timeScale          = 0;
     realtimeMode       = false;
 
@@ -81,8 +83,6 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
             , &options.verbosity);
     addCmdLineOption (true, 0, "input", "TYPE",
             "Input format of the packets to be sent. Possible values for TYPE (default is \"token\") are:\n\t"
-            "raw     Packets are defined as hex-ascii string, and will not be interpreted.\n\t"
-            "        example: 0123456789ABCDEF001122334455667788\n\t"
             "token   Token based definition of packets. tcppump will compile it to Ethernet packets.\n\t"
             "        example: eth: .dest=44:22:33:44:55:66 .payload=1234567890abcdef\n\t"
             "        For complete description of the syntax, see documentation.\n\t"
@@ -92,7 +92,6 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
             "pcap    pcap file of captured packets (e.g via wireshark or tcpdump) will be replayed."
 #endif
             , &options.inputmode);
-    addCmdLineOption (true, 'r', "raw", "Short for --input=raw", &options.raw);
     addCmdLineOption (true, 's', "script", "Short for --input=script", &options.script);
 #if HAVE_PCAP
     addCmdLineOption (true, 'p', "pcap", "Short for --input=pcap", &options.pcap);
@@ -105,11 +104,6 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
     addCmdLineOption (true, 't', "resolution", "RESOLUTION",
             "Resolution of transmission time. This affects -d parameter as well as all timestamps in script files.\n\t"
             "Possible values are 'u'= microseconds, 'm'= milliseconds(default), 'c'= centiseconds and 's'= seconds" , &options.timeRes);
-    addCmdLineOption (true, "interactive", "KEYLIST",
-            "Enable interactive mode (EXPERIMENTAL). In interactive mode no packets are sent automatically.\n\t"
-            "Instead the packets are bound to keys and only sent when the corresponding key\n\t"
-            "is pressed. The default implementation binds the first 10 packets to the keys 1, 2, ... 0."
-            , &options.interactive, &options.keys);
 #if HAVE_PCAP
     addCmdLineOption (true, 'o', "write-to-file", "OUTFILE", "Write generated packets to pcap file OUTFILE instead of sending them to the network.", &options.outpcap);
 #endif
@@ -122,7 +116,7 @@ cTcpPump::~cTcpPump()
     // TODO Auto-generated destructor stub
 }
 
-int cTcpPump::execute (int argc, char* argv[])
+int cTcpPump::execute (const std::list<std::string>& args)
 {
     cMacAddress ownMac;
     cIpAddress  ownIP;
@@ -165,7 +159,7 @@ int cTcpPump::execute (int argc, char* argv[])
         return -2;
     }
 
-    if (!argc)
+    if (!args.size())
     {
         Console::PrintError (options.script ? "no script files provided\n": "no packet data provided\n");
         return -2;
@@ -204,9 +198,7 @@ int cTcpPump::execute (int argc, char* argv[])
 
     if (strcmp ("token", options.inputmode))
     {
-        if (!strcmp ("raw", options.inputmode))
-            options.raw = true;
-        else if (!strcmp ("script", options.inputmode))
+        if (!strcmp ("script", options.inputmode))
             options.script = true;
         else if (!strcmp ("pcap", options.inputmode))
             options.pcap = true;
@@ -222,235 +214,98 @@ int cTcpPump::execute (int argc, char* argv[])
     cTimeval accuracy = tcppump::SleepInit ();
     Console::PrintMostVerbose ("System timer accuracy is %u usec. For packet delays below that value we do busy waiting.\n", (unsigned)accuracy.us());
 
-    bool ok = options.script ? parseScripts (ownMac, ownIP, argc, argv) :
-#if HAVE_PCAP
-              options.pcap   ? parsePcapFiles (argc, argv)              :
-#endif
-                               parsePackets (ownMac, ownIP, argc, argv);
-    if (!ok)
-        return -2;
-
-#if HAVE_PCAP
-    if (options.outpcap)    // write output to pcap file?
-    {
-        if (!outfile.open (options.outpcap, true))
-            return -3;
-    }
-#endif
-
     // Install a signal handler
     cSignal::sigintEnable ();
 
-    // if user has set a default packet delay, real-time mode is ALWAYS enabled
-    if (!activeDelay.isNull ())
-        realtimeMode = true;
+    cCompiler compiler (options.script ? cCompiler::SCRIPT : options.pcap ? cCompiler::PCAP : cCompiler::PACKET,
+            ownMac, ownIP, activeDelay, timeScale);
+    cResolver  resolver;
+    cFilter    filter;
+    cScheduler scheduler;
 
-    uint64_t sentBytes = 0;
-    double seconds = 0;
-
-    if (!options.interactive)
+    try
     {
-        cTimeval currentTime;
-        BUG_ON (packets.size() == delays.size());
+        // Packet-flow-chain: args --> compiler -> filter -> resolver -> scheduler -> packetData
+        // Each step may alter the content of packetData
+        cPacketData& packetData = compiler  << args;
+                                  filter    << packetData;
+                                  resolver  << packetData;
+                                  scheduler << packetData;
 
-        Console::PrintMoreVerbose ("Sending %d packets\n", packets.size());
-        bool endless = !options.repeat;
-        if (!endless)
+
+
+        // if user has set a default packet delay, real-time mode is ALWAYS enabled
+        if (!activeDelay.isNull ())
+            realtimeMode = true;
+        else
+            realtimeMode = packetData.hasUserTimestamps;
+
+        // prepare backend for packet output
+        cOutput backend (cPreprocessor (options.randSrcMac, options.randDstMac));
+#if HAVE_PCAP
+        if (options.outpcap)    // write output to pcap file?
+            backend.prepare (options.outpcap, options.repeat);
+        else
+#endif
+            backend.prepare (ifc, realtimeMode, options.repeat);
+
+        Console::PrintMoreVerbose ("Sending %d packets\n", packetData.packets.size());
+        if (options.repeat)
             Console::PrintMoreVerbose ("Repeating %d times\n", options.repeat);
         else
-            Console::PrintMoreVerbose ("Repeating infinitely\n", options.repeat);
+            Console::PrintMoreVerbose ("Repeating infinitely\n");
         if (realtimeMode)
             Console::PrintMoreVerbose ("Real-time mode with default delay between packets %" PRIu64 " usecs\n\n", activeDelay);
         else
             Console::PrintMoreVerbose ("Max. throughput mode\n\n");
 
+        // send all the packets
+        backend << packetData;
 
-        ifc.prepareSendQueue(packets.size() * options.repeat, packets.size() * options.repeat * cEthernetPacket::MAX_DOUBLE_TAGGED_PACKET, realtimeMode);
+        uint64_t sentPackets, sentBytes; double duration;
+        backend.statistic (sentPackets, sentBytes, duration);
 
-        auto t1 = std::chrono::high_resolution_clock::now();
-        while (!cSignal::sigintSignalled() && (endless || options.repeat--))
-        {
-            std::list<cTimeval>::const_iterator t = delays.cbegin();
+        Console::PrintVerbose ("Successfully %s %" PRIu64 " %s. ", options.outpcap ? "wrote" : "sent" ,sentPackets, sentPackets == 1 ? "packet" : "packets");
+        if (duration > 0.0)
+            Console::PrintVerbose ("%" PRIu64 " bytes in %f seconds (= %f Mbit/s)", sentBytes, duration, ((sentBytes*8)/duration)/1000000.0);
+        Console::PrintVerbose ("\n");
 
-            for (auto & p : packets)
-            {
-                currentTime.add (*t);
-                if (options.randSrcMac)
-                    p.setRandomSrcMac();
-                if (options.randDstMac)
-                    p.setRandomDestMac();
-                if (!sendPacket (ifc, currentTime, p))
-                    return -4;
-                t++;
-                sentBytes += p.getLength ();
-            }
-        }
-        ifc.flushSendQueue();
-        auto t2 = std::chrono::high_resolution_clock::now();
-        auto elapsedUs = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
-        seconds = (double)elapsedUs.count()/1000000.0;
+        return !sentPackets;
     }
-    else
+    catch (FileParseException &e)
     {
-        interactiveMode(ifc);
+        printParseError (e);
+        return -2;
+    }
+    catch (ParseException &e)
+    {
+        printParseError (e);
+        return -2;
+    }
+    catch (FormatException& e)
+    {
+        BUG("should never be triggered");
+        Console::PrintError ("%s %s\n", e.why (), e.value ());
+        return -2;
+    }
+    catch (FileIOException &e)
+    {
+        //TODO
+        return -2;
+    }
+    catch (const char* msg)
+    {
+        Console::PrintError ("%s\n", msg);
+        return -2;
+    }
+    catch (...)
+    {
+        Console::PrintError ("Not enough memory\n");
+        return -2;
     }
 
-    Console::PrintVerbose ("Successfully sent %u of %u packets. ", sentPackets, triedToSendPackets);
-    if (seconds > 0.0)
-        Console::PrintVerbose ("%" PRIu64 " bytes in %f seconds (= %f Mbit/s)", sentBytes, seconds, ((sentBytes*8)/seconds)/1000000.0);
-    Console::PrintVerbose ("\n");
-
-    return !sentPackets;
-}
-
-
-bool cTcpPump::parsePackets (const cMacAddress& ownMac, const cIpAddress& ownIP, int argc, char* argv[])
-{
-    cInstructionParser::cResult result (packets);
-    cTimeval timestamp, currtime;
-
-    Console::PrintDebug ("Parsing %d packets (format='%s') ...\n", argc, options.raw ? "raw" : "tokens");
-
-    for (int n = 0; n < argc; n++)
-    {
-        try
-        {
-            if (!options.raw)
-            {
-                result.timestamp = activeDelay.us()/timeScale;
-                result.isAbsolute = false;
-                int count = cInstructionParser (ownMac, ownIP).parse (argv[n], result);
-                timestamp.setUs(result.timestamp * timeScale);
-                realtimeMode = realtimeMode || result.timeValid;
-
-                for (int n = 0; n < count; n++)
-                {
-                    if (!result.isAbsolute)
-                    {
-                        delays.push_back (timestamp);
-                        currtime.add (timestamp);
-                    }
-                    else
-                    {
-                        if (timestamp < currtime)  // FIXME What to do if timestamp < currtime? delay = 0 or parse exception?
-                            BUG_ON ("fixme" == 0);
-                        else
-                        {
-                            cTimeval delta(timestamp);
-                            delays.push_back (timestamp.sub (currtime));
-                            currtime.set (timestamp);
-                        }
-                    }
-                }
-            }
-            else
-            {
-                cEthernetPacket packet;
-                size_t len;
-                const uint8_t* data = cParseHelper::hexStringToBin(argv[n], 0, len);
-                if (!data)
-                    throw FormatException (exParFormat, argv[n]);
-
-                packet.setRaw (data, len);
-                packets.push_back (std::move(packet));
-                timestamp.setUs (activeDelay.us());
-                delays.push_back(timestamp);
-                delete[] data;
-            }
-        }
-        catch (ParseException &e)
-        {
-            printParseError (e);
-            return false;
-        }
-        catch (FormatException& e)
-        {
-            Console::PrintError ("%s %s\n", e.why (), e.value ());
-            return false;
-        }
-    }
-    return true;
-}
-
-
-bool cTcpPump::parseScripts (const cMacAddress& ownMac, const cIpAddress& ownIP, int scriptsCnt, char* scripts[])
-{
-    cInstructionParser::cResult result (packets);
-    FILE *fp;
-    int count;
-    cFileParser parser;
-    cTimeval timestamp, currtime, scriptStartTime;
-
-    Console::PrintDebug ("Parsing %d script files ...\n", scriptsCnt);
-
-    do
-    {
-        Console::PrintDebug ("Open '%s'\n", *scripts);
-
-        if ((fp = fopen (*scripts, "rt")) == NULL)
-        {
-            Console::PrintError ("Unable to open the script file %s.\n", *scripts);
-            return false;
-        }
-
-        parser.init (fp, activeDelay.us()/timeScale, ownMac, ownIP);
-
-        scriptStartTime = currtime;
-
-        do
-        {
-            // allocate a new packet
-            try
-            {
-                count = parser.parse (result);
-                timestamp.setUs(result.timestamp * timeScale);
-                realtimeMode = realtimeMode || result.timeValid;
-
-                for (int n = 0; n < count; n++)
-                {
-                    if (!result.isAbsolute)
-                    {
-                        delays.push_back (timestamp);
-                        currtime.add (timestamp);
-                    }
-                    else
-                    {
-                        timestamp.add(scriptStartTime);
-
-                        if (timestamp < currtime) // FIXME What to do if timestamp < currtime? delay = 0 or parse exception?
-                            BUG ("FIXME");
-                        else
-                        {
-                            cTimeval delta(timestamp);
-                            delays.push_back (delta.sub (currtime));
-                            currtime.set (timestamp);
-                        }
-                    }
-                }
-            }
-            catch (FileParseException &e)
-            {
-                printParseError (*scripts, e);
-                count = PARSE_ERROR;
-            }
-            catch (...)
-            {
-                Console::PrintError ("Not enough memory\n");
-                return false;
-            }
-
-        }while (count > 0);
-
-        fclose (fp);
-
-        if (count != EOF)
-            return false;
-
-        scripts++;
-
-    }while (--scriptsCnt > 0);
-
-    return true;
+    BUG ("unreachable code");
+    return 0;
 }
 
 
@@ -473,121 +328,10 @@ void cTcpPump::printParseError (const ParseException &e) const
 }
 
 
-void cTcpPump::printParseError (const char* filename, const FileParseException &e) const
+void cTcpPump::printParseError (const FileParseException &e) const
 {
-    Console::PrintError ("%s (line %d) ", filename, e.lineNumber());
+    Console::PrintError ("%s (line %d) ", e.filePath(), e.lineNumber());
     printParseError (e);
-}
-
-
-
-#if HAVE_PCAP
-bool cTcpPump::parsePcapFiles (int pcapCnt, char* pcaps[])
-{
-    Console::PrintDebug ("Parsing %d PCAP files ...\n", pcapCnt);
-
-    do
-    {
-        cPcapFileIO pcap;
-        cTimeval t;
-        int len;
-
-        Console::PrintDebug ("Open '%s'\n", *pcaps);
-
-        if (pcapCnt && !pcap.open (*pcaps, false))
-        {
-            Console::PrintError ("Unable to open the pcap file %s.\n", *pcaps);
-            return false;
-        }
-
-        uint8_t* data;
-
-        while ((data = pcap.read(&t, &len)) != nullptr)
-        {
-            try
-            {
-                cEthernetPacket packet;
-                packet.setRaw (data, len);
-
-                packets.push_back (std::move(packet));
-            }
-            catch (...)
-            {
-                Console::PrintError ("Not enough memory\n");
-                return false;
-            }
-        }
-
-        pcap.close ();
-
-    }while (--pcapCnt > 0);
-
-    return true;
-}
-#endif
-
-
-bool cTcpPump::sendPacket (cInterface &ifc, const cTimeval &t, const cEthernetPacket &p)
-{
-    triedToSendPackets++;
-
-    if (!options.outpcap)
-    {
-        if(!ifc.sendPacket (p.get(), p.getLength(), t))
-        {
-            Console::PrintError ("Could not send packet.\n");
-            return false;
-        }
-    }
-#if HAVE_PCAP
-    else
-    {
-        if (!outfile.write (t, p.get(), (int)p.getLength(), true))
-            return false;
-    }
-#endif
-
-    sentPackets++;
-    if (options.dissect && !cDissector(p).dissect())
-        malformedPackets++;
-
-    return true;
-}
-
-
-bool cTcpPump::interactiveMode (cInterface &ifc)
-{
-    //TODO add some useful output to guide the user
-
-    int n = 0;
-    for (cEthernetPacket& p : packets)
-    {
-        if (options.keys[n] == '\0')
-            break;
-
-        keyBindings.insert (std::pair<int, cEthernetPacket&>((int)options.keys[n++], p));
-    }
-
-    int key;
-
-    while ((key = tcppump::getch ()) != EOF)
-    {
-        if (cSignal::sigintSignalled())
-            break;
-
-        try
-        {
-            cEthernetPacket& p = keyBindings.at (key);
-            if (!sendPacket (ifc, activeDelay, p))
-                return false;
-        }
-        catch (const std::out_of_range&)
-        {
-            // key not found --> nothing to do
-        }
-    }
-
-    return true;
 }
 
 

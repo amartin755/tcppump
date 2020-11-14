@@ -24,7 +24,7 @@
 
 #include "parameterlist.hpp"
 
-#include "bug.h"
+#include "bug.hpp"
 #include "parsehelper.hpp"
 
 

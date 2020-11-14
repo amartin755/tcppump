@@ -21,7 +21,7 @@
 
 #include "arp.hpp"
 
-#include "bug.h"
+#include "bug.hpp"
 #include "inet.h"
 #include "console.hpp"
 #include "interface.hpp"

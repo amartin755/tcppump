@@ -29,7 +29,7 @@
 
 #include "interface.hpp"
 
-#include "bug.h"
+#include "bug.hpp"
 #include "signal.hpp"
 #include "console.hpp"
 #include "ethernetpacket.hpp"
@@ -72,6 +72,10 @@ public:
     {
         return bytesQueued;
     }
+    size_t packets (void)
+    {
+        return packetsQueued;
+    }
 private:
     size_t bytesQueued;
     size_t packetsQueued;
@@ -94,8 +98,14 @@ public:
     int synchronized;
     size_t pcapMaxQueueSize;
     bool finished;
+    // statistic
+    uint64_t* sentPackets;
+    uint64_t* sentBytes;
+    double* duration;
+    LARGE_INTEGER tStart; // starttime of sending
 
-    cJob (pcap_t *ifcHandle, size_t packetCnt, size_t totalBytes, int sync, uint64_t linkspeed)
+    cJob (pcap_t *ifcHandle, size_t packetCnt, size_t totalBytes, int sync, uint64_t linkspeed,
+            uint64_t* sentPackets, uint64_t* sentBytes, double* duration)
     {
         semSpaceAvail    = CreateSemaphore(NULL, MAX_SEND_QUEUES - 1, MAX_SEND_QUEUES, NULL); // -1 --> first element is ready for input
         semDataAvail     = CreateSemaphore(NULL, 0, MAX_SEND_QUEUES, NULL);
@@ -107,6 +117,9 @@ public:
         synchronized     = sync;
         pcapMaxQueueSize = size_t (linkspeed/8);
         this->ifcHandle  = ifcHandle;
+        this->sentPackets= sentPackets;
+        this->sentBytes  = sentBytes;
+        this->duration   = duration;
 
         const size_t wholeNeededMemory = packetCnt > 0 ? packetCnt * sizeof (pcap_pkthdr) + totalBytes : pcapMaxQueueSize;
 
@@ -158,6 +171,10 @@ public:
     static DWORD WINAPI thread (cJob* instance)
     {
         HANDLE h[] = {instance->semDataAvail, instance->termEvent};
+        uint64_t sentPackets;
+        uint64_t sentBytes;
+        bool first = true;
+
         while (1)
         {
             DWORD ret = WaitForMultipleObjects (2, h, FALSE, INFINITE);
@@ -167,7 +184,23 @@ public:
             case WAIT_OBJECT_0: // data available
                 {
                     cPcapSendQueue& q = instance->allQueues.at (instance->currSendQueueOut);
-                    q.flush (instance->ifcHandle, instance->synchronized); //FIXME return value
+                    sentPackets       = (uint64_t)q.packets();
+                    sentBytes         = (uint64_t)q.queued();
+
+                    // measure start time
+                    if (first)
+                    {
+                        first = false;
+                        QueryPerformanceCounter (&instance->tStart);
+                    }
+
+                    if (q.flush (instance->ifcHandle, instance->synchronized))
+                    {
+                        // update statistic
+                        *instance->sentBytes   += sentBytes;
+                        *instance->sentPackets += sentPackets;
+                    }
+                    //FIXME error case
 
                     // move out-pointer
                     instance->currSendQueueOut = (instance->currSendQueueOut + 1) % instance->allQueues.size ();
@@ -187,6 +220,7 @@ public:
 
     ~cJob ()
     {
+        LARGE_INTEGER tEnd, freq;
         cPcapSendQueue& q = allQueues.at (currSendQueueIn);
 
         if (!finished && q.queued()) // is there still something to send?
@@ -218,6 +252,11 @@ public:
                 Console::PrintDebug ("Worker thread finished\n");
         }
 
+        // measure elapsed time
+        QueryPerformanceCounter (&tEnd);
+        QueryPerformanceFrequency (&freq);
+        *duration = (double)(tEnd.QuadPart-tStart.QuadPart) / (double)freq.QuadPart;
+
         CloseHandle (workerThread);
         CloseHandle (termEvent);
         CloseHandle (semSpaceAvail);
@@ -242,6 +281,9 @@ cInterface::cInterface(const char* ifname)
     winNetAdapters = nullptr;
     job = nullptr;
     linkSpeed = 0;
+    sentPackets = 0;
+    sentBytes = 0;
+    duration = 0;
 }
 
 cInterface::~cInterface()
@@ -329,7 +371,11 @@ bool cInterface::prepareSendQueue (size_t packetCnt, size_t totalBytes, bool syn
     BUG_ON (!job); // we only support one job at a time
     BUG_ON (ifcHandle);
 
-    job = new cJob (ifcHandle, packetCnt, totalBytes, synchronized, linkSpeed);
+    sentPackets = 0;
+    sentBytes   = 0;
+    duration    = 0;
+
+    job = new cJob (ifcHandle, packetCnt, totalBytes, synchronized, linkSpeed, &sentPackets, &sentBytes, &duration);
     return !!job;
 }
 
@@ -338,6 +384,13 @@ bool cInterface::flushSendQueue (void)
     delete job;
     job = nullptr;
     return true;
+}
+
+void cInterface::getSendStatistic (uint64_t& sentPackets, uint64_t& sentBytes, double& duration) const
+{
+    sentPackets = this->sentPackets;
+    sentBytes   = this->sentBytes;
+    duration    = this->duration;
 }
 
 bool cInterface::getMAC (cMacAddress& mac)
