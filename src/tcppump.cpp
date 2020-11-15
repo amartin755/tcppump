@@ -274,7 +274,7 @@ int cTcpPump::execute (const std::list<std::string>& args)
     }
     catch (FileParseException &e)
     {
-        printParseError (e);
+        printFileParseError (e);
         return -2;
     }
     catch (ParseException &e)
@@ -328,7 +328,7 @@ void cTcpPump::printParseError (const ParseException &e) const
 }
 
 
-void cTcpPump::printParseError (const FileParseException &e) const
+void cTcpPump::printFileParseError (const FileParseException &e) const
 {
     Console::PrintError ("%s (line %d) ", e.filePath(), e.lineNumber());
     printParseError (e);

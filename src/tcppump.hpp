@@ -62,7 +62,7 @@ public:
 
 private:
     void printParseError (const ParseException &e) const;
-    void printParseError (const FileParseException &e) const;
+    void printFileParseError (const FileParseException &e) const;
 
     appOptions options;
 #if HAVE_PCAP
