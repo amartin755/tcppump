@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <utility>
+#include <stdexcept>      // std::out_of_range
 #include "resolver.hpp"
 #include "console.hpp"
 #include "macaddress.hpp"
