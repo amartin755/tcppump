@@ -35,11 +35,7 @@ public:
         this->val    = val;
     }
 
-    int what ()
-    {
-        return cause;
-    }
-    const char* why ()
+    const char* what ()
     {
         switch (cause)
         {

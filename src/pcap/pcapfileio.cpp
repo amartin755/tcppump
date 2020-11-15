@@ -63,7 +63,6 @@ bool cPcapFileIO::open (const char* path, bool write)
             dumper = pcap_dump_open (fileHandle, path);
             if (!dumper)
             {
-                Console::PrintError ("Unable to open the file %s.\n", path);
                 printError (pcap_geterr (fileHandle));
                 pcap_close (fileHandle);
                 fileHandle = NULL;
@@ -75,7 +74,6 @@ bool cPcapFileIO::open (const char* path, bool write)
 
     if (!fileHandle)
     {
-        Console::PrintError ("Unable to open the file %s.\n", path);
         printError (errbuf);
 
         return false;

@@ -17,6 +17,7 @@
  */
 
 #include <chrono>
+#include <stdexcept>
 
 #include "bug.hpp"
 #include "output.hpp"
@@ -74,13 +75,13 @@ cPacketData& cOutput::operator<< (cPacketData& input)
         {
             sendTime.add (*t);
 
-            preproc.process (p);	// execute packet preprocessor hooks
+            preproc.process (p);    // execute packet preprocessor hooks
 
             if (netif)
             {
                 if(!netif->sendPacket (p.get(), p.getLength(), sendTime))
                 {
-                    throw "Could not send packet.";
+                    throw std::runtime_error("Could not send packet.");
                 }
             }
 #if HAVE_PCAP

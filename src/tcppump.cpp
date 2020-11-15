@@ -23,6 +23,7 @@
 #include <ctime>
 #include <cstdlib>
 #include <chrono>
+#include <new>          // std::bad_alloc
 
 #include "tcppump.hpp"
 
@@ -282,26 +283,24 @@ int cTcpPump::execute (const std::list<std::string>& args)
         printParseError (e);
         return -2;
     }
-    catch (FormatException& e)
-    {
-        BUG("should never be triggered");
-        Console::PrintError ("%s %s\n", e.why (), e.value ());
-        return -2;
-    }
     catch (FileIOException &e)
     {
-        //TODO
+        Console::PrintError ("%s %s\n", e.what(), e.value());
         return -2;
     }
-    catch (const char* msg)
+    catch (std::runtime_error &e)
     {
-        Console::PrintError ("%s\n", msg);
+        Console::PrintError ("%s\n", e.what());
+        return -2;
+    }
+    catch (std::bad_alloc& e)
+    {
+        Console::PrintError ("Not enough memory (%s)\n", e.what ());
         return -2;
     }
     catch (...)
     {
-        Console::PrintError ("Not enough memory\n");
-        return -2;
+        BUG ("unexpected exception");
     }
 
     BUG ("unreachable code");
