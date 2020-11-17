@@ -12,6 +12,7 @@ Simple Ethernet network packet generator
 tcpdump is a simple command-line tool for generating Ethernet packets, with focus on low level protocols.
 
 Features
+* Completely operating system independent packet generation. Thus it is also possible to generate deliberately faulty packets.
 * Definiton of packets via a token based syntax
 * Transmission of packets either directly via command line parameters or script based
 * Time triggered transmission of packets (realtime mode). Note: Accuracy depends on host environment.
@@ -19,6 +20,7 @@ Features
 * User defined delays between packets
 * Realtime replaying of PCAP files
 * Source MAC and IPv4 address can be freely defined (using the addresses of the network adapter is also possible)
+* Automatic ARP resolution of unknown hosts
 * Random source and destination MAC addresses
 * Output on generated network traffic to PCAP files
 

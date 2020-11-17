@@ -90,7 +90,7 @@ void cIPv4Packet::setDestination (const cIpAddress& ip)
     ipHeader.dstIp = ip.get();
 }
 
-void cIPv4Packet::compile (uint8_t protocol, const uint8_t* l4header, size_t l4headerLen, const uint8_t* payload, size_t payloadLen, bool mapIpMulticast2Mac)
+void cIPv4Packet::compile (uint8_t protocol, const uint8_t* l4header, size_t l4headerLen, const uint8_t* payload, size_t payloadLen)
 {
     // FIXME fragmentation
 
@@ -100,7 +100,8 @@ void cIPv4Packet::compile (uint8_t protocol, const uint8_t* l4header, size_t l4h
 
     cEthernetPacket &packet = packets.front();
 
-    if (mapIpMulticast2Mac)
+    // if there is no destination mac AND we have an ip multicast, translate to mac multicast
+    if (!packet.hasDestMac())
     {
         cIpAddress dstIp (ipHeader.dstIp);
         if (dstIp.isMulticast ())

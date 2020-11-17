@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <stdexcept>      // std::out_of_range
+#include <utility>
 #include "resolver.hpp"
 #include "console.hpp"
 #include "macaddress.hpp"
@@ -45,11 +45,13 @@ cPacketData& cResolver::operator<< (cPacketData& input)
             }
             catch (const std::out_of_range&)
             {
-                Console::PrintMostVerbose ("Try to resolve MAC of host %d.%d.%d.%d. ",
-                        dip.getAsArray()[0], dip.getAsArray()[1], dip.getAsArray()[2], dip.getAsArray()[3]);
+                std::string sIP;
+                dip.get (sIP);
+
+                Console::PrintMostVerbose ("Try to resolve MAC of host %s ... ", sIP.c_str());
                 if (arper.resolve(dip, dmac))
                 {
-                    Console::PrintMostVerbose (" Found %02x:%02x:%02x:%02x:%02x:%02x \n",
+                    Console::PrintMostVerbose (" is at %02x:%02x:%02x:%02x:%02x:%02x \n",
                             ((const uint8_t*)dmac.get())[0],
                             ((const uint8_t*)dmac.get())[1],
                             ((const uint8_t*)dmac.get())[2],
@@ -60,8 +62,8 @@ cPacketData& cResolver::operator<< (cPacketData& input)
                 }
                 else
                 {
-                    Console::PrintError ("Error\n");
-                    //FIXME!!!!!!!!!!
+                    Console::PrintError ("TIMEOUT! %s unreachable\n", sIP.c_str());
+                    throw std::runtime_error("Could not resolve host(s).");
                 }
             }
             p.setDestMac (dmac);

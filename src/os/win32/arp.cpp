@@ -40,7 +40,7 @@ bool cArp::resolve (const cIpAddress& ip, cMacAddress& mac)
 
     ifc.getIPv4(ownIp);
 
-    DWORD ret = ::SendARP(ip.get().s_addr, ownIp.get().s_addr, (PULONG)&mac, (PULONG)&macLen);
+    DWORD ret = ::SendARP(ip.get().s_addr, ownIp.get().s_addr, (PULONG)macAddr, (PULONG)&macLen);
 
     if (ret == NO_ERROR && (size_t)macLen == mac.size())
     {

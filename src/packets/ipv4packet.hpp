@@ -108,7 +108,7 @@ public:
     void updateHeaderChecksum ();
     cEthernetPacket& getFirstEthernetPacket ();
     size_t getAllEthernetPackets (std::list<cEthernetPacket>&) const;
-    void compile (uint8_t protocol, const uint8_t* l4header, size_t l4headerLen, const uint8_t* payload, size_t payloadLen, bool mapIpMulticast2Mac = false);
+    void compile (uint8_t protocol, const uint8_t* l4header, size_t l4headerLen, const uint8_t* payload, size_t payloadLen);
 
     enum protocols
     {
