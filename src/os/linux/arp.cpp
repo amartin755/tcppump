@@ -33,5 +33,5 @@ bool cArp::resolve (const cIpAddress& ip, cMacAddress& mac)
 {
     // TODO implement me
     mac.set("00:de:ad:be:ef:00");
-    return true;
+    return false;
 }
