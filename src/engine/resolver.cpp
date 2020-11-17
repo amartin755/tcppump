@@ -16,10 +16,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include <utility>
+#include <stdexcept>
 #include "resolver.hpp"
 #include "console.hpp"
 #include "macaddress.hpp"
 #include "ipv4packet.hpp"
+
 
 cResolver::cResolver (cInterface &netif) : arper (netif)
 {
