@@ -35,11 +35,12 @@
 #include "igmppacket.hpp"
 
 
-cInstructionParser::cInstructionParser (const cMacAddress& ownMac, const cIpAddress& ownIPv4)
+cInstructionParser::cInstructionParser (const cMacAddress& ownMac, const cIpAddress& ownIPv4, bool optDestMAC)
 {
     this->ownMac.set(ownMac);
     this->ownIPv4.set(ownIPv4);
     currentInstruction = nullptr;
+    ipOptionalDestMAC = optDestMAC;
 }
 
 
@@ -349,10 +350,10 @@ int cInstructionParser::compileIPv4 (cParameterList& params, std::list <cEtherne
 {
     cIPv4Packet ippacket;
     cEthernetPacket& eth = ippacket.getFirstEthernetPacket();
-    parseIPv4Params (params, ippacket);
+    bool destIsMulticast = parseIPv4Params (params, ippacket);
 
     // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
-    compileMacHeader  (params, eth, false, true);
+    compileMacHeader  (params, eth, false, ipOptionalDestMAC || destIsMulticast);
     compileVLANTags   (params, eth);
 
     size_t len;
@@ -369,8 +370,8 @@ int cInstructionParser::compileUDP (cParameterList& params, std::list <cEthernet
     cEthernetPacket& eth = udppacket.getFirstEthernetPacket();
     bool destIsMulticast = parseIPv4Params (params, udppacket);
 
-    // destination mac is set automatically, if destination IP is a multicast address
-    compileMacHeader  (params, eth, false, true);
+    // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+    compileMacHeader  (params, eth, false, ipOptionalDestMAC || destIsMulticast);
     compileVLANTags   (params, eth);
 
     udppacket.setSourcePort(params.findParameter ("sport")->asInt16());
@@ -744,7 +745,7 @@ void cInstructionParser::unitTest ()
     cMacAddress ownMac("ba:ba:ba:ba:ba:ba");
     cIpAddress ownIPv4;
     std::list <cEthernetPacket> packets;
-    cInstructionParser obj (ownMac, ownIPv4);
+    cInstructionParser obj (ownMac, ownIPv4, false);
 
     ownIPv4.set("10.10.10.10");
 
@@ -1045,7 +1046,7 @@ void cInstructionParser::unitTest ()
         cInstructionParser::cResult result (packets);
 
         Console::PrintDebug("packet %d", n);
-        cInstructionParser obj (ownMac, ownIPv4);
+        cInstructionParser obj (ownMac, ownIPv4, false);
         BUG_ON (1 == obj.parse (tests[n].tokens, result));
         BUG_ON (packets.size () == n + 1);
         BUG_ON (tests[n].packetSize == packets.back().getLength());

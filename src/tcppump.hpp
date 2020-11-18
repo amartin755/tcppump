@@ -36,13 +36,14 @@ typedef struct
     const char*  timeRes;
     int          script;
     int          pcap;
-    const char*  inputmode; // raw, token, script, pcap
+    const char*  inputmode; // token, script, pcap
     const char*  outpcap;
     const char*  myIP;
     const char*  myMAC;
     int          dissect;
     int          randSrcMac;
     int          randDstMac;
+    int          arp;
 }appOptions;
 
 class cInterface;

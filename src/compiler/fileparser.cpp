@@ -28,7 +28,7 @@
 #include "ethernetpacket.hpp"
 
 
-cFileParser::cFileParser (uint64_t defaultDelay, const cMacAddress& ownMac, const cIpAddress&  ownIPv4)
+cFileParser::cFileParser (uint64_t defaultDelay, const cMacAddress& ownMac, const cIpAddress&  ownIPv4, bool ipOptionalDestMAC)
 {
     instructionBufferSize = 0;
     instructionBuffer     = nullptr;
@@ -39,6 +39,7 @@ cFileParser::cFileParser (uint64_t defaultDelay, const cMacAddress& ownMac, cons
 
     this->ownMac .set (ownMac);
     this->ownIPv4.set (ownIPv4);
+    this->ipOptionalDestMAC = ipOptionalDestMAC;
 }
 
 cFileParser::~cFileParser ()
@@ -132,7 +133,7 @@ int cFileParser::parse (cInstructionParser::cResult& result)
                         result.timestamp  = delay;
                         try
                         {
-                            return cInstructionParser (ownMac, ownIPv4)
+                            return cInstructionParser (ownMac, ownIPv4, ipOptionalDestMAC)
                                     .parse (instructionBuffer, result);
                         }
                         catch (ParseException &e)

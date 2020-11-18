@@ -29,8 +29,8 @@
 #endif
 
 
-cCompiler::cCompiler (inputType t, const cMacAddress& mac, const cIpAddress& ip, const cTimeval& delay, unsigned delayScale)
-: type(t), ownMac(mac), ownIP(ip), defaultDelay(delay), defaultDelayScale(delayScale)
+cCompiler::cCompiler (inputType t, const cMacAddress& mac, const cIpAddress& ip, const cTimeval& delay, unsigned delayScale, bool optDestMAC)
+: type(t), ownMac(mac), ownIP(ip), defaultDelay(delay), defaultDelayScale(delayScale), ipOptionalDestMAC(optDestMAC)
 {
 }
 
@@ -103,7 +103,7 @@ void cCompiler::processPackets (const std::list<std::string>& input)
 
     for (const auto & packet : input)
     {
-        int count = cInstructionParser (ownMac, ownIP).parse (packet.c_str(), result);
+        int count = cInstructionParser (ownMac, ownIP, ipOptionalDestMAC).parse (packet.c_str(), result);
         if (result.hasTimestamp)
         {
             data.hasUserTimestamps = true;
@@ -142,7 +142,7 @@ void cCompiler::processScriptFiles (const std::list<std::string>& input)
 {
     cInstructionParser::cResult result (data.packets);
     cTimeval timestamp, currtime, scriptStartTime;
-    cFileParser parser(defaultDelay.us()/defaultDelayScale, ownMac, ownIP);
+    cFileParser parser(defaultDelay.us()/defaultDelayScale, ownMac, ownIP, ipOptionalDestMAC);
     int count;
 
     Console::PrintDebug ("Parsing %d script files ...\n", input.size());

@@ -119,6 +119,9 @@ For debugging add:
         Possible values are 'u'= microseconds, 'm'= milliseconds(default), 'c'= centiseconds and 's'= seconds
     -o OUTFILE --write-to-file=OUTFILE
         Write generated packets to pcap file OUTFILE instead of sending them to the network.
+    -a --arp
+        Resolve destination MAC address for IPv4 packets.
+        If dmac parameter of IPv4 based packets is ommited, the destination MAC will beautomatically detremined via ARP.
 
 
 ### Examples

@@ -56,7 +56,7 @@ public:
         std::list <cEthernetPacket> &packets;
     };
 
-    cInstructionParser (const cMacAddress& ownMac, const cIpAddress& ownIPv4);
+    cInstructionParser (const cMacAddress& ownMac, const cIpAddress& ownIPv4, bool ipOptionalDestMAC);
     ~cInstructionParser ();
     int parse (const char* instruction, cResult& result);
 
@@ -87,6 +87,7 @@ private:
     cMacAddress ownMac;
     cIpAddress  ownIPv4;
     const char* currentInstruction;
+    bool ipOptionalDestMAC;
 };
 
 class ParseException

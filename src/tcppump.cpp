@@ -103,6 +103,11 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
 #endif
     addCmdLineOption (true, 0, "dissect",
             "Prints the dissected content of sent packets as known from tcpdump.", &options.dissect);
+    addCmdLineOption (true, 'a', "arp",
+            "Resolve destination MAC address for IPv4 packets.\n\t"
+            "If dmac parameter of IPv4 based packets is ommited, the destination MAC will be"
+            "automatically detremined via ARP.",
+            &options.arp);
 }
 
 cTcpPump::~cTcpPump()
@@ -212,7 +217,7 @@ int cTcpPump::execute (const std::list<std::string>& args)
     cSignal::sigintEnable ();
 
     cCompiler compiler (options.script ? cCompiler::SCRIPT : options.pcap ? cCompiler::PCAP : cCompiler::PACKET,
-            ownMac, ownIP, activeDelay, timeScale);
+            ownMac, ownIP, activeDelay, timeScale, !!options.arp);
     cFilter    filter;
     cResolver  resolver (ifc);
     cScheduler scheduler;

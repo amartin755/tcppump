@@ -37,7 +37,7 @@ public:
         PACKET, SCRIPT, PCAP
     };
 
-    cCompiler (inputType type, const cMacAddress& ownMac, const cIpAddress& ownIP, const cTimeval& activeDelay, unsigned defaultDelayScale);
+    cCompiler (inputType type, const cMacAddress& ownMac, const cIpAddress& ownIP, const cTimeval& activeDelay, unsigned defaultDelayScale, bool ipOptionalDestMAC);
     cPacketData& operator<< (const std::list<std::string>& input);
 
 private:
@@ -53,7 +53,7 @@ private:
     const cIpAddress& ownIP;
     const cTimeval& defaultDelay;
     unsigned defaultDelayScale;
-
+    bool ipOptionalDestMAC;
 };
 
 #endif /* COMPILER_HPP_ */
