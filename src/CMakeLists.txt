@@ -693,5 +693,5 @@ add_test(NAME delay-31--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TES
 add_test(NAME delay-32-ok COMMAND tcppump ${DEFAULT_PARAMS} -d50 -l3 "2: arp(dip=10.20.30.40)" "arp(dip=20.20.30.40)" "+5: arp(dip=30.20.30.40)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 add_test(NAME delay-32--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/delay-32.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
-add_test(NAME online-1--ok COMMAND tcppump -i ${OUT_IFC} --dissect -vvvv "arp(dip=1.2.3.4)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME online-1--ok COMMAND tcppump -i ${OUT_IFC} -vvvv "arp(dip=1.2.3.4)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 set_tests_properties(online-1--ok PROPERTIES PASS_REGULAR_EXPRESSION "Successfully sent 1 packet.")
