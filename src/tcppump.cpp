@@ -48,7 +48,6 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
 {
     memset (&options, 0, sizeof(options));
     options.repeat    = 1;
-    options.inputmode = "token";
     options.timeRes   = "m";
 
     timeScale          = 0;
@@ -75,20 +74,9 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
             "When parsing and printing, produce verbose output. This option can be supplied multiple times\n\t"
             "(max. 4 times, i.e. -vvvv) for even more debug output. "
             , &options.verbosity);
-    addCmdLineOption (true, 0, "input", "TYPE",
-            "Input format of the packets to be sent. Possible values for TYPE (default is \"token\") are:\n\t"
-            "token   Token based definition of packets. tcppump will compile it to Ethernet packets.\n\t"
-            "        example: eth: .dest=44:22:33:44:55:66 .payload=1234567890abcdef\n\t"
-            "        For complete description of the syntax, see documentation.\n\t"
-            "script  Packets are defined in script files, that contain token based packets."
+    addCmdLineOption (true, 's', "script", "Packets are defined in script files, that contain token based packets.", &options.script);
 #if HAVE_PCAP
-            "\n\t"
-            "pcap    pcap file of captured packets (e.g via wireshark or tcpdump) will be replayed."
-#endif
-            , &options.inputmode);
-    addCmdLineOption (true, 's', "script", "Short for --input=script", &options.script);
-#if HAVE_PCAP
-    addCmdLineOption (true, 'p', "pcap", "Short for --input=pcap", &options.pcap);
+    addCmdLineOption (true, 'p', "pcap", "pcap file of captured packets (e.g via wireshark or tcpdump) will be replayed.", &options.pcap);
 #endif
     addCmdLineOption (true, 'l', "loop", "N",
             "Send all files/packets N times. Default: N = 1. If N = 0, packets will be sent infinitely\n\t"
@@ -101,8 +89,6 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
 #if HAVE_PCAP
     addCmdLineOption (true, 'o', "write-to-file", "OUTFILE", "Write generated packets to pcap file OUTFILE instead of sending them to the network.", &options.outpcap);
 #endif
-    addCmdLineOption (true, 0, "dissect",
-            "Prints the dissected content of sent packets as known from tcpdump.", &options.dissect);
     addCmdLineOption (true, 'a', "arp",
             "Resolve destination MAC address for IPv4 packets.\n\t"
             "If dmac parameter of IPv4 based packets is ommited, the destination MAC will be"
@@ -195,17 +181,10 @@ int cTcpPump::execute (const std::list<std::string>& args)
         return -1;
     }
 
-    if (strcmp ("token", options.inputmode))
+    if (options.script && options.pcap)
     {
-        if (!strcmp ("script", options.inputmode))
-            options.script = true;
-        else if (!strcmp ("pcap", options.inputmode))
-            options.pcap = true;
-        else
-        {
-            Console::PrintError ("Unknown --input=%s.\n", options.inputmode);
-            return -1;
-        }
+        Console::PrintError ("Options -s and -p can't be used at the same time.\n");
+        return -1;
     }
 
     activeDelay.setUs(options.delay * timeScale);
