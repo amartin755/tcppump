@@ -37,7 +37,7 @@
 class cPcapSendQueue
 {
 public:
-    cPcapSendQueue (size_t qlen) : bytesQueued(0), packetsQueued(0)
+    cPcapSendQueue (size_t qlen) : bytesQueued(0), packetsQueued(0), packetBytesQueued(0)
     {
         pcapQ = pcap_sendqueue_alloc ((u_int)qlen);
         if (!pcapQ)
@@ -61,6 +61,7 @@ public:
         BUG_ON (!pcap_sendqueue_queue (pcapQ, pkt_header, pkt_data));  // can only fail if buffer calculation is wrong
         packetsQueued++;
         bytesQueued += pkt_header->caplen + sizeof (pcap_pkthdr);
+        packetBytesQueued += pkt_header->caplen;
     }
     bool flush (pcap_t *pcapIf, int sync)
     {
@@ -76,9 +77,14 @@ public:
     {
         return packetsQueued;
     }
+    size_t packetBytes (void)
+    {
+        return packetBytesQueued;
+    }
 private:
     size_t bytesQueued;
     size_t packetsQueued;
+    size_t packetBytesQueued;
     pcap_send_queue* pcapQ;
 };
 
@@ -185,7 +191,7 @@ public:
                 {
                     cPcapSendQueue& q = instance->allQueues.at (instance->currSendQueueOut);
                     sentPackets       = (uint64_t)q.packets();
-                    sentBytes         = (uint64_t)q.queued();
+                    sentBytes         = (uint64_t)q.packetBytes();
 
                     // measure start time
                     if (first)
