@@ -435,6 +435,15 @@ bool cInterface::getIPv4 (cIpAddress& ip)
     return false;
 }
 
+uint32_t cInterface::getMTU (void)
+{
+    PIP_ADAPTER_ADDRESSES pAdapterInfo = getAdapterInfo ();
+    if (!pAdapterInfo)
+        return 0;
+
+    return (uint32_t)pAdapterInfo->Mtu;
+}
+
 bool cInterface::isOpen () const
 {
     return ifcHandle != NULL;

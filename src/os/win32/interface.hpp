@@ -49,6 +49,7 @@ public:
     void getSendStatistic (uint64_t& sentPackets, uint64_t& sentBytes, double& duration) const;
     bool getMAC (cMacAddress&);
     bool getIPv4 (cIpAddress&);
+    uint32_t getMTU (void);
     bool isOpen () const;
 
     void operator()();
