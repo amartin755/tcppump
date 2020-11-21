@@ -113,7 +113,7 @@ void cIPv4Packet::compile (uint8_t protocol, const uint8_t* l4header, size_t l4h
     if (l4headerLen && l4header)
         packet.appendPayload(l4header, l4headerLen);            // copy L4 header (e.g. udp header)
     if (payloadLen && payload)
-        packet.appendPayload (payload, payloadLen);             // copy payload from ascii string
+        packet.appendPayload (payload, payloadLen);             // copy payload
 
     //TODO later when supporting fragmentation flags_offset and identification also have to be updated
 }
