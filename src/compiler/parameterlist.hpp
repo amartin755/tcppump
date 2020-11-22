@@ -45,6 +45,7 @@ public:
 
 private:
     void clear ();
+    int isRandom (bool allowRange) const;
 
     const char* parameter;
     size_t      parLen;

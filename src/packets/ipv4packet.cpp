@@ -36,9 +36,18 @@ cIPv4Packet::cIPv4Packet ()
     ipHeader.routerAlert.length = 4;
     ipHeader.routerAlert.value  = 0;
 
+    mtu = 1500; // FIXME real MTU
+
     cEthernetPacket firstPacket;
     firstPacket.setTypeLength (ETHERTYPE_IPV4);
     packets.push_back(std::move(firstPacket));
+    packetsAsArray = nullptr;
+}
+
+cIPv4Packet::~cIPv4Packet ()
+{
+    delete[] packetsAsArray;
+    packetsAsArray = nullptr;
 }
 
 cEthernetPacket& cIPv4Packet::getFirstEthernetPacket ()
@@ -77,7 +86,7 @@ void cIPv4Packet::setTimeToLive (uint8_t ttl)
 
 void cIPv4Packet::setDontFragment (bool df)
 {
-    ipHeader.setFlags (false, df, false);
+    ipHeader.setFlagDF (df);
 }
 
 void cIPv4Packet::setSource (const cIpAddress& ip)
@@ -92,11 +101,15 @@ void cIPv4Packet::setDestination (const cIpAddress& ip)
 
 void cIPv4Packet::compile (uint8_t protocol, const uint8_t* l4header, size_t l4headerLen, const uint8_t* payload, size_t payloadLen)
 {
-    // FIXME fragmentation
+    if (l4headerLen + payloadLen + getHeaderLength() > 65535)
+        throw FormatException (exParRange, nullptr);
 
-    ipHeader.len = htons (uint16_t(ipHeader.getHeaderLenght() * 4 + l4headerLen + payloadLen));
-    ipHeader.protocol = protocol;
-    updateHeaderChecksum();
+    size_t ipHeaderLen = getHeaderLength();
+
+    unsigned fragCnt = unsigned((l4headerLen + payloadLen - 1) / (mtu - ipHeaderLen)) + 1;
+    unsigned offset = 0;
+
+    BUG_ON (l4headerLen < mtu - ipHeaderLen);    // we rely on L4 header fitting into first ip fragment
 
     cEthernetPacket &packet = packets.front();
 
@@ -109,42 +122,87 @@ void cIPv4Packet::compile (uint8_t protocol, const uint8_t* l4header, size_t l4h
             packet.setDestMac (cMacAddress (1, 0, 0x5e, dstIp.getAsArray()[1] & 0x7f, dstIp.getAsArray()[2], dstIp.getAsArray()[3]));
         }
     }
-    packet.setPayload ((uint8_t*)&ipHeader, getHeaderLength()); // write IP header
-    if (l4headerLen && l4header)
-        packet.appendPayload(l4header, l4headerLen);            // copy L4 header (e.g. udp header)
-    if (payloadLen && payload)
-        packet.appendPayload (payload, payloadLen);             // copy payload
 
-    //TODO later when supporting fragmentation flags_offset and identification also have to be updated
+    ipHeader.protocol = protocol;
+
+    for (unsigned n = 1; n < fragCnt; n++)
+        packets.push_back(std::move(cEthernetPacket(packet)));
+
+    packetsAsArray = new const cEthernetPacket*[fragCnt];
+
+    unsigned n = 0;
+    for (auto & p : packets)
+    {
+        packetsAsArray[n] = &p;
+
+        size_t fragLen = 0;
+        if (n == 0)
+            fragLen = l4headerLen + payloadLen + ipHeaderLen > mtu ? mtu - ipHeaderLen : l4headerLen + payloadLen;
+        else
+            fragLen = payloadLen + ipHeaderLen > mtu ? mtu - ipHeaderLen : payloadLen;
+
+        ipHeader.totalLength = htons (uint16_t(ipHeaderLen + fragLen));
+        ipHeader.setFlagMF (n + 1 != fragCnt);
+        ipHeader.setOffset (offset);
+        updateHeaderChecksum ();
+
+        p.setPayload ((uint8_t*)&ipHeader, ipHeaderLen);           // write IP header
+
+        if (n == 0)
+        {
+            fragLen -= l4headerLen;
+            if (l4headerLen && l4header)
+                p.appendPayload(l4header, l4headerLen);            // copy L4 header (e.g. udp header)
+            if (payloadLen && payload)
+                p.appendPayload (payload, fragLen);  // copy payload
+
+            payloadLen -= fragLen;
+        }
+        else
+        {
+            p.appendPayload (payload, fragLen);                    // copy payload
+            payloadLen -= fragLen;
+        }
+
+        payload += fragLen;
+        offset  += fragLen;
+        n++;
+    }
 }
 
 uint8_t cIPv4Packet::getPayloadAt8 (unsigned offset) const
 {
-    // FIXME fragmentation
+    size_t ipHeaderLen  = getHeaderLength();
+    unsigned fragment   = offset / (mtu - ipHeaderLen);
+    unsigned packOffset = offset % (mtu - ipHeaderLen);
 
-    const cEthernetPacket &packet = packets.front();
-    return packet.getPayloadAt8 (offset + (unsigned)getHeaderLength());
+    const cEthernetPacket *packet = packetsAsArray[fragment];
+    return packet->getPayloadAt8 (packOffset + (unsigned)ipHeaderLen);
 }
 
 // note: offset is a byte offset!!!
 uint16_t cIPv4Packet::getPayloadAt16 (unsigned offset) const
 {
-    // FIXME fragmentation
+    size_t ipHeaderLen  = getHeaderLength();
+    unsigned fragment   = offset / (mtu - ipHeaderLen);
+    unsigned packOffset = offset % (mtu - ipHeaderLen);
 
-    const cEthernetPacket &packet = packets.front();
-    return packet.getPayloadAt16 (offset + (unsigned)getHeaderLength());
+    const cEthernetPacket *packet = packetsAsArray[fragment];
+    return packet->getPayloadAt16 (packOffset + (unsigned)ipHeaderLen);
 }
 
 size_t cIPv4Packet::getPayloadLength () const
 {
-    // FIXME fragmentation
+    size_t ipHeaderLen = getHeaderLength();
+    size_t len = 0;
 
-    const cEthernetPacket &packet = packets.front();
-    size_t len = packet.getPayloadLength ();
+    for (auto & p : packets)
+    {
+        BUG_ON (p.getPayloadLength () > ipHeaderLen);
+        len += p.getPayloadLength () - ipHeaderLen;
+    }
 
-    BUG_ON (len > getHeaderLength());
-
-    return len > getHeaderLength() ? len - getHeaderLength() : 0;
+    return len;
 }
 
 void cIPv4Packet::updateL4Header (const uint8_t* l4header, size_t l4headerLen)
@@ -158,6 +216,7 @@ void cIPv4Packet::updateL4Header (const uint8_t* l4header, size_t l4headerLen)
 
 void cIPv4Packet::updateHeaderChecksum ()
 {
+    ipHeader.chksum = 0;
     ipHeader.chksum = cInetChecksum::rfc1071((const uint16_t*)&ipHeader, getHeaderLength(), nullptr, 0);
 }
 

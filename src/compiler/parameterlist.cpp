@@ -20,6 +20,7 @@
 #include <cctype>
 #include <cstring>
 #include <cerrno>
+#include <cstdlib>
 #include <stdexcept>      // std::invalid_argument
 
 #include "parameterlist.hpp"
@@ -74,22 +75,62 @@ void cParameter::clear ()
 }
 
 
+int cParameter::isRandom (bool allowRange) const
+{
+    if (!valLen || *value != '*')
+        return -1;
+
+    if (valLen == 1)
+        return 0;
+
+    if (allowRange)
+    {
+        char* end;
+        errno = 0;
+        unsigned long r = strtoul (value+1, &end, 0);
+        if (end != (value + valLen))
+        {
+            throw FormatException (exParFormat, value+1, (int)valLen-1);
+        }
+        else if ((!((r >= 1) && (r <= 65535))) || (errno == ERANGE))
+        {
+            throw FormatException (exParRange, value+1, (int)valLen-1);
+        }
+        return (int)r;
+    }
+    else
+    {
+        throw FormatException (exParFormat, value+1, (int)valLen-1);
+    }
+
+    return -1;
+}
+
+
 uint32_t cParameter::asInt32 (uint32_t rangeBegin, uint32_t rangeEnd) const
 {
     BUG_ON (rangeEnd >= rangeBegin);
 
     unsigned long v;
 
-    char* end;
-    errno = 0;
-    v = strtoul (value, &end, 0);
-    if (end != (value + valLen))
+    if (isRandom(false) == 0)
     {
-        throw FormatException (exParFormat, value, (int)valLen);
+        uint32_t range = rangeEnd - rangeBegin > RAND_MAX ? RAND_MAX : rangeEnd - rangeBegin + 1;
+        v = (std::rand() % range) + rangeBegin;
     }
-    else if ((!((v >= rangeBegin) && (v <= rangeEnd))) || (errno == ERANGE))
+    else
     {
-        throw FormatException (exParRange, value, (int)valLen);
+        char* end;
+        errno = 0;
+        v = strtoul (value, &end, 0);
+        if (end != (value + valLen))
+        {
+            throw FormatException (exParFormat, value, (int)valLen);
+        }
+        else if ((!((v >= rangeBegin) && (v <= rangeEnd))) || (errno == ERANGE))
+        {
+            throw FormatException (exParRange, value, (int)valLen);
+        }
     }
 
     return (uint32_t)v;
@@ -160,16 +201,28 @@ const uint8_t* cParameter::asStream (size_t& len)
 {
     if (!data)
     {
-        if (*value != '"')
+        int randLen = isRandom (true);
+
+        if (randLen >= 0)
+        {
+            if (!randLen) randLen = 32; // set to default if no length is defined
+
+            data = new uint8_t[randLen];
+            dataLen = randLen;
+
+            for (int n = 0; n < randLen; n++)
+                data[n] = (uint8_t)n;//std::rand(); sequence seems to be more suitable for automatic values
+        }
+        else if (*value == '"')
+        {
+            len = valLen - 2; // don't count " at the begin an end of string
+            return (uint8_t*)value + 1;
+        }
+        else
         {
             data = cParseHelper::hexStringToBin(value, valLen, dataLen);
             if (!data)
                 throw FormatException (exParFormat, value, (int)valLen);
-        }
-        else
-        {
-            len = valLen - 2; // don't count " at the begin an end of string
-            return (uint8_t*)value + 1;
         }
     }
 
@@ -826,6 +879,221 @@ void cParameterList::unitTest ()
     catch (FormatException& )
     {
         BUG_ON (0);
+    }
+    {
+        cParameterList obj ("(first=*)");
+        BUG_ON (obj.isValid ());
+        try
+        {
+            const cParameter* par = nullptr;
+
+            par = obj.findParameter("first");
+            BUG_ON (par->asInt32(0,4)  < (uint32_t)5);
+            BUG_ON (par->asInt32(0,4)  < (uint32_t)5);
+            BUG_ON (par->asInt32(0,4)  < (uint32_t)5);
+            BUG_ON (par->asInt32(0,4)  < (uint32_t)5);
+        }
+        catch (FormatException& )
+        {
+            BUG_ON (0);
+        }
+    }
+    {
+        catched = false;
+        cParameterList obj ("(first=*k)");
+        BUG_ON (obj.isValid ());
+        try
+        {
+            const cParameter* par = nullptr;
+            par = obj.findParameter("first");
+            BUG_ON (par);
+            par->asInt32();
+        }
+        catch (FormatException& e)
+        {
+            catched = true;
+            BUG_ON (e.what () == exParFormat);
+            BUG_ON (e.value ());
+        }
+        BUG_ON (catched);
+    }
+    {
+        catched = false;
+        cParameterList obj ("(first=*1k)");
+        BUG_ON (obj.isValid ());
+        try
+        {
+            const cParameter* par = nullptr;
+            par = obj.findParameter("first");
+            BUG_ON (par);
+            par->asInt32();
+        }
+        catch (FormatException& e)
+        {
+            catched = true;
+            BUG_ON (e.what () == exParFormat);
+            BUG_ON (e.value ());
+        }
+        BUG_ON (catched);
+    }
+    {
+        catched = false;
+        cParameterList obj ("(first=**)");
+        BUG_ON (obj.isValid ());
+        try
+        {
+            const cParameter* par = nullptr;
+            par = obj.findParameter("first");
+            BUG_ON (par);
+            par->asInt32();
+        }
+        catch (FormatException& e)
+        {
+            catched = true;
+            BUG_ON (e.what () == exParFormat);
+            BUG_ON (e.value ());
+        }
+        BUG_ON (catched);
+    }
+    {
+        catched = false;
+        cParameterList obj ("(first=*1)");
+        BUG_ON (obj.isValid ());
+        try
+        {
+            const cParameter* par = nullptr;
+            par = obj.findParameter("first");
+            BUG_ON (par);
+            par->asInt32();
+        }
+        catch (FormatException& e)
+        {
+            catched = true;
+            BUG_ON (e.what () == exParFormat);
+            BUG_ON (e.value ());
+        }
+        BUG_ON (catched);
+    }
+    {
+        catched = false;
+        cParameterList obj ("(first=*k)");
+        BUG_ON (obj.isValid ());
+        try
+        {
+            size_t len = 0;
+            cParameter* par = nullptr;
+            par = obj.findParameter("first");
+            BUG_ON (par);
+            par->asStream(len);
+        }
+        catch (FormatException& e)
+        {
+            catched = true;
+            BUG_ON (e.what () == exParFormat);
+            BUG_ON (e.value ());
+        }
+        BUG_ON (catched);
+    }
+    {
+        catched = false;
+        cParameterList obj ("(first=*1k)");
+        BUG_ON (obj.isValid ());
+        try
+        {
+            size_t len = 0;
+            cParameter* par = nullptr;
+            par = obj.findParameter("first");
+            BUG_ON (par);
+            par->asStream(len);
+        }
+        catch (FormatException& e)
+        {
+            catched = true;
+            BUG_ON (e.what () == exParFormat);
+            BUG_ON (e.value ());
+        }
+        BUG_ON (catched);
+    }
+    {
+        catched = false;
+        cParameterList obj ("(first=**)");
+        BUG_ON (obj.isValid ());
+        try
+        {
+            size_t len = 0;
+            cParameter* par = nullptr;
+            par = obj.findParameter("first");
+            BUG_ON (par);
+            par->asStream(len);
+        }
+        catch (FormatException& e)
+        {
+            catched = true;
+            BUG_ON (e.what () == exParFormat);
+            BUG_ON (e.value ());
+        }
+        BUG_ON (catched);
+    }
+    {
+        catched = false;
+        cParameterList obj ("(first=*65536)");
+        BUG_ON (obj.isValid ());
+        try
+        {
+            size_t len = 0;
+            cParameter* par = nullptr;
+            par = obj.findParameter("first");
+            BUG_ON (par);
+            par->asStream(len);
+        }
+        catch (FormatException& e)
+        {
+            catched = true;
+            BUG_ON (e.what () == exParRange);
+            BUG_ON (e.value ());
+        }
+        BUG_ON (catched);
+    }
+    {
+        catched = false;
+        cParameterList obj ("(first=*0)");
+        BUG_ON (obj.isValid ());
+        try
+        {
+            size_t len = 0;
+            cParameter* par = nullptr;
+            par = obj.findParameter("first");
+            BUG_ON (par);
+            par->asStream(len);
+        }
+        catch (FormatException& e)
+        {
+            catched = true;
+            BUG_ON (e.what () == exParRange);
+            BUG_ON (e.value ());
+        }
+        BUG_ON (catched);
+    }
+    {
+        cParameterList obj ("(first=*, second=*1, third=*100)");
+        try
+        {
+            size_t len = 0;
+            BUG_ON (obj.isValid ());
+            len = 0;
+            BUG_ON (obj.findParameter("first")->asStream(len));
+            BUG_ON (len == 32);
+            len = 0;
+            BUG_ON (obj.findParameter("second")->asStream(len));
+            BUG_ON (len == 1);
+            len = 0;
+            BUG_ON (obj.findParameter("third")->asStream(len));
+            BUG_ON (len == 100);
+        }
+        catch (FormatException& )
+        {
+            BUG_ON (0);
+        }
     }
 
     // TODO fuzzing

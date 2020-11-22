@@ -41,7 +41,7 @@ typedef struct
 {
     uint8_t  vers_ihl; // version (bit 0 - 3) | ip header length (bit 4 - 7)
     uint8_t  tos;
-    uint16_t len;
+    uint16_t totalLength;
     uint16_t ident;
     uint16_t flags_offset; // flags (bit 0 -2) | offset (bit 3 - 12)
     uint8_t  ttl;
@@ -71,14 +71,22 @@ typedef struct
     {
         tos = (ecn & 0x03) | (tos & 0xfc);
     }
-    void setFlags (bool reserved, bool df, bool mf)
+    void setFlagDF (bool df)
     {
-        uint16_t fo  = ntohs (flags_offset) & 0x1fff;
-        flags_offset = htons ((reserved ? 0x8000 : 0) | (df ? 0x4000 : 0) | (mf ? 0x2000 : 0) | fo);
+        uint16_t fo  = ntohs (flags_offset) & 0xbfff;
+        flags_offset = htons ((df ? 0x4000 : 0) | fo);
     }
-    void setOffset (int offset)
+    void setFlagMF (bool mf)
     {
-        flags_offset = (offset & 0x1fff) | (flags_offset & 0xe000);
+        uint16_t fo  = ntohs (flags_offset) & 0xdfff;
+        flags_offset = htons ((mf ? 0x2000 : 0) | fo);
+    }
+    void setOffset (unsigned offset)
+    {
+        BUG_ON (!(offset % 8));
+        offset /= 8;
+        uint16_t fo  = ntohs (flags_offset) & 0xe000;
+        flags_offset = htons ((offset & ~0xe000) | fo);
     }
 
 }ipv4_header_t;
@@ -99,6 +107,7 @@ class cIPv4Packet
 {
 public:
     cIPv4Packet ();
+    virtual ~cIPv4Packet ();
     void setDSCP (int dscp);
     void setECN (int ecn);
     void setTimeToLive (uint8_t ttl);
@@ -142,6 +151,9 @@ protected:
 private:
     ipv4_header_t              ipHeader;
     std::list<cEthernetPacket> packets;
+    unsigned 				   mtu;
+    const cEthernetPacket**    packetsAsArray;
+
 };
 
 

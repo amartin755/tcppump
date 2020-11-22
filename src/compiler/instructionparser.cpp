@@ -114,7 +114,7 @@ int cInstructionParser::parse (const char* instruction, cResult& result)
         switch (e.what ())
         {
         case exParUnknown:
-            throwParseException ("Missing parameter", p, std::strlen (p), e.value ());// todo Klammern unterringeln, parameter mit ausgeben
+            throwParseException ("Missing parameter", p, std::strlen (p), e.value ());
             break;
         case exParRange:
             throwParseException ("Range of parameter violated", e.value (), e.valueLength ());

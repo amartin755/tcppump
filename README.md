@@ -30,7 +30,7 @@ Supported protocols and packet formats
 * IEEE802.3 packets, with IEEE802.2 header (aka LLC) including SNAP
 * VLAN tagging; including multiple tagging
 * ARP
-* Raw IPv4 (fragmentation is currently not supported)
+* Raw IPv4
 * UDP
 * VRRP
 * STP/RSTP
