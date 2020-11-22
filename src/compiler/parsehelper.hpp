@@ -40,13 +40,13 @@ public:
     }
     static const char* nextValueStart (const char* p)
     {
-        // Values always start with an alphabetic character, a number or "
-        return nextTokenStart (p, true, true, "\"");
+        // Values always start with an alphabetic character, a number, ", or *
+        return nextTokenStart (p, true, true, "\"*");
     }
     static const char* nextValueEnd (const char* p)
     {
         // alphabetic characters, numbers, '.' and ':' are allowed
-        return nextTokenEnd (p, true, true, ".:");
+        return nextTokenEnd (p, true, true, ".:*");
     }
     static const char* nextTokenStart (const char* p, bool isAlpha, bool isDigit, const char* accept);
     static const char* nextTokenEnd (const char* p, bool isAlpha, bool isDigit, const char* accept);
