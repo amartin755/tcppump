@@ -33,6 +33,7 @@
 #include "vrrppacket.hpp"
 #include "stppacket.hpp"
 #include "igmppacket.hpp"
+#include "icmppacket.hpp"
 
 
 cInstructionParser::cInstructionParser (const cMacAddress& ownMac, const cIpAddress& ownIPv4, bool optDestMAC)
@@ -106,6 +107,8 @@ int cInstructionParser::parse (const char* instruction, cResult& result)
             return compileIGMP (params, result.packets, false, false, true, false);
         if (!strncmp ("igmp-leave", keyword, keywordLen))
             return compileIGMP (params, result.packets, false, false, false, true);
+        if (!strncmp ("icmp", keyword, keywordLen))
+            return compileICMP (params, result.packets);
 
         throwParseException ("Unknown protocol type", keyword, keywordLen);
     }
@@ -553,6 +556,31 @@ int cInstructionParser::compileIGMP  (cParameterList& params, std::list <cEthern
         }
     }
     return (int)igmp.getAllEthernetPackets(packets);
+}
+
+
+int cInstructionParser::compileICMP  (cParameterList& params, std::list <cEthernetPacket> &packets)
+{
+    cIcmpPacket icmppacket;
+    cEthernetPacket& eth = icmppacket.getFirstEthernetPacket();
+    bool destIsMulticast = parseIPv4Params (params, icmppacket);
+
+    // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+    compileMacHeader  (params, eth, false, ipOptionalDestMAC || destIsMulticast);
+    compileVLANTags   (params, eth);
+
+    size_t len = 0;
+    uint8_t type = params.findParameter ("type")->asInt8();
+    uint8_t code = params.findParameter ("code")->asInt8();
+    const uint8_t* payload = params.findParameter ("payload")->asStream(len);
+
+    cParameter* optionalPar = params.findParameter ("chksum", true);
+    if (optionalPar)
+        icmppacket.compileRaw(type, code, optionalPar->asInt16(), payload, len);
+    else
+        icmppacket.compileRaw(type, code, payload, len);
+
+    return (int)icmppacket.getAllEthernetPackets(packets);
 }
 
 

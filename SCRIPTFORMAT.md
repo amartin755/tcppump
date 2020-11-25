@@ -416,6 +416,50 @@ Optionally all vlan tag parameters and all optional ipv4 parameters (see above) 
     # UDP packet with to multicast destination and source ip taken from network interface
     udp(dip=224.2.3.4, sport=1234, dport=2345, payload=12345678);
 
+### ICMP
+#### Protocol Specifier
+
+    ICMP
+
+#### Parameters
+Destination EUI-48 MAC address. Note: If `dip` is a multicast address `dmac` will be set automatically.
+
+    dmac (optional if dip is multicast)
+
+Destination IPv4 address
+
+    dip
+
+Source EUI-48 MAC address. If ommited, address of the network interface is used
+
+    smac (optional)
+
+Source IPv4 address; If ommited, address of the network interface is used
+
+    sip (optional)
+
+Source port (range 0 - 255)
+
+    type
+
+Destination port (range 0 - 255)
+
+    code
+
+Checksum (range 0 - 0xffff) If ommited, checksum is calculated automatically. Setting the checksum manually is only useful to force creation of malformed packets.
+
+    chksum (optional)
+
+Payload in ascii hex
+
+    payload (optional)
+
+Optionally all vlan tag parameters and all optional ipv4 parameters (see above) are also allowed.
+
+#### Examples
+
+    # TODO
+
 ### VRRP Virtual Router Redundancy Protocol
 Supported are the protocol versions 2 according to RFC3768 (vrrp) and version 3 according to RFC5798 (vrrp3).
 

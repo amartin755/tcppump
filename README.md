@@ -35,6 +35,7 @@ Supported protocols and packet formats
 * VRRP
 * STP/RSTP
 * IGMP (v1/v2 only, v3 is on the way)
+* ICMP
 
 **Note: This tool is in alpha state.**
 
