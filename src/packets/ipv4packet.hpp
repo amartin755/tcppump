@@ -114,6 +114,7 @@ public:
     void setDontFragment (bool df);
     void setSource (const cIpAddress& ip);
     void setDestination (const cIpAddress& ip);
+    void setIdentification (uint16_t id);
     void updateHeaderChecksum ();
     cEthernetPacket& getFirstEthernetPacket ();
     size_t getAllEthernetPackets (std::list<cEthernetPacket>&) const;
@@ -153,6 +154,9 @@ private:
     std::list<cEthernetPacket> packets;
     unsigned 				   mtu;
     const cEthernetPacket**    packetsAsArray;
+
+    static uint16_t identification;
+    bool hasId;
 
 };
 

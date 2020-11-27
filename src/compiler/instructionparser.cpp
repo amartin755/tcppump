@@ -344,6 +344,9 @@ bool cInstructionParser::parseIPv4Params (cParameterList& params, cIPv4Packet& p
         isMulticast = destIP.isMulticast();
     }
     packet.setSource       (params.findParameter ("sip", ownIPv4)->asIPv4());
+    cParameter* optionalPar = params.findParameter ("id", true);
+    if (optionalPar)
+        packet.setIdentification(optionalPar->asInt16());
 
     return isMulticast;
 }

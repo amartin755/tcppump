@@ -26,6 +26,8 @@
 #include "inetchecksum.hpp"
 
 
+uint16_t cIPv4Packet::identification = 1;
+
 
 cIPv4Packet::cIPv4Packet ()
 {
@@ -42,6 +44,7 @@ cIPv4Packet::cIPv4Packet ()
     firstPacket.setTypeLength (ETHERTYPE_IPV4);
     packets.push_back(std::move(firstPacket));
     packetsAsArray = nullptr;
+    hasId = false;
 }
 
 cIPv4Packet::~cIPv4Packet ()
@@ -99,6 +102,12 @@ void cIPv4Packet::setDestination (const cIpAddress& ip)
     ipHeader.dstIp = ip.get();
 }
 
+void cIPv4Packet::setIdentification (uint16_t id)
+{
+    ipHeader.ident = htons(id);
+    hasId = true;
+}
+
 void cIPv4Packet::compile (uint8_t protocol, const uint8_t* l4header, size_t l4headerLen, const uint8_t* payload, size_t payloadLen)
 {
     if (l4headerLen + payloadLen + getHeaderLength() > 65535)
@@ -124,6 +133,8 @@ void cIPv4Packet::compile (uint8_t protocol, const uint8_t* l4header, size_t l4h
     }
 
     ipHeader.protocol = protocol;
+    if (fragCnt > 1 && !hasId)
+        ipHeader.ident = htons(identification++);
 
     for (unsigned n = 1; n < fragCnt; n++)
         packets.push_back(std::move(cEthernetPacket(packet)));
@@ -157,15 +168,16 @@ void cIPv4Packet::compile (uint8_t protocol, const uint8_t* l4header, size_t l4h
                 p.appendPayload (payload, fragLen);  // copy payload
 
             payloadLen -= fragLen;
+            offset  += fragLen + l4headerLen;
         }
         else
         {
             p.appendPayload (payload, fragLen);                    // copy payload
             payloadLen -= fragLen;
+            offset  += fragLen;
         }
 
         payload += fragLen;
-        offset  += fragLen;
         n++;
     }
 }
