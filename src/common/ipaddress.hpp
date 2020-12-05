@@ -89,7 +89,7 @@ public:
 #if HAVE_NTOP
         return !!inet_ntop(AF_INET, &ipv4, s, len);
 #else
-        ::strncpy (s, inet_ntoa(ipv4), len);
+        std::strncpy (s, inet_ntoa(ipv4), len);
         return true;
 #endif
     }

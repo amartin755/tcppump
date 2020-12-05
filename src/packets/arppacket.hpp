@@ -30,6 +30,7 @@ class cArpPacket : public cEthernetPacket
 {
 public:
     cArpPacket ();
+    void whoHas (const cMacAddress& srcMac, const cIpAddress& srcIp, const cIpAddress& ip);
     void probe (const cMacAddress& srcMac, const cIpAddress& ip);
     void announce (const cMacAddress& srcMac, const cIpAddress& ip);
     void setAll (uint16_t opcode, const cMacAddress& srcMac, const cIpAddress& srcIp, const cMacAddress& dstMac, const cIpAddress& dstIp);
@@ -57,6 +58,15 @@ typedef struct
     struct in_addr srcIp;
     cMacAddress::mac_t dstMac;
     struct in_addr dstIp;
+
+    bool isRequest (void)
+    {
+        return opcode == htons(1);
+    }
+    bool isReply (void)
+    {
+        return opcode == htons(2);
+    }
 
 }arp_t;
 

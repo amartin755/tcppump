@@ -30,6 +30,12 @@ cArpPacket::cArpPacket ()
 }
 
 
+void cArpPacket::whoHas (const cMacAddress& srcMac, const cIpAddress& srcIp, const cIpAddress& ip)
+{
+    cMacAddress dstMac;
+    setAll (1, srcMac, srcIp, dstMac, ip);
+}
+
 void cArpPacket::probe (const cMacAddress& srcMac, const cIpAddress& ip)
 {
     cMacAddress dstMac;

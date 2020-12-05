@@ -38,12 +38,13 @@ public:
     bool open ();
     bool close ();
     bool sendPacket (const uint8_t* payload, size_t length, const cTimeval& t);
-    bool prepareSendQueue (size_t packetCnt, size_t totalBytes, bool synchronized){return true;}
-    bool flushSendQueue (void){return true;}
+    bool prepareSendQueue (size_t packetCnt, size_t totalBytes, bool synchronized);
+    bool flushSendQueue (void);
     void getSendStatistic (uint64_t& sentPackets, uint64_t& sentBytes, double& duration) const;
     bool getMAC (cMacAddress&);
     bool getIPv4 (cIpAddress&);
     bool isOpen () const;
+    const char* getName (void) const;
 
 private:
 

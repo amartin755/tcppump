@@ -105,6 +105,12 @@ bool cInterface::close ()
     return true;
 }
 
+bool cInterface::prepareSendQueue (size_t packetCnt, size_t totalBytes, bool synchronized)
+{
+    // STUB
+    return true;
+}
+
 bool cInterface::sendPacket (const uint8_t* payload, size_t length, const cTimeval& t)
 {
     cTimeval sleepTime (t);
@@ -145,6 +151,13 @@ bool cInterface::sendPacket (const uint8_t* payload, size_t length, const cTimev
 
     return true;
 }
+
+bool cInterface::flushSendQueue (void)
+{
+    // STUB
+    return true;
+}
+
 
 void cInterface::getSendStatistic (uint64_t& sentPackets, uint64_t& sentBytes, double& duration) const
 {
@@ -236,4 +249,10 @@ bool cInterface::getIPv4 (cIpAddress &ip)
 bool cInterface::isOpen () const
 {
     return (ifcHandle != -1);
+}
+
+
+const char* cInterface::getName (void) const
+{
+    return name.c_str();
 }
