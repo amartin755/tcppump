@@ -16,7 +16,7 @@ Each packet is defined as follows (optional parameters are market with [])
 Each protocol defines name and type of its parameters (see PROTOCOLS). Depending on its type, parameter values can be
 * Integer: decimal (`1234`), hex (`0x1234`), random number (`*`)
 * Float: e.g. `1.2`
-* Byte-streams: A stream of 8 bit values (bytes or octetts), which can be defined as
+* Bytestream: A stream of 8 bit values (aka bytes or octetts), which can be defined as
 
   ASCII hex values: where each byte is defined as ascii-hex value (e.g. `01020304ABCD`)
 
@@ -28,7 +28,6 @@ Each protocol defines name and type of its parameters (see PROTOCOLS). Depending
 * MAC-Address: A EUI-48 MAC address (e.g. `12:23:34:45:56:67`)
 * IPv4 address: e.g. `1.2.3.4`
 
-For numbers and bytestreams it is also possible to define random values by using `*`. tcppump will then use a random number. For byte-streams a number after `*` defines the length of the generated random bytestream. For example a random byte-stream with a length of 16 bytes is defined as `*16`.
 
 ### Examples
 
