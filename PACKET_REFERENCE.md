@@ -1,26 +1,58 @@
-# Script file definition
+# Packet Syntax Reference
 
-The input file contains a list of ethernet packets in an human readable c-like syntax. Each packet definition has to be terminated with semicolon.
+tcppumps input is a list of ethernet packets, defined in an human readable c-like syntax. The list is either directly passed as command line parameter or part of a script file (parameter `-s` or `--script`).
 
-## Syntax
-Optional parameters are market with []
+## Packet
+### Abstract format
+Each packet is defined as follows (optional parameters are market with [])
 
-    [timestamp:] protocol(parameters);
+    [timestamp:] protocol([parameterlist])
 
-* `timestamp` relative time as integer followed by ':' (us since beginning of the file) e.g. 123456 if time starts with '+', time is relative to the previous packet; e.g. +100
-* `protocol` protocol specifier , see PROTOCOLS
-* `parameters` protocol parameters in parantheses as comma separated parameter-value pairs. e.g. (hugo=123, egon=456)
+* `timestamp` relative time as integer followed by ':' (relative to start of tcppump) e.g. 123456 if time starts with '+', time is relative to the previous packet; e.g. +100
+* `protocol` protocol specifier , see *Protocol Definitions*
+* `parameterlist` protocol parameters in parantheses as comma separated parameter-value pairs `par=value, par=value, ...`. e.g. (hugo=123, egon=456)
 
-Comments start with '#'
+### Parameters
+Each protocol defines name and type of its parameters (see PROTOCOLS). Depending on its type, parameter values can be
+* Integer: decimal (`1234`), hex (`0x1234`), random number (`*`)
+* Float: e.g. `1.2`
+* Byte-streams: A stream of 8 bit values (bytes or octetts), which can be defined as
 
-Examples:
+  ASCII hex values: where each byte is defined as ascii-hex value (e.g. `01020304ABCD`)
+
+  String: A stream of printable ascii values surrounded by double-quotes(e.g. `"Hello World"`)
+
+  Random: `*` defines a random stream of 32 bytes length. Any length can be specified by adding the length in bytes after the asterisk. For example `*16` expands to a random byte
+           stream of 16 bytes.
+
+* MAC-Address: A EUI-48 MAC address (e.g. `12:23:34:45:56:67`)
+* IPv4 address: e.g. `1.2.3.4`
+
+For numbers and bytestreams it is also possible to define random values by using `*`. tcppump will then use a random number. For byte-streams a number after `*` defines the length of the generated random bytestream. For example a random byte-stream with a length of 16 bytes is defined as `*16`.
+
+### Examples
+
+    +1234:   protoMickey(color = 10, index = 0x16, msg = "Hello")
+
+    1000000: protoMouse(payload = *32)
+
+    donald(parZ = valueZ)
+
+    doit()
+
+## Script files
+Script files contain a list of packets as specified above. Each packet definition has to be terminated with semicolon. Comments start with '#'.
+
+Example:
 
     # this is a comment
-    +1234:   theProtocol(parameter-x = 3333333333333333333333333333333333333333);
-    1000000: theProtocol(parameter-x = 3333333333333333333333333333333333333333);
+    +1234:   protoMickey(color = 10, index = 0x16, msg = "Hello");
+    1000000: protoMouse(payload = *32);
+    donald(parZ = valueZ);  # another comment
+    doit();
 
 
-## Protocol definitions
+## Protocol Definitions
 
 ### Raw unstructured ethernet packet as byte stream
 #### Protocol Specifier
@@ -28,13 +60,15 @@ Examples:
     raw
 
 #### Parameters
-Payload in ascii hex
+Payload (bytestream)
 
     payload
 
-#### Example
+#### Examples
 
     raw(payload = 112233445566aabbccddeeff08001234567890abcdef);
+    raw(payload = "Hello");
+    raw(payload = *64);
 
 
 ### Ethernet II or IEEE802.3 packet format
@@ -47,7 +81,7 @@ Destination EUI-48 MAC address
 
     dmac
 
-Payload in ascii hex
+Payload (bytestream)
 
     payload
 
@@ -55,7 +89,7 @@ Source EUI-48 MAC address. If ommited, address of the network interface is used
 
     smac (optional)
 
-Ethertype or length of the packet (range 0 - 0xffff). If ommited or LLC header is defined, length will be calculated based on `payload`
+Ethertype or length of the packet (integer: range 0 - 0xffff). If ommited or LLC header is defined, length will be calculated based on `payload`
 
     ethertype (optional)
 
@@ -64,19 +98,19 @@ __VLAN tags__ (IEEE 802.1Q)
 For vlan tagged packets parameter 'vid' is mandatory, if ommitted all other vlan parameters will be ignored and an untagged packet is compiled.
 Multiple vlan tags are also allowed. 'vid' must be the first parameter of a vlan tag.
 
-VLAN id (TCI.VID) (range 0-4095)
+VLAN id (TCI.VID) (integer: range 0-4095)
 
     vid
 
-VLAN prio (TCI.PCP)(range 0-7; default 0)
+VLAN prio (TCI.PCP)(integer: range 0-7; default 0)
 
     prio (optional)
 
-Drop Eligible Indicator (range 0-1; default 0)
+Drop Eligible Indicator (integer: range 0-1; default 0)
 
     dei (optional)
 
-VLAN type (1 = Customer VLAN, 2 = Provider VLAN; default 1)
+VLAN type (integer: 1 = Customer VLAN, 2 = Provider VLAN; default 1)
 
     vtype (optional)
 
@@ -84,26 +118,26 @@ __LLC header__ (IEEE 802.2)
 
 For packets with LLC header both parameters 'dsap' and 'ssap' have to be defined,
 
-Destination Service Access point (range 0 - 0xff)
+Destination Service Access point (integer: range 0 - 0xff)
 
     dsap
 
-Source Service Access Point (range 0 - 0xff)
+Source Service Access Point (integer: range 0 - 0xff)
 
     ssap
 
-Control word (range 0 - 0xffff; default 3); will be compiled to a 8 bit value, if bit 0/1 == 1, otherwise compiled to 16 bit value
+Control word (integer: range 0 - 0xffff; default 3); will be compiled to a 8 bit value, if bit 0/1 == 1, otherwise compiled to 16 bit value
 
     control (optional)
 
 __LLC header with SNAP extension__
 
 LLC header parameters must not be defined for snap packets. Their content is filled automatically. Otherwise a normal LLC packet is compiled.
-Organizationally Unique Identifier (range 0 - 0xffffff)
+Organizationally Unique Identifier (integer: range 0 - 0xffffff)
 
     oui
 
-Protocol type (range 0 - 0xffff)
+Protocol type (integer: range 0 - 0xffff)
 
     protocol
 
@@ -139,7 +173,7 @@ Destination IPv4 address
 
     dip
 
-Opcode (1 = request, 2 = reply, range 0 - 0xffff; default 1)
+Opcode (integer: 1 = request, 2 = reply, range 0 - 0xffff; default 1)
 
     op (optional)
 
@@ -191,31 +225,31 @@ Source IPv4 address; If ommited, address of the network interface is used
 
     sip (optional)
 
-Differentiated services code point (range 0 - 0x3f; default 0)
+Differentiated services code point (integer: range 0 - 0x3f; default 0)
 
     dscp (optional)
 
-Explicit congestion notification (range 0 - 3; default 0)
+Explicit congestion notification (integer: range 0 - 3; default 0)
 
     ecn (optional)
 
-Time to life (range 0 - 255; default 64)
+Time to life (integer: range 0 - 255; default 64)
 
     ttl (optional)
 
-Don't fragment (default 0; 1 = don't fragment)
+Don't fragment (integer: 1 = don't fragment; default 0)
 
     df (optional)
 
-Identification (range 0 - 0xffff; default 0 or auto value for fragmented packets)
+Identification (integer: range 0 - 0xffff; default 0 or auto value for fragmented packets)
 
     id (optional)
 
-Protocol number (range 0 - 255) see https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml
+Protocol number (integer: range 0 - 255) see https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml
 
     protocol
 
-Payload in ascii hex
+Payload (bytestream)
 
     payload
 
@@ -253,11 +287,11 @@ Source IPv4 address; If ommited, address of the network interface is used
 
     sip (optional)
 
-IGMP Message Type (range 0 - 255, default 0x11)
+IGMP Message Type (integer: range 0 - 255; default 0x11)
 
     type
 
-Max. Respnd Time in 1/10 seconds (range: 0 - 255, default 0)
+Max. Respnd Time in 1/10 seconds (integer: range 0 - 255; default 0)
 
     time (optional)
 
@@ -278,7 +312,7 @@ Source IPv4 address; If ommited, address of the network interface is used
 
     sip (optional)
 
-Max. Respnd Time in 1/10 seconds (range: 0 - 255, default 100 = 10 sec.)
+Max. Respnd Time in 1/10 seconds (integer: range: 0 - 255; default 100 = 10 sec.)
 
     time (optional)
 
@@ -317,19 +351,19 @@ Source IPv4 address; If ommited, address of the network interface is used
 
     sip (optional)
 
-Max. Respnd Time in seconds (range: 0 - 3174.4, default 10)
+Max. Respnd Time in seconds (float: range 0 - 3174.4; default 10)
 
     time (optional)
 
-S Flag (Suppress Router-Side Processing) (range: 0 - 1, default 0)
+S Flag (Suppress Router-Side Processing) (integer: range 0 - 1; default 0)
 
     s (optional)
 
-Querier's Robustness Variable (range: 0 - 7, default 2) Note: According to RFC3376 zero is an invalid value
+Querier's Robustness Variable (integer: range 0 - 7; default 2) Note: According to RFC3376 zero is an invalid value
 
     qrv (optional)
 
-Querier's Query Interval Code in seconds (range: 0 - 31744, default 125)
+Querier's Query Interval Code in seconds (integer: range 0 - 31744; default 125)
 
     qqic (optional)
 
@@ -393,19 +427,19 @@ Source IPv4 address; If ommited, address of the network interface is used
 
     sip (optional)
 
-Source port (range 0 - 0xffff)
+Source port (integer: range 0 - 0xffff)
 
     sport
 
-Destination port (range 0 - 0xffff)
+Destination port (integer: range 0 - 0xffff)
 
     dport
 
-Checksum (range 0 - 0xffff) If ommited, checksum is calculated automatically. Setting the checksum manually is only useful to force creation of malformed packets.
+Checksum (integer: range 0 - 0xffff) If ommited, checksum is calculated automatically. Setting the checksum manually is only useful to force creation of malformed packets.
 
     chksum (optional)
 
-Payload in ascii hex
+Payload (bytestream)
 
     payload (optional)
 
@@ -422,6 +456,7 @@ Optionally all vlan tag parameters and all optional ipv4 parameters (see above) 
 
 ### ICMP
 #### Protocol Specifier
+RFC792
 
     ICMP
 
@@ -442,19 +477,19 @@ Source IPv4 address; If ommited, address of the network interface is used
 
     sip (optional)
 
-Source port (range 0 - 255)
+ICMP type (integer: range 0 - 255)
 
     type
 
-Destination port (range 0 - 255)
+Code (integer: range 0 - 255)
 
     code
 
-Checksum (range 0 - 0xffff) If ommited, checksum is calculated automatically. Setting the checksum manually is only useful to force creation of malformed packets.
+Checksum (integer: range 0 - 0xffff) If ommited, checksum is calculated automatically. Setting the checksum manually is only useful to force creation of malformed packets.
 
     chksum (optional)
 
-Payload in ascii hex
+Payload (bytestream)
 
     payload (optional)
 
@@ -481,7 +516,7 @@ Source IPv4 Address. If ommited, address of the network interface is used
 
     sip (optional)
 
-Virtual Router ID (range 1 - 255)
+Virtual Router ID (integer: range 1 - 255)
 
     vrid
 
@@ -489,19 +524,19 @@ Virtual Router IPv4 Address; Up to 255 IP addresses are allowed. At least one IP
 
     vrip
 
-Virtual Router Priority (range 0 - 255, default 100)
+Virtual Router Priority (integer: range 0 - 255; default 100)
 
     prio (optional)
 
-Advertisement Interval. Note: Value range and unit depends on the specified protocol version. V2: seconds (range: 0 - 255, default 1), V3: centiseconds (range: 0 - 4095, default 100)
+Advertisement Interval. Note: Value range and unit depends on the specified protocol version. V2: seconds (range: 0 - 255, default 1), V3: centiseconds (integer: range 0 - 4095; default 100)
 
     aint (optional)
 
-VRRP Packet Type (range 0 - 15; default 1). Note: According to RFC3768 only 1 is a valid value
+VRRP Packet Type (integer: range 0 - 15; default 1). Note: According to RFC3768 only 1 is a valid value
 
     type (optional)
 
-Checksum (range 0 - 0xffff). If ommited, checksum is calculated automatically
+Checksum (integer: range 0 - 0xffff). If ommited, checksum is calculated automatically
 
     chksum (optional)
 
@@ -536,11 +571,11 @@ Source EUI-48 MAC Address. If ommited, address of the network interface is used
 
     smac (optional)
 
-Root Bridge Priority (range 0 - 15, default 0)
+Root Bridge Priority (integer: range 0 - 15; default 0)
 
     rbprio (optional)
 
-Root Bridge System ID Extension (range 0 - 4095, default 0)
+Root Bridge System ID Extension (integer: range 0 - 4095; default 0)
 
     rbidext (optional)
 
@@ -548,15 +583,15 @@ Root Bridge EUI-48 MAC Address. If ommited, address of the network interface is 
 
     rbmac (optional)
 
-Root Path Cost (STP: range 1 - 65535, default 4; RSTP: range 1 - 4294967295, default 20000)
+Root Path Cost (integer: STP: range 1 - 65535; default 4; RSTP: range 1 - 4294967295; default 20000)
 
     rpathcost (optional)
 
-Bridge Priority (range 0 - 15, default 8)
+Bridge Priority (integer: range 0 - 15; default 8)
 
     bprio (optional)
 
-Bridge System ID Extension (range 0 - 4095, default 0)
+Bridge System ID Extension (integer: range 0 - 4095; default 0)
 
     bidext (optional)
 
@@ -564,55 +599,55 @@ Bridge EUI-48 MAC Address. If ommited, address of the network interface is used
 
     bmac (optional)
 
-Port Priority (range 0 - 15, default 8)
+Port Priority (integer: range 0 - 15; default 8)
 
     pprio (optional)
 
-Port Number (range 1 - 4095, default 1)
+Port Number (integer: range 1 - 4095; default 1)
 
     pnum (optional)
 
-Message Age (seconds)(range 0.0 - 255.996, default 0)
+Message Age (seconds)(float: range 0.0 - 255.996; default 0)
 
     msgage (optional)
 
-Max Age in seconds (range 0.0 - 255.996, default 20) Note: According to IEEE802.1D-2004 only range 6 - 40 is allowed
+Max Age in seconds (float: range 0.0 - 255.996; default 20) Note: According to IEEE802.1D-2004 only range 6 - 40 is allowed
 
     maxage (optional)
 
-Hello Time (seconds)(range 0.0 - 255.996, default 2)
+Hello Time (seconds)(float: range 0.0 - 255.996; default 2)
 
     hello (optional)
 
-Forward Delay (seconds)(range 0.0 - 255.996, default 15)  Note: According to IEEE802.1D-2004 only range 4 - 30 is allowed
+Forward Delay (seconds)(float: range 0.0 - 255.996; default 15)  Note: According to IEEE802.1D-2004 only range 4 - 30 is allowed
 
     delay (optional)
 
-Topology Change Flag(default 0; 1 = Topology Change)
+Topology Change Flag(integer: default 0; 1 = Topology Change)
 
     topochange (optional)
 
-Topology Change Acknowledgement Flag(default 0; 1 = Topology Change Acknowledgement)
+Topology Change Acknowledgement Flag(integer: default 0; 1 = Topology Change Acknowledgement)
 
     topochangeack (optional)
 
-RSTP only: Port Role (range 1 - 3, default 3; 1 = Alternate or Backup, 2 = Root, 3 = Designated)
+RSTP only: Port Role (integer: range 1 - 3, default 3; 1 = Alternate or Backup, 2 = Root, 3 = Designated)
 
     portrole (optional)
 
-RSTP only: Proposal Flag (default 0; 1 = proposal)
+RSTP only: Proposal Flag (integer: default 0; 1 = proposal)
 
     proposal (optional)
 
-RSTP only: Learning Flag (default 1; 0 = no learning, 1 = learning)
+RSTP only: Learning Flag (integer: default 1; 0 = no learning, 1 = learning)
 
     learning (optional)
 
-RSTP only: Forwarding Flag (default 1; 0 = no forwarding, 1 = forwarding)
+RSTP only: Forwarding Flag (integer: default 1; 0 = no forwarding, 1 = forwarding)
 
     forwarding (optional)
 
-RSTP only: Agreement Flag (default 0; 1 = agreement)
+RSTP only: Agreement Flag (integer: default 0; 1 = agreement)
 
     agreement (optional)
 
