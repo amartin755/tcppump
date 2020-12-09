@@ -189,9 +189,10 @@ int cTcpPump::execute (const std::list<std::string>& args)
 
     activeDelay.setUs(options.delay * timeScale);
 
+#if not HAVE_WINDOWS
     cTimeval accuracy = tcppump::SleepInit ();
     Console::PrintMostVerbose ("System timer accuracy is %u usec. For packet delays below that value we do busy waiting.\n", (unsigned)accuracy.us());
-
+#endif
     // Install a signal handler
     cSignal::sigintEnable ();
 
