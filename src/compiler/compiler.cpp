@@ -20,7 +20,6 @@
 #include "console.hpp"
 #include "compiler.hpp"
 #include "instructionparser.hpp"
-#include "fileparser.hpp"
 #include "parsehelper.hpp"
 #include "formatexception.hpp"
 #include "fileioexception.hpp"
@@ -30,7 +29,8 @@
 
 
 cCompiler::cCompiler (inputType t, const cMacAddress& mac, const cIpAddress& ip, const cTimeval& delay, unsigned delayScale, bool optDestMAC)
-: type(t), ownMac(mac), ownIP(ip), defaultDelay(delay), defaultDelayScale(delayScale), ipOptionalDestMAC(optDestMAC)
+: type(t), ownMac(mac), ownIP(ip), defaultDelay(delay), defaultDelayScale(delayScale), ipOptionalDestMAC(optDestMAC),
+  fileParser (defaultDelay.us()/defaultDelayScale, ownMac, ownIP, ipOptionalDestMAC)
 {
 }
 
@@ -142,7 +142,6 @@ void cCompiler::processScriptFiles (const std::list<std::string>& input)
 {
     cInstructionParser::cResult result (data.packets);
     cTimeval timestamp, currtime, scriptStartTime;
-    cFileParser parser(defaultDelay.us()/defaultDelayScale, ownMac, ownIP, ipOptionalDestMAC);
     int count;
 
     Console::PrintDebug ("Parsing %d script files ...\n", input.size());
@@ -151,7 +150,7 @@ void cCompiler::processScriptFiles (const std::list<std::string>& input)
     {
         Console::PrintDebug ("Open '%s'\n", file.c_str());
 
-        if (!parser.open (file.c_str()))
+        if (!fileParser.open (file.c_str()))
         {
             throw FileIOException (FileIOException::OPEN, file.c_str());
         }
@@ -160,7 +159,7 @@ void cCompiler::processScriptFiles (const std::list<std::string>& input)
 
         do
         {
-            count = parser.parse (result);
+            count = fileParser.parse (result);
             timestamp.setUs(result.timestamp * defaultDelayScale);
             if (result.hasTimestamp)
             {
@@ -191,7 +190,7 @@ void cCompiler::processScriptFiles (const std::list<std::string>& input)
 
         } while (count > 0);
 
-        parser.close ();
+        fileParser.close ();
 
         if (count != EOF)
             throw FileIOException (FileIOException::READ, file.c_str());

@@ -26,6 +26,7 @@
 #include "macaddress.hpp"
 #include "ipaddress.hpp"
 #include "timeval.hpp"
+#include "fileparser.hpp"
 
 
 class cCompiler
@@ -54,6 +55,7 @@ private:
     const cTimeval& defaultDelay;
     unsigned defaultDelayScale;
     bool ipOptionalDestMAC;
+    cFileParser fileParser;
 };
 
 #endif /* COMPILER_HPP_ */
