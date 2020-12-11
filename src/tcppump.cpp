@@ -307,7 +307,11 @@ void cTcpPump::printParseError (const ParseException &e) const
 void cTcpPump::printFileParseError (const FileParseException &e) const
 {
     Console::PrintError ("%s (line %d) ", e.filePath(), e.lineNumber());
-    printParseError (e);
+
+    if (e.instruction())
+        printParseError (e);
+    else
+        Console::PrintError ("error: %s\n", e.errorMsg ());
 }
 
 

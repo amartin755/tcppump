@@ -24,8 +24,10 @@
 #include "fileparser.hpp"
 
 #include "bug.hpp"
+#include "console.hpp"
 #include "instructionparser.hpp"
 #include "ethernetpacket.hpp"
+#include "parsehelper.hpp"
 
 
 cFileParser::cFileParser (uint64_t defaultDelay, const cMacAddress& ownMac, const cIpAddress&  ownIPv4, bool ipOptionalDestMAC)
@@ -36,6 +38,7 @@ cFileParser::cFileParser (uint64_t defaultDelay, const cMacAddress& ownMac, cons
     lineNbr               = 1;
     delay                 = defaultDelay;
     path                  = nullptr;
+    openControlBlocks     = 0;
 
     this->ownMac .set (ownMac);
     this->ownIPv4.set (ownIPv4);
@@ -108,48 +111,77 @@ int cFileParser::parse (cInstructionParser::cResult& result)
         }
         else
         {
+            if (c == '\n')
+            {
+                lineNbr++;
+            }
             if (comment)
             {
-                if (c == '\n' || c == '\r')
+                if (c == '\n')
                 {
-                    lineNbr++;
                     comment = false;
                 }
             }
-            else
+
+            if (!comment)
             {
-                if (c == '\n' || c == '\r')
+                // instructions are terminated with ';'
+                if (c == ';')
                 {
-                    lineNbr++;
-                    c = ' ';
+                    instructionBuffer[offset++] = '\0';
+                    result.isAbsolute = false;
+                    result.timestamp  = delay;
+                    try
+                    {
+                        return cInstructionParser (ownMac, ownIPv4, ipOptionalDestMAC)
+                                .parse (instructionBuffer, result);
+                    }
+                    catch (ParseException &e)
+                    {
+                        throw FileParseException (path, lineNbr, e.instruction(), e.errorMsg(), e.details(), e.errorBegin(), e.errorLen());
+                    }
+                }
+                // control blocks start with '{'
+                else if (c == '{')
+                {
+                    openControlBlocks++;
+                    Console::PrintDebug("## block start %d\n", lineNbr);
+                    // TODO
+                    // - parse timestamp
+                    // - parse control key word and its parameters
+
+                    offset = 0;
+                }
+                // control blocks are terminated with '}'
+                else if (c == '}')
+                {
+                    openControlBlocks--;
+                    instructionBuffer[offset++] = c;
+                    Console::PrintDebug("## block end %d\n", lineNbr);
+                    const char* p = cParseHelper::skipWhitespaces (instructionBuffer);
+                    if (*p != '}')
+                        throw FileParseException (path, lineNbr, instructionBuffer, "syntax error before '}'. Missing ';'?", nullptr, p, 0);
+
+                    if (openControlBlocks < 0)
+                        throw FileParseException (path, lineNbr, instructionBuffer, "Missing matching ‘{’", nullptr, p, 0);
+
+                    // TODO
+                    // generate jump label that points to start of the block
+
+                    offset = 0;
                 }
                 else
                 {
-                    // instructions are terminated with ';'
-                    if (c == ';')
-                    {
-                        instructionBuffer[offset++] = '\0';
-                        result.isAbsolute = false;
-                        result.timestamp  = delay;
-                        try
-                        {
-                            return cInstructionParser (ownMac, ownIPv4, ipOptionalDestMAC)
-                                    .parse (instructionBuffer, result);
-                        }
-                        catch (ParseException &e)
-                        {
-                            throw FileParseException (path, lineNbr, e.instruction(), e.errorMsg(), e.details(), e.errorBegin(), e.errorLen());
-                        }
-                    }
-                    else
-                    {
-                        instructionBuffer[offset++] = c;
-                    }
+                    instructionBuffer[offset++] = c;
                 }
-
             }
         }
     }
+
+    BUG_ON (openControlBlocks >= 0); // must be already handled above
+
+    if (openControlBlocks > 0)
+        throw FileParseException (path, lineNbr, nullptr, "Expected ‘}’ at end of input", nullptr, nullptr, 0);
 
     return EOF;
 }

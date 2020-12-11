@@ -720,3 +720,14 @@ add_test(NAME delay-32--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TES
 
 add_test(NAME online-1--ok COMMAND tcppump -i ${OUT_IFC} -vvvv "arp(dip=1.2.3.4)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 set_tests_properties(online-1--ok PROPERTIES PASS_REGULAR_EXPRESSION "Successfully sent 1 packet.")
+
+add_test(NAME loop-01--ok COMMAND tcppump ${DEFAULT_PARAMS} -s ${TEST_FILE_PREFIX}/loop-01.pump WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+# TODO loop-01--diff
+add_test(NAME loop-02--nok COMMAND tcppump ${DEFAULT_PARAMS} -s ${TEST_FILE_PREFIX}/loop-02.pump WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+set_tests_properties(loop-02--nok PROPERTIES PASS_REGULAR_EXPRESSION "Missing matching \‘{\’")
+add_test(NAME loop-03--nok COMMAND tcppump ${DEFAULT_PARAMS} -s ${TEST_FILE_PREFIX}/loop-03.pump WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+set_tests_properties(loop-03--nok PROPERTIES PASS_REGULAR_EXPRESSION "Missing matching \‘{\’")
+add_test(NAME loop-04--nok COMMAND tcppump ${DEFAULT_PARAMS} -s ${TEST_FILE_PREFIX}/loop-04.pump WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+set_tests_properties(loop-04--nok PROPERTIES PASS_REGULAR_EXPRESSION "Missing matching \‘{\’")
+add_test(NAME loop-05--nok COMMAND tcppump ${DEFAULT_PARAMS} -s ${TEST_FILE_PREFIX}/loop-05.pump WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+set_tests_properties(loop-05--nok PROPERTIES PASS_REGULAR_EXPRESSION "Expected \‘}\’ at end of input")

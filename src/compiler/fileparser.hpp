@@ -56,6 +56,7 @@ private:
     const char*  path;
 
     unsigned     lineNbr;
+    int          openControlBlocks;
 };
 
 class FileParseException : public ParseException

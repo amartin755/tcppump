@@ -1,0 +1,21 @@
+0:  arp(dip=1.20.30.40);
+2:  arp(dip=2.20.30.40);
+4:  arp(dip=3.20.30.40);
++4: arp(dip=4.20.30.40); # T = 8
+    arp(dip=5.20.30.40); # T = 8 (depends on -d option)
+
+100:  arp(dip=6.20.30.40); # if -t is > 92 this will fail
+
+1002:    repeat (17)
+    {
++1:
+        arp(dip=7.20.30.40);
+        repeat (3)
+        {
+        arp(dip=8.20.30.40);
+        }
+    }
+}
+    arp(dip=9.20.30.40);
+
+
