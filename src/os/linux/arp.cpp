@@ -51,8 +51,6 @@ bool cArp::resolve (const cIpAddress& ip, cMacAddress& mac)
     BUG_ON (ifc.getMAC(myMac));
     BUG_ON (ifc.getIPv4(myIP));
 
-    // TODO implement me
-    mac.set("00:de:ad:be:ef:00");
 
     errno = 0;
     if ((arpSock = socket (PF_PACKET, SOCK_RAW, htons (ETH_P_ARP))) < 0)
