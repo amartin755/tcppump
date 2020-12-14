@@ -18,7 +18,8 @@
 
 #include "filter.hpp"
 
-cFilter::cFilter()
+cFilter::cFilter (const cMacAddress* ovrDMAC, const cMacAddress* drDMAC,
+        const cMacAddress* drSMAC) : forcedDMAC(ovrDMAC), dropDMAC(drDMAC), dropSMAC(drSMAC)
 {
     // TODO Auto-generated constructor stub
 
@@ -27,7 +28,16 @@ cFilter::cFilter()
 
 cPacketData& cFilter::operator<< (cPacketData& input)
 {
-    // TODO stub
+    if (forcedDMAC || dropDMAC || dropSMAC) // only walk through the list, if a filter is active
+    {
+        for (auto & p : input.packets)
+        {
+            if (forcedDMAC)
+                p.setDestMac (*forcedDMAC);
+
+            // TODO add more filters
+        }
+    }
     return input;
 }
 

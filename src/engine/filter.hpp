@@ -20,13 +20,21 @@
 #define FILTER_HPP_
 
 #include "packetdata.hpp"
+#include "macaddress.hpp"
 
 
 class cFilter
 {
 public:
-    cFilter();
+    cFilter (const cMacAddress* forcedDMAC = nullptr,
+             const cMacAddress* dropDMAC = nullptr,
+             const cMacAddress* dropSMAC = nullptr);
     cPacketData& operator<< (cPacketData& input);
+
+private:
+    const cMacAddress* forcedDMAC;
+    const cMacAddress* dropDMAC;
+    const cMacAddress* dropSMAC;
 };
 
 #endif /* FILTER_HPP_ */
