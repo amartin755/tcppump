@@ -51,6 +51,16 @@ typedef struct
     struct in_addr dstIp;
     ipv4_option_router_alert_t routerAlert;
 
+    void init (void)
+    {
+        std::memset (this, 0, sizeof (*this));
+        setVersion (4);
+        setHeaderLenght (5);
+        routerAlert.type   = 0x94;
+        routerAlert.length = 4;
+        routerAlert.value  = 0;
+    }
+
     void setVersion (int version)
     {
         vers_ihl = ((version & 0x0F) << 4) | (vers_ihl & 0x0F);
