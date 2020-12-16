@@ -21,7 +21,6 @@
 cFilter::cFilter (const cMacAddress* ovrDMAC, const cMacAddress* drDMAC,
         const cMacAddress* drSMAC) : forcedDMAC(ovrDMAC), dropDMAC(drDMAC), dropSMAC(drSMAC)
 {
-    // TODO Auto-generated constructor stub
 
 }
 
