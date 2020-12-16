@@ -9,7 +9,7 @@ Usage
 
 Die zu versendenden Netwerkpakete können sowohl direkt als Programmparameter, als auch über Skriptfiles definiert werden. Möchte man nur einzelne Packete versenden, ist die erst genannte Methode sicherlich die einfachste Möglichkeit. Skriptfiles bieten sich dann an, wenn man ganze Packet-Sequenzen generieren und/oder Packete zeitgesteuert versenden möchte. Sollen Skriptfiles verwendet werden, muss der Parameter `-s` bzw. `--script` gefolgt vom Dateinamen des Skriptfiles angegeben werden. Es können auch mehrere Dateien übergeben werden.
 
-tcppump benötigt immer ein Netzwerkinterface über das die Packete versendet werden sollen. Deshalb ist der Parameter `-i` bzw. `--interface` gefolgt vom Namen des Netzwerkadapters verpflichtend.
+tcppump benötigt immer ein Netzwerkinterface über das die Packete versendet werden sollen. Deshalb ist der Parameter `-i` bzw. `--interface` gefolgt vom Namen des Netzwerkadapters verpflichtend. Unter Windows kann als Name entweder der sog. "Friendly-Name" (ermittelbar via `ipconfig`), als auch GUID des Netzwerkadapters angegeben werden. Unter Linux ist Name des Netzwerk-Devices anzugeben (siehe output von `ip addr`);
 
 Beispiele:
 
