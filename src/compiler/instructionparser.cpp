@@ -504,9 +504,9 @@ int cInstructionParser::compileIGMP  (cParameterList& params, std::list <cEthern
     cIgmpPacket igmp;
     cEthernetPacket& eth = igmp.getFirstEthernetPacket ();
 
-    compileMacHeader  (params, eth, true);
+    bool destIsMulticast = parseIPv4Params (params, igmp, query || report || leave);
+    compileMacHeader  (params, eth, destIsMulticast || ipOptionalDestMAC || query || report || leave);
     compileVLANTags   (params, eth);
-    parseIPv4Params (params, igmp, query || report || leave);
 
     if (query)
     {
@@ -551,7 +551,7 @@ int cInstructionParser::compileIGMP  (cParameterList& params, std::list <cEthern
         {
             igmp.v2compileLeaveGroup (group);
         }
-        else
+        else	// raw v12 packet
         {
             uint8_t type = params.findParameter ("type")->asInt8();
             uint8_t time = params.findParameter ("time", (uint32_t)0)->asInt8();
@@ -572,12 +572,16 @@ int cInstructionParser::compileICMP  (cParameterList& params, std::list <cEthern
     compileMacHeader  (params, eth, false, ipOptionalDestMAC || destIsMulticast);
     compileVLANTags   (params, eth);
 
-    size_t len = 0;
     uint8_t type = params.findParameter ("type")->asInt8();
     uint8_t code = params.findParameter ("code")->asInt8();
-    const uint8_t* payload = params.findParameter ("payload")->asStream(len);
 
-    cParameter* optionalPar = params.findParameter ("chksum", true);
+    size_t len = 0;
+    const uint8_t* payload = nullptr;
+    cParameter* optionalPar = params.findParameter ("payload", true);
+    if (optionalPar)
+        payload = optionalPar->asStream(len);
+
+    optionalPar = params.findParameter ("chksum", true);
     if (optionalPar)
         icmppacket.compileRaw(type, code, optionalPar->asInt16(), payload, len);
     else
