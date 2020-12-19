@@ -42,6 +42,7 @@ typedef struct
     int          randSrcMac;
     int          randDstMac;
     int          arp;
+    const char*  overwriteDMAC;
 }appOptions;
 
 class cInterface;

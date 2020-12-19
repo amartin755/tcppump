@@ -31,12 +31,7 @@ uint16_t cIPv4Packet::identification = 1;
 
 cIPv4Packet::cIPv4Packet ()
 {
-    memset (&ipHeader, 0, sizeof (ipHeader));
-    ipHeader.setVersion (4);
-    ipHeader.setHeaderLenght (5);
-    ipHeader.routerAlert.type   = 0x94;
-    ipHeader.routerAlert.length = 4;
-    ipHeader.routerAlert.value  = 0;
+    ipHeader.init();
 
     mtu = 1500; // FIXME real MTU
 

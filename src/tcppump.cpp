@@ -70,6 +70,8 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
             "Use random source MAC address. Overwrites --mymac as well as explicitly defined addresses in packets.", &options.randSrcMac);
     addCmdLineOption (true, 0, "rand-dmac",
             "Use random destination MAC address. Overwrites all explicitly defined addresses in packets.", &options.randDstMac);
+    addCmdLineOption (true, 0, "overwrite-dmac", "MAC",
+            "Overwrite destination MAC address of all packets to MAC", &options.overwriteDMAC);
     addCmdLineOption (true, 'v', "verbose",
             "When parsing and printing, produce verbose output. This option can be supplied multiple times\n\t"
             "(max. 4 times, i.e. -vvvv) for even more debug output. "
@@ -103,7 +105,7 @@ cTcpPump::~cTcpPump()
 
 int cTcpPump::execute (const std::list<std::string>& args)
 {
-    cMacAddress ownMac;
+    cMacAddress ownMac, overwriteDMAC;
     cIpAddress  ownIP;
 
     std::srand ((unsigned)std::time (NULL));
@@ -166,6 +168,14 @@ int cTcpPump::execute (const std::list<std::string>& args)
             return -1;
         }
     }
+    if (options.overwriteDMAC)
+    {
+        if (!overwriteDMAC.set (options.overwriteDMAC))
+        {
+            Console::PrintError ("Wrong MAC address format %s\n", options.overwriteDMAC);
+            return -1;
+        }
+    }
 
     cInterface ifc (options.ifc);
     if (!ifc.open())
@@ -189,15 +199,16 @@ int cTcpPump::execute (const std::list<std::string>& args)
 
     activeDelay.setUs(options.delay * timeScale);
 
+#if not HAVE_WINDOWS
     cTimeval accuracy = tcppump::SleepInit ();
     Console::PrintMostVerbose ("System timer accuracy is %u usec. For packet delays below that value we do busy waiting.\n", (unsigned)accuracy.us());
-
+#endif
     // Install a signal handler
     cSignal::sigintEnable ();
 
     cCompiler compiler (options.script ? cCompiler::SCRIPT : options.pcap ? cCompiler::PCAP : cCompiler::PACKET,
             ownMac, ownIP, activeDelay, timeScale, !!options.arp);
-    cFilter    filter;
+    cFilter    filter (options.overwriteDMAC ? &overwriteDMAC : nullptr);
     cResolver  resolver (ifc);
     cScheduler scheduler;
 

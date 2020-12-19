@@ -278,6 +278,10 @@ Destination IPv4 address
 
     dip
 
+Destination EUI-48 MAC address. Note: Optional if `dip` is a multicast address
+
+    dmac (optional if dip is multicast)
+
 Source EUI-48 MAC address. If ommited, address of the network interface is used
 
     smac (optional)
@@ -290,13 +294,21 @@ IGMP Message Type (integer: range 0 - 255; default 0x11)
 
     type
 
-Max. Respnd Time in 1/10 seconds (integer: range 0 - 255; default 0)
+V1: unused, V2: Max. Respnd Time in 1/10 seconds (integer: range 0 - 255; default 0)
 
     time (optional)
 
-Group IPv4 Address. If ommited, value of parameter `dip` is used.
+Checksum (integer: range 0 - 0xffff) If ommited, checksum is calculated automatically. Setting the checksum manually is only useful to force creation of malformed packets.
 
-    group (optional)
+    chksum (optional)  NOT YET IMPLEMENTED
+
+Group IPv4 Address.
+
+    group
+
+Additional payload (bytestream). Can be used to encode IGMPv0 Access Keys or to create malformed packets.
+
+    payload (optional) NOT YET IMPLEMENTED
 
 #### Protocol Specifier (IGMPv2 General/Group-Specific Membership Query)
 
