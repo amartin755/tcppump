@@ -125,8 +125,8 @@ public:
     void setDontFragment (bool df);
     void setSource (const cIpAddress& ip);
     void setDestination (const cIpAddress& ip);
-    const cIpAddress& getSource (void) const;
-    const cIpAddress& getDestination (void) const;
+    void getSource (cIpAddress& ip) const;
+    void getDestination (cIpAddress& ip) const;
     void setIdentification (uint16_t id);
     cEthernetPacket& getFirstEthernetPacket ();
     std::list<cEthernetPacket>& getAllEthernetPackets (void);

@@ -1082,7 +1082,7 @@ void cInstructionParser::unitTest ()
         }
         catch (ParseException& )
         {
-            BUG();
+            BUG ("BUG: unexpected exception");
         }
         cEthernetPacket* packets = dynamic_cast<cEthernetPacket*>(result.packets);
         if (!packets)

@@ -38,7 +38,8 @@ cPacketData& cResolver::operator<< (cPacketData& input)
         if (ipv4 && !ipv4->getFirstEthernetPacket().hasDestMac())
         {
             cMacAddress dmac;
-            cIpAddress dip(ipv4->getDestination());
+            cIpAddress dip;
+            ipv4->getDestination(dip);
 
             try
             {
