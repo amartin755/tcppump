@@ -27,6 +27,7 @@
 
 #include "bug.hpp"
 #include "parsehelper.hpp"
+#include "random.hpp"
 
 
 
@@ -116,7 +117,7 @@ uint32_t cParameter::asInt32 (uint32_t rangeBegin, uint32_t rangeEnd) const
     if (isRandom(false) == 0)
     {
         uint32_t range = rangeEnd - rangeBegin > RAND_MAX ? RAND_MAX : rangeEnd - rangeBegin + 1;
-        v = (std::rand() % range) + rangeBegin;
+        v = (cRandom::rand() % range) + rangeBegin;
     }
     else
     {
@@ -211,7 +212,21 @@ const uint8_t* cParameter::asStream (size_t& len)
             dataLen = randLen;
 
             for (int n = 0; n < randLen; n++)
-                data[n] = (uint8_t)n;//std::rand(); sequence seems to be more suitable for automatic values
+#ifdef NDEBUG
+                data[n] = (uint8_t)cRandom::rand();
+#else
+                /*
+                 * Just setting commandline option --test-norandom is not enough
+                 * to keep all ctest cases working, because there is still different
+                 * behavior between script mode and commandline mode. Most commandline
+                 * tests only compile one packet per tcppump-run and therefore the byte
+                 * sequence is identical for all packets (every run starts with 0).
+                 * In script mode many packets are compiled in ONE tcppump-run which
+                 * results in continuous sequence over all packets.
+                 * --> in debug mode every "random" byte stream starts with 0
+                 */
+                data[n] = (uint8_t)n; // we need this hack to keep ctest cases
+#endif
         }
         else if (*value == '"')
         {

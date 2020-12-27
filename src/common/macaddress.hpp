@@ -26,6 +26,7 @@
 #include <string>
 
 #include "bug.hpp"
+#include "random.hpp"
 
 class cMacAddress
 {
@@ -132,12 +133,12 @@ public:
     {
         BUG_ON (unicast || multicast);
 
-        mac[0] = uint8_t(rand () % 256);
-        mac[1] = uint8_t(rand () % 256);
-        mac[2] = uint8_t(rand () % 256);
-        mac[3] = uint8_t(rand () % 256);
-        mac[4] = uint8_t(rand () % 256);
-        mac[5] = uint8_t(rand () % 256);
+        mac[0] = uint8_t(cRandom::rand () % 256);
+        mac[1] = uint8_t(cRandom::rand () % 256);
+        mac[2] = uint8_t(cRandom::rand () % 256);
+        mac[3] = uint8_t(cRandom::rand () % 256);
+        mac[4] = uint8_t(cRandom::rand () % 256);
+        mac[5] = uint8_t(cRandom::rand () % 256);
 
         if (unicast && !multicast)
             mac[0] &= 0xfe;

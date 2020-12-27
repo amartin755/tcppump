@@ -41,6 +41,7 @@
 #include "scheduler.hpp"
 #include "preprocessor.hpp"
 #include "output.hpp"
+#include "random.hpp"
 
 
 cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const char* description)
@@ -96,6 +97,11 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
             "If dmac parameter of IPv4 based packets is ommited, the destination MAC will be"
             "automatically detremined via ARP.",
             &options.arp);
+
+#ifndef NDEBUG
+    addCmdLineOption (true, 0, "test-norandom",
+            "For testing only! Don't use random numbers, use simple sequence instead.", &options.testPredictableRandom);
+#endif
 }
 
 cTcpPump::~cTcpPump()
@@ -107,8 +113,6 @@ int cTcpPump::execute (const std::list<std::string>& args)
 {
     cMacAddress ownMac, overwriteDMAC;
     cIpAddress  ownIP;
-
-    std::srand ((unsigned)std::time (NULL));
 
 
     switch (options.verbosity)
@@ -126,6 +130,8 @@ int cTcpPump::execute (const std::list<std::string>& args)
         Console::SetPrintLevel(Console::Debug);
         break;
     }
+
+    cRandom::create (!!options.testPredictableRandom);
 
     switch (options.timeRes[0])
     {
