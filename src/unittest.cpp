@@ -35,6 +35,7 @@
 #include "macaddress.hpp"
 #include "parsehelper.hpp"
 #include "inetchecksum.hpp"
+#include "random.hpp"
 #if HAVE_MSVC
 #include <crtdbg.h>
 #endif
@@ -51,6 +52,7 @@ int main (void)
 #endif
 
     Console::SetPrintLevel(Console::Debug);
+    cRandom::create(false);
     try
     {
         tcppump::SleepInit ();

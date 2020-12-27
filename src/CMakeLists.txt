@@ -299,7 +299,7 @@ endif ()
 message(STATUS "Using network adapter '${OUT_IFC}' for ctest")
 
 set (TEST_OUTPUT testoutput.pcap)
-set (DEFAULT_PARAMS -i ${OUT_IFC} --myip4=1.2.3.4 --mymac=80:23:45:67:89:AB -o ${TEST_OUTPUT})
+set (DEFAULT_PARAMS -i ${OUT_IFC} --test-norandom --myip4=1.2.3.4 --mymac=80:23:45:67:89:AB -o ${TEST_OUTPUT})
 set (TEST_FILE_PREFIX ${CMAKE_BINARY_DIR}/../src/test)
 
 
@@ -738,6 +738,33 @@ add_test(NAME delay-31-ok COMMAND tcppump ${DEFAULT_PARAMS} -l3 "2: arp(dip=10.2
 add_test(NAME delay-31--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/delay-31.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 add_test(NAME delay-32-ok COMMAND tcppump ${DEFAULT_PARAMS} -d50 -l3 "2: arp(dip=10.20.30.40)" "arp(dip=20.20.30.40)" "+5: arp(dip=30.20.30.40)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 add_test(NAME delay-32--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/delay-32.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+
+add_test(NAME overwrite-dmac-1--ok COMMAND tcppump ${DEFAULT_PARAMS} --overwrite-dmac=12:34:56:78:90:91 "eth(dmac=11:22:33:44:55:66, payload = 0123456789abcdef0123456789abcdef)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME overwrite-dmac-1--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/overwrite-dmac-01.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME overwrite-dmac-2--ok COMMAND tcppump ${DEFAULT_PARAMS} --overwrite-dmac=12:34:56:78:90:91 "udp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=0, dport=0)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME overwrite-dmac-2--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/overwrite-dmac-02.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME overwrite-dmac-3--ok COMMAND tcppump ${DEFAULT_PARAMS} --rand-dmac --overwrite-dmac=12:34:56:78:90:91 "udp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=0, dport=0)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME overwrite-dmac-3--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/overwrite-dmac-02.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+# --rand-dmac overrules --overwrite-dmac --> diff MUST fail
+set_tests_properties(overwrite-dmac-3--diff PROPERTIES WILL_FAIL TRUE)
+
+add_test(NAME random-mac-1--ok COMMAND tcppump ${DEFAULT_PARAMS} --rand-dmac "eth(dmac=11:22:33:44:55:66, payload = 0123456789abcdef0123456789abcdef)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME random-mac-1--ok--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/random-mac-01.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME random-mac-2--ok COMMAND tcppump ${DEFAULT_PARAMS} --rand-smac "eth(dmac=11:22:33:44:55:66, payload = 0123456789abcdef0123456789abcdef)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME random-mac-2--ok--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/random-mac-02.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME random-mac-3--ok COMMAND tcppump ${DEFAULT_PARAMS} --rand-dmac --rand-smac "eth(dmac=11:22:33:44:55:66, payload = 0123456789abcdef0123456789abcdef)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME random-mac-3--ok--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/random-mac-03.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME random-mac-4--ok COMMAND tcppump ${DEFAULT_PARAMS} --rand-dmac --rand-smac "eth(dmac=11:22:33:44:55:66, payload = 0123456789abcdef0123456789abcdef)" "eth(dmac=11:22:33:44:55:66, payload = 0123456789abcdef0123456789abcdef)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME random-mac-4--ok--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/random-mac-04.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME random-mac-5--ok COMMAND tcppump ${DEFAULT_PARAMS} --rand-dmac "udp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=0, dport=0)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME random-mac-5--ok--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/random-mac-05.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME random-mac-6--ok COMMAND tcppump ${DEFAULT_PARAMS} --rand-smac "udp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=0, dport=0)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME random-mac-6--ok--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/random-mac-06.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME random-mac-7--ok COMMAND tcppump ${DEFAULT_PARAMS} --rand-dmac --rand-smac "udp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=0, dport=0)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME random-mac-7--ok--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/random-mac-07.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME random-mac-8--ok COMMAND tcppump ${DEFAULT_PARAMS} --rand-dmac --rand-smac "udp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=0, dport=0)" "udp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=0, dport=0)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME random-mac-8--ok--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/random-mac-08.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+
 
 add_test(NAME online-1--ok COMMAND tcppump -i ${OUT_IFC} -vvvv "arp(dip=1.2.3.4)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 set_tests_properties(online-1--ok PROPERTIES PASS_REGULAR_EXPRESSION "Successfully sent 1 packet.")
