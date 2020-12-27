@@ -49,8 +49,7 @@ cInstructionParser::~cInstructionParser ()
 {
 }
 
-// returns the number of added packets to the list 'packets'
-int cInstructionParser::parse (const char* instruction, cResult& result)
+void cInstructionParser::parse (const char* instruction, cResult& result)
 {
     currentInstruction = instruction;
 
@@ -74,43 +73,45 @@ int cInstructionParser::parse (const char* instruction, cResult& result)
     {
         //TODO find better way for protocol selection (e.g. hash table)
         if (!strncmp ("raw", keyword, keywordLen))
-            return compileRAW (params, result.packets);
-        if (!strncmp ("eth", keyword, keywordLen))
-            return compileETH (params, result.packets);
-        if (!strncmp ("arp", keyword, keywordLen))
-            return compileARP (params, result.packets);
-        if (!strncmp ("arp-probe", keyword, keywordLen))
-            return compileARP (params, result.packets, true);
-        if (!strncmp ("arp-announce", keyword, keywordLen))
-            return compileARP (params, result.packets, false, true);
-        if (!strncmp ("ipv4", keyword, keywordLen))
-            return compileIPv4 (params, result.packets);
-        if (!strncmp ("udp", keyword, keywordLen))
-            return compileUDP (params, result.packets);
-        if (!strncmp ("vrrp", keyword, keywordLen))
-            return compileVRRP (params, result.packets, 2);
-        if (!strncmp ("vrrp3", keyword, keywordLen))
-            return compileVRRP (params, result.packets, 3);
-        if (!strncmp ("stp", keyword, keywordLen))
-            return compileSTP (params, result.packets);
-        if (!strncmp ("stp-tcn", keyword, keywordLen))
-            return compileSTP (params, result.packets, false, true);
-        if (!strncmp ("rstp", keyword, keywordLen))
-            return compileSTP (params, result.packets, true);
-        if (!strncmp ("igmp", keyword, keywordLen))
-            return compileIGMP (params, result.packets, false, false, false, false);
-        if (!strncmp ("igmp-query", keyword, keywordLen))
-            return compileIGMP (params, result.packets, false, true, false, false);
-        if (!strncmp ("igmp3-query", keyword, keywordLen))
-            return compileIGMP (params, result.packets, true, true, false, false);
-        if (!strncmp ("igmp-report", keyword, keywordLen))
-            return compileIGMP (params, result.packets, false, false, true, false);
-        if (!strncmp ("igmp-leave", keyword, keywordLen))
-            return compileIGMP (params, result.packets, false, false, false, true);
-        if (!strncmp ("icmp", keyword, keywordLen))
-            return compileICMP (params, result.packets);
+            result.packets = compileRAW (params);
+        else if (!strncmp ("eth", keyword, keywordLen))
+            result.packets = compileETH (params);
+        else if (!strncmp ("arp", keyword, keywordLen))
+            result.packets = compileARP (params);
+        else if (!strncmp ("arp-probe", keyword, keywordLen))
+            result.packets = compileARP (params, true);
+        else if (!strncmp ("arp-announce", keyword, keywordLen))
+            result.packets = compileARP (params, false, true);
+        else if (!strncmp ("ipv4", keyword, keywordLen))
+            result.packets = compileIPv4 (params);
+        else if (!strncmp ("udp", keyword, keywordLen))
+            result.packets = compileUDP (params);
+        else if (!strncmp ("vrrp", keyword, keywordLen))
+            result.packets = compileVRRP (params, 2);
+        else if (!strncmp ("vrrp3", keyword, keywordLen))
+            result.packets = compileVRRP (params, 3);
+        else if (!strncmp ("stp", keyword, keywordLen))
+            result.packets = compileSTP (params);
+        else if (!strncmp ("stp-tcn", keyword, keywordLen))
+            result.packets = compileSTP (params, false, true);
+        else if (!strncmp ("rstp", keyword, keywordLen))
+            result.packets = compileSTP (params, true);
+        else if (!strncmp ("igmp", keyword, keywordLen))
+            result.packets = compileIGMP (params, false, false, false, false);
+        else if (!strncmp ("igmp-query", keyword, keywordLen))
+            result.packets = compileIGMP (params, false, true, false, false);
+        else if (!strncmp ("igmp3-query", keyword, keywordLen))
+            result.packets = compileIGMP (params, true, true, false, false);
+        else if (!strncmp ("igmp-report", keyword, keywordLen))
+            result.packets = compileIGMP (params, false, false, true, false);
+        else if (!strncmp ("igmp-leave", keyword, keywordLen))
+            result.packets = compileIGMP (params, false, false, false, true);
+        else if (!strncmp ("icmp", keyword, keywordLen))
+            result.packets = compileICMP (params);
+        else
+            throwParseException ("Unknown protocol type", keyword, keywordLen);
 
-        throwParseException ("Unknown protocol type", keyword, keywordLen);
+        return;
     }
     catch (FormatException& e)
     {
@@ -131,8 +132,6 @@ int cInstructionParser::parse (const char* instruction, cResult& result)
     }
 
     BUG ("BUG: unreachable code");
-
-    return 0;
 }
 
 const char* cInstructionParser::parseTimestamp (const char* p, bool& hasTimestamp, uint64_t& timestamp, bool& isAbsolute)
@@ -197,29 +196,28 @@ const char* cInstructionParser::parseProtocollIdentifier (const char* p, const c
 }
 
 
-int cInstructionParser::compileRAW (cParameterList& params, std::list <cEthernetPacket> &packets)
+cLinkable* cInstructionParser::compileRAW (cParameterList& params)
 {
     size_t len;
     const uint8_t* value = params.findParameter ("payload")->asStream(len);
-    cEthernetPacket eth;
-    eth.setRaw (value, len);
-    packets.push_back (std::move(eth));
+    cEthernetPacket* eth = new cEthernetPacket (len);
+    eth->setRaw (value, len);
 
-    return 1; // one packet was added to the list
+    return eth; // one packet was added to the list
 }
 
 
 // returns true, if destination MAC address is set
-bool cInstructionParser::compileMacHeader (cParameterList& params, cEthernetPacket &packet, bool noDestination, bool destIsOptional)
+bool cInstructionParser::compileMacHeader (cParameterList& params, cEthernetPacket *packet, bool noDestination, bool destIsOptional)
 {
     // default value of source mac is our own mac address
-    packet.setSrcMac (params.findParameter ("smac", ownMac)->asMac ());
+    packet->setSrcMac (params.findParameter ("smac", ownMac)->asMac ());
     if (!noDestination)
     {
         const cParameter* destMacPar = params.findParameter ("dmac", destIsOptional);
         if (destMacPar)
         {
-            packet.setDestMac (destMacPar->asMac ());
+            packet->setDestMac (destMacPar->asMac ());
             return true;
         }
     }
@@ -227,9 +225,9 @@ bool cInstructionParser::compileMacHeader (cParameterList& params, cEthernetPack
 }
 
 
-int cInstructionParser::compileETH (cParameterList& params, std::list <cEthernetPacket> &packets)
+cLinkable* cInstructionParser::compileETH (cParameterList& params)
 {
-    cEthernetPacket eth;
+    cEthernetPacket* eth = new cEthernetPacket;
     const cParameter* optionalPar = nullptr;
 
     // MAC header
@@ -246,7 +244,7 @@ int cInstructionParser::compileETH (cParameterList& params, std::list <cEthernet
     {
         uint8_t dsap = optionalPar->asInt8 ();
         uint8_t ssap = params.findParameter ("ssap")->asInt8 ();
-        eth.addLlcHeader(dsap, ssap, params.findParameter("control", (uint32_t)3)->asInt16 ());
+        eth->addLlcHeader(dsap, ssap, params.findParameter("control", (uint32_t)3)->asInt16 ());
     }
     else
     {
@@ -254,66 +252,64 @@ int cInstructionParser::compileETH (cParameterList& params, std::list <cEthernet
         optionalPar = params.findParameter ("oui",  true);
         if (optionalPar)
         {
-            eth.addSnapHeader (optionalPar->asInt32 (0, 0x00ffffff),
+            eth->addSnapHeader (optionalPar->asInt32 (0, 0x00ffffff),
                     params.findParameter ("protocol")->asInt16 ());
         }
     }
 
     size_t len;
     const uint8_t* value = params.findParameter ("payload")->asStream(len);
-    eth.setPayload (value, len);
+    eth->setPayload (value, len);
 
     // if llc header or no ethertype/length is provided, we calculate the length ourself
-    if (eth.hasLlcHeader() || (optionalPar = params.findParameter ("ethertype", true)) == NULL)
+    if (eth->hasLlcHeader() || (optionalPar = params.findParameter ("ethertype", true)) == NULL)
     {
-        eth.setLength ();
+        eth->setLength ();
     }
     else
     {
-        eth.setTypeLength (optionalPar->asInt16 ());
+        eth->setTypeLength (optionalPar->asInt16 ());
     }
 
-
-    packets.push_back (std::move(eth));
-    return 1; // one packet was added to the list
+    return eth;
 }
 
 
-size_t cInstructionParser::compileVLANTags (cParameterList& params, cEthernetPacket &packet)
+size_t cInstructionParser::compileVLANTags (cParameterList& params, cEthernetPacket *packet)
 {
     const cParameter* optionalPar = nullptr;
 
     // VLAN tags
     while ((optionalPar = params.findParameter(optionalPar, nullptr, "vid", true)) != nullptr)
     {
-        packet.addVlanTag ((int)params.findParameter (optionalPar, "vid", "vtype", (uint32_t)1)->asInt8 (1, 2) == 1 ? true : false,
+        packet->addVlanTag ((int)params.findParameter (optionalPar, "vid", "vtype", (uint32_t)1)->asInt8 (1, 2) == 1 ? true : false,
                            (int)optionalPar->asInt16 (0, 0x0fff), // VID
                            (int)params.findParameter (optionalPar, "vid", "prio",  (uint32_t)0)->asInt8 (0, 7),
                            (int)params.findParameter (optionalPar, "vid", "dei",   (uint32_t)0)->asInt8 (0, 1));
     }
-    return packet.getLength();
+    return packet->getLength();
 }
 
 
-int cInstructionParser::compileARP (cParameterList& params, std::list <cEthernetPacket> &packets, bool isProbe, bool isGratuitous)
+cLinkable* cInstructionParser::compileARP (cParameterList& params, bool isProbe, bool isGratuitous)
 {
-    cArpPacket  arp;
+    cArpPacket*  arp = new cArpPacket;
 
     BUG_ON ((!isProbe && !isGratuitous) || (isProbe != isGratuitous));
 
     if (isProbe)
     {
-        arp.probe (ownMac, params.findParameter ("dip")->asIPv4());
+        arp->probe (ownMac, params.findParameter ("dip")->asIPv4());
     }
     else if (isGratuitous)
     {
-        arp.announce (ownMac, params.findParameter ("dip", ownIPv4)->asIPv4());
+        arp->announce (ownMac, params.findParameter ("dip", ownIPv4)->asIPv4());
     }
     else
     {
         cMacAddress targetMac = params.findParameter ("dmac", cMacAddress ((unsigned)0))->asMac();
 
-        arp.setAll (params.findParameter ("op", (uint32_t)1)->asInt16(),
+        arp->setAll (params.findParameter ("op", (uint32_t)1)->asInt16(),
                     params.findParameter ("smac", ownMac)->asMac(),
                     params.findParameter ("sip", ownIPv4)->asIPv4(),
                     targetMac,
@@ -323,107 +319,106 @@ int cInstructionParser::compileARP (cParameterList& params, std::list <cEthernet
 
     // compile VLAN tags
     compileVLANTags (params, arp);
-    packets.push_back (std::move(arp));
 
-    return 1; // one packet was added to the list
+    return arp;
 }
 
 // returns true, if destination IP address is a multicast address
-bool cInstructionParser::parseIPv4Params (cParameterList& params, cIPv4Packet& packet, bool noDestinationIP)
+bool cInstructionParser::parseIPv4Params (cParameterList& params, cIPv4Packet* packet, bool noDestinationIP)
 {
     bool isMulticast = false;
 
-    packet.setDSCP         (params.findParameter ("dscp", (uint32_t)0)->asInt8(0, 0x3f));
-    packet.setECN          (params.findParameter ("ecn", (uint32_t)0)->asInt8(0, 3));
-    packet.setTimeToLive   (params.findParameter ("ttl", (uint32_t)64)->asInt8());
-    packet.setDontFragment (params.findParameter ("df", (uint32_t)0)->asInt8(0, 1));
+    packet->setDSCP         (params.findParameter ("dscp", (uint32_t)0)->asInt8(0, 0x3f));
+    packet->setECN          (params.findParameter ("ecn", (uint32_t)0)->asInt8(0, 3));
+    packet->setTimeToLive   (params.findParameter ("ttl", (uint32_t)64)->asInt8());
+    packet->setDontFragment (params.findParameter ("df", (uint32_t)0)->asInt8(0, 1));
     if (!noDestinationIP)
     {
         const cIpAddress destIP = params.findParameter ("dip")->asIPv4();
-        packet.setDestination (destIP);
+        packet->setDestination (destIP);
         isMulticast = destIP.isMulticast();
     }
-    packet.setSource       (params.findParameter ("sip", ownIPv4)->asIPv4());
+    packet->setSource       (params.findParameter ("sip", ownIPv4)->asIPv4());
     cParameter* optionalPar = params.findParameter ("id", true);
     if (optionalPar)
-        packet.setIdentification(optionalPar->asInt16());
+        packet->setIdentification(optionalPar->asInt16());
 
     return isMulticast;
 }
 
 
-int cInstructionParser::compileIPv4 (cParameterList& params, std::list <cEthernetPacket> &packets)
+cLinkable* cInstructionParser::compileIPv4 (cParameterList& params)
 {
-    cIPv4Packet ippacket;
-    cEthernetPacket& eth = ippacket.getFirstEthernetPacket();
+    cIPv4Packet* ippacket = new cIPv4Packet;
+    cEthernetPacket& eth = ippacket->getFirstEthernetPacket();
     bool destIsMulticast = parseIPv4Params (params, ippacket);
 
     // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
-    compileMacHeader  (params, eth, false, ipOptionalDestMAC || destIsMulticast);
-    compileVLANTags   (params, eth);
+    compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
+    compileVLANTags   (params, &eth);
 
     size_t len;
     const uint8_t* payload = params.findParameter ("payload")->asStream(len);
-    ippacket.compile (params.findParameter ("protocol")->asInt8(), nullptr, 0, payload, len);
+    ippacket->compile (params.findParameter ("protocol")->asInt8(), nullptr, 0, payload, len);
 
-    return (int)ippacket.getAllEthernetPackets(packets);
+    return ippacket;
 }
 
 
-int cInstructionParser::compileUDP (cParameterList& params, std::list <cEthernetPacket> &packets)
+cLinkable* cInstructionParser::compileUDP (cParameterList& params)
 {
-    cUdpPacket udppacket;
-    cEthernetPacket& eth = udppacket.getFirstEthernetPacket();
+    cUdpPacket* udppacket = new cUdpPacket;
+    cEthernetPacket& eth = udppacket->getFirstEthernetPacket();
     bool destIsMulticast = parseIPv4Params (params, udppacket);
 
     // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
-    compileMacHeader  (params, eth, false, ipOptionalDestMAC || destIsMulticast);
-    compileVLANTags   (params, eth);
+    compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
+    compileVLANTags   (params, &eth);
 
-    udppacket.setSourcePort(params.findParameter ("sport")->asInt16());
-    udppacket.setDestinationPort(params.findParameter ("dport")->asInt16());
+    udppacket->setSourcePort(params.findParameter ("sport")->asInt16());
+    udppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
 
     size_t len = 0;
     const uint8_t* payload = nullptr;
     cParameter* optionalPar = params.findParameter ("payload", true);
     if (optionalPar)
         payload = optionalPar->asStream(len);
-    udppacket.setPayload (payload, len);
+    udppacket->setPayload (payload, len);
 
     optionalPar = params.findParameter ("chksum", true);
     if (optionalPar)
-        udppacket.setChecksum (optionalPar->asInt16());
+        udppacket->setChecksum (optionalPar->asInt16());
 
-    return (int)udppacket.getAllEthernetPackets(packets);
+    return udppacket;
 }
 
 
-int cInstructionParser::compileVRRP (cParameterList& params, std::list <cEthernetPacket> &packets, int version)
+cLinkable* cInstructionParser::compileVRRP (cParameterList& params, int version)
 {
     bool userDefinedChecksum = false;
-    cVrrpPacket vrrp;
-    cEthernetPacket& eth = vrrp.getFirstEthernetPacket();
+    cVrrpPacket* vrrp = new cVrrpPacket;
+    cEthernetPacket& eth = vrrp->getFirstEthernetPacket();
 
     parseIPv4Params   (params, vrrp, true);
-    compileMacHeader  (params, eth, true);
-    compileVLANTags   (params, eth);
+    compileMacHeader  (params, &eth, true);
+    compileVLANTags   (params, &eth);
 
     const cParameter* firstVRIP = params.findParameter ("vrip");
 
-    vrrp.setVersion(version);
-    vrrp.setVRID(params.findParameter ("vrid")->asInt8(1, 255));
-    vrrp.addVirtualIP(firstVRIP->asIPv4());
-    vrrp.setPrio(params.findParameter ("prio", (uint32_t)100)->asInt8());
-    vrrp.setType(params.findParameter ("type", (uint32_t)1)->asInt8(0, 15));
+    vrrp->setVersion(version);
+    vrrp->setVRID(params.findParameter ("vrid")->asInt8(1, 255));
+    vrrp->addVirtualIP(firstVRIP->asIPv4());
+    vrrp->setPrio(params.findParameter ("prio", (uint32_t)100)->asInt8());
+    vrrp->setType(params.findParameter ("type", (uint32_t)1)->asInt8(0, 15));
     if (version == 2)
-        vrrp.setInterval(params.findParameter ("aint", (uint32_t)1)->asInt8());
+        vrrp->setInterval(params.findParameter ("aint", (uint32_t)1)->asInt8());
     else
-        vrrp.setInterval(params.findParameter ("aint", (uint32_t)100)->asInt16(0, 4095));
+        vrrp->setInterval(params.findParameter ("aint", (uint32_t)100)->asInt16(0, 4095));
     const cParameter* optionalPar = params.findParameter ("chksum", true);
     if (optionalPar)
     {
         userDefinedChecksum = true;
-        vrrp.setChecksum (optionalPar->asInt16());
+        vrrp->setChecksum (optionalPar->asInt16());
     }
 
     // additional virtual IPs (optional)
@@ -432,18 +427,18 @@ int cInstructionParser::compileVRRP (cParameterList& params, std::list <cEtherne
     while ((++vripCount <= 255 ) &&
            ((optionalPar = params.findParameter(optionalPar, nullptr, "vrip", true)) != nullptr))
     {
-        vrrp.addVirtualIP (optionalPar->asIPv4());
+        vrrp->addVirtualIP (optionalPar->asIPv4());
     }
 
-    vrrp.compile (!userDefinedChecksum);
+    vrrp->compile (!userDefinedChecksum);
 
-    return (int)vrrp.getAllEthernetPackets(packets);
+    return vrrp;
 }
 
 
-int cInstructionParser::compileSTP (cParameterList& params, std::list <cEthernetPacket> &packets, bool isRSTP, bool isTCN)
+cLinkable* cInstructionParser::compileSTP (cParameterList& params, bool isRSTP, bool isTCN)
 {
-    cStpPacket  stp;
+    cStpPacket*  stp = new cStpPacket;
 
     compileMacHeader (params, stp, true);
     compileVLANTags  (params, stp);
@@ -478,35 +473,34 @@ int cInstructionParser::compileSTP (cParameterList& params, std::list <cEthernet
             flags |= params.findParameter ("forwarding", (uint32_t)1)->asInt8 (0, 1) ? cStpPacket::FORWARDING : 0;
             flags |= params.findParameter ("agreement",  (uint32_t)0)->asInt8 (0, 1) ? cStpPacket::AGREEMENT  : 0;
 
-            stp.compileConfigPduRstp (rootBridgePrio, rootBridgeId, rootBridgeMac, pathCost, bridgePrio, bridgeId,
+            stp->compileConfigPduRstp (rootBridgePrio, rootBridgeId, rootBridgeMac, pathCost, bridgePrio, bridgeId,
                     bridgeMac, portPrio, portNumber, msgAge, maxAge, helloTime, forwardDelay, flags, role);
         }
         else
         {
             pathCost = params.findParameter ("rpathcost", (uint32_t)4)->asInt32 (1, 65535);
 
-            stp.compileConfigPdu (rootBridgePrio, rootBridgeId, rootBridgeMac, pathCost, bridgePrio, bridgeId,
+            stp->compileConfigPdu (rootBridgePrio, rootBridgeId, rootBridgeMac, pathCost, bridgePrio, bridgeId,
                     bridgeMac, portPrio, portNumber, msgAge, maxAge, helloTime, forwardDelay, flags);
         }
     }
     else
     {
-        stp.compileTcnPdu ();
+        stp->compileTcnPdu ();
     }
 
-    packets.push_back (std::move(stp));
-    return 1; // one packet was added to the list
+    return stp;
 }
 
 
-int cInstructionParser::compileIGMP  (cParameterList& params, std::list <cEthernetPacket> &packets, bool v3, bool query, bool report, bool leave)
+cLinkable* cInstructionParser::compileIGMP  (cParameterList& params, bool v3, bool query, bool report, bool leave)
 {
-    cIgmpPacket igmp;
-    cEthernetPacket& eth = igmp.getFirstEthernetPacket ();
+    cIgmpPacket* igmp = new cIgmpPacket;
+    cEthernetPacket& eth = igmp->getFirstEthernetPacket ();
 
     bool destIsMulticast = parseIPv4Params (params, igmp, query || report || leave);
-    compileMacHeader  (params, eth, destIsMulticast || ipOptionalDestMAC || query || report || leave);
-    compileVLANTags   (params, eth);
+    compileMacHeader  (params, &eth, destIsMulticast || ipOptionalDestMAC || query || report || leave);
+    compileVLANTags   (params, &eth);
 
     if (query)
     {
@@ -527,7 +521,7 @@ int cInstructionParser::compileIGMP  (cParameterList& params, std::list <cEthern
             while ((++sources <= 366 ) &&
                    ((optionalPar = params.findParameter(optionalPar, nullptr, "rsip", true)) != nullptr))
             {
-                igmp.v3addSource (optionalPar->asIPv4());
+                igmp->v3addSource (optionalPar->asIPv4());
             }
         }
         else
@@ -536,41 +530,41 @@ int cInstructionParser::compileIGMP  (cParameterList& params, std::list <cEthern
         }
         cParameter* optionalPar = params.findParameter ("group", true);
         if (optionalPar)
-            igmp.compileGroupQuery(v3, time, s, qrv, qqic, optionalPar->asIPv4 ());
+            igmp->compileGroupQuery(v3, time, s, qrv, qqic, optionalPar->asIPv4 ());
         else
-            igmp.compileGeneralQuery (v3, time, s, qrv, qqic);
+            igmp->compileGeneralQuery (v3, time, s, qrv, qqic);
     }
     else
     {
         cIpAddress group = params.findParameter ("group")->asIPv4 ();
         if (report)
         {
-            igmp.compileReport (group);
+            igmp->compileReport (group);
         }
         else if (leave)
         {
-            igmp.v2compileLeaveGroup (group);
+            igmp->v2compileLeaveGroup (group);
         }
-        else	// raw v12 packet
+        else    // raw v12 packet
         {
             uint8_t type = params.findParameter ("type")->asInt8();
             uint8_t time = params.findParameter ("time", (uint32_t)0)->asInt8();
-            igmp.v12compile (type, time, group);
+            igmp->v12compile (type, time, group);
         }
     }
-    return (int)igmp.getAllEthernetPackets(packets);
+    return igmp;
 }
 
 
-int cInstructionParser::compileICMP  (cParameterList& params, std::list <cEthernetPacket> &packets)
+cLinkable* cInstructionParser::compileICMP  (cParameterList& params)
 {
-    cIcmpPacket icmppacket;
-    cEthernetPacket& eth = icmppacket.getFirstEthernetPacket();
+    cIcmpPacket* icmppacket = new cIcmpPacket;
+    cEthernetPacket& eth = icmppacket->getFirstEthernetPacket();
     bool destIsMulticast = parseIPv4Params (params, icmppacket);
 
     // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
-    compileMacHeader  (params, eth, false, ipOptionalDestMAC || destIsMulticast);
-    compileVLANTags   (params, eth);
+    compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
+    compileVLANTags   (params, &eth);
 
     uint8_t type = params.findParameter ("type")->asInt8();
     uint8_t code = params.findParameter ("code")->asInt8();
@@ -583,11 +577,11 @@ int cInstructionParser::compileICMP  (cParameterList& params, std::list <cEthern
 
     optionalPar = params.findParameter ("chksum", true);
     if (optionalPar)
-        icmppacket.compileRaw(type, code, optionalPar->asInt16(), payload, len);
+        icmppacket->compileRaw(type, code, optionalPar->asInt16(), payload, len);
     else
-        icmppacket.compileRaw(type, code, payload, len);
+        icmppacket->compileRaw(type, code, payload, len);
 
-    return (int)icmppacket.getAllEthernetPackets(packets);
+    return icmppacket;
 }
 
 
@@ -1078,25 +1072,41 @@ void cInstructionParser::unitTest ()
 
     for (unsigned n = 0; n < sizeof(tests)/sizeof(tests[0]); n++)
     {
-        cInstructionParser::cResult result (packets);
+        cInstructionParser::cResult result;
 
         Console::PrintDebug("packet %d", n);
         cInstructionParser obj (ownMac, ownIPv4, false);
-        BUG_ON (1 == obj.parse (tests[n].tokens, result));
-        BUG_ON (packets.size () == n + 1);
-        BUG_ON (tests[n].packetSize == packets.back().getLength());
-        if (memcmp (packets.back().get(), tests[n].packet, tests[n].packetSize))
+        try
         {
-            const uint8_t* p = packets.back().get();
+            obj.parse (tests[n].tokens, result);
+        }
+        catch (ParseException& )
+        {
+            BUG();
+        }
+        cEthernetPacket* packets = dynamic_cast<cEthernetPacket*>(result.packets);
+        if (!packets)
+        {
+            cIPv4Packet* ipv4 = dynamic_cast<cIPv4Packet*>(result.packets);
+            BUG_ON (ipv4);
+            packets = &ipv4->getFirstEthernetPacket();
+        }
+        BUG_ON (packets);
+        BUG_ON (tests[n].packetSize == packets->getLength());
+        if (memcmp (packets->get(), tests[n].packet, tests[n].packetSize))
+        {
+            const uint8_t* p = packets->get();
 
-            for (size_t n = 0; n < packets.back().getLength(); n++)
+            for (size_t n = 0; n < packets->getLength(); n++)
             {
                 printf ("0x%02x, ", (int)*p++);
             }
             printf ("\n");
         }
-        BUG_ON (!memcmp (packets.back().get(), tests[n].packet, tests[n].packetSize));
+        BUG_ON (!memcmp (packets->get(), tests[n].packet, tests[n].packetSize));
         Console::PrintDebug("\r");
+
+        delete result.packets;
     }
 }
 #endif /*WITH_UNITTESTS*/

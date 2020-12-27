@@ -26,6 +26,7 @@
 #include "inet.h" // ntohs, htons
 #include "ethernetpacket.hpp"
 #include "ipaddress.hpp"
+#include "linkable.hpp"
 
 #pragma pack(1)
 // RFC2113
@@ -113,7 +114,7 @@ typedef struct
 #pragma pack()
 
 
-class cIPv4Packet
+class cIPv4Packet : public cLinkable
 {
 public:
     cIPv4Packet ();
@@ -124,10 +125,12 @@ public:
     void setDontFragment (bool df);
     void setSource (const cIpAddress& ip);
     void setDestination (const cIpAddress& ip);
+    const cIpAddress& getSource (void) const;
+    const cIpAddress& getDestination (void) const;
     void setIdentification (uint16_t id);
-    void updateHeaderChecksum ();
     cEthernetPacket& getFirstEthernetPacket ();
-    size_t getAllEthernetPackets (std::list<cEthernetPacket>&) const;
+    std::list<cEthernetPacket>& getAllEthernetPackets (void);
+    void setDestMac (const cMacAddress& dest);
     void compile (uint8_t protocol, const uint8_t* l4header, size_t l4headerLen, const uint8_t* payload, size_t payloadLen);
 
     enum protocols
@@ -157,12 +160,13 @@ protected:
     {
         return ipHeader.getHeaderLenght() * 4;
     }
+    void updateHeaderChecksum ();
 
 
 private:
     ipv4_header_t              ipHeader;
     std::list<cEthernetPacket> packets;
-    unsigned 				   mtu;
+    unsigned                    mtu;
     const cEthernetPacket**    packetsAsArray;
 
     static uint16_t identification;

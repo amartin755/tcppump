@@ -28,6 +28,7 @@
 #include "ethernetpacket.hpp"
 #include "ipaddress.hpp"
 #include "macaddress.hpp"
+#include "linkable.hpp"
 
 class cParameterList;
 class cIPv4Packet;
@@ -39,7 +40,7 @@ public:
     class cResult
     {
     public:
-        cResult (std::list <cEthernetPacket> &p) : packets (p)
+        cResult ()
         {
             clear ();
         }
@@ -48,17 +49,18 @@ public:
             timestamp = 0;
             isAbsolute = false;
             hasTimestamp = false;
+            packets = nullptr;
         }
 
         bool hasTimestamp;
         uint64_t timestamp;
         bool isAbsolute;
-        std::list <cEthernetPacket> &packets;
+        cLinkable* packets;
     };
 
     cInstructionParser (const cMacAddress& ownMac, const cIpAddress& ownIPv4, bool ipOptionalDestMAC);
     ~cInstructionParser ();
-    int parse (const char* instruction, cResult& result);
+    void parse (const char* instruction, cResult& result);
 
 #ifdef WITH_UNITTESTS
         static void unitTest ();
@@ -68,20 +70,20 @@ private:
     const char* parseTimestamp (const char* p, bool& hasTimestamp, uint64_t& timestamp, bool& isAbsolute);
     const char* parseProtocollIdentifier (const char* p, const char** identifier, size_t *len);
 
-    int compileRAW  (cParameterList& params, std::list <cEthernetPacket> &packets);
-    int compileETH  (cParameterList& params, std::list <cEthernetPacket> &packets);
-    int compileARP  (cParameterList& params, std::list <cEthernetPacket> &packets, bool isProbe = false, bool isGratuitous = false);
-    int compileSNAP (cParameterList& params, std::list <cEthernetPacket> &packets);
-    int compileIPv4 (cParameterList& params, std::list <cEthernetPacket> &packets);
-    int compileUDP  (cParameterList& params, std::list <cEthernetPacket> &packets);
-    int compileVRRP (cParameterList& params, std::list <cEthernetPacket> &packets, int version);
-    int compileSTP  (cParameterList& params, std::list <cEthernetPacket> &packets, bool isRSTP = false, bool isTCN = false);
-    int compileIGMP (cParameterList& params, std::list <cEthernetPacket> &packets, bool v3, bool query, bool report, bool leave);
-    int compileICMP (cParameterList& params, std::list <cEthernetPacket> &packets);
+    cLinkable* compileRAW  (cParameterList& params);
+    cLinkable* compileETH  (cParameterList& params);
+    cLinkable* compileARP  (cParameterList& params, bool isProbe = false, bool isGratuitous = false);
+    cLinkable* compileSNAP (cParameterList& params);
+    cLinkable* compileIPv4 (cParameterList& params);
+    cLinkable* compileUDP  (cParameterList& params);
+    cLinkable* compileVRRP (cParameterList& params, int version);
+    cLinkable* compileSTP  (cParameterList& params, bool isRSTP = false, bool isTCN = false);
+    cLinkable* compileIGMP (cParameterList& params, bool v3, bool query, bool report, bool leave);
+    cLinkable* compileICMP (cParameterList& params);
 
-    bool   compileMacHeader (cParameterList& params, cEthernetPacket& packet, bool noDestination, bool destIsOptional = false);
-    size_t compileVLANTags (cParameterList& params, cEthernetPacket& packet);
-    bool   parseIPv4Params (cParameterList& params, cIPv4Packet& packet, bool noDestinationIP = false);
+    bool   compileMacHeader (cParameterList& params, cEthernetPacket* packet, bool noDestination, bool destIsOptional = false);
+    size_t compileVLANTags (cParameterList& params, cEthernetPacket* packet);
+    bool   parseIPv4Params (cParameterList& params, cIPv4Packet* packet, bool noDestinationIP = false);
 
     void throwParseException (const char* msg, const char* val, size_t valLen = 0, const char* details = nullptr);
 

@@ -16,33 +16,41 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "filter.hpp"
-#include "console.hpp"
+#ifndef LINKABLE_HPP_
+#define LINKABLE_HPP_
 
-cFilter::cFilter (const cMacAddress* ovrDMAC, const cMacAddress* drDMAC,
-        const cMacAddress* drSMAC) : forcedDMAC(ovrDMAC), dropDMAC(drDMAC), dropSMAC(drSMAC)
+#include "timeval.hpp"
+
+class cLinkable
 {
-}
-
-
-cPacketData& cFilter::operator<< (cPacketData& input)
-{
-    if (forcedDMAC || dropDMAC || dropSMAC) // only walk through the list, if a filter is active
+public:
+    cLinkable ()
     {
-        Console::PrintDebug ("Filtering ...\n");
-
-        for (cLinkable* p = input.getFirst(); p != nullptr; p = p->getNext())
-        {
-            if (forcedDMAC)
-            {
-                cEthernetPacket* eth = dynamic_cast<cEthernetPacket*>(p);
-
-                eth->setDestMac (*forcedDMAC);
-            }
-
-            // TODO add more filters
-        }
+        next = nullptr;
     }
-    return input;
-}
+    virtual ~cLinkable ()
+    {
+    }
+    inline cLinkable* getNext (void)
+    {
+        return next;
+    }
+    inline void setNext (cLinkable* next)
+    {
+        this->next = next;
+    }
+    inline const cTimeval& getTime (void)
+    {
+        return t;
+    }
+    inline void setTime (const cTimeval& t)
+    {
+        this->t = t;
+    }
 
+private:
+    cLinkable *next;
+    cTimeval t;
+};
+
+#endif /* LINKABLE_HPP_ */

@@ -55,45 +55,38 @@ void cOutput::prepare (const char* pcapOutFile, int repeat)
 
 cPacketData& cOutput::operator<< (cPacketData& input)
 {
-    BUG_ON (input.packets.size() == input.timestamps.size());
     cTimeval sendTime;
     bool endless = !repeat;
 
 
     if (netif)
     {
-        netif->prepareSendQueue(input.packets.size() * repeat,
-                input.packets.size() * repeat * cEthernetPacket::MAX_DOUBLE_TAGGED_PACKET, // FIXME we should pass the real data amount
+        netif->prepareSendQueue(input.getPacketCnt() * repeat,
+                input.getTotalPacketBytes(),
                 realtimeMode);
     }
 
     while (!cSignal::sigintSignalled() && (endless || repeat--))
     {
-        std::list<cTimeval>::const_iterator t = input.timestamps.cbegin();
-
-        for (auto & p : input.packets)
+        for (cLinkable* p = input.getFirst(); p != nullptr; p = p->getNext())
         {
-            sendTime.add (*t);
+            sendTime.add (p->getTime());
+            cEthernetPacket* eth;
+            cIPv4Packet* ipv4;
 
-            preproc.process (p);    // execute packet preprocessor hooks
-
-            if (netif)
+            if ((eth = dynamic_cast<cEthernetPacket*>(p)) != nullptr)
             {
-                if(!netif->sendPacket (p.get(), p.getLength(), sendTime))
+                processPacket (sendTime, *eth);
+            }
+            else if ((ipv4 = dynamic_cast<cIPv4Packet*>(p)) != nullptr)
+            {
+                std::list<cEthernetPacket>& packets = ipv4->getAllEthernetPackets();
+
+                for (auto & p : packets)
                 {
-                    throw std::runtime_error("Could not send packet.");
+                    processPacket (sendTime, p);
                 }
             }
-#if HAVE_PCAP
-            else
-            {
-                if (!outfile.write (sendTime, p.get(), (int)p.getLength(), true))
-                    throw FileIOException (FileIOException::WRITE, outfile.name());
-                pcapWrittenPackets++;
-                pcapWrittenBytes += (uint64_t)p.getLength ();
-            }
-#endif
-            t++;
         }
     }
 
@@ -103,6 +96,28 @@ cPacketData& cOutput::operator<< (cPacketData& input)
     }
 
     return input;
+}
+
+void cOutput::processPacket (const cTimeval& sendTime, cEthernetPacket& p)
+{
+    preproc.process (p);    // execute packet preprocessor hooks
+
+    if (netif)
+    {
+        if(!netif->sendPacket (p.get(), p.getLength(), sendTime))
+        {
+            throw std::runtime_error("Could not send packet.");
+        }
+    }
+#if HAVE_PCAP
+    else
+    {
+        if (!outfile.write (sendTime, p.get(), (int)p.getLength(), true))
+            throw FileIOException (FileIOException::WRITE, outfile.name());
+        pcapWrittenPackets++;
+        pcapWrittenBytes += (uint64_t)p.getLength ();
+    }
+#endif
 }
 
 void cOutput::statistic (uint64_t& sentPackets, uint64_t& sentBytes, double& duration) const

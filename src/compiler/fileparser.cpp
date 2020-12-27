@@ -133,8 +133,9 @@ int cFileParser::parse (cInstructionParser::cResult& result)
                     result.timestamp  = delay;
                     try
                     {
-                        return cInstructionParser (ownMac, ownIPv4, ipOptionalDestMAC)
+                        cInstructionParser (ownMac, ownIPv4, ipOptionalDestMAC)
                                 .parse (instructionBuffer, result);
+                        return 0;
                     }
                     catch (ParseException &e)
                     {

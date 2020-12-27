@@ -54,17 +54,17 @@ cEthernetPacket& cIPv4Packet::getFirstEthernetPacket ()
     return packets.front();
 }
 
-size_t cIPv4Packet::getAllEthernetPackets (std::list<cEthernetPacket>& l) const
+std::list<cEthernetPacket>& cIPv4Packet::getAllEthernetPackets (void)
 {
-    size_t ret = packets.size();
+    return packets;
+}
 
+void cIPv4Packet::setDestMac (const cMacAddress& dest)
+{
     for (auto & p : packets)
     {
-        l.push_back(std::move(p));
+        p.setDestMac(dest);
     }
-
-
-    return ret;
 }
 
 void cIPv4Packet::setDSCP (int dscp)
@@ -92,9 +92,19 @@ void cIPv4Packet::setSource (const cIpAddress& ip)
     ipHeader.srcIp = ip.get();
 }
 
+const cIpAddress& cIPv4Packet::getSource (void) const
+{
+    return ipHeader.srcIp;
+}
+
 void cIPv4Packet::setDestination (const cIpAddress& ip)
 {
     ipHeader.dstIp = ip.get();
+}
+
+const cIpAddress& cIPv4Packet::getDestination (void) const
+{
+    return ipHeader.dstIp;
 }
 
 void cIPv4Packet::setIdentification (uint16_t id)

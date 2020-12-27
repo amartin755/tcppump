@@ -238,7 +238,7 @@ int cTcpPump::execute (const std::list<std::string>& args)
 #endif
             backend.prepare (ifc, realtimeMode, options.repeat);
 
-        Console::PrintMoreVerbose ("Sending %d packets\n", packetData.packets.size());
+        Console::PrintMoreVerbose ("Sending %d packets\n", packetData.getPacketCnt());
         if (options.repeat)
             Console::PrintMoreVerbose ("Repeating %d times\n", options.repeat);
         else

@@ -25,21 +25,20 @@
 
 cResolver::cResolver (cInterface &netif) : arper (netif)
 {
-    // TODO Auto-generated constructor stub
-
 }
 
 cPacketData& cResolver::operator<< (cPacketData& input)
 {
     Console::PrintDebug ("Resolving ...\n");
 
-    for (auto & p : input.packets)
+    for (cLinkable* p = input.getFirst(); p != nullptr; p = p->getNext())
     {
-        if (!p.hasDestMac() && p.getEthertype() == ntohs(ETHERTYPE_IPV4))
+        cIPv4Packet* ipv4 = dynamic_cast<cIPv4Packet*>(p);
+
+        if (ipv4 && !ipv4->getFirstEthernetPacket().hasDestMac())
         {
             cMacAddress dmac;
-            const ipv4_header_t* ipheader = (const ipv4_header_t*)p.getPayload ();
-            cIpAddress dip(ipheader->dstIp);
+            cIpAddress dip(ipv4->getDestination());
 
             try
             {
@@ -68,7 +67,7 @@ cPacketData& cResolver::operator<< (cPacketData& input)
                     throw std::runtime_error("Could not resolve host(s).");
                 }
             }
-            p.setDestMac (dmac);
+            ipv4->setDestMac (dmac);
         }
     }
 

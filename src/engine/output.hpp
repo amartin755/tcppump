@@ -45,6 +45,7 @@ private:
 #if HAVE_PCAP
     cPcapFileIO outfile;
 #endif
+    inline void processPacket (const cTimeval& sendTime, cEthernetPacket& p);
     const cPreprocessor &preproc;
     cInterface *netif;
     bool realtimeMode;

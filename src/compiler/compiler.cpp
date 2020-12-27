@@ -74,15 +74,15 @@ void cCompiler::processPcapFiles (const std::list<std::string>& input)
             throw FileIOException (FileIOException::OPEN, file.c_str());
         }
 
-        uint8_t* data;
+        uint8_t* pcapdata;
 
-        while ((data = pcap.read(&t, &len)) != nullptr)
+        while ((pcapdata = pcap.read(&t, &len)) != nullptr)
         {
-            cEthernetPacket packet;
-            packet.setRaw (data, len);
+            cEthernetPacket* packet = new cEthernetPacket(len);
+            packet->setRaw (pcapdata, len);
+            packet->setTime (t);
 
-            this->data.packets.push_back (std::move(packet));
-            this->data.timestamps.push_back (t);
+            data.addPacket(packet);
         }
         if (pcap.error ())
         {
@@ -96,14 +96,14 @@ void cCompiler::processPcapFiles (const std::list<std::string>& input)
 
 void cCompiler::processPackets (const std::list<std::string>& input)
 {
-    cInstructionParser::cResult result (data.packets);
+    cInstructionParser::cResult result;
     cTimeval timestamp, currtime;
 
     Console::PrintDebug ("Parsing %d packets ...\n", input.size());
 
     for (const auto & packet : input)
     {
-        int count = cInstructionParser (ownMac, ownIP, ipOptionalDestMAC).parse (packet.c_str(), result);
+        cInstructionParser (ownMac, ownIP, ipOptionalDestMAC).parse (packet.c_str(), result);
         if (result.hasTimestamp)
         {
             data.hasUserTimestamps = true;
@@ -115,23 +115,22 @@ void cCompiler::processPackets (const std::list<std::string>& input)
         }
         timestamp.setUs(result.timestamp * defaultDelayScale);
 
-        for (int n = 0; n < count; n++)
+        if (!result.isAbsolute)
         {
-            if (!result.isAbsolute)
-            {
-                data.timestamps.push_back (timestamp);
-                currtime.add (timestamp);
-            }
+            result.packets->setTime(timestamp);
+            data.addPacket(result.packets);
+            currtime.add (timestamp);
+        }
+        else
+        {
+            if (timestamp < currtime)  // FIXME What to do if timestamp < currtime? delay = 0 or parse exception?
+                BUG ("FIXME");
             else
             {
-                if (timestamp < currtime)  // FIXME What to do if timestamp < currtime? delay = 0 or parse exception?
-                    BUG ("FIXME");
-                else
-                {
-                    cTimeval delta(timestamp);
-                    data.timestamps.push_back (delta.sub (currtime));
-                    currtime.set (timestamp);
-                }
+                cTimeval delta(timestamp);
+                result.packets->setTime(delta.sub (currtime));
+                data.addPacket(result.packets);
+                currtime.set (timestamp);
             }
         }
     }
@@ -140,7 +139,7 @@ void cCompiler::processPackets (const std::list<std::string>& input)
 
 void cCompiler::processScriptFiles (const std::list<std::string>& input)
 {
-    cInstructionParser::cResult result (data.packets);
+    cInstructionParser::cResult result;
     cTimeval timestamp, currtime, scriptStartTime;
     int count;
 
@@ -166,29 +165,28 @@ void cCompiler::processScriptFiles (const std::list<std::string>& input)
                 data.hasUserTimestamps = true;
             }
 
-            for (int n = 0; n < count; n++)
+            if (!result.isAbsolute)
             {
-                if (!result.isAbsolute)
-                {
-                    data.timestamps.push_back (timestamp);
-                    currtime.add (timestamp);
-                }
+                result.packets->setTime(timestamp);
+                data.addPacket(result.packets);
+                currtime.add (timestamp);
+            }
+            else
+            {
+                timestamp.add(scriptStartTime);
+
+                if (timestamp < currtime) // FIXME What to do if timestamp < currtime? delay = 0 or parse exception?
+                    BUG ("FIXME");
                 else
                 {
-                    timestamp.add(scriptStartTime);
-
-                    if (timestamp < currtime) // FIXME What to do if timestamp < currtime? delay = 0 or parse exception?
-                        BUG ("FIXME");
-                    else
-                    {
-                        cTimeval delta(timestamp);
-                        data.timestamps.push_back (delta.sub (currtime));
-                        currtime.set (timestamp);
-                    }
+                    cTimeval delta(timestamp);
+                    result.packets->setTime(delta.sub (currtime));
+                    data.addPacket(result.packets);
+                    currtime.set (timestamp);
                 }
             }
 
-        } while (count > 0);
+        } while (count >= 0);
 
         fileParser.close ();
 

@@ -27,15 +27,16 @@
 #include "formatexception.hpp"
 #include "inet.h"
 #include "macaddress.hpp"
+#include "linkable.hpp"
 
 
-class cEthernetPacket
+class cEthernetPacket : public cLinkable
 {
 public:
     cEthernetPacket ();
     cEthernetPacket (size_t maxLength);
     cEthernetPacket (const cEthernetPacket& obj); // copy constructor
-    ~cEthernetPacket ();
+    virtual ~cEthernetPacket ();
     cEthernetPacket (cEthernetPacket&& other);
     cEthernetPacket& operator=(cEthernetPacket&& other);
     void operator=(const cEthernetPacket&) = delete;       // no copy-assignment operator
