@@ -744,7 +744,7 @@ add_test(NAME overwrite-dmac-1--diff COMMAND cmake -E compare_files ${TEST_OUTPU
 add_test(NAME overwrite-dmac-2--ok COMMAND tcppump ${DEFAULT_PARAMS} --overwrite-dmac=12:34:56:78:90:91 "udp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=0, dport=0)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 add_test(NAME overwrite-dmac-2--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/overwrite-dmac-02.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 add_test(NAME overwrite-dmac-3--ok COMMAND tcppump ${DEFAULT_PARAMS} --rand-dmac --overwrite-dmac=12:34:56:78:90:91 "udp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=0, dport=0)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-add_test(NAME overwrite-dmac-3--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/overwrite-dmac-03.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME overwrite-dmac-3--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/overwrite-dmac-02.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 
 add_test(NAME online-1--ok COMMAND tcppump -i ${OUT_IFC} -vvvv "arp(dip=1.2.3.4)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
