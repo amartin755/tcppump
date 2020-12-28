@@ -156,9 +156,8 @@ void cCompiler::processScriptFiles (const std::list<std::string>& input)
 
         scriptStartTime = currtime;
 
-        do
+        while ((count = fileParser.parse (result)) >= 0)
         {
-            count = fileParser.parse (result);
             timestamp.setUs(result.timestamp * defaultDelayScale);
             if (result.hasTimestamp)
             {
@@ -185,8 +184,7 @@ void cCompiler::processScriptFiles (const std::list<std::string>& input)
                     currtime.set (timestamp);
                 }
             }
-
-        } while (count >= 0);
+        }
 
         fileParser.close ();
 

@@ -79,7 +79,7 @@ public:
 
     size_t getPacketCnt (void) const
     {
-        return ethPackets + ipv4Packets;
+        return ethPackets;
     }
     size_t getTotalPacketBytes (void) const
     {
