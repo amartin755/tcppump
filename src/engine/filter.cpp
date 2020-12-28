@@ -35,9 +35,17 @@ cPacketData& cFilter::operator<< (cPacketData& input)
         {
             if (forcedDMAC)
             {
-                cEthernetPacket* eth = dynamic_cast<cEthernetPacket*>(p);
+                cEthernetPacket* eth;
+                cIPv4Packet*     ipv4;
 
-                eth->setDestMac (*forcedDMAC);
+                if ((eth = dynamic_cast<cEthernetPacket*>(p)) != nullptr)
+                {
+                    eth->setDestMac (*forcedDMAC);
+                }
+                else if ((ipv4 = dynamic_cast<cIPv4Packet*>(p)) != nullptr)
+                {
+                    ipv4->setDestMac (*forcedDMAC);
+                }
             }
 
             // TODO add more filters
