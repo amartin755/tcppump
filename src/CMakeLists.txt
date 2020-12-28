@@ -779,3 +779,5 @@ add_test(NAME loop-04--nok COMMAND tcppump ${DEFAULT_PARAMS} -s ${TEST_FILE_PREF
 set_tests_properties(loop-04--nok PROPERTIES PASS_REGULAR_EXPRESSION "Missing matching \‘{\’")
 add_test(NAME loop-05--nok COMMAND tcppump ${DEFAULT_PARAMS} -s ${TEST_FILE_PREFIX}/loop-05.pump WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 set_tests_properties(loop-05--nok PROPERTIES PASS_REGULAR_EXPRESSION "Expected \‘}\’ at end of input")
+add_test(NAME loop-06--ok COMMAND tcppump ${DEFAULT_PARAMS} -s ${TEST_FILE_PREFIX}/loop-06.pump WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+# TODO loop-06--diff
