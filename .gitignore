@@ -1,7 +1,7 @@
 .cproject
 .project
 .settings/
-build/
+build*/
 bin/
 libpcap/
 /Debug/
