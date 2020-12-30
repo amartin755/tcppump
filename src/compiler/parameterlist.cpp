@@ -477,7 +477,15 @@ const char* cParameterList::parseParameters (const char* parameters)
             p++;
     }
 
-    return *p == ')' ? nullptr : p;
+    if (*p != ')')
+        return p;
+
+    p++;
+    p = cParseHelper::skipWhitespaces (p);
+    if (*p != '\0')
+        return p;
+
+    return nullptr; // everything ok
 }
 
 
@@ -1104,6 +1112,17 @@ void cParameterList::unitTest ()
             len = 0;
             BUG_ON (obj.findParameter("third")->asStream(len));
             BUG_ON (len == 100);
+        }
+        catch (FormatException& )
+        {
+            BUG_ON (0);
+        }
+    }
+    {
+        try
+        {
+            cParameterList obj ("(first = 01)3456789abcdef0123456789abcdef)");
+            BUG_ON (!obj.isValid ());
         }
         catch (FormatException& )
         {
