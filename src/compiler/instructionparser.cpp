@@ -30,6 +30,7 @@
 #include "arppacket.hpp"
 #include "ipv4packet.hpp"
 #include "udppacket.hpp"
+#include "tcppacket.hpp"
 #include "vrrppacket.hpp"
 #include "stppacket.hpp"
 #include "igmppacket.hpp"
@@ -108,6 +109,8 @@ void cInstructionParser::parse (const char* instruction, cResult& result)
             result.packets = compileIGMP (params, false, false, false, true);
         else if (!strncmp ("icmp", keyword, keywordLen))
             result.packets = compileICMP (params);
+        else if (!strncmp ("tcp", keyword, keywordLen))
+            result.packets = compileTCP (params);
         else
             throwParseException ("Unknown protocol type", keyword, keywordLen);
 
@@ -390,6 +393,34 @@ cLinkable* cInstructionParser::compileUDP (cParameterList& params)
         udppacket->setChecksum (optionalPar->asInt16());
 
     return udppacket;
+}
+
+
+cLinkable* cInstructionParser::compileTCP (cParameterList& params)
+{
+    cTcpPacket* tcppacket = new cTcpPacket;
+    cEthernetPacket& eth = tcppacket->getFirstEthernetPacket();
+    bool destIsMulticast = parseIPv4Params (params, tcppacket);
+
+    // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+    compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
+    compileVLANTags   (params, &eth);
+
+    tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
+    tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
+
+    size_t len = 0;
+    const uint8_t* payload = nullptr;
+    cParameter* optionalPar = params.findParameter ("payload", true);
+    if (optionalPar)
+        payload = optionalPar->asStream(len);
+    tcppacket->setPayload (payload, len);
+
+    optionalPar = params.findParameter ("chksum", true);
+    if (optionalPar)
+        tcppacket->setChecksum (optionalPar->asInt16());
+
+    return tcppacket;
 }
 
 

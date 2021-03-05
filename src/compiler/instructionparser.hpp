@@ -80,6 +80,7 @@ private:
     cLinkable* compileSTP  (cParameterList& params, bool isRSTP = false, bool isTCN = false);
     cLinkable* compileIGMP (cParameterList& params, bool v3, bool query, bool report, bool leave);
     cLinkable* compileICMP (cParameterList& params);
+    cLinkable* compileTCP  (cParameterList& params);
 
     bool   compileMacHeader (cParameterList& params, cEthernetPacket* packet, bool noDestination, bool destIsOptional = false);
     size_t compileVLANTags (cParameterList& params, cEthernetPacket* packet);
