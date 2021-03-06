@@ -19,6 +19,8 @@
 
 #include <cstring>
 #include <string>
+#include <cstdio>
+#include <cstdlib>
 #include <errno.h>
 
 #include <unistd.h>
@@ -45,6 +47,8 @@ cInterface::cInterface(const char* ifname)
     sentPackets = 0;
     sentBytes   = 0;
     firstPacket = true;
+    mtu         = 0;
+    linkSpeed   = 0;
 }
 
 cInterface::~cInterface()
@@ -79,6 +83,8 @@ bool cInterface::open ()
 
     getMAC (myMac);
     getIPv4 (myIP);
+    mtu       = getMTU ();
+    linkSpeed = getLinkSpeed ();
 
     std::string macAsString;
     myMac.get(macAsString);
@@ -105,7 +111,8 @@ bool cInterface::close ()
     return true;
 }
 
-bool cInterface::prepareSendQueue (size_t packetCnt, size_t totalBytes, bool synchronized)
+bool cInterface::prepareSendQueue (__attribute__((unused)) size_t packetCnt,
+        __attribute__((unused)) size_t totalBytes, __attribute__((unused)) bool synchronized)
 {
     // STUB
     return true;
@@ -184,7 +191,6 @@ bool cInterface::getMAC (cMacAddress &mac)
             return false;
         }
 
-        // Use ioctl() to look up interface name and get its MAC address.
         errno = 0;
         memset (&ifr, 0, sizeof (ifr));
         snprintf (ifr.ifr_name, sizeof (ifr.ifr_name), "%s", name.c_str());
@@ -192,7 +198,7 @@ bool cInterface::getMAC (cMacAddress &mac)
         {
             Console::PrintError ("error: %s\n", strerror (errno));
             return false;
-           }
+        }
 
         ::close (s);
 
@@ -223,7 +229,6 @@ bool cInterface::getIPv4 (cIpAddress &ip)
             return false;
         }
 
-        // Use ioctl() to look up interface name and get its IPv4 address.
         errno = 0;
         memset (&ifr, 0, sizeof (ifr));
         ifr.ifr_addr.sa_family = AF_INET;
@@ -232,7 +237,7 @@ bool cInterface::getIPv4 (cIpAddress &ip)
         {
             Console::PrintError ("error: %s\n", strerror (errno));
             return false;
-           }
+        }
 
         ip.set(((struct sockaddr_in *)&(ifr.ifr_addr))->sin_addr);
 
@@ -243,6 +248,67 @@ bool cInterface::getIPv4 (cIpAddress &ip)
         ip.set(myIP);
     }
     return true;
+}
+
+
+uint32_t cInterface::getMTU (void)
+{
+    if (!mtu)
+    {
+        struct ifreq ifr;
+        int s;
+
+        errno = 0;
+        if ((s = socket (AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0)
+        {
+            Console::PrintError ("error: %s\n", strerror (errno));
+            return false;
+        }
+
+        errno = 0;
+        memset (&ifr, 0, sizeof (ifr));
+        snprintf (ifr.ifr_name, sizeof (ifr.ifr_name), "%s", name.c_str());
+        if (ioctl (s, SIOCGIFMTU, &ifr) < 0)
+        {
+            Console::PrintError ("error: %s\n", strerror (errno));
+            return false;
+        }
+
+        mtu = (uint32_t)ifr.ifr_mtu;
+
+        ::close (s);
+    }
+    return mtu;
+}
+
+
+uint64_t cInterface::getLinkSpeed (void)
+{
+    if (!linkSpeed)
+    {
+        std::string path ("/sys/class/net/");
+        char s[32] = {0};
+
+        path += name + "/speed";
+
+        errno = 0;
+        FILE* fp = std::fopen (path.c_str(), "r");
+
+        if (!fp)
+        {
+            Console::PrintError ("error: %s\n", strerror (errno));
+            return 0;
+        }
+
+        if (std::fread (s, 1, sizeof(s) - 1, fp))
+        {
+            linkSpeed = (uint64_t)std::strtoul(s, NULL, 10) * (uint64_t)1000000;
+        }
+
+        std::fclose (fp);
+    }
+
+    return linkSpeed;
 }
 
 

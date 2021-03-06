@@ -43,6 +43,8 @@ public:
     void getSendStatistic (uint64_t& sentPackets, uint64_t& sentBytes, double& duration) const;
     bool getMAC (cMacAddress&);
     bool getIPv4 (cIpAddress&);
+    uint32_t getMTU (void);
+    uint64_t getLinkSpeed (void);
     bool isOpen () const;
     const char* getName (void) const;
 
@@ -53,6 +55,8 @@ private:
     int ifIndex;
     cMacAddress myMac;
     cIpAddress myIP;
+    uint32_t mtu;
+    uint64_t linkSpeed;
     cTimeval lastSentPacket;
 
     bool firstPacket;
