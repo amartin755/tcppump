@@ -24,19 +24,23 @@
 #include "bug.hpp"
 
 
+uint32_t cTcpPacket::sequence = 42;
 
 cTcpPacket::cTcpPacket ()
 {
     header.init();
+    setSeqNumber (sequence);
 }
 
-void cTcpPacket::setPayload (const uint8_t* payload, size_t len)
+void cTcpPacket::compile (const uint8_t* payload, size_t len, bool calcChksum)
 {
     // TODO check max tcp length
 
     cIPv4Packet::compile (PROTO_TCP, (const uint8_t*)&header, sizeof (header), payload, len);
-    header.checksum = calcChecksum();
+    if (calcChksum)
+        header.checksum = calcChecksum();
     cIPv4Packet::updateL4Header ((const uint8_t*)&header, sizeof (header));
+    sequence += len + (uint32_t)header.isSyn();
 }
 
 void cTcpPacket::setSourcePort (uint16_t port)
@@ -52,8 +56,74 @@ void cTcpPacket::setDestinationPort (uint16_t port)
 void cTcpPacket::setChecksum (uint16_t checksum)
 {
     header.checksum = htons(checksum);
-    cIPv4Packet::updateL4Header ((const uint8_t*)&header, sizeof (header));
 }
+
+void cTcpPacket::setSeqNumber (uint32_t seq)
+{
+    header.seqNumber = htonl(seq);
+    sequence = seq;
+}
+
+void cTcpPacket::setAckNumber (uint32_t ack)
+{
+    header.ackNumber = htonl(ack);
+}
+
+void cTcpPacket::setWindow (uint16_t window)
+{
+    header.window = htons(window);
+}
+
+void cTcpPacket::setUrgentPointer (uint16_t urgentPtr)
+{
+    header.urgentPtr = htons(urgentPtr);
+}
+
+void cTcpPacket::setFlagFIN (bool flag)
+{
+    header.setFin (flag);
+}
+
+void cTcpPacket::setFlagSYN (bool flag)
+{
+    header.setSyn (flag);
+}
+
+void cTcpPacket::setFlagRST (bool flag)
+{
+    header.setRst (flag);
+}
+
+void cTcpPacket::setFlagPSH (bool flag)
+{
+    header.setPsh (flag);
+}
+
+void cTcpPacket::setFlagACK (bool flag)
+{
+    header.setAck (flag);
+}
+
+void cTcpPacket::setFlagURG (bool flag)
+{
+    header.setUrg (flag);
+}
+
+void cTcpPacket::setFlagECE (bool flag)
+{
+    header.setEce (flag);
+}
+
+void cTcpPacket::setFlagCWR (bool flag)
+{
+    header.setCwr (flag);
+}
+
+void cTcpPacket::setFlagNON (bool flag)
+{
+    header.setNonce (flag);
+}
+
 
 // FIXME use cInetChecksum instead
 uint16_t cTcpPacket::calcChecksum () const

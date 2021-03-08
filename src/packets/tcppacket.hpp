@@ -43,11 +43,51 @@ typedef struct
     {
         std::memset (this, 0, sizeof (*this));
         setHeaderLenght (5);
-        window = 1024;
+        window = htons(1024);
     }
     void setHeaderLenght (int length)
     {
         dataOffset = uint8_t(length << 4);
+    }
+    void setFin (bool f)
+    {
+        flags = f ? flags | 1 : flags & ~1;
+    }
+    void setSyn (bool f)
+    {
+        flags = f ? flags | 2 : flags & ~2;
+    }
+    void setRst (bool f)
+    {
+        flags = f ? flags | 4 : flags & ~4;
+    }
+    void setPsh (bool f)
+    {
+        flags = f ? flags | 8 : flags & ~8;
+    }
+    void setAck (bool f)
+    {
+        flags = f ? flags | 0x10 : flags & ~0x10;
+    }
+    void setUrg (bool f)
+    {
+        flags = f ? flags | 0x20 : flags & ~0x20;
+    }
+    void setEce (bool f)
+    {
+        flags = f ? flags | 0x40 : flags & ~0x40;
+    }
+    void setCwr (bool f)
+    {
+        flags = f ? flags | 0x80 : flags & ~0x80;
+    }
+    void setNonce (bool f)
+    {
+        dataOffset = f ? dataOffset | 1 : dataOffset & ~1;
+    }
+    bool isSyn (void)
+    {
+        return !!(flags & 2);
     }
 
 }tcp_header_t;
@@ -59,10 +99,23 @@ class cTcpPacket : public cIPv4Packet
 public:
     cTcpPacket ();
 
-    void setPayload (const uint8_t* payload, size_t len);
+    void compile (const uint8_t* payload, size_t len, bool calcChecksum);
     void setSourcePort (uint16_t port);
     void setDestinationPort (uint16_t port);
     void setChecksum (uint16_t checksum);
+    void setSeqNumber (uint32_t seq);
+    void setAckNumber (uint32_t ack);
+    void setWindow (uint16_t window);
+    void setUrgentPointer (uint16_t urgentPtr);
+    void setFlagFIN (bool flag);
+    void setFlagSYN (bool flag);
+    void setFlagRST (bool flag);
+    void setFlagPSH (bool flag);
+    void setFlagACK (bool flag);
+    void setFlagURG (bool flag);
+    void setFlagECE (bool flag);
+    void setFlagCWR (bool flag);
+    void setFlagNON (bool flag);
 
 
 #ifdef WITH_UNITTESTS
@@ -75,6 +128,7 @@ private:
     uint32_t csum () const;
 
     tcp_header_t header;
+    static uint32_t sequence;
 };
 
 

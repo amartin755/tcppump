@@ -401,6 +401,8 @@ cLinkable* cInstructionParser::compileTCP (cParameterList& params)
     cTcpPacket* tcppacket = new cTcpPacket;
     cEthernetPacket& eth = tcppacket->getFirstEthernetPacket();
     bool destIsMulticast = parseIPv4Params (params, tcppacket);
+    bool userDefinedChecksum = false;
+    cParameter* optionalPar;
 
     // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
     compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
@@ -409,16 +411,62 @@ cLinkable* cInstructionParser::compileTCP (cParameterList& params)
     tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
     tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
 
+    optionalPar = params.findParameter ("seq", true);
+    if (optionalPar)
+        tcppacket->setSeqNumber (optionalPar->asInt32());
+    optionalPar = params.findParameter ("ack", true);
+    if (optionalPar)
+        tcppacket->setAckNumber (optionalPar->asInt32());
+    optionalPar = params.findParameter ("win", true);
+    if (optionalPar)
+        tcppacket->setWindow (optionalPar->asInt16());
+    optionalPar = params.findParameter ("urgptr", true);
+    if (optionalPar)
+        tcppacket->setUrgentPointer (optionalPar->asInt16());
+
+    // Flags
+    optionalPar = params.findParameter ("FIN", true);
+    if (optionalPar)
+        tcppacket->setFlagFIN (!!optionalPar->asInt8(0, 1));
+    optionalPar = params.findParameter ("SYN", true);
+    if (optionalPar)
+        tcppacket->setFlagSYN (!!optionalPar->asInt8(0, 1));
+    optionalPar = params.findParameter ("RST", true);
+    if (optionalPar)
+        tcppacket->setFlagRST (!!optionalPar->asInt8(0, 1));
+    optionalPar = params.findParameter ("PSH", true);
+    if (optionalPar)
+        tcppacket->setFlagPSH (!!optionalPar->asInt8(0, 1));
+    optionalPar = params.findParameter ("ACK", true);
+    if (optionalPar)
+        tcppacket->setFlagACK (!!optionalPar->asInt8(0, 1));
+    optionalPar = params.findParameter ("URG", true);
+    if (optionalPar)
+        tcppacket->setFlagURG (!!optionalPar->asInt8(0, 1));
+    optionalPar = params.findParameter ("ECE", true);
+    if (optionalPar)
+        tcppacket->setFlagECE (!!optionalPar->asInt8(0, 1));
+    optionalPar = params.findParameter ("CWR", true);
+    if (optionalPar)
+        tcppacket->setFlagCWR (!!optionalPar->asInt8(0, 1));
+    optionalPar = params.findParameter ("NON", true);
+    if (optionalPar)
+        tcppacket->setFlagNON (!!optionalPar->asInt8(0, 1));
+
     size_t len = 0;
     const uint8_t* payload = nullptr;
-    cParameter* optionalPar = params.findParameter ("payload", true);
+    optionalPar = params.findParameter ("payload", true);
     if (optionalPar)
         payload = optionalPar->asStream(len);
-    tcppacket->setPayload (payload, len);
 
     optionalPar = params.findParameter ("chksum", true);
     if (optionalPar)
+    {
+        userDefinedChecksum = true;
         tcppacket->setChecksum (optionalPar->asInt16());
+    }
+
+    tcppacket->compile (payload, len, !userDefinedChecksum);
 
     return tcppacket;
 }
