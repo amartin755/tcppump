@@ -62,7 +62,7 @@ cPacketData& cOutput::operator<< (cPacketData& input)
     if (netif)
     {
         netif->prepareSendQueue(input.getPacketCnt() * repeat,
-                input.getTotalPacketBytes(),
+                input.getTotalPacketBytes() * repeat,
                 realtimeMode);
     }
 
