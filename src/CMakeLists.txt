@@ -490,6 +490,8 @@ add_test(NAME ipv4-31--ok COMMAND tcppump ${DEFAULT_PARAMS} "ipv4(dip=10.20.30.4
 add_test(NAME ipv4-31--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/ipv4-31.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 add_test(NAME ipv4-32--nok COMMAND tcppump ${DEFAULT_PARAMS} "ipv4(dip=10.20.30.40, dmac=11:22:33:44:55:66, protocol=255, id=1, payload = *65516)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 set_tests_properties(ipv4-32--nok PROPERTIES WILL_FAIL TRUE)
+add_test(NAME ipv4-33--ok COMMAND tcppump ${DEFAULT_PARAMS} "ipv4(dip=10.20.30.40, dmac=11:22:33:44:55:66, df, ttl=255, dscp=0x0, ecn=3, protocol=255, payload = 0123456789abcdef0123456789abcdef)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME ipv4-33--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/ipv4-17.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 add_test(NAME udp-1--nok COMMAND tcppump ${DEFAULT_PARAMS} "udp()" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 set_tests_properties(udp-1--nok PROPERTIES WILL_FAIL TRUE)

@@ -400,6 +400,7 @@ cParameter* cParameterList::findParameter (const char* parameter, const cIpAddre
 // returns nullptr on success. Otherwise a pointer to the syntax error
 const char* cParameterList::parseParameters (const char* parameters)
 {
+    static const char BOOLVALUE[] = "1";
     const char* p = parameters;
     cParameter v;
     bool isString = false;
@@ -439,32 +440,39 @@ const char* cParameterList::parseParameters (const char* parameters)
         v.parameter = token;
         v.parLen    = p - token;
         p = cParseHelper::skipWhitespaces (p);
-        if (*p != '=')
-            return p; // syntax error
-        p++;
-
-        // find start of value
-        token = cParseHelper::nextValueStart (p);
-        if (!token)
-            return p; // syntax error
-        else
-            p = token;
-        isString = *p == '"';
-
-        // find end of value
-        if (isString)
+        if (!cParseHelper::isOneOf (*p, ",)")) //--> parameter with value
         {
+            if (*p != '=')
+                return p; // syntax error
             p++;
-            const char* end = std::strchr (p, '"');
-            if (!end)
-                return p;
-            p = *end == '\0' ? end : end + 1;
-        }
-        else
-            p = cParseHelper::nextValueEnd (p);
-        v.value  = token;
-        v.valLen = p - token;
 
+            // find start of value
+            token = cParseHelper::nextValueStart (p);
+            if (!token)
+                return p; // syntax error
+            else
+                p = token;
+            isString = *p == '"';
+
+            // find end of value
+            if (isString)
+            {
+                p++;
+                const char* end = std::strchr (p, '"');
+                if (!end)
+                    return p;
+                p = *end == '\0' ? end : end + 1;
+            }
+            else
+                p = cParseHelper::nextValueEnd (p);
+            v.value  = token;
+            v.valLen = p - token;
+        }
+        else	// --> parameter without value
+        {
+            v.value  = BOOLVALUE;
+            v.valLen = sizeof (BOOLVALUE) - 1;
+        }
         // store parameter and its value
         v.index = (int)list.size ();
         list.push_back (v);
@@ -624,10 +632,6 @@ void cParameterList::unitTest ()
         BUG_ON (!obj.isValid ());
     }
     {
-        cParameterList obj ("(d,first=100)");
-        BUG_ON (!obj.isValid ());
-    }
-    {
         cParameterList obj ("(=123)");
         BUG_ON (!obj.isValid ());
     }
@@ -735,7 +739,7 @@ void cParameterList::unitTest ()
         }
         BUG_ON (catched);
         {
-            cParameterList obj ("(dk,fjsdf=12)");
+            cParameterList obj ("(dk=,fjsdf=12)");
             BUG_ON (!obj.isValid ());
         }
     }
@@ -1128,6 +1132,30 @@ void cParameterList::unitTest ()
         {
             BUG_ON (0);
         }
+    }
+    try
+    {
+        cParameterList obj ("(     first, second = 200, third)");
+        BUG_ON (obj.isValid ());
+        BUG_ON (obj.findParameter("first")->asInt32()  == (uint32_t)1);
+        BUG_ON (obj.findParameter("second")->asInt32() == (uint32_t)200);
+        BUG_ON (obj.findParameter("third")->asInt32()  == (uint32_t)1);
+    }
+    catch (FormatException& )
+    {
+        BUG_ON (0);
+    }
+    try
+    {
+        cParameterList obj ("(     first=100, second , third   )");
+        BUG_ON (obj.isValid ());
+        BUG_ON (obj.findParameter("first")->asInt32()  == (uint32_t)100);
+        BUG_ON (obj.findParameter("second")->asInt32() == (uint32_t)1);
+        BUG_ON (obj.findParameter("third")->asInt32()  == (uint32_t)1);
+    }
+    catch (FormatException& )
+    {
+        BUG_ON (0);
     }
 
     // TODO fuzzing
