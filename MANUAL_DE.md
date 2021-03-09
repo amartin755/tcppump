@@ -1,15 +1,15 @@
 # tcppump
 
-tcppump ist ein Packetgeneerator der blabla
+tcppump ist ein Kommandozeilen-Werkzeuge fÃ¼r die Erzeugung von Ethernet-Netzwerkpaketen. Der Anwender hat dabei die volle Kontrolle Ã¼ber alle Details der erzeugten Pakete. Alle Netzwerkpakete werden direkt von tcppump erzeugt und nicht vom Betriebssystem, was es auch ermÃ¶glicht ungÃ¼ltige und fehlerhafte Pakete zu erzeugen. Entwickelt wurde es mit dem Ziel ein einfaches Werkzeug fÃ¼r den Test von Protokoll-Stacks und Firewalls zur VerfÃ¼gung zu stellen.
 
 Usage
 
     tcppump -i IFC [OPTIONS] packets
     tcppump -i IFC [OPTIONS] -s scriptfiles
 
-Die zu versendenden Netwerkpakete können sowohl direkt als Programmparameter, als auch über Skriptfiles definiert werden. Möchte man nur einzelne Packete versenden, ist die erst genannte Methode sicherlich die einfachste Möglichkeit. Skriptfiles bieten sich dann an, wenn man ganze Packet-Sequenzen generieren und/oder Packete zeitgesteuert versenden möchte. Sollen Skriptfiles verwendet werden, muss der Parameter `-s` bzw. `--script` gefolgt vom Dateinamen des Skriptfiles angegeben werden. Es können auch mehrere Dateien übergeben werden.
+Die zu versendenden Netwerkpakete kÃ¶nnen sowohl direkt als Programmparameter, als auch Ã¼ber Skriptfiles definiert werden. MÃ¶chte man nur einzelne Packete versenden, ist die erst genannte Methode sicherlich die einfachste MÃ¶glichkeit. Skriptfiles bieten sich dann an, wenn man ganze Packet-Sequenzen generieren und/oder Packete zeitgesteuert versenden mÃ¶chte. Sollen Skriptfiles verwendet werden, muss der Parameter `-s` bzw. `--script` gefolgt vom Dateinamen des Skriptfiles angegeben werden. Es kÃ¶nnen auch mehrere Dateien Ã¼bergeben werden.
 
-tcppump benötigt immer ein Netzwerkinterface über das die Packete versendet werden sollen. Deshalb ist der Parameter `-i` bzw. `--interface` gefolgt vom Namen des Netzwerkadapters verpflichtend. Unter Windows kann als Name entweder der sog. "Friendly-Name" (ermittelbar via `ipconfig`), als auch GUID des Netzwerkadapters angegeben werden. Unter Linux ist Name des Netzwerk-Devices anzugeben (siehe output von `ip addr`);
+tcppump benÃ¶tigt immer ein Netzwerkinterface Ã¼ber das die Packete versendet werden sollen. Deshalb ist der Parameter `-i` bzw. `--interface` gefolgt vom Namen des Netzwerkadapters verpflichtend. Unter Windows kann als Name entweder der sog. "Friendly-Name" (ermittelbar via `ipconfig`), als auch GUID des Netzwerkadapters angegeben werden. Unter Linux ist Name des Netzwerk-Devices anzugeben (siehe output von `ip addr`);
 
 Beispiele:
 
@@ -18,16 +18,16 @@ Beispiele:
     tcppump -i WiFi -s myscript.txt
     tcppump -i WiFi -s myscript.txt mystript2.txt
 
-Es ist grundsätzlich eine gute Idee die Definitionen der Netzwerkpackete mit Anführungszeichen zu versehen, da die Definition auch Leerzeichen enthalten könnten und somit fälschlicherweise als mehrere Kommandozeilenparameter erkannt werden.
+Es ist grundsÃ¤tzlich eine gute Idee die Definitionen der Netzwerkpackete mit AnfÃ¼hrungszeichen zu versehen, da die Definition auch Leerzeichen enthalten kÃ¶nnten und somit fÃ¤lschlicherweise als mehrere Kommandozeilenparameter erkannt werden.
 
-Die genaue Syntax der Netzwerkpackete (`packets`) und die verschiedenen unterstützten Protokolle sind [hier](./PACKET_REFERENCE.md) definiert.
+Die genaue Syntax der Netzwerkpackete (`packets`) und die verschiedenen unterstÃ¼tzten Protokolle sind [hier](./PACKET_REFERENCE.md) definiert.
 
 
 ## Packet Source-Adressen (MAC, IPv4)
 
-tcppump bietet mehrere Möglichkeiten die Absendeadressen zu beeinflussen. Sofern im Packet nicht explizit die Absendeadresse angegeben wurde, verwendet tcppump die Adressen des Netzwerkadapters. Das gilt sowohl für die MAC, als auch die IPv4 Adresse. Die Adressen des Netzwerkadapters können wiederum explizit mit den Parameter `--mymac` und `--mymipv4` überschrieben werden. Die Einstellungen der Netzwerkkarten werden natürlich nicht verändert.
+tcppump bietet mehrere MÃ¶glichkeiten die Absendeadressen zu beeinflussen. Sofern im Packet nicht explizit die Absendeadresse angegeben wurde, verwendet tcppump die Adressen des Netzwerkadapters. Das gilt sowohl fÃ¼r die MAC, als auch die IPv4 Adresse. Die Adressen des Netzwerkadapters kÃ¶nnen wiederum explizit mit den Parameter `--mymac` und `--mymipv4` Ã¼berschrieben werden. Die Einstellungen der Netzwerkkarten werden natÃ¼rlich nicht verÃ¤ndert.
 
-Dadurch ergibt sich folgendes Vergabestrategie (mit absteigender Priorität)
+Dadurch ergibt sich folgendes Vergabestrategie (mit absteigender PrioritÃ¤t)
 
 1. Direkt in der Packetdefinition angegebene source adresse(n)
 2. Adressen der Parameter `--mymac` und `--mymipv4`

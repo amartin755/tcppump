@@ -22,7 +22,7 @@ Features
 * Source MAC and IPv4 address can be freely defined (using the addresses of the network adapter is also possible)
 * Automatic ARP resolution of unknown hosts
 * Random source and destination MAC addresses
-* Output on generated network traffic to PCAP files
+* Output of generated network traffic to PCAP files
 
 Supported protocols and packet formats
 * Raw packets as bytestream
@@ -32,6 +32,7 @@ Supported protocols and packet formats
 * ARP
 * Raw IPv4
 * UDP
+* TCP
 * VRRP
 * STP/RSTP
 * IGMP (v1/v2 only, v3 is on the way)
