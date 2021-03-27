@@ -12,6 +12,8 @@ Each packet is defined as follows (optional parameters are market with [])
 * `protocol` protocol specifier , see *Protocol Definitions*
 * `parameterlist` protocol parameters in parantheses as comma separated parameter-value pairs `par=value, par=value, ...`. e.g. (hugo=123, egon=456)
 
+Note: all identifiers are case-sensitive
+
 ### Parameters
 Each protocol defines name and type of its parameters (see PROTOCOLS). Depending on its type, parameter values can be
 * Integer: decimal (`1234`), hex (`0x1234`), random number (`*`)
@@ -464,10 +466,109 @@ Optionally all vlan tag parameters and all optional ipv4 parameters (see above) 
     udp(dmac=12:23:34:34:44:44, dip=1.2.3.4, smac=80:12:34:45:67:89, sip=192.168.0.1, sport=1234, dport=2345, payload=12345678);
     # UDP packet with to multicast destination and source ip taken from network interface
     udp(dip=224.2.3.4, sport=1234, dport=2345, payload=12345678);
+    # UDP packet without payload
+    udp(dmac=12:23:34:34:44:44, dip=1.2.3.4, sport=1234, dport=2345);
+    # UDP packet with random payload
+    udp(dmac=12:23:34:34:44:44, dip=1.2.3.4, sport=1234, dport=2345, payload=*);
+
+### TCP
+#### Protocol Specifier
+
+    tcp
+
+#### Parameters
+Destination EUI-48 MAC address. Note: If `dip` is a multicast address `dmac` will be set automatically.
+
+    dmac (optional if dip is multicast)
+
+Destination IPv4 address. Multicast addresses are also possible, which can be used for creation of malformed packets.
+
+    dip
+
+Source EUI-48 MAC address. If ommited, address of the network interface is used
+
+    smac (optional)
+
+Source IPv4 address; If ommited, address of the network interface is used
+
+    sip (optional)
+
+Source port (integer: range 0 - 0xffff)
+
+    sport
+
+Destination port (integer: range 0 - 0xffff)
+
+    dport
+
+Sequence number (integer: range 0 - 0xffffffff)
+
+    seq
+
+Acknowledgement number (integer: range 0 - 0xffffffff)
+
+    ack
+
+Window size (integer: range 0 - 65535; default 1024)
+
+    win (optional)
+
+Urgent pointer (integer: range 0 - 65535; default 0)
+
+    urgptr (optional)
+
+Fin control flag (integer: range 0 - 1; default 0)
+
+    FIN (optional)
+
+Syn control flag (integer: range 0 - 1; default 0)
+
+    SYN (optional)
+
+Reset control flag (integer: range 0 - 1; default 0)
+
+    RESET (optional)
+
+Push control flag (integer: range 0 - 1; default 0)
+
+    PUSH (optional)
+
+Acknowledge control flag (integer: range 0 - 1; default 0)
+
+    ACK (optional)
+
+Urgent control flag (integer: range 0 - 1; default 0)
+
+    URGENT (optional)
+
+ECN-echo control flag (integer: range 0 - 1; default 0)
+
+    ECN (optional)
+
+Congestion-Window-Reduced control flag (integer: range 0 - 1; default 0)
+
+    CWR (optional)
+
+Nonce control flag (integer: range 0 - 1; default 0)
+
+    NONCE (optional)
+
+Checksum (integer: range 0 - 0xffff) If ommited, checksum is calculated automatically. Setting the checksum manually is only useful to force creation of malformed packets.
+
+    chksum (optional)
+
+Payload (bytestream)
+
+    payload (optional)
+
+Optionally all vlan tag parameters and all optional ipv4 parameters (see above) are also allowed.
+
+#### Examples
+
 
 ### ICMP
-#### Protocol Specifier
 RFC792
+#### Protocol Specifier
 
     ICMP
 

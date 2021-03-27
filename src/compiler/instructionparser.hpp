@@ -81,6 +81,13 @@ private:
     cLinkable* compileIGMP (cParameterList& params, bool v3, bool query, bool report, bool leave);
     cLinkable* compileICMP (cParameterList& params);
     cLinkable* compileTCP  (cParameterList& params);
+    cLinkable* compileTCPSYN  (cParameterList& params);
+    cLinkable* compileTCPSYNACK  (cParameterList& params);
+    cLinkable* compileTCPSYNACK2  (cParameterList& params);
+    cLinkable* compileTCPFIN  (cParameterList& params);
+    cLinkable* compileTCPFINACK  (cParameterList& params);
+    cLinkable* compileTCPFINACK2  (cParameterList& params);
+    cLinkable* compileTCPRST  (cParameterList& params);
 
     bool   compileMacHeader (cParameterList& params, cEthernetPacket* packet, bool noDestination, bool destIsOptional = false);
     size_t compileVLANTags (cParameterList& params, cEthernetPacket* packet);

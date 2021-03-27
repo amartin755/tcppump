@@ -111,6 +111,20 @@ void cInstructionParser::parse (const char* instruction, cResult& result)
             result.packets = compileICMP (params);
         else if (!strncmp ("tcp", keyword, keywordLen))
             result.packets = compileTCP (params);
+        else if (!strncmp ("tcp-syn", keyword, keywordLen))
+            result.packets = compileTCPSYN (params);
+        else if (!strncmp ("tcp-syn-ack", keyword, keywordLen))
+            result.packets = compileTCPSYNACK (params);
+        else if (!strncmp ("tcp-syn-ack2", keyword, keywordLen))
+            result.packets = compileTCPSYNACK2 (params);
+        else if (!strncmp ("tcp-fin", keyword, keywordLen))
+            result.packets = compileTCPFIN (params);
+        else if (!strncmp ("tcp-fin-ack", keyword, keywordLen))
+            result.packets = compileTCPFINACK (params);
+        else if (!strncmp ("tcp-fin-ack2", keyword, keywordLen))
+            result.packets = compileTCPFINACK2 (params);
+        else if (!strncmp ("tcp-reset", keyword, keywordLen))
+            result.packets = compileTCPRST (params);
         else
             throwParseException ("Unknown protocol type", keyword, keywordLen);
 
@@ -411,47 +425,22 @@ cLinkable* cInstructionParser::compileTCP (cParameterList& params)
     tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
     tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
 
-    optionalPar = params.findParameter ("seq", true);
-    if (optionalPar)
-        tcppacket->setSeqNumber (optionalPar->asInt32());
-    optionalPar = params.findParameter ("ack", true);
-    if (optionalPar)
-        tcppacket->setAckNumber (optionalPar->asInt32());
-    optionalPar = params.findParameter ("win", true);
-    if (optionalPar)
-        tcppacket->setWindow (optionalPar->asInt16());
-    optionalPar = params.findParameter ("urgptr", true);
-    if (optionalPar)
-        tcppacket->setUrgentPointer (optionalPar->asInt16());
+    tcppacket->setSeqNumber (params.findParameter ("seq")->asInt32());
+    tcppacket->setAckNumber (params.findParameter ("ack")->asInt32());
+
+    tcppacket->setWindow (params.findParameter ("win", (uint32_t)1024)->asInt16());
+    tcppacket->setUrgentPointer (params.findParameter ("urgptr", (uint32_t)0)->asInt16());
 
     // Flags
-    optionalPar = params.findParameter ("FIN", true);
-    if (optionalPar)
-        tcppacket->setFlagFIN (!!optionalPar->asInt8(0, 1));
-    optionalPar = params.findParameter ("SYN", true);
-    if (optionalPar)
-        tcppacket->setFlagSYN (!!optionalPar->asInt8(0, 1));
-    optionalPar = params.findParameter ("RST", true);
-    if (optionalPar)
-        tcppacket->setFlagRST (!!optionalPar->asInt8(0, 1));
-    optionalPar = params.findParameter ("PSH", true);
-    if (optionalPar)
-        tcppacket->setFlagPSH (!!optionalPar->asInt8(0, 1));
-    optionalPar = params.findParameter ("ACK", true);
-    if (optionalPar)
-        tcppacket->setFlagACK (!!optionalPar->asInt8(0, 1));
-    optionalPar = params.findParameter ("URG", true);
-    if (optionalPar)
-        tcppacket->setFlagURG (!!optionalPar->asInt8(0, 1));
-    optionalPar = params.findParameter ("ECE", true);
-    if (optionalPar)
-        tcppacket->setFlagECE (!!optionalPar->asInt8(0, 1));
-    optionalPar = params.findParameter ("CWR", true);
-    if (optionalPar)
-        tcppacket->setFlagCWR (!!optionalPar->asInt8(0, 1));
-    optionalPar = params.findParameter ("NON", true);
-    if (optionalPar)
-        tcppacket->setFlagNON (!!optionalPar->asInt8(0, 1));
+    tcppacket->setFlagFIN (!!(params.findParameter ("FIN",    (uint32_t)0)->asInt8(0, 1)));
+    tcppacket->setFlagSYN (!!(params.findParameter ("SYN",    (uint32_t)0)->asInt8(0, 1)));
+    tcppacket->setFlagRST (!!(params.findParameter ("RESET",  (uint32_t)0)->asInt8(0, 1)));
+    tcppacket->setFlagPSH (!!(params.findParameter ("PUSH",   (uint32_t)0)->asInt8(0, 1)));
+    tcppacket->setFlagACK (!!(params.findParameter ("ACK",    (uint32_t)0)->asInt8(0, 1)));
+    tcppacket->setFlagURG (!!(params.findParameter ("URGENT", (uint32_t)0)->asInt8(0, 1)));
+    tcppacket->setFlagECE (!!(params.findParameter ("ECN",    (uint32_t)0)->asInt8(0, 1)));
+    tcppacket->setFlagCWR (!!(params.findParameter ("CWR",    (uint32_t)0)->asInt8(0, 1)));
+    tcppacket->setFlagNON (!!(params.findParameter ("NONCE",  (uint32_t)0)->asInt8(0, 1)));
 
     size_t len = 0;
     const uint8_t* payload = nullptr;
@@ -467,6 +456,177 @@ cLinkable* cInstructionParser::compileTCP (cParameterList& params)
     }
 
     tcppacket->compile (payload, len, !userDefinedChecksum);
+
+    return tcppacket;
+}
+
+
+cLinkable* cInstructionParser::compileTCPSYN (cParameterList& params)
+{
+    cTcpPacket* tcppacket = new cTcpPacket;
+    cEthernetPacket& eth = tcppacket->getFirstEthernetPacket();
+    bool destIsMulticast = parseIPv4Params (params, tcppacket);
+
+    // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+    compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
+    compileVLANTags   (params, &eth);
+
+    tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
+    tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
+
+    tcppacket->setSeqNumber (0);
+    tcppacket->setAckNumber (0);
+    tcppacket->setWindow (1024);
+    tcppacket->setFlagSYN (true);
+
+    tcppacket->compile (nullptr, 0, true);
+
+    return tcppacket;
+}
+
+
+cLinkable* cInstructionParser::compileTCPSYNACK (cParameterList& params)
+{
+    cTcpPacket* tcppacket = new cTcpPacket;
+    cEthernetPacket& eth = tcppacket->getFirstEthernetPacket();
+    bool destIsMulticast = parseIPv4Params (params, tcppacket);
+
+    // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+    compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
+    compileVLANTags   (params, &eth);
+
+    tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
+    tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
+
+    tcppacket->setSeqNumber (0);
+    tcppacket->setAckNumber (1);
+    tcppacket->setWindow (1024);
+    tcppacket->setFlagSYN (true);
+    tcppacket->setFlagACK (true);
+
+    tcppacket->compile (nullptr, 0, true);
+
+    return tcppacket;
+}
+
+
+cLinkable* cInstructionParser::compileTCPSYNACK2 (cParameterList& params)
+{
+    cTcpPacket* tcppacket = new cTcpPacket;
+    cEthernetPacket& eth = tcppacket->getFirstEthernetPacket();
+    bool destIsMulticast = parseIPv4Params (params, tcppacket);
+
+    // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+    compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
+    compileVLANTags   (params, &eth);
+
+    tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
+    tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
+
+    tcppacket->setSeqNumber (1);
+    tcppacket->setAckNumber (1);
+    tcppacket->setWindow (1024);
+    tcppacket->setFlagACK (true);
+
+    tcppacket->compile (nullptr, 0, true);
+
+    return tcppacket;
+}
+
+
+cLinkable* cInstructionParser::compileTCPFIN (cParameterList& params)
+{
+    cTcpPacket* tcppacket = new cTcpPacket;
+    cEthernetPacket& eth = tcppacket->getFirstEthernetPacket();
+    bool destIsMulticast = parseIPv4Params (params, tcppacket);
+
+    // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+    compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
+    compileVLANTags   (params, &eth);
+
+    tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
+    tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
+
+    tcppacket->setSeqNumber (1);
+    tcppacket->setAckNumber (1);
+    tcppacket->setWindow (1024);
+    tcppacket->setFlagFIN (true);
+    tcppacket->setFlagACK (true);
+
+    tcppacket->compile (nullptr, 0, true);
+
+    return tcppacket;
+}
+
+
+cLinkable* cInstructionParser::compileTCPFINACK (cParameterList& params)
+{
+    cTcpPacket* tcppacket = new cTcpPacket;
+    cEthernetPacket& eth = tcppacket->getFirstEthernetPacket();
+    bool destIsMulticast = parseIPv4Params (params, tcppacket);
+
+    // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+    compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
+    compileVLANTags   (params, &eth);
+
+    tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
+    tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
+
+    tcppacket->setSeqNumber (1);
+    tcppacket->setAckNumber (2);
+    tcppacket->setWindow (1024);
+    tcppacket->setFlagFIN (true);
+    tcppacket->setFlagACK (true);
+
+    tcppacket->compile (nullptr, 0, true);
+
+    return tcppacket;
+}
+
+
+cLinkable* cInstructionParser::compileTCPFINACK2 (cParameterList& params)
+{
+    cTcpPacket* tcppacket = new cTcpPacket;
+    cEthernetPacket& eth = tcppacket->getFirstEthernetPacket();
+    bool destIsMulticast = parseIPv4Params (params, tcppacket);
+
+    // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+    compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
+    compileVLANTags   (params, &eth);
+
+    tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
+    tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
+
+    tcppacket->setSeqNumber (2);
+    tcppacket->setAckNumber (2);
+    tcppacket->setWindow (1024);
+    tcppacket->setFlagACK (true);
+
+    tcppacket->compile (nullptr, 0, true);
+
+    return tcppacket;
+}
+
+
+cLinkable* cInstructionParser::compileTCPRST (cParameterList& params)
+{
+    cTcpPacket* tcppacket = new cTcpPacket;
+    cEthernetPacket& eth = tcppacket->getFirstEthernetPacket();
+    bool destIsMulticast = parseIPv4Params (params, tcppacket);
+
+    // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+    compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
+    compileVLANTags   (params, &eth);
+
+    tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
+    tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
+
+    tcppacket->setSeqNumber (0);
+    tcppacket->setAckNumber (0);
+    tcppacket->setWindow (1024);
+    tcppacket->setFlagRST (true);
+
+    tcppacket->compile (nullptr, 0, true);
 
     return tcppacket;
 }
