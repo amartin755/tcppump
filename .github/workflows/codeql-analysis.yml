@@ -30,7 +30,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-- name: Install Dependencies
+    - name: Install Dependencies
       # install libpcap and its development files
       run: sudo apt-get --assume-yes install libpcap-dev
 
