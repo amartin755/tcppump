@@ -93,8 +93,8 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
     addCmdLineOption (true, 'o', "write-to-file", "OUTFILE", "Write generated packets to pcap file OUTFILE instead of sending them to the network.", &options.outpcap);
     addCmdLineOption (true, 'a', "arp",
             "Resolve destination MAC address for IPv4 packets.\n\t"
-            "If dmac parameter of IPv4 based packets is omitted, the destination MAC will be\n"
-            "automatically determined via ARP.",
+            "If dmac parameter of IPv4 based packets is omitted, the destination MAC will be automatically\n\t"
+            "determined via ARP.",
             &options.arp);
     addCmdLineOption (true, 0, "responder", "MODE",
             "Enable responder mode (EXPERIMENTAL). Possible values for MODE are:\n\t"

@@ -23,6 +23,7 @@ Features
 * Automatic ARP resolution of unknown hosts
 * Random source and destination MAC addresses
 * Output of generated network traffic to PCAP files
+* Responder mode allows mirroring of received packets or receive triggered transmission of custom packets
 
 Supported protocols and packet formats
 * Raw packets as bytestream
@@ -118,8 +119,14 @@ For debugging add:
         Write generated packets to pcap file OUTFILE instead of sending them to the network.
     -a --arp
         Resolve destination MAC address for IPv4 packets.
-        If dmac parameter of IPv4 based packets is omitted, the destination MAC will be
-    automatically determined via ARP.
+        If dmac parameter of IPv4 based packets is omitted, the destination MAC will be automatically
+        determined via ARP.
+    --responder=MODE
+        Enable responder mode (EXPERIMENTAL). Possible values for MODE are:
+        mirror  Each received packet will be mirrored back to the sender.
+        trigger Each received packet will trigger sending of specified packets.
+    --bpf-filter=FILTER
+        Receive bpf filter for responder mode.
 
 
 ### Examples
