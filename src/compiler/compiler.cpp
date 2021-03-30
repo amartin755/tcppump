@@ -55,7 +55,7 @@ cPacketData& cCompiler::operator<< (const std::list<std::string>& input)
 
 void cCompiler::processPcapFiles (const std::list<std::string>& input)
 {
-    Console::PrintDebug ("Parsing %d PCAP files ...\n", input.size());
+    Console::PrintDebug ("Parsing %d PCAP files ...\n", (int)input.size());
 
     for (const auto & file : input)
     {
@@ -95,7 +95,7 @@ void cCompiler::processPackets (const std::list<std::string>& input)
     cInstructionParser::cResult result;
     cTimeval timestamp, currtime;
 
-    Console::PrintDebug ("Parsing %d packets ...\n", input.size());
+    Console::PrintDebug ("Parsing %d packets ...\n", (int)input.size());
 
     for (const auto & packet : input)
     {
@@ -139,7 +139,7 @@ void cCompiler::processScriptFiles (const std::list<std::string>& input)
     cTimeval timestamp, currtime, scriptStartTime;
     int count;
 
-    Console::PrintDebug ("Parsing %d script files ...\n", input.size());
+    Console::PrintDebug ("Parsing %d script files ...\n", (int)input.size());
 
     for (const auto & file : input)
     {

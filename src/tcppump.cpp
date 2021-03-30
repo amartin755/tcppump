@@ -235,7 +235,7 @@ int cTcpPump::execute (const std::list<std::string>& args)
         return -1;
     }
 
-    activeDelay.setUs(options.delay * timeScale);
+    activeDelay.setUs((uint64_t)options.delay * (uint64_t)timeScale);
 
 #if HAVE_WINDOWS == 0
     cTimeval accuracy = tcppump::SleepInit ();
@@ -286,13 +286,13 @@ int cTcpPump::execute (const std::list<std::string>& args)
             else
                 backend.prepare (*ifc, realtimeMode, options.repeat, responder == TRIGGER);
 
-            Console::PrintMoreVerbose ("Will send %d packets\n", packetData.getPacketCnt());
+            Console::PrintMoreVerbose ("Will send %zu packets\n", packetData.getPacketCnt());
             if (options.repeat)
                 Console::PrintMoreVerbose ("Repeating %d times\n", options.repeat);
             else
                 Console::PrintMoreVerbose ("Repeating infinitely\n");
             if (realtimeMode)
-                Console::PrintMoreVerbose ("Real-time mode with default delay between packets %" PRIu64 " usecs\n\n", activeDelay);
+                Console::PrintMoreVerbose ("Real-time mode with default delay between packets %" PRIu64 " usecs\n\n", activeDelay.us());
             else
                 Console::PrintMoreVerbose ("Max. throughput mode\n\n");
 

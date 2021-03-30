@@ -51,10 +51,10 @@ bool cDissector::dissect () const
             throw "Packet too short (< 14 bytes)";
         }
         // first, we print the mac header
-        Console::Print("%02x:%02x:%02x:%02x:%02x:%02x > %02x:%02x:%02x:%02x:%02x:%02x (packet length %d)\n  ",
+        Console::Print("%02x:%02x:%02x:%02x:%02x:%02x > %02x:%02x:%02x:%02x:%02x:%02x (packet length %u)\n  ",
                 header->src.mac[0], header->src.mac[1], header->src.mac[2], header->src.mac[3], header->src.mac[4], header->src.mac[5],
                 header->dest.mac[0], header->dest.mac[1], header->dest.mac[2], header->dest.mac[3], header->dest.mac[4], header->dest.mac[5],
-                packetLength);
+                (unsigned)packetLength);
 
         // ... then walk through possible existing VLAN and LLC/SNAP headers
         const uint16_t* typeLength = (const uint16_t*)dissectVLAN (&header->ethertypeLength);
@@ -81,7 +81,7 @@ bool cDissector::dissect () const
         }
         // Finally, all upper layer protocols are just 'payload'
         if (payload)
-            Console::Print("Payload %u bytes\n ", packet + packetLength - (uint8_t*)payload);
+            Console::Print("Payload %u bytes\n ", unsigned(packet + packetLength - (uint8_t*)payload));
     }
     catch (const char *malformed)    // malformed packet?
     {
