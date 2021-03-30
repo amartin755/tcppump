@@ -50,16 +50,12 @@ typedef struct
     uint16_t chksum;
     struct in_addr srcIp;
     struct in_addr dstIp;
-    ipv4_option_router_alert_t routerAlert;
 
     void init (void)
     {
         std::memset (this, 0, sizeof (*this));
         setVersion (4);
         setHeaderLenght (5);
-        routerAlert.type   = 0x94;
-        routerAlert.length = 4;
-        routerAlert.value  = 0;
     }
 
     void setVersion (int version)
@@ -101,6 +97,20 @@ typedef struct
     }
 
 }ipv4_header_t;
+
+typedef struct
+{
+    ipv4_header_t ip;
+    ipv4_option_router_alert_t routerAlert;
+
+    void init (void)
+    {
+        ip.init();
+        routerAlert.type   = 0x94;
+        routerAlert.length = 4;
+        routerAlert.value  = 0;
+    }
+}ipv4_header_with_router_alert_t;
 
 typedef struct
 {
@@ -149,7 +159,7 @@ public:
 protected:
     const ipv4_header_t& getHeader () const
     {
-        return ipHeader;
+        return ipHeader.ip;
     }
     uint8_t  getPayloadAt8 (unsigned offset) const;
     uint16_t getPayloadAt16 (unsigned offset) const; // note: offset is a byte offset!!!
@@ -158,16 +168,16 @@ protected:
     void     addRouterAlertOption (void);
     size_t   getHeaderLength () const
     {
-        return ipHeader.getHeaderLenght() * 4;
+        return ipHeader.ip.getHeaderLenght() * 4;
     }
     void updateHeaderChecksum ();
 
 
 private:
-    ipv4_header_t              ipHeader;
-    std::list<cEthernetPacket> packets;
-    unsigned                    mtu;
-    const cEthernetPacket**    packetsAsArray;
+    ipv4_header_with_router_alert_t ipHeader;
+    std::list<cEthernetPacket>      packets;
+    unsigned                        mtu;
+    const cEthernetPacket**         packetsAsArray;
 
     static uint16_t identification;
     bool hasId;

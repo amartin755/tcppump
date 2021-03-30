@@ -49,6 +49,7 @@ public:
 #endif
 
 private:
+    bool hasEmbeddedInetHeader (unsigned type);
 };
 
 

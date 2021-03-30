@@ -69,47 +69,47 @@ void cIPv4Packet::setDestMac (const cMacAddress& dest)
 
 void cIPv4Packet::setDSCP (int dscp)
 {
-    ipHeader.setDSCP (dscp);
+    ipHeader.ip.setDSCP (dscp);
 }
 
 void cIPv4Packet::setECN (int ecn)
 {
-    ipHeader.setECN (ecn);
+    ipHeader.ip.setECN (ecn);
 }
 
 void cIPv4Packet::setTimeToLive (uint8_t ttl)
 {
-    ipHeader.ttl = ttl;
+    ipHeader.ip.ttl = ttl;
 }
 
 void cIPv4Packet::setDontFragment (bool df)
 {
-    ipHeader.setFlagDF (df);
+    ipHeader.ip.setFlagDF (df);
 }
 
 void cIPv4Packet::setSource (const cIpAddress& ip)
 {
-    ipHeader.srcIp = ip.get();
+    ipHeader.ip.srcIp = ip.get();
 }
 
 void cIPv4Packet::getSource (cIpAddress& ip) const
 {
-    ip.set(ipHeader.srcIp);
+    ip.set(ipHeader.ip.srcIp);
 }
 
 void cIPv4Packet::setDestination (const cIpAddress& ip)
 {
-    ipHeader.dstIp = ip.get();
+    ipHeader.ip.dstIp = ip.get();
 }
 
 void cIPv4Packet::getDestination (cIpAddress& ip) const
 {
-    ip.set(ipHeader.dstIp);
+    ip.set(ipHeader.ip.dstIp);
 }
 
 void cIPv4Packet::setIdentification (uint16_t id)
 {
-    ipHeader.ident = htons(id);
+    ipHeader.ip.ident = htons(id);
     hasId = true;
 }
 
@@ -130,16 +130,16 @@ void cIPv4Packet::compile (uint8_t protocol, const uint8_t* l4header, size_t l4h
     // if there is no destination mac AND we have an ip multicast, translate to mac multicast
     if (!packet.hasDestMac())
     {
-        cIpAddress dstIp (ipHeader.dstIp);
+        cIpAddress dstIp (ipHeader.ip.dstIp);
         if (dstIp.isMulticast ())
         {
             packet.setDestMac (cMacAddress (1, 0, 0x5e, dstIp.getAsArray()[1] & 0x7f, dstIp.getAsArray()[2], dstIp.getAsArray()[3]));
         }
     }
 
-    ipHeader.protocol = protocol;
+    ipHeader.ip.protocol = protocol;
     if (fragCnt > 1 && !hasId)
-        ipHeader.ident = htons(identification++);
+        ipHeader.ip.ident = htons(identification++);
 
     for (unsigned n = 1; n < fragCnt; n++)
         packets.push_back(std::move(cEthernetPacket(packet)));
@@ -157,9 +157,9 @@ void cIPv4Packet::compile (uint8_t protocol, const uint8_t* l4header, size_t l4h
         else
             fragLen = payloadLen + ipHeaderLen > mtu ? mtu - ipHeaderLen : payloadLen;
 
-        ipHeader.totalLength = htons (uint16_t(ipHeaderLen + fragLen));
-        ipHeader.setFlagMF (n + 1 != fragCnt);
-        ipHeader.setOffset ((unsigned)offset);
+        ipHeader.ip.totalLength = htons (uint16_t(ipHeaderLen + fragLen));
+        ipHeader.ip.setFlagMF (n + 1 != fragCnt);
+        ipHeader.ip.setOffset ((unsigned)offset);
         updateHeaderChecksum ();
 
         p.setPayload ((uint8_t*)&ipHeader, ipHeaderLen);           // write IP header
@@ -233,13 +233,13 @@ void cIPv4Packet::updateL4Header (const uint8_t* l4header, size_t l4headerLen)
 
 void cIPv4Packet::updateHeaderChecksum ()
 {
-    ipHeader.chksum = 0;
-    ipHeader.chksum = cInetChecksum::rfc1071((const uint16_t*)&ipHeader, getHeaderLength(), nullptr, 0);
+    ipHeader.ip.chksum = 0;
+    ipHeader.ip.chksum = cInetChecksum::rfc1071((const uint16_t*)&ipHeader, getHeaderLength(), nullptr, 0);
 }
 
 void cIPv4Packet::addRouterAlertOption (void)
 {
-    ipHeader.setHeaderLenght(ipHeader.getHeaderLenght() + sizeof (ipv4_option_router_alert_t) / 4);
+    ipHeader.ip.setHeaderLenght(ipHeader.ip.getHeaderLenght() + sizeof (ipv4_option_router_alert_t) / 4);
 }
 
 

@@ -22,6 +22,7 @@
 #include "bug.hpp"
 #include "inetchecksum.hpp"
 #include "icmppacket.hpp"
+#include "udppacket.hpp"
 
 
 
@@ -36,20 +37,60 @@ void cIcmpPacket::compileRaw (uint8_t type, uint8_t code, const uint8_t* payload
     header.type = type;
     header.code = code;
     header.checksum = 0;
-    header.checksum = cInetChecksum::rfc1071((const uint16_t*)&header, sizeof(header), payload, len);
 
+    if (!payload && hasEmbeddedInetHeader(type))
+    {
+        const ipv4_header_t& ipHeader = cIPv4Packet::getHeader();
+        struct
+        {
+            uint32_t null;
+            ipv4_header_t ip;
+            udp_header_t udp;
+        }icmpPayload;
+
+        std::memset (&icmpPayload, 0, sizeof (icmpPayload));
+        icmpPayload.ip.init ();
+
+        icmpPayload.ip.srcIp = ipHeader.dstIp;
+        icmpPayload.ip.dstIp = ipHeader.srcIp;
+        icmpPayload.ip.protocol = PROTO_UDP;
+        icmpPayload.ip.ttl = 64;
+        icmpPayload.ip.totalLength = htons(icmpPayload.ip.getHeaderLenght() * 4 + sizeof (udp_header_t));
+        icmpPayload.ip.chksum = cInetChecksum::rfc1071((const uint16_t*)&icmpPayload.ip, sizeof(icmpPayload.ip));
+
+        icmpPayload.udp.length = htons (sizeof (udp_header_t));
+        payload = (uint8_t*)&icmpPayload;
+        len = sizeof(icmpPayload);
+    }
+
+    header.checksum = cInetChecksum::rfc1071((const uint16_t*)&header, sizeof(header), payload, len);
     cIPv4Packet::compile (PROTO_ICMP, (const uint8_t*)&header, sizeof (header), payload, len);
 }
 
 void cIcmpPacket::compileRaw (uint8_t type, uint8_t code, uint16_t checksum, const uint8_t* payload, size_t len)
 {
-    icmp_header_t header;
+    this->compileRaw (type, code, payload, len);
 
+    icmp_header_t header;
     header.type = type;
     header.code = code;
     header.checksum = checksum;
 
-    cIPv4Packet::compile (PROTO_ICMP, (const uint8_t*)&header, sizeof (header), payload, len);
+    cIPv4Packet::updateL4Header((const uint8_t*)&header, sizeof (header));
+}
+
+bool cIcmpPacket::hasEmbeddedInetHeader (unsigned type)
+{
+    switch (type)
+    {
+    case 3:
+    case 4:
+    case 5:
+    case 11:
+    case 12:
+        return true;
+    }
+    return false;
 }
 
 #ifdef WITH_UNITTESTS
