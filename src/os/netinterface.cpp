@@ -16,26 +16,13 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef RESOLVER_HPP_
-#define RESOLVER_HPP_
 
-#include <map>
 
-#include "packetdata.hpp"
-#include "arp.hpp"
 #include "netinterface.hpp"
-#include "macaddress.hpp"
-#include "ipaddress.hpp"
+#include "interface.hpp"
 
-class cResolver
+cNetInterface* cNetInterface::factory(const char* ifname, bool sendOnly)
 {
-public:
-    cResolver (cNetInterface &netif);
-    cPacketData& operator<< (cPacketData& input);
+    return new cInterface (ifname, sendOnly);
+}
 
-private:
-    cArp arper;
-    std::map <cIpAddress, cMacAddress> cache;
-};
-
-#endif /* RESOLVER_HPP_ */

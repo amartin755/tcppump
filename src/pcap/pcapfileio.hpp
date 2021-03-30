@@ -20,7 +20,6 @@
 #ifndef PCAPFILEIO_HPP_
 #define PCAPFILEIO_HPP_
 
-#if HAVE_PCAP
 
 #include <cstdint>
 #include <pcap.h>
@@ -56,5 +55,4 @@ private:
     cTimeval offset;
 };
 
-#endif /* HAVE_PCAP */
 #endif /* PCAPFILEIO_HPP_ */

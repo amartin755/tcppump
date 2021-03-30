@@ -44,9 +44,7 @@ public:
 private:
     void processPackets (const std::list<std::string>& input);
     void processScriptFiles (const std::list<std::string>& input);
-#if HAVE_PCAP
     void processPcapFiles (const std::list<std::string>& input);
-#endif
 
     cPacketData data;
     inputType type;

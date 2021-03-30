@@ -23,7 +23,7 @@
 #include "ipv4packet.hpp"
 
 
-cResolver::cResolver (cInterface &netif) : arper (netif)
+cResolver::cResolver (cNetInterface &netif) : arper (netif)
 {
 }
 

@@ -22,6 +22,7 @@
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
+#define HAVE_REMOTE 1
 #include <pcap.h>
 #include <Win32-Extensions.h>
 #include <iphlpapi.h>
@@ -33,6 +34,7 @@
 #include "signal.hpp"
 #include "console.hpp"
 #include "ethernetpacket.hpp"
+#include "pcapfilter.hpp"
 
 class cPcapSendQueue
 {
@@ -155,7 +157,7 @@ public:
 
         if (q.queued () + cEthernetPacket::MAX_DOUBLE_TAGGED_PACKET + sizeof (pcap_pkthdr) >= pcapMaxQueueSize) // don't know the size of next packet, assume maximum length
         {
-            ReleaseSemaphore (semDataAvail, 1, NULL);	// wake up worker thread
+            ReleaseSemaphore (semDataAvail, 1, NULL);    // wake up worker thread
 
             // acquire next send queue
             HANDLE h[] = {sigEvent, semSpaceAvail};
@@ -280,7 +282,7 @@ public:
  * Examples: FriendlyName "WiFi" or "Local Area Connection 1."
  *           AdapterName "{3F4A136A-2ED5-4226-9CB2-7A511E93CD48}"
  */
-cInterface::cInterface(const char* ifname)
+cInterface::cInterface(const char* ifname, bool txOnly)
 : name (ifname)
 {
     ifcHandle  = nullptr;
@@ -290,6 +292,7 @@ cInterface::cInterface(const char* ifname)
     sentPackets = 0;
     sentBytes = 0;
     duration = 0;
+    sendOnly = txOnly;
 }
 
 cInterface::~cInterface()
@@ -316,12 +319,14 @@ bool cInterface::open ()
     }
 
     // convert windows' AdapterName to pcap known interface name
-    std::string pcapIfName("\\Device\\NPF_");
+    std::string pcapIfName ("\\Device\\NPF_");
     pcapIfName += adapter->AdapterName;
 
     char errbuf[PCAP_ERRBUF_SIZE] = {0};
-    // we don't want to receive any packets, thus we set the capbuf=0
-    ifcHandle = pcap_open_live(pcapIfName.c_str(), 0, 0, 1000, errbuf);
+    ifcHandle = pcap_open (pcapIfName.c_str(),
+            sendOnly ? 0 : 65536, // if we don't want to receive any packets, thus we set the capbuf=0
+            sendOnly ? 0 : PCAP_OPENFLAG_MAX_RESPONSIVENESS | PCAP_OPENFLAG_NOCAPTURE_LOCAL,
+            1000, NULL, errbuf);
 
     if (!ifcHandle)
     {
@@ -366,6 +371,11 @@ bool cInterface::sendPacket (const uint8_t* payload, size_t length, const cTimev
 
         if (ret == -1)
             Console::PrintError ("pcap error: %s\n", pcap_geterr (ifcHandle));
+        else
+        {
+            sentBytes += length;
+            sentPackets++;
+        }
 
         return ret == 0;
     }
@@ -374,6 +384,7 @@ bool cInterface::sendPacket (const uint8_t* payload, size_t length, const cTimev
 // packetCnt = 0 means endless loop
 bool cInterface::prepareSendQueue (size_t packetCnt, size_t totalBytes, bool synchronized)
 {
+    BUG_ON (sendOnly); // in responder mode we do not want to send queue based
     BUG_ON (!job); // we only support one job at a time
     BUG_ON (ifcHandle);
 
@@ -538,4 +549,62 @@ uint64_t cInterface::getLinkSpeed (const char* guid)
     _pclose(fp);
 
     return (uint64_t)std::strtoull(speed, NULL, 10);
+}
+
+const char* cInterface::getName (void) const
+{
+    return name.c_str();
+}
+
+
+bool cInterface::waitForPacket (void)
+{
+    return !!receivePacket (nullptr, nullptr);
+}
+
+const uint8_t* cInterface::receivePacket (cTimeval* timestamp, int* len)
+{
+    BUG_ON (!sendOnly);
+
+    struct pcap_pkthdr *header;
+    const u_char *pkt_data;
+    int res;
+
+    do
+    {
+        if (cSignal::sigintSignalled ())
+            return nullptr;
+    }
+    while (!(res = pcap_next_ex(ifcHandle, &header, &pkt_data)));
+
+
+    if (res < 0)
+    {
+        Console::PrintError ("Error while reading packets: %s\n", pcap_geterr (ifcHandle));
+        return nullptr;
+    }
+
+    if (timestamp)
+        timestamp->set (header->ts);
+    if (len)
+        *len = (int)header->len;
+
+    return (uint8_t*)pkt_data;
+}
+
+bool cInterface::addReceiveFilter (const char* filter)
+{
+    BUG_ON (!sendOnly);
+    cPcapFilter f(ifcHandle);
+    return f.compile (filter) && f.apply();
+}
+
+bool cInterface::addReceiveFilter (bool tcp, bool udp,
+                                   const std::list<const char*>* ethertypes,
+                                   const std::list<const char*>* hostsMAC,
+                                   const std::list<const char*>* hostsIP)
+{
+    BUG_ON (!sendOnly);
+    cPcapFilter f(ifcHandle);
+    return f.compile (tcp, udp, ethertypes, hostsMAC, hostsIP) && f.apply();
 }

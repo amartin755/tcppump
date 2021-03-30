@@ -17,8 +17,6 @@
  */
 
 
-#if HAVE_PCAP
-
 #include <cstdio>
 
 #include <pcap.h>
@@ -283,4 +281,3 @@ void cPcapFileIO::unitTest (const char* file)
 }
 #endif /* WITH_UNITTESTS */
 
-#endif /* HAVE_PCAP */

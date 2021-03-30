@@ -25,6 +25,7 @@ set (SOURCES
      ${CMAKE_CURRENT_SOURCE_DIR}/scheduler.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/output.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/preprocessor.cpp
+     ${CMAKE_CURRENT_SOURCE_DIR}/responder.cpp
      PARENT_SCOPE
 )
 set (INCLUDES

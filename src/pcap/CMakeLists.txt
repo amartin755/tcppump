@@ -21,6 +21,7 @@
 set (SOURCES
      ${SOURCES}
      ${CMAKE_CURRENT_SOURCE_DIR}/pcapfileio.cpp
+     ${CMAKE_CURRENT_SOURCE_DIR}/pcapfilter.cpp
      PARENT_SCOPE
 )
 set (INCLUDES

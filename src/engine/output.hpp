@@ -22,34 +22,29 @@
 #include <cstdint>
 
 #include "packetdata.hpp"
-#include "interface.hpp"
+#include "netinterface.hpp"
 #include "preprocessor.hpp"
-#if HAVE_PCAP
 #include "pcapfileio.hpp"
-#endif
 
 
 class cOutput
 {
 public:
     cOutput (const cPreprocessor &preproc);
-    void prepare (cInterface &netif, bool realtime, int repeat);
-#if HAVE_PCAP
+    void prepare (cNetInterface &netif, bool realtime, int repeat, bool responderMode);
     void prepare (const char* pcapOutFile, int repeat);
-#endif
     cPacketData& operator<< (cPacketData& input);
     void statistic (uint64_t& sentPackets, uint64_t& sentBytes, double& duration) const;
 
 
 private:
-#if HAVE_PCAP
     cPcapFileIO outfile;
-#endif
     inline void processPacket (const cTimeval& sendTime, cEthernetPacket& p);
     const cPreprocessor &preproc;
-    cInterface *netif;
+    cNetInterface *netif;
     bool realtimeMode;
     int repeat;
+    bool responderMode;
 
     uint64_t pcapWrittenPackets;
     uint64_t pcapWrittenBytes;

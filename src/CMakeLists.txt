@@ -96,6 +96,10 @@ check_symbol_exists (pcap_open_offline "stdio.h;pcap.h" HAVE_PCAP)
 set (CMAKE_REQUIRED_LIBRARIES "")
 set (CMAKE_REQUIRED_INCLUDES "")
 
+if (NOT HAVE_PCAP)
+    message (FATAL_ERROR "Library pcap not found!")
+endif ()
+
 
 if (WIN32)
     # winsock, winpcap, conio and iphlpapi are needed on windows
@@ -115,9 +119,6 @@ if (WIN32)
     endif ()
     if (NOT HAVE_WS2)
         message (FATAL_ERROR "Winsock and ip helper headers not found!")
-    endif ()
-    if (NOT HAVE_PCAP)
-        message (FATAL_ERROR "Library wpcap not found!")
     endif ()
 else ()
     check_symbol_exists (inet_pton "arpa/inet.h" HAVE_PTON)
@@ -774,7 +775,7 @@ add_test(NAME igmp-10--nok COMMAND tcppump ${DEFAULT_PARAMS} "igmp(dip=225.0.0.1
 set_tests_properties(igmp-10--nok PROPERTIES WILL_FAIL TRUE)
 
 add_test(NAME script-01--ok COMMAND tcppump ${DEFAULT_PARAMS} -vvv -s ${TEST_FILE_PREFIX}/all.pump WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-set_tests_properties(script-01--ok PROPERTIES PASS_REGULAR_EXPRESSION "Sending 242 packets.*Successfully wrote 242 packets")
+set_tests_properties(script-01--ok PROPERTIES PASS_REGULAR_EXPRESSION "Will send 242 packets.*Successfully wrote 242 packets")
 add_test(NAME script-01--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/all.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 ### AFL findings

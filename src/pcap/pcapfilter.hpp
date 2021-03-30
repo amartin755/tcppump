@@ -1,6 +1,6 @@
 /**
  * TCPPUMP <https://github.com/amartin755/tcppump>
- * Copyright (C) 2012-2020 Andreas Martin (netnag@mailbox.org)
+ * Copyright (C) 2012-2021 Andreas Martin (netnag@mailbox.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,26 +16,38 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef RESOLVER_HPP_
-#define RESOLVER_HPP_
 
-#include <map>
+#ifndef PCAPFILTER_HPP_
+#define PCAPFILTER_HPP_
 
-#include "packetdata.hpp"
-#include "arp.hpp"
-#include "netinterface.hpp"
-#include "macaddress.hpp"
-#include "ipaddress.hpp"
 
-class cResolver
+#include <cstdint>
+#include <list>
+#include <pcap.h>
+
+
+class cPcapFilter
 {
 public:
-    cResolver (cNetInterface &netif);
-    cPacketData& operator<< (cPacketData& input);
+    cPcapFilter (pcap_t* ifc);
+    virtual ~cPcapFilter ();
+    bool compile (const char* filter);
+    bool compile (bool tcp, bool udp,
+                           const std::list<const char*>* ethertypes,
+                           const std::list<const char*>* hostsMAC,
+                           const std::list<const char*>* hostsIP);
+    bool apply (void);
+    bool remove (void);
+
+#ifdef WITH_UNITTESTS
+    static void unitTest ();
+#endif
 
 private:
-    cArp arper;
-    std::map <cIpAddress, cMacAddress> cache;
+    void resetBPF (void);
+
+    pcap_t* ifcHandle;
+    bpf_program bpfCode;
 };
 
-#endif /* RESOLVER_HPP_ */
+#endif /* PCAPFILTER_HPP_ */

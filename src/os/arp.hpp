@@ -22,16 +22,16 @@
 #include "macaddress.hpp"
 #include "ipaddress.hpp"
 
-class cInterface;
+class cNetInterface;
 
 class cArp
 {
 public:
-    cArp (cInterface& ifc);
+    cArp (cNetInterface& ifc);
     bool resolve (const cIpAddress& ip, cMacAddress& mac);
 
 private:
-    cInterface& ifc;
+    cNetInterface& ifc;
 };
 
 

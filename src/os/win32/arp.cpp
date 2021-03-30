@@ -24,9 +24,9 @@
 #include "bug.hpp"
 #include "inet.h"
 #include "console.hpp"
-#include "interface.hpp"
+#include "netinterface.hpp"
 
-cArp::cArp (cInterface& i) : ifc(i)
+cArp::cArp (cNetInterface& i) : ifc(i)
 {
     // We don't really need an "opened" interface here. This is a sanity check, to accept validated interfaces only.
     BUG_ON (i.isOpen ());

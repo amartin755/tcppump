@@ -28,6 +28,7 @@ endif ()
 
 set (SOURCES
      ${SOURCES}
+     ${CMAKE_CURRENT_SOURCE_DIR}/netinterface.cpp
      ${OS_SPECIFIC}/interface.cpp
      ${OS_SPECIFIC}/getch.cpp
      ${OS_SPECIFIC}/sleep.cpp

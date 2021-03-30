@@ -50,7 +50,9 @@ public:
         setDestMac (cMacAddress (unicast, multicast));
     }
     void setSrcMac (const cMacAddress& src);
+    void getSrcMac (cMacAddress& src) const;
     void setDestMac (const cMacAddress& dest);
+    void getDestMac (cMacAddress& dest) const;
     void setMacHeader (const cMacAddress& src, const cMacAddress& dest);
     void addLlcHeader (uint8_t dsap, uint8_t ssap, uint16_t control);
     void addSnapHeader (uint32_t oui, uint16_t protocol);
@@ -82,7 +84,7 @@ public:
         return ((uint16_t*)pPayload)[offset/2];
     }
     inline size_t getPayloadLength () const {return payloadLength;}
-    inline uint16_t getEthertype () const {return *pEthertypeLength;}
+    inline uint16_t getTypeLength () const {return ntohs(*pEthertypeLength);}
     void updatePayloadAt (unsigned offset, const void* payload, size_t len);
 
     static const size_t   MAX_ETHERNET_PAYLOAD     = 1500;
@@ -105,6 +107,8 @@ private:
         if ((getLength () + addedBytes) > packetMaxLength)
             throw FormatException (exParRange, NULL);
     }
+    void parseVlanTags (void);
+    void parseLlcHeader(void);
 
     const uint32_t* data;       // holds the packet data; do never access directly; use packet instead!
     uint8_t*  packet;            // always points to packet begin

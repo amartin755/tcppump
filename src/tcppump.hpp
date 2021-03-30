@@ -26,6 +26,7 @@
 #include "cmdlineapp.hpp"
 #include "ethernetpacket.hpp"
 #include "pcapfileio.hpp"
+#include "netinterface.hpp"
 
 typedef struct
 {
@@ -44,6 +45,8 @@ typedef struct
     int          arp;
     const char*  overwriteDMAC;
     int          testPredictableRandom;
+    const char*  responderMode;
+    const char*  bpf;
 }appOptions;
 
 class cInterface;
@@ -66,12 +69,14 @@ private:
     void printFileParseError (const FileParseException &e) const;
 
     appOptions options;
-#if HAVE_PCAP
     cPcapFileIO outfile;
-#endif
     cTimeval activeDelay;
     unsigned timeScale; // 1 = us, 1000 = ms, 1000000 = sec
     bool realtimeMode;  // if true, packets will be sent time triggered
+
+    enum reponder_mode {NONE = 0, ACK, MIRROR, TRIGGER};
+    reponder_mode responder;
+    cNetInterface* ifc;
 };
 
 #endif /* TCPPUMP_HPP */

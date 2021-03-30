@@ -37,9 +37,11 @@
 #include "bug.hpp"
 #include "console.hpp"
 #include "sleep.hpp"
+#include "pcapfilter.hpp"
+#include "signal.hpp"
 
 
-cInterface::cInterface(const char* ifname)
+cInterface::cInterface(const char* ifname, bool txOnly)
 : name (ifname)
 {
     ifcHandle   = -1;
@@ -49,6 +51,9 @@ cInterface::cInterface(const char* ifname)
     firstPacket = true;
     mtu         = 0;
     linkSpeed   = 0;
+    sendOnly    = txOnly;
+    pcapHandle  = nullptr;
+
 }
 
 cInterface::~cInterface()
@@ -59,7 +64,7 @@ cInterface::~cInterface()
 bool cInterface::open ()
 {
     // aleady open
-    if (ifcHandle != -1)
+    if (ifcHandle > 0)
         return true;
 
     ifIndex = if_nametoindex (name.c_str ());
@@ -92,18 +97,46 @@ bool cInterface::open ()
 
     lastSentPacket.clear();
 
-    return (ifcHandle != -1);
+    if (!sendOnly)
+    {
+        char errbuf[PCAP_ERRBUF_SIZE] = {0};
+        pcapHandle = pcap_create (name.c_str(), errbuf);
+        if (!pcapHandle)
+        {
+            Console::PrintError ("Unable to open the pcap interface %s.\n", name.c_str());
+            Console::PrintError ("pcap error: %s\n", errbuf);
+            this->close();
+        }
+        if (pcap_set_timeout (pcapHandle, 1000)  ||
+            pcap_set_snaplen (pcapHandle, 65536) ||
+            pcap_set_immediate_mode (pcapHandle, 1))
+        {
+            Console::PrintError ("Error during setup of pcap interface. %s\n", pcap_geterr (pcapHandle));
+        }
+        int ret = pcap_activate (pcapHandle);
+        if (ret)
+        {
+            if (ret == PCAP_ERROR_IFACE_NOT_UP)
+                Console::PrintError ("Interface %s is down\n", name.c_str());
+            else
+                Console::PrintError ("Could not active pcap interface for capturing. %s\n", pcap_geterr (pcapHandle));
+            this->close();
+        }
+    }
+
+    return (isOpen());
 }
 
 
 bool cInterface::close ()
 {
     // aleady closed
-    if (!ifcHandle)
-        return true;
-
-    ::close (ifcHandle);
+    if (ifcHandle > 0)
+        ::close (ifcHandle);
+    if (pcapHandle)
+        pcap_close (pcapHandle);
     ifcHandle = -1;
+    pcapHandle = nullptr;
     ifIndex = 0;
     myMac.clear ();
     myIP.clear ();
@@ -321,4 +354,56 @@ bool cInterface::isOpen () const
 const char* cInterface::getName (void) const
 {
     return name.c_str();
+}
+
+bool cInterface::waitForPacket (void)
+{
+    return !!receivePacket (nullptr, nullptr);
+}
+
+const uint8_t* cInterface::receivePacket (cTimeval* timestamp, int* len)
+{
+    BUG_ON (!sendOnly);
+
+    struct pcap_pkthdr *header;
+    const u_char *pkt_data;
+    int res;
+
+    do
+    {
+        if (cSignal::sigintSignalled ())
+            return nullptr;
+    }
+    while (!(res = pcap_next_ex(pcapHandle, &header, &pkt_data)));
+
+
+    if (res < 0)
+    {
+        Console::PrintError ("Error while reading packets: %s\n", pcap_geterr (pcapHandle));
+        return nullptr;
+    }
+
+    if (timestamp)
+        timestamp->set (header->ts);
+    if (len)
+        *len = (int)header->len;
+
+    return (uint8_t*)pkt_data;
+}
+
+bool cInterface::addReceiveFilter (const char* filter)
+{
+    BUG_ON (!sendOnly);
+    cPcapFilter f(pcapHandle);
+    return f.compile (filter) && f.apply();
+}
+
+bool cInterface::addReceiveFilter (bool tcp, bool udp,
+                                   const std::list<const char*>* ethertypes,
+                                   const std::list<const char*>* hostsMAC,
+                                   const std::list<const char*>* hostsIP)
+{
+    BUG_ON (!sendOnly);
+    cPcapFilter f(pcapHandle);
+    return f.compile (tcp, udp, ethertypes, hostsMAC, hostsIP) && f.apply();
 }

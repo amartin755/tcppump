@@ -161,6 +161,10 @@ public:
     {
         return (mac[0] & 1) && !isBroadcast ();
     }
+    bool isUnicast () const
+    {
+        return !(mac[0] & 1);
+    }
 
 
 #ifdef WITH_UNITTESTS

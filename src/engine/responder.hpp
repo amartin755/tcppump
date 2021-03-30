@@ -1,6 +1,6 @@
 /**
  * TCPPUMP <https://github.com/amartin755/tcppump>
- * Copyright (C) 2012-2020 Andreas Martin (netnag@mailbox.org)
+ * Copyright (C) 2012-2021 Andreas Martin (netnag@mailbox.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,23 +16,20 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ARP_HPP_
-#define ARP_HPP_
+#ifndef RESPONDER_HPP_
+#define RESPONDER_HPP_
 
-#include "macaddress.hpp"
-#include "ipaddress.hpp"
+#include "netinterface.hpp"
 
-class cInterface;
-
-class cArp
+class cResponder
 {
 public:
-    cArp (cInterface& ifc);
-    bool resolve (const cIpAddress& ip, cMacAddress& mac);
+    cResponder (cNetInterface& ifc);
+    void mirror (void);
 
 private:
-    cInterface& ifc;
+    cNetInterface &netif;
+
 };
 
-
-#endif /* ARP_HPP_ */
+#endif /* RESPONDER_HPP_ */

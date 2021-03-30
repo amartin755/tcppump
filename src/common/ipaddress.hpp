@@ -22,6 +22,7 @@
 
 #include <cstring>
 #include <string>
+#include <cstdint>
 
 #include "inet.h"
 #ifdef WITH_UNITTESTS
@@ -145,6 +146,10 @@ public:
         BUG_ON (!cIpAddress("240.0.0.0").isMulticast());
         BUG_ON (cIpAddress("1.2.3.4") < cIpAddress("1.3.3.4"));
         BUG_ON (cIpAddress("2.2.3.4") > cIpAddress("1.3.3.4"));
+        BUG_ON (cIpAddress("1.2.3.4").getAsArray()[0] == 1);
+        BUG_ON (cIpAddress("1.2.3.4").getAsArray()[1] == 2);
+        BUG_ON (cIpAddress("1.2.3.4").getAsArray()[2] == 3);
+        BUG_ON (cIpAddress("1.2.3.4").getAsArray()[3] == 4);
     }
 #endif
 

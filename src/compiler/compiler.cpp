@@ -23,9 +23,7 @@
 #include "parsehelper.hpp"
 #include "formatexception.hpp"
 #include "fileioexception.hpp"
-#if HAVE_PCAP
 #include "pcapfileio.hpp"
-#endif
 
 
 cCompiler::cCompiler (inputType t, const cMacAddress& mac, const cIpAddress& ip, const cTimeval& delay, unsigned delayScale, bool optDestMAC)
@@ -45,11 +43,9 @@ cPacketData& cCompiler::operator<< (const std::list<std::string>& input)
     case SCRIPT:
         processScriptFiles (input);
         break;
-#if HAVE_PCAP
     case PCAP:
         processPcapFiles (input);
         break;
-#endif
     default:
         BUG ("unkown input type");
     }

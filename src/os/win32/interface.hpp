@@ -21,25 +21,23 @@
 #define INTERFACE_H_
 
 #include <string>
-#include <thread>
+#include <list>
 #include <cstdint>
 #include <cstddef>
 #include <iphlpapi.h>
 
-#include "ipaddress.hpp"
-#include "macaddress.hpp"
-#include "timeval.hpp"
+#include "netinterface.hpp"
 
 // forward declarations
 typedef struct pcap pcap_t;
 struct pcap_send_queue;
 class cJob;
 
-class cInterface
+class cInterface : public cNetInterface
 {
 
 public:
-    cInterface(const char* ifname);
+    cInterface(const char* ifname, bool sendOnly);
     virtual ~cInterface();
     bool open ();
     bool close ();
@@ -51,9 +49,14 @@ public:
     bool getIPv4 (cIpAddress&);
     uint32_t getMTU (void);
     bool isOpen () const;
-
-    void operator()();
-
+    const char* getName (void) const;
+    bool waitForPacket (void);
+    const uint8_t* receivePacket (cTimeval* timestamp, int* len);
+    bool addReceiveFilter (const char* filter);
+    bool addReceiveFilter (bool tcp, bool udp,
+                           const std::list<const char*>* ethertypes,
+                           const std::list<const char*>* hostsMAC,
+                           const std::list<const char*>* hostsIP);
 
 private:
     PIP_ADAPTER_ADDRESSES getAdapterInfo ();
@@ -70,6 +73,7 @@ private:
     double   duration;
 
     cJob* job;
+    bool sendOnly;
 };
 
 #endif /* INTERFACE_H_ */

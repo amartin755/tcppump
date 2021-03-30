@@ -28,18 +28,18 @@
 
 
 cOutput::cOutput (const cPreprocessor &p)
-: preproc (p), netif (nullptr), realtimeMode (false), repeat (1), pcapWrittenPackets(0), pcapWrittenBytes(0)
+: preproc (p), netif (nullptr), realtimeMode (false), repeat (1), responderMode(false), pcapWrittenPackets(0), pcapWrittenBytes(0)
 {
 }
 
-void cOutput::prepare(cInterface &netif, bool realtime, int repeat)
+void cOutput::prepare(cNetInterface &netif, bool realtime, int repeat, bool responderMode)
 {
     this->netif  = &netif;
     realtimeMode = realtime;
     this->repeat = repeat;
+    this->responderMode = responderMode;
 }
 
-#if HAVE_PCAP
 void cOutput::prepare (const char* pcapOutFile, int repeat)
 {
     realtimeMode = false;
@@ -51,7 +51,6 @@ void cOutput::prepare (const char* pcapOutFile, int repeat)
         throw FileIOException (FileIOException::OPEN, pcapOutFile);
 
 }
-#endif
 
 cPacketData& cOutput::operator<< (cPacketData& input)
 {
@@ -59,7 +58,7 @@ cPacketData& cOutput::operator<< (cPacketData& input)
     bool endless = !repeat;
 
 
-    if (netif)
+    if (netif && !responderMode)
     {
         netif->prepareSendQueue(input.getPacketCnt() * repeat,
                 input.getTotalPacketBytes() * repeat,
@@ -68,8 +67,11 @@ cPacketData& cOutput::operator<< (cPacketData& input)
 
     while (!cSignal::sigintSignalled() && (endless || repeat--))
     {
-        for (cLinkable* p = input.getFirst(); p != nullptr; p = p->getNext())
+        for (cLinkable* p = input.getFirst(); !cSignal::sigintSignalled() && (p != nullptr); p = p->getNext())
         {
+            if (responderMode && !netif->waitForPacket())
+                break;
+
             sendTime.add (p->getTime());
             cEthernetPacket* eth;
             cIPv4Packet* ipv4;
@@ -90,7 +92,7 @@ cPacketData& cOutput::operator<< (cPacketData& input)
         }
     }
 
-    if (netif)
+    if (netif && !responderMode)
     {
         netif->flushSendQueue();
     }
@@ -109,7 +111,6 @@ void cOutput::processPacket (const cTimeval& sendTime, cEthernetPacket& p)
             throw std::runtime_error("Could not send packet.");
         }
     }
-#if HAVE_PCAP
     else
     {
         if (!outfile.write (sendTime, p.get(), (int)p.getLength(), true))
@@ -117,7 +118,6 @@ void cOutput::processPacket (const cTimeval& sendTime, cEthernetPacket& p)
         pcapWrittenPackets++;
         pcapWrittenBytes += (uint64_t)p.getLength ();
     }
-#endif
 }
 
 void cOutput::statistic (uint64_t& sentPackets, uint64_t& sentBytes, double& duration) const

@@ -28,12 +28,17 @@
 #include "ipaddress.hpp"
 #include "macaddress.hpp"
 #include "timeval.hpp"
+#include "netinterface.hpp"
 
 
-class cInterface
+// forward declarations
+typedef struct pcap pcap_t;
+
+
+class cInterface : public cNetInterface
 {
 public:
-    cInterface(const char* ifname);
+    cInterface(const char* ifname, bool sendOnly);
     virtual ~cInterface();
     bool open ();
     bool close ();
@@ -47,11 +52,19 @@ public:
     uint64_t getLinkSpeed (void);
     bool isOpen () const;
     const char* getName (void) const;
+    bool waitForPacket (void);
+    const uint8_t* receivePacket (cTimeval* timestamp, int* len);
+    bool addReceiveFilter (const char* filter);
+    bool addReceiveFilter (bool tcp, bool udp,
+                           const std::list<const char*>* ethertypes,
+                           const std::list<const char*>* hostsMAC,
+                           const std::list<const char*>* hostsIP);
 
 private:
 
     std::string name;
     int ifcHandle;
+    pcap_t *pcapHandle;
     int ifIndex;
     cMacAddress myMac;
     cIpAddress myIP;
@@ -63,6 +76,7 @@ private:
     std::chrono::high_resolution_clock::time_point tStart;
     uint64_t sentPackets;
     uint64_t sentBytes;
+    bool sendOnly;
 };
 
 #endif /* INTERFACE_H_ */
