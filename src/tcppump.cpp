@@ -94,8 +94,8 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
 #endif
     addCmdLineOption (true, 'a', "arp",
             "Resolve destination MAC address for IPv4 packets.\n\t"
-            "If dmac parameter of IPv4 based packets is ommited, the destination MAC will be"
-            "automatically detremined via ARP.",
+            "If dmac parameter of IPv4 based packets is omitted, the destination MAC will be\n"
+            "automatically determined via ARP.",
             &options.arp);
 
 #ifndef NDEBUG
