@@ -285,3 +285,14 @@ if (WITH_UNITTESTS)
     target_include_directories (unittest PRIVATE ${INCLUDES})
 endif ()
 
+
+install(TARGETS tcppump)
+set(CPACK_GENERATOR "DEB;STGZ")
+set(CPACK_PACKAGE_CONTACT "Andreas Martin <netnag@mailbox.org>")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_BINARY_DIR}/../LICENSE")
+set(CPACK_RESOURCE_FILE_README "${CMAKE_BINARY_DIR}/../README.md")
+
+set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com/amartin755/tcppump")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.14), libpcap0.8 (>= 1.5.1), libstdc++6 (>=9)")
+set(CPACK_DEBIAN_PACKAGE_SECTION "net")
+include(CPack)

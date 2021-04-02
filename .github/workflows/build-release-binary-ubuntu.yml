@@ -33,7 +33,15 @@ jobs:
       shell: bash
       run: cmake --build build --config $BUILD_TYPE
       
+    - name: Package
+      working-directory: ${{runner.workspace}}/tcppump/build
+      shell: bash
+      run: cpack
+
     - uses: actions/upload-artifact@v2
       with:
         name: release-ubuntu-x64
-        path: ${{runner.workspace}}/tcppump/bin/
+        path: |
+          ${{runner.workspace}}/tcppump/bin/
+          ${{runner.workspace}}/tcppump/build/*.deb
+          ${{runner.workspace}}/tcppump/build/*.sh
