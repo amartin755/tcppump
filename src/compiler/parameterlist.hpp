@@ -88,8 +88,9 @@ class cParameterList
 {
 public:
     cParameterList (const char*);
-    bool isValid ();
-    const char* getParseError ();
+    bool isValid (void);
+    const char* getParseError (void);
+    void checkForUnusedParameters (void);
     cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, bool isOptional = false);
     cParameter* findParameter (const char* parameter, bool isOptional = false);
     cParameter* findParameter (const char* parameter, uint32_t optionalValue);
@@ -108,6 +109,7 @@ public:
 private:
     const char* parseParameters (const char*);
     std::vector<cParameter> list;
+    std::vector<bool> used;
     const char* parseError;
     cDefaultParameter defaultParameter;
 };

@@ -633,13 +633,13 @@ Virtual Router ID (integer: range 1 - 255)
 
     vrid
 
-Virtual Router IPv4 Address; Up to 255 IP addresses are allowed. At least one IP is mandatory, if you provide more addresses they will be silently ignored.
+Virtual Router IPv4 Address; Up to 255 IP addresses are allowed at least one IP is mandatory.
 
     vrip
 
 Virtual Router Priority (integer: range 0 - 255; default 100)
 
-    prio (optional)
+    vrprio (optional)
 
 Advertisement Interval. Note: Value range and unit depends on the specified protocol version. V2: seconds (range: 0 - 255, default 1), V3: centiseconds (integer: range 0 - 4095; default 100)
 

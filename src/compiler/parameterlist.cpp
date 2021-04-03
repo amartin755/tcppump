@@ -267,16 +267,29 @@ cParameterList::cParameterList (const char* parameters)
 }
 
 
-bool cParameterList::isValid ()
+bool cParameterList::isValid (void)
 {
     return parseError == NULL;
 }
 
 
-const char* cParameterList::getParseError ()
+const char* cParameterList::getParseError (void)
 {
     return parseError;
 }
+
+
+void cParameterList::checkForUnusedParameters (void)
+{
+    BUG_ON (list.size() == used.size());
+
+    for (size_t n = 0; n < list.size (); n++)
+    {
+        if (!used.at(n))
+            throw FormatException (exParUnused, list[n].parameter, (int)list[n].parLen);
+    }
+}
+
 
 //FIXME there's a lot of room for improvement; too many string compares
 cParameter* cParameterList::findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, bool isOptional)
@@ -298,6 +311,7 @@ cParameter* cParameterList::findParameter (const cParameter* startAfter, const c
         }
         if (len == par.parLen && !strncmp (parameter, par.parameter, par.parLen))
         {
+            used.at(n) = true;
             return &par;
         }
     }
@@ -406,6 +420,7 @@ const char* cParameterList::parseParameters (const char* parameters)
     bool isString = false;
 
     list.clear ();
+    used.clear ();
 
     /*
      * Parsing rules
@@ -468,7 +483,7 @@ const char* cParameterList::parseParameters (const char* parameters)
             v.value  = token;
             v.valLen = p - token;
         }
-        else	// --> parameter without value
+        else    // --> parameter without value
         {
             v.value  = BOOLVALUE;
             v.valLen = sizeof (BOOLVALUE) - 1;
@@ -476,6 +491,7 @@ const char* cParameterList::parseParameters (const char* parameters)
         // store parameter and its value
         v.index = (int)list.size ();
         list.push_back (v);
+        used.push_back(false);
 
         p = cParseHelper::skipWhitespaces (p);
         if (!cParseHelper::isOneOf (*p, ",)"))

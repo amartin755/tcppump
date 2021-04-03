@@ -23,6 +23,7 @@
 const int exParUnknown = 1;
 const int exParRange   = 2;
 const int exParFormat  = 3;
+const int exParUnused  = 4;
 
 class FormatException
 {
@@ -48,6 +49,8 @@ public:
             return "Range of parameter violated";
         case exParFormat:
             return "Invalid parameter format";
+        case exParUnused:
+            return "Unexpected parameter";
         }
         return "";
     }

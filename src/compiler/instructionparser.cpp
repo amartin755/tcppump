@@ -128,6 +128,8 @@ void cInstructionParser::parse (const char* instruction, cResult& result)
         else
             throwParseException ("Unknown protocol type", keyword, keywordLen);
 
+        params.checkForUnusedParameters ();
+
         return;
     }
     catch (FormatException& e)
@@ -142,6 +144,9 @@ void cInstructionParser::parse (const char* instruction, cResult& result)
             break;
         case exParFormat:
             throwParseException ("Invalid parameter value", e.value (), e.valueLength ());
+            break;
+        case exParUnused:
+            throwParseException (e.why(), e.value (), e.valueLength ());
             break;
         default:
             BUG ("BUG: unexpected compile exception");
@@ -647,7 +652,7 @@ cLinkable* cInstructionParser::compileVRRP (cParameterList& params, int version)
     vrrp->setVersion(version);
     vrrp->setVRID(params.findParameter ("vrid")->asInt8(1, 255));
     vrrp->addVirtualIP(firstVRIP->asIPv4());
-    vrrp->setPrio(params.findParameter ("prio", (uint32_t)100)->asInt8());
+    vrrp->setPrio(params.findParameter ("vrprio", (uint32_t)100)->asInt8());
     vrrp->setType(params.findParameter ("type", (uint32_t)1)->asInt8(0, 15));
     if (version == 2)
         vrrp->setInterval(params.findParameter ("aint", (uint32_t)1)->asInt8());
