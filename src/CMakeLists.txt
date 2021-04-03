@@ -286,9 +286,12 @@ if (WITH_UNITTESTS)
 endif ()
 
 
+# install & package
+###############################################################################
 install(TARGETS tcppump)
 set(CPACK_GENERATOR "DEB;STGZ")
 set(CPACK_PACKAGE_CONTACT "Andreas Martin <netnag@mailbox.org>")
+set(CPACK_PACKAGE_VENDOR "Andreas Martin")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_BINARY_DIR}/../LICENSE")
 set(CPACK_RESOURCE_FILE_README "${CMAKE_BINARY_DIR}/../README.md")
 
