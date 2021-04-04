@@ -29,6 +29,7 @@
 class cPcapFilter
 {
 public:
+    cPcapFilter ();
     cPcapFilter (pcap_t* ifc);
     virtual ~cPcapFilter ();
     bool compile (const char* filter);
@@ -38,6 +39,7 @@ public:
                            const std::list<const char*>* hostsIP);
     bool apply (void);
     bool remove (void);
+    bool match (const struct pcap_pkthdr *h, const u_char *pkt) const;
 
 #ifdef WITH_UNITTESTS
     static void unitTest ();

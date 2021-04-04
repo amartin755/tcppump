@@ -562,7 +562,7 @@ bool cInterface::waitForPacket (void)
     return !!receivePacket (nullptr, nullptr);
 }
 
-const uint8_t* cInterface::receivePacket (cTimeval* timestamp, int* len)
+const uint8_t* cInterface::receivePacket (cTimeval* timestamp, int* len, const cPcapFilter* filter)
 {
     BUG_ON (!sendOnly);
 
@@ -574,8 +574,12 @@ const uint8_t* cInterface::receivePacket (cTimeval* timestamp, int* len)
     {
         if (cSignal::sigintSignalled ())
             return nullptr;
+
+        res = pcap_next_ex(pcapHandle, &header, &pkt_data);
+        if (filter && (res > 0) && !filter->match(header, pkt_data))
+            res = 0;
     }
-    while (!(res = pcap_next_ex(ifcHandle, &header, &pkt_data)));
+    while (!res);
 
 
     if (res < 0)

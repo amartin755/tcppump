@@ -261,6 +261,12 @@ cIpAddress cParameter::asIPv4 () const
 }
 
 
+void cParameter::throwValueExcetion (void) const
+{
+    throw FormatException (exParFormat, value, (int)valLen);
+}
+
+
 cParameterList::cParameterList (const char* parameters)
 {
     parseError = parseParameters (parameters);

@@ -1,6 +1,6 @@
 /**
  * TCPPUMP <https://github.com/amartin755/tcppump>
- * Copyright (C) 2012-2020 Andreas Martin (netnag@mailbox.org)
+ * Copyright (C) 2012-2021 Andreas Martin (netnag@mailbox.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,12 +17,17 @@
  */
 
 
-
+#include "trigger.hpp"
 #include "netinterface.hpp"
-#include "interface.hpp"
 
-cNetInterface* cNetInterface::factory(const char* ifname)
+
+bool cTrigger::compileFilter (const char* filter)
 {
-    return new cInterface (ifname);
+    return pcapFilter.compile (filter);
 }
 
+
+bool cTrigger::wait (cNetInterface &netif)
+{
+    return !!netif.receivePacket(nullptr, nullptr, &pcapFilter);
+}

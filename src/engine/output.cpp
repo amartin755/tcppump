@@ -25,6 +25,7 @@
 #include "fileioexception.hpp"
 #include "console.hpp"
 #include "signal.hpp"
+#include "trigger.hpp"
 
 
 cOutput::cOutput (const cPreprocessor &p)
@@ -49,16 +50,16 @@ void cOutput::prepare (const char* pcapOutFile, int repeat)
 
     if (!outfile.open (pcapOutFile, true))
         throw FileIOException (FileIOException::OPEN, pcapOutFile);
-
 }
 
 cPacketData& cOutput::operator<< (cPacketData& input)
 {
     cTimeval sendTime;
     bool endless = !repeat;
+    bool queuedOutput = netif && !responderMode && !input.hasTriggerPoints();
 
 
-    if (netif && !responderMode)
+    if (queuedOutput)
     {
         netif->prepareSendQueue(input.getPacketCnt() * repeat,
                 input.getTotalPacketBytes() * repeat,
@@ -70,6 +71,10 @@ cPacketData& cOutput::operator<< (cPacketData& input)
         for (cLinkable* p = input.getFirst(); !cSignal::sigintSignalled() && (p != nullptr); p = p->getNext())
         {
             if (responderMode && !netif->waitForPacket())
+                break;
+
+            cTrigger* event = dynamic_cast<cTrigger*>(p);
+            if (event && !event->wait (*netif))
                 break;
 
             sendTime.add (p->getTime());
@@ -92,7 +97,7 @@ cPacketData& cOutput::operator<< (cPacketData& input)
         }
     }
 
-    if (netif && !responderMode)
+    if (queuedOutput)
     {
         netif->flushSendQueue();
     }

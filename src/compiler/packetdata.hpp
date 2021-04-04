@@ -21,6 +21,7 @@
 
 #include "ethernetpacket.hpp"
 #include "ipv4packet.hpp"
+#include "trigger.hpp"
 #include "timeval.hpp"
 #include "linkable.hpp"
 
@@ -31,7 +32,7 @@ public:
     {
         hasUserTimestamps = false;
         head = tail = nullptr;
-        elements = ethPackets = ipv4Packets = totalBytes = 0;
+        elements = ethPackets = ipv4Packets = totalBytes = triggerPoints = 0;
     }
 
     ~cPacketData ()
@@ -81,9 +82,15 @@ public:
     {
         return ethPackets;
     }
+
     size_t getTotalPacketBytes (void) const
     {
         return totalBytes;
+    }
+
+    bool hasTriggerPoints (void) const
+    {
+        return !!triggerPoints;
     }
 
     // TODO encapsulate
@@ -105,15 +112,22 @@ private:
         else
         {
             cIPv4Packet* ipv4 = dynamic_cast<cIPv4Packet*>(packet);
-            BUG_ON (ipv4);
-
-            ipv4Packets++;
-            const std::list<cEthernetPacket>& fragments = ipv4->getAllEthernetPackets();
-
-            for (auto & p : fragments)
+            if (ipv4)
             {
-                ethPackets++;
-                totalBytes += p.getLength();
+                ipv4Packets++;
+                const std::list<cEthernetPacket>& fragments = ipv4->getAllEthernetPackets();
+
+                for (auto & p : fragments)
+                {
+                    ethPackets++;
+                    totalBytes += p.getLength();
+                }
+            }
+            else
+            {
+                cTrigger* event = dynamic_cast<cTrigger*>(packet);
+                if (event)
+                    triggerPoints++;
             }
         }
     }
@@ -123,6 +137,8 @@ private:
     size_t ethPackets;
     size_t ipv4Packets;
     size_t totalBytes;
+    size_t triggerPoints;
+
 };
 
 #endif /* PACKETDATA_HPP_ */

@@ -28,15 +28,16 @@
 #include "ipaddress.hpp"
 #include "macaddress.hpp"
 #include "timeval.hpp"
+#include "pcapfilter.hpp"
 
 
 class cNetInterface
 {
 
 public:
-    static cNetInterface* factory(const char* ifname, bool sendOnly);
+    static cNetInterface* factory(const char* ifname);
     virtual ~cNetInterface () {};
-    virtual bool open () = 0;
+    virtual bool open (bool sendOnly) = 0;
     virtual bool close () = 0;
     virtual bool sendPacket (const uint8_t* payload, size_t length, const cTimeval& t) = 0;
     virtual bool prepareSendQueue (size_t packetCnt, size_t totalBytes, bool synchronized) = 0;
@@ -47,7 +48,7 @@ public:
     virtual uint32_t getMTU (void) = 0;
     virtual bool isOpen () const = 0;
     virtual bool waitForPacket (void) = 0;
-    virtual const uint8_t* receivePacket (cTimeval* timestamp, int* len) = 0;
+    virtual const uint8_t* receivePacket (cTimeval* timestamp, int* len, const cPcapFilter* filter = nullptr) = 0;
     virtual bool addReceiveFilter (const char* filter) = 0;
     virtual bool addReceiveFilter (bool tcp, bool udp,
                            const std::list<const char*>* ethertypes,

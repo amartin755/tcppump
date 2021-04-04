@@ -1,6 +1,6 @@
 /**
  * TCPPUMP <https://github.com/amartin755/tcppump>
- * Copyright (C) 2012-2020 Andreas Martin (netnag@mailbox.org)
+ * Copyright (C) 2012-2021 Andreas Martin (netnag@mailbox.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,13 +16,22 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef TRIGGER_HPP
+#define TRIGGER_HPP
 
+#include "linkable.hpp"
+#include "pcapfilter.hpp"
 
-#include "netinterface.hpp"
-#include "interface.hpp"
+class cNetInterface;
 
-cNetInterface* cNetInterface::factory(const char* ifname)
+class cTrigger : public cLinkable
 {
-    return new cInterface (ifname);
-}
+public:
+    bool compileFilter (const char* filter);
+    bool wait (cNetInterface &netif);
 
+private:
+    cPcapFilter pcapFilter;
+};
+
+#endif /* TRIGGER_HPP */

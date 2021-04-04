@@ -41,7 +41,7 @@
 #include "signal.hpp"
 
 
-cInterface::cInterface(const char* ifname, bool txOnly)
+cInterface::cInterface(const char* ifname)
 : name (ifname)
 {
     ifcHandle   = -1;
@@ -51,7 +51,7 @@ cInterface::cInterface(const char* ifname, bool txOnly)
     firstPacket = true;
     mtu         = 0;
     linkSpeed   = 0;
-    sendOnly    = txOnly;
+    sendOnly    = true;
     pcapHandle  = nullptr;
 
 }
@@ -61,11 +61,13 @@ cInterface::~cInterface()
     close ();
 }
 
-bool cInterface::open ()
+bool cInterface::open (bool txOnly)
 {
     // aleady open
     if (ifcHandle > 0)
         return true;
+
+    sendOnly = txOnly;
 
     ifIndex = if_nametoindex (name.c_str ());
     if (!ifIndex)
@@ -299,8 +301,8 @@ uint32_t cInterface::getMTU (void)
         }
 
         errno = 0;
-        memset (&ifr, 0, sizeof (ifr));
-        snprintf (ifr.ifr_name, sizeof (ifr.ifr_name), "%s", name.c_str());
+        std::memset (&ifr, 0, sizeof (ifr));
+        std::snprintf (ifr.ifr_name, sizeof (ifr.ifr_name), "%s", name.c_str());
         if (ioctl (s, SIOCGIFMTU, &ifr) < 0)
         {
             Console::PrintError ("error: %s\n", strerror (errno));
@@ -361,7 +363,7 @@ bool cInterface::waitForPacket (void)
     return !!receivePacket (nullptr, nullptr);
 }
 
-const uint8_t* cInterface::receivePacket (cTimeval* timestamp, int* len)
+const uint8_t* cInterface::receivePacket (cTimeval* timestamp, int* len, const cPcapFilter* filter)
 {
     BUG_ON (!sendOnly);
 
@@ -373,8 +375,12 @@ const uint8_t* cInterface::receivePacket (cTimeval* timestamp, int* len)
     {
         if (cSignal::sigintSignalled ())
             return nullptr;
+
+        res = pcap_next_ex(pcapHandle, &header, &pkt_data);
+        if (filter && (res > 0) && !filter->match(header, pkt_data))
+            res = 0;
     }
-    while (!(res = pcap_next_ex(pcapHandle, &header, &pkt_data)));
+    while (!res);
 
 
     if (res < 0)

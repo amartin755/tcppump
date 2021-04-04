@@ -43,6 +43,8 @@ public:
     virtual const uint8_t* asStream   (size_t& len);
     virtual cIpAddress  asIPv4  () const;
 
+    void throwValueExcetion (void) const;
+
 private:
     void clear ();
     int isRandom (bool allowRange) const;

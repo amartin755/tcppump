@@ -38,9 +38,9 @@ typedef struct pcap pcap_t;
 class cInterface : public cNetInterface
 {
 public:
-    cInterface(const char* ifname, bool sendOnly);
+    cInterface(const char* ifname);
     virtual ~cInterface();
-    bool open ();
+    bool open (bool sendOnly);
     bool close ();
     bool sendPacket (const uint8_t* payload, size_t length, const cTimeval& t);
     bool prepareSendQueue (size_t packetCnt, size_t totalBytes, bool synchronized);
@@ -53,7 +53,7 @@ public:
     bool isOpen () const;
     const char* getName (void) const;
     bool waitForPacket (void);
-    const uint8_t* receivePacket (cTimeval* timestamp, int* len);
+    const uint8_t* receivePacket (cTimeval* timestamp, int* len, const cPcapFilter* filter = nullptr);
     bool addReceiveFilter (const char* filter);
     bool addReceiveFilter (bool tcp, bool udp,
                            const std::list<const char*>* ethertypes,

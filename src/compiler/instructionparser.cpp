@@ -35,6 +35,7 @@
 #include "stppacket.hpp"
 #include "igmppacket.hpp"
 #include "icmppacket.hpp"
+#include "trigger.hpp"
 
 
 cInstructionParser::cInstructionParser (const cMacAddress& ownMac, const cIpAddress& ownIPv4, bool optDestMAC)
@@ -125,6 +126,8 @@ void cInstructionParser::parse (const char* instruction, cResult& result)
             result.packets = compileTCPFINACK2 (params);
         else if (!strncmp ("tcp-reset", keyword, keywordLen))
             result.packets = compileTCPRST (params);
+        else if (!strncmp ("receive", keyword, keywordLen))
+            result.packets = compileReceive (params);
         else
             throwParseException ("Unknown protocol type", keyword, keywordLen);
 
@@ -826,6 +829,23 @@ cLinkable* cInstructionParser::compileICMP  (cParameterList& params)
         icmppacket->compileRaw(type, code, payload, len);
 
     return icmppacket;
+}
+
+
+cLinkable* cInstructionParser::compileReceive (cParameterList& params)
+{
+    cTrigger* event = new cTrigger;
+    cParameter* optionalPar = params.findParameter ("filter", true);
+
+    if (optionalPar)
+    {
+        size_t len;
+        const char* p = (const char*)optionalPar->asStream (len);
+        std::string s (p, len);
+        if (!event->compileFilter (s.c_str()))
+            optionalPar->throwValueExcetion ();
+    }
+    return event;
 }
 
 

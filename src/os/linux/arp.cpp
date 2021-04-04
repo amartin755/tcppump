@@ -37,8 +37,6 @@ using namespace std;
 
 cArp::cArp (cNetInterface& i) : ifc(i)
 {
-    // We don't really need an "opened" interface here. This is a sanity check, to accept validated interfaces only.
-    BUG_ON (i.isOpen ());
 }
 
 bool cArp::resolve (const cIpAddress& ip, cMacAddress& mac)
@@ -48,6 +46,8 @@ bool cArp::resolve (const cIpAddress& ip, cMacAddress& mac)
     int arpSock;
     cMacAddress myMac;
     cIpAddress myIP;
+    // We don't really need an "opened" interface here. This is a sanity check, to accept validated interfaces only.
+    BUG_ON (ifc.isOpen ());
     BUG_ON (ifc.getMAC(myMac));
     BUG_ON (ifc.getIPv4(myIP));
 

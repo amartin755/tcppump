@@ -28,16 +28,16 @@
 
 cArp::cArp (cNetInterface& i) : ifc(i)
 {
-    // We don't really need an "opened" interface here. This is a sanity check, to accept validated interfaces only.
-    BUG_ON (i.isOpen ());
 }
 
 bool cArp::resolve (const cIpAddress& ip, cMacAddress& mac)
 {
-    ULONG macAddr[2];	// SendARP expects at least two ULONGs
+    ULONG macAddr[2];    // SendARP expects at least two ULONGs
     ULONG macLen = 6;
     cIpAddress ownIp;
 
+    // We don't really need an "opened" interface here. This is a sanity check, to accept validated interfaces only.
+    BUG_ON (ifc.isOpen ());
     ifc.getIPv4(ownIp);
 
     DWORD ret = ::SendARP(ip.get().s_addr, ownIp.get().s_addr, (PULONG)macAddr, (PULONG)&macLen);

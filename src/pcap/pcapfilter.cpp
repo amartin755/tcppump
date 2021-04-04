@@ -26,6 +26,16 @@
 #include "bug.hpp"
 #include "console.hpp"
 
+
+
+cPcapFilter::cPcapFilter ()
+{
+    ifcHandle = pcap_open_dead (DLT_EN10MB, 65536);
+    BUG_ON (ifcHandle); // must never fail
+
+    resetBPF ();
+}
+
 cPcapFilter::cPcapFilter (pcap_t* ifc) : ifcHandle(ifc)
 {
     resetBPF ();
@@ -142,6 +152,7 @@ bool cPcapFilter::compile (const char* filter)
     return true;
 }
 
+
 bool cPcapFilter::apply (void)
 {
     bool ret = true;
@@ -156,22 +167,29 @@ bool cPcapFilter::apply (void)
     return ret;
 }
 
+
 bool cPcapFilter::remove (void)
 {
     return compile ("") && apply();
 }
+
 
 void cPcapFilter::resetBPF (void)
 {
     std::memset(&bpfCode, 0, sizeof(bpfCode));
 }
 
+
+bool cPcapFilter::match (const struct pcap_pkthdr *h, const u_char *pkt) const
+{
+    // if no filter is set, ALL packets match
+    return (!bpfCode.bf_len) ? true : !!pcap_offline_filter (&bpfCode, h, pkt);
+}
+
+
 #ifdef WITH_UNITTESTS
 void cPcapFilter::unitTest ()
 {
-    pcap_t* p = pcap_open_dead (DLT_EN10MB, 65536);
-    BUG_ON (p);
-
     std::list<const char*> ethers;
     std::list<const char*> macs;
     std::list<const char*> ips;
@@ -179,7 +197,7 @@ void cPcapFilter::unitTest ()
     macs.push_back ("12:34:56:78:90:AB");
     ips.push_back ("1.2.3.4");
 
-    cPcapFilter obj(p);
+    cPcapFilter obj;
 
     BUG_ON (!obj.compile ("kkdkdkdk"));
     BUG_ON (obj.compile ("tcp or udp"));
@@ -251,8 +269,6 @@ void cPcapFilter::unitTest ()
     BUG_ON (obj.compile (true, true, nullptr, nullptr, &ips));
     BUG_ON (obj.compile (true, true, &ethers, &macs, nullptr));
     BUG_ON (obj.compile (true, true, &ethers, &macs, &ips));
-
-    pcap_close (p);
 }
 #endif
 

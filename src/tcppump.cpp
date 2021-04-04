@@ -211,9 +211,7 @@ int cTcpPump::execute (const std::list<std::string>& args)
         }
     }
 
-    ifc = cNetInterface::factory (options.ifc, !options.responderMode);
-    if (!ifc->open())
-        return -1;
+    ifc = cNetInterface::factory (options.ifc);
     if (!options.myMAC && !ifc->getMAC(ownMac))
     {
         Console::PrintError ("Could not determine mac address of interface.\n");
@@ -246,6 +244,8 @@ int cTcpPump::execute (const std::list<std::string>& args)
 
     if (responder == MIRROR || responder == ACK)
     {
+        if (!ifc->open (false))
+            return -1;
         cResponder resp (*ifc);
 
         if (responder == MIRROR)
@@ -267,11 +267,13 @@ int cTcpPump::execute (const std::list<std::string>& args)
             // Packet-flow-chain: args --> compiler -> filter -> resolver -> scheduler -> packetData
             // Each step may alter the content of packetData
             cPacketData& packetData = compiler  << args;
-                                      filter    << packetData;
-                                      resolver  << packetData;
-                                      scheduler << packetData;
 
+            if (!ifc->open (!packetData.hasTriggerPoints ()))
+                return -1;
 
+            filter    << packetData;
+            resolver  << packetData;
+            scheduler << packetData;
 
             // if user has set a default packet delay, real-time mode is ALWAYS enabled
             if (!activeDelay.isNull ())
@@ -295,6 +297,7 @@ int cTcpPump::execute (const std::list<std::string>& args)
                 Console::PrintMoreVerbose ("Real-time mode with default delay between packets %" PRIu64 " usecs\n\n", activeDelay.us());
             else
                 Console::PrintMoreVerbose ("Max. throughput mode\n\n");
+
 
             // send all the packets
             backend << packetData;
