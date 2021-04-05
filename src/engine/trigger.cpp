@@ -19,6 +19,7 @@
 
 #include "trigger.hpp"
 #include "netinterface.hpp"
+#include "timeval.hpp"
 
 
 bool cTrigger::compileFilter (const char* filter)
@@ -29,5 +30,7 @@ bool cTrigger::compileFilter (const char* filter)
 
 bool cTrigger::wait (cNetInterface &netif)
 {
-    return !!netif.receivePacket(nullptr, nullptr, &pcapFilter);
+    cTimeval t;
+    t.now();
+    return !!netif.receivePacket(nullptr, nullptr, &pcapFilter, &t);
 }

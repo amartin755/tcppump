@@ -562,7 +562,7 @@ bool cInterface::waitForPacket (void)
     return !!receivePacket (nullptr, nullptr);
 }
 
-const uint8_t* cInterface::receivePacket (cTimeval* timestamp, int* len, const cPcapFilter* filter)
+const uint8_t* cInterface::receivePacket (cTimeval* timestamp, int* len, const cPcapFilter* filter, const cTimeval* dropBefore)
 {
     BUG_ON (!sendOnly);
 

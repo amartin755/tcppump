@@ -53,7 +53,7 @@ public:
     bool isOpen () const;
     const char* getName (void) const;
     bool waitForPacket (void);
-    const uint8_t* receivePacket (cTimeval* timestamp, int* len, const cPcapFilter* filter = nullptr);
+    const uint8_t* receivePacket (cTimeval* timestamp, int* len, const cPcapFilter* filter = nullptr, const cTimeval* dropBefore = nullptr);
     bool addReceiveFilter (const char* filter);
     bool addReceiveFilter (bool tcp, bool udp,
                            const std::list<const char*>* ethertypes,

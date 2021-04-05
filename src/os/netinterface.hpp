@@ -48,7 +48,7 @@ public:
     virtual uint32_t getMTU (void) = 0;
     virtual bool isOpen () const = 0;
     virtual bool waitForPacket (void) = 0;
-    virtual const uint8_t* receivePacket (cTimeval* timestamp, int* len, const cPcapFilter* filter = nullptr) = 0;
+    virtual const uint8_t* receivePacket (cTimeval* timestamp, int* len, const cPcapFilter* filter = nullptr, const cTimeval* dropBefore = nullptr) = 0;
     virtual bool addReceiveFilter (const char* filter) = 0;
     virtual bool addReceiveFilter (bool tcp, bool udp,
                            const std::list<const char*>* ethertypes,

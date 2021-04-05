@@ -21,6 +21,8 @@
 #define TIMEVAL_HPP_
 
 #include <cstdint>
+#include <chrono>
+
 #include "timeval.h" // struct timeval
 #ifdef WITH_UNITTESTS
 #include "bug.hpp"
@@ -48,6 +50,13 @@ public:
     bool isNull () const
     {
         return value == 0;
+    }
+    cTimeval& now ()
+    {
+        auto currTime = std::chrono::system_clock::now();
+        auto us = std::chrono::duration_cast<std::chrono::microseconds>(currTime.time_since_epoch());
+        value = us.count();
+        return *this;
     }
     struct timeval timeval() const
     {

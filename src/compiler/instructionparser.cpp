@@ -126,8 +126,8 @@ void cInstructionParser::parse (const char* instruction, cResult& result)
             result.packets = compileTCPFINACK2 (params);
         else if (!strncmp ("tcp-reset", keyword, keywordLen))
             result.packets = compileTCPRST (params);
-        else if (!strncmp ("receive", keyword, keywordLen))
-            result.packets = compileReceive (params);
+        else if (!strncmp ("WAIT", keyword, keywordLen))
+            result.packets = compileWait (params);
         else
             throwParseException ("Unknown protocol type", keyword, keywordLen);
 
@@ -832,7 +832,7 @@ cLinkable* cInstructionParser::compileICMP  (cParameterList& params)
 }
 
 
-cLinkable* cInstructionParser::compileReceive (cParameterList& params)
+cLinkable* cInstructionParser::compileWait (cParameterList& params)
 {
     cTrigger* event = new cTrigger;
     cParameter* optionalPar = params.findParameter ("filter", true);
