@@ -50,6 +50,7 @@ private:
 
     pcap_t* ifcHandle;
     bpf_program bpfCode;
+    bool freeIfcHandle;
 };
 
 #endif /* PCAPFILTER_HPP_ */

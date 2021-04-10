@@ -53,7 +53,7 @@ int main (void)
 #endif
 
     Console::SetPrintLevel(Console::Debug);
-    cRandom::create(false);
+    cRandom::create();
     try
     {
         tcppump::SleepInit ();
@@ -82,5 +82,6 @@ int main (void)
     // every failure will lead to assert, thus if we see this output, all tests have passed
     fprintf (stderr, "\n --- unit tests finished successfully !!! --- \n");
 
+    cRandom::destroy();
     return 0;
 }

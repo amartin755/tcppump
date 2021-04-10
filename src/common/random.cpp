@@ -23,23 +23,35 @@
 
 cRandom* cRandom::instance = nullptr;
 
-cRandom* cRandom::create (bool countOnly)
+cRandom* cRandom::create (void)
 {
     if (!instance)
     {
-        instance = new cRandom(countOnly);
+        instance = new cRandom();
     }
     return instance;
 }
 
-cRandom::cRandom (bool countOnly)
+void cRandom::destroy (void)
 {
-    this->countOnly = countOnly;
+    if (instance)
+    {
+        delete instance;
+        instance = nullptr;
+    }
+}
 
+void cRandom::setCounterMode (unsigned startValue)
+{
+    assert (instance);
+    instance->countOnly = true;
+    instance->seq       = startValue;
+}
+
+cRandom::cRandom () : countOnly(false), seq(0)
+{
     if (!countOnly)
         std::srand ((unsigned)std::time (NULL));
-    else
-        seq = 0;
 }
 
 int cRandom::rand (void)

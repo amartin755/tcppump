@@ -21,11 +21,13 @@
 class cRandom
 {
 public:
-    static cRandom* create (bool countOnly);
+    static cRandom* create (void);
+    static void destroy (void);
     static int rand (void);
+    static void setCounterMode (unsigned startValue);
 
 private:
-    cRandom (bool countOnly);
+    cRandom ();
     int pseudoRandom (void);
     int sequence (void);
     static cRandom* instance;

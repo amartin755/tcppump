@@ -33,11 +33,14 @@ cPcapFilter::cPcapFilter ()
     ifcHandle = pcap_open_dead (DLT_EN10MB, 65536);
     BUG_ON (ifcHandle); // must never fail
 
+    freeIfcHandle = true; // remenber to close the handle in destructor
+
     resetBPF ();
 }
 
 cPcapFilter::cPcapFilter (pcap_t* ifc) : ifcHandle(ifc)
 {
+    freeIfcHandle = false;
     resetBPF ();
 }
 
@@ -45,6 +48,10 @@ cPcapFilter::~cPcapFilter ()
 {
     if (bpfCode.bf_len)
         pcap_freecode (&bpfCode);
+
+    BUG_ON (ifcHandle);
+    if (freeIfcHandle)
+        pcap_close (ifcHandle);
 }
 
 bool cPcapFilter::compile (bool tcp, bool udp,

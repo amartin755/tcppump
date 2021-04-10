@@ -48,6 +48,8 @@
 cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const char* description)
 : cCmdlineApp (name, brief, usage, description)
 {
+    cRandom::create();
+
     memset (&options, 0, sizeof(options));
     options.repeat  = 1;
     options.timeRes = "m";
@@ -112,6 +114,7 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
 cTcpPump::~cTcpPump()
 {
     delete ifc;
+    cRandom::destroy();
 }
 
 int cTcpPump::execute (const std::list<std::string>& args)
@@ -136,7 +139,8 @@ int cTcpPump::execute (const std::list<std::string>& args)
         break;
     }
 
-    cRandom::create (!!options.testPredictableRandom);
+    if (options.testPredictableRandom)
+        cRandom::setCounterMode(0);
 
     switch (options.timeRes[0])
     {
