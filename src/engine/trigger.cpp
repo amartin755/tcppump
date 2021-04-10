@@ -30,6 +30,9 @@ bool cTrigger::compileFilter (const char* filter)
 
 bool cTrigger::wait (cNetInterface &netif)
 {
+    // TODO filtering should be done here and not in interface code
+    // --> remove filter parameter in receivePacket function
+    // see TODOs in cInstructionParser::compileWait
     cTimeval t;
     t.now();
     return !!netif.receivePacket(nullptr, nullptr, &pcapFilter, &t);
