@@ -21,7 +21,7 @@
 #include "netinterface.hpp"
 #include "interface.hpp"
 
-cNetInterface* cNetInterface::factory(const char* ifname)
+cNetInterface* cNetInterface::create(const char* ifname)
 {
     return new cInterface (ifname);
 }

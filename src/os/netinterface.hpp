@@ -35,7 +35,7 @@ class cNetInterface
 {
 
 public:
-    static cNetInterface* factory(const char* ifname);
+    static cNetInterface* create(const char* ifname);
     virtual ~cNetInterface () {};
     virtual bool open (bool sendOnly) = 0;
     virtual bool close () = 0;

@@ -215,7 +215,7 @@ int cTcpPump::execute (const std::list<std::string>& args)
         }
     }
 
-    ifc = cNetInterface::factory (options.ifc);
+    ifc = cNetInterface::create (options.ifc);
     if (!options.myMAC && !ifc->getMAC(ownMac))
     {
         Console::PrintError ("Could not determine mac address of interface.\n");

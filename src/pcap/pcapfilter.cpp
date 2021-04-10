@@ -33,7 +33,7 @@ cPcapFilter::cPcapFilter ()
     ifcHandle = pcap_open_dead (DLT_EN10MB, 65536);
     BUG_ON (ifcHandle); // must never fail
 
-    freeIfcHandle = true; // remenber to close the handle in destructor
+    freeIfcHandle = true; // remember to close the handle in destructor
 
     resetBPF ();
 }
