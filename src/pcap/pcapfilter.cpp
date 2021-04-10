@@ -31,7 +31,7 @@
 cPcapFilter::cPcapFilter ()
 {
     ifcHandle = pcap_open_dead (DLT_EN10MB, 65536);
-    BUG_ON (ifcHandle); // must never fail
+    BUG_ON (!ifcHandle); // must never fail
 
     freeIfcHandle = true; // remember to close the handle in destructor
 
@@ -49,7 +49,7 @@ cPcapFilter::~cPcapFilter ()
     if (bpfCode.bf_len)
         pcap_freecode (&bpfCode);
 
-    BUG_ON (ifcHandle);
+    BUG_ON (!ifcHandle);
     if (freeIfcHandle)
         pcap_close (ifcHandle);
 }
@@ -206,76 +206,76 @@ void cPcapFilter::unitTest ()
 
     cPcapFilter obj;
 
-    BUG_ON (!obj.compile ("kkdkdkdk"));
-    BUG_ON (obj.compile ("tcp or udp"));
+    assert (!obj.compile ("kkdkdkdk"));
+    assert (obj.compile ("tcp or udp"));
 
-    BUG_ON (obj.compile (false, false, nullptr, nullptr, nullptr));
-    BUG_ON (obj.compile (true, false, nullptr, nullptr, nullptr));
-    BUG_ON (obj.compile (false, true, nullptr, nullptr, nullptr));
-    BUG_ON (obj.compile (true, true, nullptr, nullptr, nullptr));
+    assert (obj.compile (false, false, nullptr, nullptr, nullptr));
+    assert (obj.compile (true, false, nullptr, nullptr, nullptr));
+    assert (obj.compile (false, true, nullptr, nullptr, nullptr));
+    assert (obj.compile (true, true, nullptr, nullptr, nullptr));
 
-    BUG_ON (obj.compile (false, false, &ethers, nullptr, nullptr));
-    BUG_ON (obj.compile (false, false, nullptr, &macs, nullptr));
-    BUG_ON (obj.compile (false, false, nullptr, nullptr, &ips));
-    BUG_ON (obj.compile (true, false, &ethers, nullptr, nullptr));
-    BUG_ON (obj.compile (true, false, nullptr, &macs, nullptr));
-    BUG_ON (obj.compile (true, false, nullptr, nullptr, &ips));
-    BUG_ON (obj.compile (false, true, &ethers, nullptr, nullptr));
-    BUG_ON (obj.compile (false, true, nullptr, &macs, nullptr));
-    BUG_ON (obj.compile (false, true, nullptr, nullptr, &ips));
-    BUG_ON (obj.compile (true, true, &ethers, nullptr, nullptr));
-    BUG_ON (obj.compile (true, true, nullptr, &macs, nullptr));
-    BUG_ON (obj.compile (true, true, nullptr, nullptr, &ips));
-    BUG_ON (obj.compile (true, true, &ethers, &macs, nullptr));
-    BUG_ON (obj.compile (true, true, &ethers, &macs, &ips));
+    assert (obj.compile (false, false, &ethers, nullptr, nullptr));
+    assert (obj.compile (false, false, nullptr, &macs, nullptr));
+    assert (obj.compile (false, false, nullptr, nullptr, &ips));
+    assert (obj.compile (true, false, &ethers, nullptr, nullptr));
+    assert (obj.compile (true, false, nullptr, &macs, nullptr));
+    assert (obj.compile (true, false, nullptr, nullptr, &ips));
+    assert (obj.compile (false, true, &ethers, nullptr, nullptr));
+    assert (obj.compile (false, true, nullptr, &macs, nullptr));
+    assert (obj.compile (false, true, nullptr, nullptr, &ips));
+    assert (obj.compile (true, true, &ethers, nullptr, nullptr));
+    assert (obj.compile (true, true, nullptr, &macs, nullptr));
+    assert (obj.compile (true, true, nullptr, nullptr, &ips));
+    assert (obj.compile (true, true, &ethers, &macs, nullptr));
+    assert (obj.compile (true, true, &ethers, &macs, &ips));
 
     ethers.push_back ("0x8888");
-    BUG_ON (obj.compile (false, false, &ethers, nullptr, nullptr));
-    BUG_ON (obj.compile (false, false, nullptr, &macs, nullptr));
-    BUG_ON (obj.compile (false, false, nullptr, nullptr, &ips));
-    BUG_ON (obj.compile (true, false, &ethers, nullptr, nullptr));
-    BUG_ON (obj.compile (true, false, nullptr, &macs, nullptr));
-    BUG_ON (obj.compile (true, false, nullptr, nullptr, &ips));
-    BUG_ON (obj.compile (false, true, &ethers, nullptr, nullptr));
-    BUG_ON (obj.compile (false, true, nullptr, &macs, nullptr));
-    BUG_ON (obj.compile (false, true, nullptr, nullptr, &ips));
-    BUG_ON (obj.compile (true, true, &ethers, nullptr, nullptr));
-    BUG_ON (obj.compile (true, true, nullptr, &macs, nullptr));
-    BUG_ON (obj.compile (true, true, nullptr, nullptr, &ips));
-    BUG_ON (obj.compile (true, true, &ethers, &macs, nullptr));
-    BUG_ON (obj.compile (true, true, &ethers, &macs, &ips));
+    assert (obj.compile (false, false, &ethers, nullptr, nullptr));
+    assert (obj.compile (false, false, nullptr, &macs, nullptr));
+    assert (obj.compile (false, false, nullptr, nullptr, &ips));
+    assert (obj.compile (true, false, &ethers, nullptr, nullptr));
+    assert (obj.compile (true, false, nullptr, &macs, nullptr));
+    assert (obj.compile (true, false, nullptr, nullptr, &ips));
+    assert (obj.compile (false, true, &ethers, nullptr, nullptr));
+    assert (obj.compile (false, true, nullptr, &macs, nullptr));
+    assert (obj.compile (false, true, nullptr, nullptr, &ips));
+    assert (obj.compile (true, true, &ethers, nullptr, nullptr));
+    assert (obj.compile (true, true, nullptr, &macs, nullptr));
+    assert (obj.compile (true, true, nullptr, nullptr, &ips));
+    assert (obj.compile (true, true, &ethers, &macs, nullptr));
+    assert (obj.compile (true, true, &ethers, &macs, &ips));
 
     macs.push_back ("11:22:33:44:55:66");
-    BUG_ON (obj.compile (false, false, &ethers, nullptr, nullptr));
-    BUG_ON (obj.compile (false, false, nullptr, &macs, nullptr));
-    BUG_ON (obj.compile (false, false, nullptr, nullptr, &ips));
-    BUG_ON (obj.compile (true, false, &ethers, nullptr, nullptr));
-    BUG_ON (obj.compile (true, false, nullptr, &macs, nullptr));
-    BUG_ON (obj.compile (true, false, nullptr, nullptr, &ips));
-    BUG_ON (obj.compile (false, true, &ethers, nullptr, nullptr));
-    BUG_ON (obj.compile (false, true, nullptr, &macs, nullptr));
-    BUG_ON (obj.compile (false, true, nullptr, nullptr, &ips));
-    BUG_ON (obj.compile (true, true, &ethers, nullptr, nullptr));
-    BUG_ON (obj.compile (true, true, nullptr, &macs, nullptr));
-    BUG_ON (obj.compile (true, true, nullptr, nullptr, &ips));
-    BUG_ON (obj.compile (true, true, &ethers, &macs, nullptr));
-    BUG_ON (obj.compile (true, true, &ethers, &macs, &ips));
+    assert (obj.compile (false, false, &ethers, nullptr, nullptr));
+    assert (obj.compile (false, false, nullptr, &macs, nullptr));
+    assert (obj.compile (false, false, nullptr, nullptr, &ips));
+    assert (obj.compile (true, false, &ethers, nullptr, nullptr));
+    assert (obj.compile (true, false, nullptr, &macs, nullptr));
+    assert (obj.compile (true, false, nullptr, nullptr, &ips));
+    assert (obj.compile (false, true, &ethers, nullptr, nullptr));
+    assert (obj.compile (false, true, nullptr, &macs, nullptr));
+    assert (obj.compile (false, true, nullptr, nullptr, &ips));
+    assert (obj.compile (true, true, &ethers, nullptr, nullptr));
+    assert (obj.compile (true, true, nullptr, &macs, nullptr));
+    assert (obj.compile (true, true, nullptr, nullptr, &ips));
+    assert (obj.compile (true, true, &ethers, &macs, nullptr));
+    assert (obj.compile (true, true, &ethers, &macs, &ips));
 
     ips.push_back ("5.6.7.8");
-    BUG_ON (obj.compile (false, false, &ethers, nullptr, nullptr));
-    BUG_ON (obj.compile (false, false, nullptr, &macs, nullptr));
-    BUG_ON (obj.compile (false, false, nullptr, nullptr, &ips));
-    BUG_ON (obj.compile (true, false, &ethers, nullptr, nullptr));
-    BUG_ON (obj.compile (true, false, nullptr, &macs, nullptr));
-    BUG_ON (obj.compile (true, false, nullptr, nullptr, &ips));
-    BUG_ON (obj.compile (false, true, &ethers, nullptr, nullptr));
-    BUG_ON (obj.compile (false, true, nullptr, &macs, nullptr));
-    BUG_ON (obj.compile (false, true, nullptr, nullptr, &ips));
-    BUG_ON (obj.compile (true, true, &ethers, nullptr, nullptr));
-    BUG_ON (obj.compile (true, true, nullptr, &macs, nullptr));
-    BUG_ON (obj.compile (true, true, nullptr, nullptr, &ips));
-    BUG_ON (obj.compile (true, true, &ethers, &macs, nullptr));
-    BUG_ON (obj.compile (true, true, &ethers, &macs, &ips));
+    assert (obj.compile (false, false, &ethers, nullptr, nullptr));
+    assert (obj.compile (false, false, nullptr, &macs, nullptr));
+    assert (obj.compile (false, false, nullptr, nullptr, &ips));
+    assert (obj.compile (true, false, &ethers, nullptr, nullptr));
+    assert (obj.compile (true, false, nullptr, &macs, nullptr));
+    assert (obj.compile (true, false, nullptr, nullptr, &ips));
+    assert (obj.compile (false, true, &ethers, nullptr, nullptr));
+    assert (obj.compile (false, true, nullptr, &macs, nullptr));
+    assert (obj.compile (false, true, nullptr, nullptr, &ips));
+    assert (obj.compile (true, true, &ethers, nullptr, nullptr));
+    assert (obj.compile (true, true, nullptr, &macs, nullptr));
+    assert (obj.compile (true, true, nullptr, nullptr, &ips));
+    assert (obj.compile (true, true, &ethers, &macs, nullptr));
+    assert (obj.compile (true, true, &ethers, &macs, &ips));
 }
 #endif
 

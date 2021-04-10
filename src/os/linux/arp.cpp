@@ -47,9 +47,9 @@ bool cArp::resolve (const cIpAddress& ip, cMacAddress& mac)
     cMacAddress myMac;
     cIpAddress myIP;
     // We don't really need an "opened" interface here. This is a sanity check, to accept validated interfaces only.
-    BUG_ON (ifc.isOpen ());
-    BUG_ON (ifc.getMAC(myMac));
-    BUG_ON (ifc.getIPv4(myIP));
+    BUG_ON (!ifc.isOpen ());
+    BUG_ON (!ifc.getMAC(myMac));
+    BUG_ON (!ifc.getIPv4(myIP));
 
 
     errno = 0;

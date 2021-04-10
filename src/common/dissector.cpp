@@ -358,8 +358,8 @@ const char* cDissector::ethertypeToString (uint16_t ethertype) const
 
 bool cDissector::isWithinPacket (const void* p, size_t size) const
 {
-    BUG_ON (p >= packet);
-    BUG_ON (size > 0);
+    BUG_ON (p < packet);
+    BUG_ON (size <= 0);
     return ((uint8_t*)p + size) <= (packet + packetLength);
 }
 

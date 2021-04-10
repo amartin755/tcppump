@@ -65,6 +65,6 @@ HANDLE cSignal::sigintGetEventHandle (void)
         return sigintEvent;
 
     sigintEvent = CreateEvent (NULL, FALSE, FALSE, NULL);
-    BUG_ON (sigintEvent);
+    BUG_ON (!sigintEvent);
     return sigintEvent;
 }

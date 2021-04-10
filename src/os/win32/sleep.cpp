@@ -73,7 +73,7 @@ cTimeval SleepInit ()
 
 void Sleep (const cTimeval& t)
 {
-    BUG_ON (!resolution.isNull());
+    BUG_ON (resolution.isNull());
 
     if (t < resolution)
     {

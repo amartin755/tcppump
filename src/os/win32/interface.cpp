@@ -47,20 +47,20 @@ public:
     }
     ~cPcapSendQueue ()
     {
-        BUG_ON (pcapQ);
+        BUG_ON (!pcapQ);
         pcap_sendqueue_destroy (pcapQ);
         pcapQ = nullptr;
         bytesQueued = packetsQueued = 0;
     }
     void reset (void)
     {
-        BUG_ON (pcapQ);
+        BUG_ON (!pcapQ);
         pcapQ->len = 0;
         bytesQueued = packetsQueued = 0;
     }
     void add (const struct pcap_pkthdr *pkt_header, const u_char *pkt_data)
     {
-        BUG_ON (!pcap_sendqueue_queue (pcapQ, pkt_header, pkt_data));  // can only fail if buffer calculation is wrong
+        BUG_ON (pcap_sendqueue_queue (pcapQ, pkt_header, pkt_data));  // can only fail if buffer calculation is wrong
         packetsQueued++;
         bytesQueued += pkt_header->caplen + sizeof (pcap_pkthdr);
         packetBytesQueued += pkt_header->caplen;
@@ -384,9 +384,9 @@ bool cInterface::sendPacket (const uint8_t* payload, size_t length, const cTimev
 // packetCnt = 0 means endless loop
 bool cInterface::prepareSendQueue (size_t packetCnt, size_t totalBytes, bool synchronized)
 {
-    BUG_ON (sendOnly); // in responder mode we do not want to send queue based
-    BUG_ON (!job); // we only support one job at a time
-    BUG_ON (ifcHandle);
+    BUG_ON (!sendOnly); // in responder mode we do not want to send queue based
+    BUG_ON (job); // we only support one job at a time
+    BUG_ON (!ifcHandle);
 
     sentPackets = 0;
     sentBytes   = 0;
@@ -416,7 +416,7 @@ bool cInterface::getMAC (cMacAddress& mac)
     if (!pAdapterInfo)
         return false;
 
-    BUG_ON (pAdapterInfo->PhysicalAddressLength == cMacAddress::size());
+    BUG_ON (pAdapterInfo->PhysicalAddressLength != cMacAddress::size());
     mac.set ((void*)pAdapterInfo->PhysicalAddress, pAdapterInfo->PhysicalAddressLength);
 
     return true;
@@ -564,7 +564,7 @@ bool cInterface::waitForPacket (void)
 
 const uint8_t* cInterface::receivePacket (cTimeval* timestamp, int* len, const cPcapFilter* filter, const cTimeval* dropBefore)
 {
-    BUG_ON (!sendOnly);
+    BUG_ON (sendOnly);
 
     struct pcap_pkthdr *header;
     const u_char *pkt_data;
@@ -598,7 +598,7 @@ const uint8_t* cInterface::receivePacket (cTimeval* timestamp, int* len, const c
 
 bool cInterface::addReceiveFilter (const char* filter)
 {
-    BUG_ON (!sendOnly);
+    BUG_ON (sendOnly);
     cPcapFilter f(ifcHandle);
     return f.compile (filter) && f.apply();
 }
@@ -608,7 +608,7 @@ bool cInterface::addReceiveFilter (bool tcp, bool udp,
                                    const std::list<const char*>* hostsMAC,
                                    const std::list<const char*>* hostsIP)
 {
-    BUG_ON (!sendOnly);
+    BUG_ON (sendOnly);
     cPcapFilter f(ifcHandle);
     return f.compile (tcp, udp, ethertypes, hostsMAC, hostsIP) && f.apply();
 }

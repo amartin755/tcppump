@@ -37,7 +37,7 @@ bool cArp::resolve (const cIpAddress& ip, cMacAddress& mac)
     cIpAddress ownIp;
 
     // We don't really need an "opened" interface here. This is a sanity check, to accept validated interfaces only.
-    BUG_ON (ifc.isOpen ());
+    BUG_ON (!ifc.isOpen ());
     ifc.getIPv4(ownIp);
 
     DWORD ret = ::SendARP(ip.get().s_addr, ownIp.get().s_addr, (PULONG)macAddr, (PULONG)&macLen);

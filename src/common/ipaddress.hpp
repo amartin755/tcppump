@@ -134,22 +134,22 @@ public:
 #ifdef WITH_UNITTESTS
     static void unitTest ()
     {
-        BUG_ON (cIpAddress() == cIpAddress("0.0.0.0"));
-        BUG_ON (cIpAddress() != cIpAddress("0.0.0.1"));
+        assert (cIpAddress() == cIpAddress("0.0.0.0"));
+        assert (cIpAddress() != cIpAddress("0.0.0.1"));
         const char x[] = "1.2.3.4dfadfasd";
         cIpAddress a; a.set(x, 7);
-        BUG_ON (cIpAddress("1.2.3.4") == a);
-        BUG_ON (!a.set("laskdfj"));
-        BUG_ON (!cIpAddress("223.255.255.255").isMulticast());
-        BUG_ON (cIpAddress("224.0.0.0").isMulticast());
-        BUG_ON (cIpAddress("239.255.255.255").isMulticast());
-        BUG_ON (!cIpAddress("240.0.0.0").isMulticast());
-        BUG_ON (cIpAddress("1.2.3.4") < cIpAddress("1.3.3.4"));
-        BUG_ON (cIpAddress("2.2.3.4") > cIpAddress("1.3.3.4"));
-        BUG_ON (cIpAddress("1.2.3.4").getAsArray()[0] == 1);
-        BUG_ON (cIpAddress("1.2.3.4").getAsArray()[1] == 2);
-        BUG_ON (cIpAddress("1.2.3.4").getAsArray()[2] == 3);
-        BUG_ON (cIpAddress("1.2.3.4").getAsArray()[3] == 4);
+        assert (cIpAddress("1.2.3.4") == a);
+        assert (!a.set("laskdfj"));
+        assert (!cIpAddress("223.255.255.255").isMulticast());
+        assert (cIpAddress("224.0.0.0").isMulticast());
+        assert (cIpAddress("239.255.255.255").isMulticast());
+        assert (!cIpAddress("240.0.0.0").isMulticast());
+        assert (cIpAddress("1.2.3.4") < cIpAddress("1.3.3.4"));
+        assert (cIpAddress("2.2.3.4") > cIpAddress("1.3.3.4"));
+        assert (cIpAddress("1.2.3.4").getAsArray()[0] == 1);
+        assert (cIpAddress("1.2.3.4").getAsArray()[1] == 2);
+        assert (cIpAddress("1.2.3.4").getAsArray()[2] == 3);
+        assert (cIpAddress("1.2.3.4").getAsArray()[3] == 4);
     }
 #endif
 

@@ -353,12 +353,12 @@ int cTcpPump::execute (const std::list<std::string>& args)
 
 void cTcpPump::printParseError (const ParseException &e) const
 {
-    BUG_ON (e.errorMsg());
-    BUG_ON (e.instruction());
+    BUG_ON (!e.errorMsg());
+    BUG_ON (!e.instruction());
     std::string s, b;
     if (e.instruction() && e.errorBegin())
     {
-        BUG_ON ((e.errorBegin() - e.instruction()) >= 0);
+        BUG_ON ((e.errorBegin() - e.instruction()) < 0);
         s.assign(e.errorBegin() - e.instruction(), ' ');
     }
     if (e.errorLen())

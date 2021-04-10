@@ -365,7 +365,7 @@ bool cInterface::waitForPacket (void)
 
 const uint8_t* cInterface::receivePacket (cTimeval* timestamp, int* len, const cPcapFilter* filter, const cTimeval* dropBefore)
 {
-    BUG_ON (!sendOnly);
+    BUG_ON (sendOnly);
 
     struct pcap_pkthdr *header;
     const u_char *pkt_data;
@@ -401,7 +401,7 @@ const uint8_t* cInterface::receivePacket (cTimeval* timestamp, int* len, const c
 
 bool cInterface::addReceiveFilter (const char* filter)
 {
-    BUG_ON (!sendOnly);
+    BUG_ON (sendOnly);
     cPcapFilter f(pcapHandle);
     return f.compile (filter) && f.apply();
 }
@@ -411,7 +411,7 @@ bool cInterface::addReceiveFilter (bool tcp, bool udp,
                                    const std::list<const char*>* hostsMAC,
                                    const std::list<const char*>* hostsIP)
 {
-    BUG_ON (!sendOnly);
+    BUG_ON (sendOnly);
     cPcapFilter f(pcapHandle);
     return f.compile (tcp, udp, ethertypes, hostsMAC, hostsIP) && f.apply();
 }

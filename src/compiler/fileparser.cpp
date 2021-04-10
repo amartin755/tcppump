@@ -53,7 +53,7 @@ cFileParser::~cFileParser ()
 
 bool cFileParser::open (const char* path)
 {
-    BUG_ON (!fp);
+    BUG_ON (fp);
 
     if ((fp = std::fopen (path, "rt")) == NULL)
     {
@@ -82,7 +82,7 @@ void cFileParser::close (void)
  */
 int cFileParser::parse (cInstructionParser::cResult& result)
 {
-    BUG_ON (fp);
+    BUG_ON (!fp);
 
     int offset = 0;
     int c;
@@ -179,7 +179,7 @@ int cFileParser::parse (cInstructionParser::cResult& result)
         }
     }
 
-    BUG_ON (openControlBlocks >= 0); // must be already handled above
+    BUG_ON (openControlBlocks < 0); // must be already handled above
 
     if (openControlBlocks > 0)
         throw FileParseException (path, lineNbr, nullptr, "Expected ‘}’ at end of input", nullptr, nullptr, 0);

@@ -22,6 +22,14 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <cassert>
+
+#ifdef __GNUC__
+#    define unlikely(x)     __builtin_expect((x),0)
+#else
+#    define unlikely(x)     (x)
+#endif
+
 
 static inline void __game_over (const char* expr, const char* file, int line)
 {
@@ -32,10 +40,11 @@ static inline void __game_over (const char* expr, const char* file, int line)
     std::abort ();
 #endif
 }
-#define BUG_ON(expr)                            \
-     (static_cast <bool> (expr)                        \
-      ? void (0)                            \
-      : __game_over (#expr, __FILE__, __LINE__))
+#define BUG_ON(expr)                             \
+     (unlikely(static_cast <bool> (expr))        \
+      ? __game_over (#expr, __FILE__, __LINE__)  \
+      : void (0))
+
 #define BUG(msg) __game_over (#msg, __FILE__, __LINE__)
 
 #endif /* BUGON_HPP */

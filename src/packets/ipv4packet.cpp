@@ -50,7 +50,7 @@ cIPv4Packet::~cIPv4Packet ()
 
 cEthernetPacket& cIPv4Packet::getFirstEthernetPacket ()
 {
-    BUG_ON (packets.size() > 0);
+    BUG_ON (packets.size() <= 0);
     return packets.front();
 }
 
@@ -123,7 +123,7 @@ void cIPv4Packet::compile (uint8_t protocol, const uint8_t* l4header, size_t l4h
     unsigned fragCnt = unsigned((l4headerLen + payloadLen - 1) / (mtu - ipHeaderLen)) + 1;
     size_t offset = 0;
 
-    BUG_ON (l4headerLen < mtu - ipHeaderLen);    // we rely on L4 header fitting into first ip fragment
+    BUG_ON (l4headerLen > mtu - ipHeaderLen);    // we rely on L4 header fitting into first ip fragment
 
     cEthernetPacket &packet = packets.front();
 
@@ -215,7 +215,7 @@ size_t cIPv4Packet::getPayloadLength () const
 
     for (auto & p : packets)
     {
-        BUG_ON (p.getPayloadLength () > ipHeaderLen);
+        BUG_ON (p.getPayloadLength () <= ipHeaderLen);
         len += p.getPayloadLength () - ipHeaderLen;
     }
 
@@ -226,7 +226,7 @@ void cIPv4Packet::updateL4Header (const uint8_t* l4header, size_t l4headerLen)
 {
     cEthernetPacket &packet = packets.front();
 
-    BUG_ON (packet.getPayloadLength () > getHeaderLength());
+    BUG_ON (packet.getPayloadLength () <= getHeaderLength());
 
     packet.updatePayloadAt((unsigned)getHeaderLength(), l4header, l4headerLen);
 }

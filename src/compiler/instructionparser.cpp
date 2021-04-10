@@ -327,8 +327,6 @@ size_t cInstructionParser::compileVLANTags (cParameterList& params, cEthernetPac
 
 cLinkable* cInstructionParser::compileARP (cParameterList& params, bool isProbe, bool isGratuitous)
 {
-    BUG_ON ((!isProbe && !isGratuitous) || (isProbe != isGratuitous));
-
     cArpPacket*  arp = new cArpPacket;
     try
     {
@@ -1216,8 +1214,8 @@ void cInstructionParser::unitTest ()
         {
             catched = true;
         }
-        BUG_ON (!catched);
-        BUG_ON (p == &s[2]);
+        assert (!catched);
+        assert (p == &s[2]);
     }
     {
         const char s[] = "1000";
@@ -1234,8 +1232,8 @@ void cInstructionParser::unitTest ()
         {
             catched = true;
         }
-        BUG_ON (catched);
-        BUG_ON (!p);
+        assert (catched);
+        assert (!p);
     }
     {
         const char s[] = "+1000";
@@ -1252,8 +1250,8 @@ void cInstructionParser::unitTest ()
         {
             catched = true;
         }
-        BUG_ON (catched);
-        BUG_ON (!p);
+        assert (catched);
+        assert (!p);
     }
     {
         const char s[] = "1000:";
@@ -1270,10 +1268,10 @@ void cInstructionParser::unitTest ()
         {
             catched = true;
         }
-        BUG_ON (!catched);
-        BUG_ON (abs);
-        BUG_ON (p == &s[sizeof(s)]-1);
-        BUG_ON (t == 1000);
+        assert (!catched);
+        assert (abs);
+        assert (p == &s[sizeof(s)]-1);
+        assert (t == 1000);
     }
     {
         const char s[] = "+1000:";
@@ -1290,10 +1288,10 @@ void cInstructionParser::unitTest ()
         {
             catched = true;
         }
-        BUG_ON (!catched);
-        BUG_ON (!abs);
-        BUG_ON (p == &s[sizeof(s)]-1);
-        BUG_ON (t == 1000);
+        assert (!catched);
+        assert (!abs);
+        assert (p == &s[sizeof(s)]-1);
+        assert (t == 1000);
     }
     {
         const char s[] = " 1000 : ";
@@ -1310,10 +1308,10 @@ void cInstructionParser::unitTest ()
         {
             catched = true;
         }
-        BUG_ON (!catched);
-        BUG_ON (abs);
-        BUG_ON (p == &s[7]);
-        BUG_ON (t == 1000);
+        assert (!catched);
+        assert (abs);
+        assert (p == &s[7]);
+        assert (t == 1000);
     }
     {
         const char s[] = " +1000 : ";
@@ -1330,10 +1328,10 @@ void cInstructionParser::unitTest ()
         {
             catched = true;
         }
-        BUG_ON (!catched);
-        BUG_ON (!abs);
-        BUG_ON (p == &s[8]);
-        BUG_ON (t == 1000);
+        assert (!catched);
+        assert (!abs);
+        assert (p == &s[8]);
+        assert (t == 1000);
     }
     {
         const char s[] = " 1asd000 : ";
@@ -1350,10 +1348,10 @@ void cInstructionParser::unitTest ()
         {
             catched = true;
         }
-        BUG_ON (catched);
-        BUG_ON (abs);
-        BUG_ON (!p);
-        BUG_ON (t==1);
+        assert (catched);
+        assert (abs);
+        assert (!p);
+        assert (t==1);
     }
     {
         const char s[] = " abcd(";
@@ -1370,10 +1368,10 @@ void cInstructionParser::unitTest ()
         {
             catched = true;
         }
-        BUG_ON (!catched);
-        BUG_ON (len == 4);
-        BUG_ON (!strncmp("abcd", prot, len));
-        BUG_ON (*p=='(');
+        assert (!catched);
+        assert (len == 4);
+        assert (!strncmp("abcd", prot, len));
+        assert (*p=='(');
     }
     {
         const char s[] = " abcd (";
@@ -1390,10 +1388,10 @@ void cInstructionParser::unitTest ()
         {
             catched = true;
         }
-        BUG_ON (!catched);
-        BUG_ON (len == 4);
-        BUG_ON (!strncmp("abcd", prot, len));
-        BUG_ON (*p=='(');
+        assert (!catched);
+        assert (len == 4);
+        assert (!strncmp("abcd", prot, len));
+        assert (*p=='(');
     }
     {
         const char s[] = "abcd(";
@@ -1410,10 +1408,10 @@ void cInstructionParser::unitTest ()
         {
             catched = true;
         }
-        BUG_ON (!catched);
-        BUG_ON (len == 4);
-        BUG_ON (!strncmp("abcd", prot, len));
-        BUG_ON (*p=='(');
+        assert (!catched);
+        assert (len == 4);
+        assert (!strncmp("abcd", prot, len));
+        assert (*p=='(');
     }
     {
         const char s[] = "abcd( ";
@@ -1430,10 +1428,10 @@ void cInstructionParser::unitTest ()
         {
             catched = true;
         }
-        BUG_ON (!catched);
-        BUG_ON (len == 4);
-        BUG_ON (!strncmp("abcd", prot, len));
-        BUG_ON (*p=='(');
+        assert (!catched);
+        assert (len == 4);
+        assert (!strncmp("abcd", prot, len));
+        assert (*p=='(');
     }
     {
         const char s[] = " ab42cd-ef(";
@@ -1450,10 +1448,10 @@ void cInstructionParser::unitTest ()
         {
             catched = true;
         }
-        BUG_ON (!catched);
-        BUG_ON (len == 9);
-        BUG_ON (!strncmp("ab42cd-ef", prot, len));
-        BUG_ON (*p=='(');
+        assert (!catched);
+        assert (len == 9);
+        assert (!strncmp("ab42cd-ef", prot, len));
+        assert (*p=='(');
     }
     {
         const char* prot = nullptr;
@@ -1483,9 +1481,9 @@ void cInstructionParser::unitTest ()
             {
                 catched = true;
             }
-            BUG_ON (catched);
-            BUG_ON (!len);
-            BUG_ON (!p);
+            assert (catched);
+            assert (!len);
+            assert (!p);
         }
     }
 
@@ -1511,11 +1509,11 @@ void cInstructionParser::unitTest ()
         if (!packets)
         {
             cIPv4Packet* ipv4 = dynamic_cast<cIPv4Packet*>(result.packets);
-            BUG_ON (ipv4);
+            assert (ipv4);
             packets = &ipv4->getFirstEthernetPacket();
         }
-        BUG_ON (packets);
-        BUG_ON (tests[n].packetSize == packets->getLength());
+        assert (packets);
+        assert (tests[n].packetSize == packets->getLength());
         if (memcmp (packets->get(), tests[n].packet, tests[n].packetSize))
         {
             const uint8_t* p = packets->get();
@@ -1526,7 +1524,7 @@ void cInstructionParser::unitTest ()
             }
             printf ("\n");
         }
-        BUG_ON (!memcmp (packets->get(), tests[n].packet, tests[n].packetSize));
+        assert (!memcmp (packets->get(), tests[n].packet, tests[n].packetSize));
         Console::PrintDebug("\r");
 
         delete result.packets;

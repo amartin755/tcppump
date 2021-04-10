@@ -27,7 +27,7 @@ Console::out_level Console::level = Normal;
 
 void Console::SetPrintLevel (out_level lvl)
 {
-    BUG_ON ((lvl >= Silent) && (lvl <= Debug));
+    BUG_ON ((lvl < Silent) || (lvl > Debug));
     level = lvl;
 }
 

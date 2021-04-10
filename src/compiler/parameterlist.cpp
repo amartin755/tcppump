@@ -46,7 +46,7 @@ cParameter::cParameter (const cParameter& obj)
     index     = obj.index;
     if (obj.dataLen)
     {
-        BUG_ON (obj.data);
+        BUG_ON (!obj.data);
         dataLen   = obj.dataLen;
         data      = new uint8_t[dataLen];
         std::memcpy (data, obj.data, dataLen);
@@ -110,7 +110,7 @@ int cParameter::isRandom (bool allowRange) const
 
 uint32_t cParameter::asInt32 (uint32_t rangeBegin, uint32_t rangeEnd) const
 {
-    BUG_ON (rangeEnd >= rangeBegin);
+    BUG_ON (rangeEnd < rangeBegin);
 
     unsigned long v;
 
@@ -152,7 +152,7 @@ uint8_t cParameter::asInt8 (uint8_t  rangeBegin, uint8_t rangeEnd) const
 
 double cParameter::asDouble (double rangeBegin, double rangeEnd) const
 {
-    BUG_ON (rangeEnd >= rangeBegin);
+    BUG_ON (rangeEnd < rangeBegin);
 
     size_t end;
     double v = 0;
@@ -287,7 +287,7 @@ const char* cParameterList::getParseError (void)
 
 void cParameterList::checkForUnusedParameters (void)
 {
-    BUG_ON (list.size() == used.size());
+    BUG_ON (list.size() != used.size());
 
     for (size_t n = 0; n < list.size (); n++)
     {
@@ -441,7 +441,7 @@ const char* cParameterList::parseParameters (const char* parameters)
      */
 
     // caller must ensure that parameter list starts with '('
-    BUG_ON (*p == '(');
+    BUG_ON (*p != '(');
     p++;
 
     while (*p != '\0' && *p != ')')
@@ -530,29 +530,29 @@ void cParameterList::unitTest ()
     try
     {
         cParameterList obj ("(     first=100, second = 200, third   =300)");
-        BUG_ON (obj.isValid ());
-        BUG_ON (obj.findParameter("first")->asInt32()  == (uint32_t)100);
-        BUG_ON (obj.findParameter("second")->asInt32() == (uint32_t)200);
-        BUG_ON (obj.findParameter("third")->asInt32()  == (uint32_t)300);
+        assert (obj.isValid ());
+        assert (obj.findParameter("first")->asInt32()  == (uint32_t)100);
+        assert (obj.findParameter("second")->asInt32() == (uint32_t)200);
+        assert (obj.findParameter("third")->asInt32()  == (uint32_t)300);
     }
     catch (FormatException& )
     {
-        BUG_ON (0);
+        assert (0);
     }
 
     {
         cParameterList obj ("(first=100, second = 200, third   =300, fourth=x12)");
-        BUG_ON (obj.isValid ());
+        assert (obj.isValid ());
         try
         {
             catched = false;
-            BUG_ON (obj.findParameter("first")->asInt32()  == (uint32_t)100);
-            BUG_ON (obj.findParameter("second")->asInt32() == (uint32_t)200);
-            BUG_ON (obj.findParameter("third")->asInt32()  == (uint32_t)300);
+            assert (obj.findParameter("first")->asInt32()  == (uint32_t)100);
+            assert (obj.findParameter("second")->asInt32() == (uint32_t)200);
+            assert (obj.findParameter("third")->asInt32()  == (uint32_t)300);
         }
         catch (FormatException& )
         {
-            BUG_ON (0);
+            assert (0);
         }
 
         try
@@ -563,10 +563,10 @@ void cParameterList::unitTest ()
         catch (FormatException& e)
         {
             catched = true;
-            BUG_ON (e.what () == exParFormat);
-            BUG_ON (e.value ());
+            assert (e.what () == exParFormat);
+            assert (e.value ());
         }
-        BUG_ON (catched);
+        assert (catched);
 
         try
         {
@@ -576,10 +576,10 @@ void cParameterList::unitTest ()
         catch (FormatException& e)
         {
             catched = true;
-            BUG_ON (e.what () == exParFormat);
-            BUG_ON (e.value ());
+            assert (e.what () == exParFormat);
+            assert (e.value ());
         }
-        BUG_ON (catched);
+        assert (catched);
 
         try
         {
@@ -589,11 +589,11 @@ void cParameterList::unitTest ()
         catch (FormatException& e)
         {
             catched = true;
-            BUG_ON (e.what () == exParUnknown);
-            BUG_ON (e.value ());
-            BUG_ON (!strcmp ("f", e.value ()));
+            assert (e.what () == exParUnknown);
+            assert (e.value ());
+            assert (!strcmp ("f", e.value ()));
         }
-        BUG_ON (catched);
+        assert (catched);
 
         try
         {
@@ -603,19 +603,19 @@ void cParameterList::unitTest ()
         catch (FormatException& e)
         {
             catched = true;
-            BUG_ON (e.what () == exParUnknown);
-            BUG_ON (e.value ());
-            BUG_ON (!strcmp ("firstfirst", e.value ()));
+            assert (e.what () == exParUnknown);
+            assert (e.value ());
+            assert (!strcmp ("firstfirst", e.value ()));
         }
-        BUG_ON (catched);
+        assert (catched);
 
         try
         {
-            BUG_ON (obj.findParameter("first")->asInt32(100, 100)  == (uint32_t)100);
+            assert (obj.findParameter("first")->asInt32(100, 100)  == (uint32_t)100);
         }
         catch (FormatException& )
         {
-            BUG_ON (0);
+            assert (0);
         }
 
         try
@@ -626,103 +626,103 @@ void cParameterList::unitTest ()
         catch (FormatException& e)
         {
             catched = true;
-            BUG_ON (e.what () == exParRange);
-            BUG_ON (e.value ());
+            assert (e.what () == exParRange);
+            assert (e.value ());
         }
-        BUG_ON (catched);
+        assert (catched);
 
     }
 
     try
     {
         cParameterList obj ("(first=100, firstsecond = 200, third   =300)");
-        BUG_ON (obj.findParameter("first")->asInt32()  == (uint32_t)100);
-        BUG_ON (obj.findParameter("firstsecond")->asInt32()  == (uint32_t)200);
-        BUG_ON (obj.isValid ());
+        assert (obj.findParameter("first")->asInt32()  == (uint32_t)100);
+        assert (obj.findParameter("firstsecond")->asInt32()  == (uint32_t)200);
+        assert (obj.isValid ());
     }
     catch (FormatException& )
     {
-        BUG_ON (0);
+        assert (0);
     }
 
     {
         cParameterList obj ("(first=100.firstsecond = 200, third   =300)");
-        BUG_ON (!obj.isValid ());
+        assert (!obj.isValid ());
     }
     {
         cParameterList obj ("(d.first=100.second =)");
-        BUG_ON (!obj.isValid ());
+        assert (!obj.isValid ());
     }
     {
         cParameterList obj ("(=123)");
-        BUG_ON (!obj.isValid ());
+        assert (!obj.isValid ());
     }
     try
     {
         cParameterList obj ("(  first=123)");
-        BUG_ON (obj.isValid ());
-        BUG_ON (obj.findParameter("first")->asInt32()  == (uint32_t)123);
+        assert (obj.isValid ());
+        assert (obj.findParameter("first")->asInt32()  == (uint32_t)123);
     }
     catch (FormatException& )
     {
-        BUG_ON (0);
+        assert (0);
     }
     {
         cParameterList obj ("($,dkfjsdf=sd,djhdslk,,0=0sd sdlfkjf)");
-        BUG_ON (!obj.isValid ());
+        assert (!obj.isValid ());
     }
     {
         cParameterList obj ("(long=100, ipv4 = 1.2.3.4, mac =12:34:56:78:9A:BC, payload=012345)");
         try
         {
-            BUG_ON (obj.isValid ());
-            BUG_ON (obj.findParameter("long")->asInt32()  == (uint32_t)100);
-            BUG_ON (obj.findParameter("ipv4")->asIPv4()  == cIpAddress("1.2.3.4"));
+            assert (obj.isValid ());
+            assert (obj.findParameter("long")->asInt32()  == (uint32_t)100);
+            assert (obj.findParameter("ipv4")->asIPv4()  == cIpAddress("1.2.3.4"));
             cMacAddress mac2("12:34:56:78:9a:bc");
             cMacAddress mac = obj.findParameter("mac")->asMac();
-            BUG_ON (!memcmp (&mac, &mac2, sizeof (mac2)));
+            assert (!memcmp (&mac, &mac2, sizeof (mac2)));
             size_t len = 0;
-            BUG_ON (!memcmp (obj.findParameter("payload")->asStream(len), "\x01\x23\x45", len));
-            BUG_ON (len == 3);
+            assert (!memcmp (obj.findParameter("payload")->asStream(len), "\x01\x23\x45", len));
+            assert (len == 3);
         }
         catch (FormatException& )
         {
-            BUG_ON (0);
+            assert (0);
         }
     }
     {
         cParameterList obj ("(ipv4 = 1.2.3.4)");
         try
         {
-            BUG_ON (obj.isValid ());
-            BUG_ON (obj.findParameter("ipv4")->asIPv4()  == cIpAddress("1.2.3.4"));
+            assert (obj.isValid ());
+            assert (obj.findParameter("ipv4")->asIPv4()  == cIpAddress("1.2.3.4"));
             cMacAddress mac1("12:34:56:78:9a:bc");
             cMacAddress mac2("11:22:33:44:55:66");
             cMacAddress _mac2 = obj.findParameter("mac2", mac2)->asMac();
             cMacAddress _mac1 = obj.findParameter("mac1", mac1)->asMac();
-            BUG_ON (!memcmp (&_mac2, &mac2, sizeof (mac2)));
-            BUG_ON (!memcmp (&_mac1, &mac1, sizeof (mac2)));
+            assert (!memcmp (&_mac2, &mac2, sizeof (mac2)));
+            assert (!memcmp (&_mac1, &mac1, sizeof (mac2)));
         }
         catch (FormatException& )
         {
-            BUG_ON (0);
+            assert (0);
         }
     }
     {
         cParameterList obj ("(first=0xFFFF, second=0x10000, toolong=0x100000000)");
-        BUG_ON (obj.isValid ());
+        assert (obj.isValid ());
         try
         {
-            BUG_ON (obj.findParameter("first")->asInt32()  == (uint32_t)0x0000ffff);
-            BUG_ON (obj.findParameter("first")->asInt32(200, 0xffff)  == (uint32_t)0x0000ffff);
-            BUG_ON (obj.findParameter("first")->asInt32(0xffff, 0xffff)  == (uint32_t)0x0000ffff);
-            BUG_ON (obj.findParameter("first")->asInt16()  == (uint16_t)0x0000ffff);
-            BUG_ON (obj.findParameter("second")->asInt32()  == (uint32_t)0x00010000);
-            BUG_ON (obj.findParameter("second")->asInt32(0x00010000)  == (uint32_t)0x00010000);
+            assert (obj.findParameter("first")->asInt32()  == (uint32_t)0x0000ffff);
+            assert (obj.findParameter("first")->asInt32(200, 0xffff)  == (uint32_t)0x0000ffff);
+            assert (obj.findParameter("first")->asInt32(0xffff, 0xffff)  == (uint32_t)0x0000ffff);
+            assert (obj.findParameter("first")->asInt16()  == (uint16_t)0x0000ffff);
+            assert (obj.findParameter("second")->asInt32()  == (uint32_t)0x00010000);
+            assert (obj.findParameter("second")->asInt32(0x00010000)  == (uint32_t)0x00010000);
         }
         catch (FormatException& )
         {
-            BUG_ON (0);
+            assert (0);
         }
         try
         {
@@ -732,10 +732,10 @@ void cParameterList::unitTest ()
         catch (FormatException& e)
         {
             catched = true;
-            BUG_ON (e.what () == exParRange);
-            BUG_ON (e.value ());
+            assert (e.what () == exParRange);
+            assert (e.value ());
         }
-        BUG_ON (catched);
+        assert (catched);
         try
         {
             catched = false;
@@ -744,10 +744,10 @@ void cParameterList::unitTest ()
         catch (FormatException& e)
         {
             catched = true;
-            BUG_ON (e.what () == exParRange);
-            BUG_ON (e.value ());
+            assert (e.what () == exParRange);
+            assert (e.value ());
         }
-        BUG_ON (catched);
+        assert (catched);
         try
         {
             catched = false;
@@ -756,118 +756,118 @@ void cParameterList::unitTest ()
         catch (FormatException& e)
         {
             catched = true;
-            BUG_ON (e.what () == exParRange);
-            BUG_ON (e.value ());
+            assert (e.what () == exParRange);
+            assert (e.value ());
         }
-        BUG_ON (catched);
+        assert (catched);
         {
             cParameterList obj ("(dk=,fjsdf=12)");
-            BUG_ON (!obj.isValid ());
+            assert (!obj.isValid ());
         }
     }
     {
         cParameterList obj ("(first=0x1, first=0x2, first=0x3 )");
-        BUG_ON (obj.isValid ());
+        assert (obj.isValid ());
         try
         {
             const cParameter* par = nullptr;
-            BUG_ON (obj.findParameter("first")->asInt32()  == (uint32_t)1);
+            assert (obj.findParameter("first")->asInt32()  == (uint32_t)1);
 
             par = obj.findParameter("first");
-            BUG_ON (par->asInt32()  == (uint32_t)1);
+            assert (par->asInt32()  == (uint32_t)1);
             par = obj.findParameter(par, nullptr, "first");
-            BUG_ON (par->asInt32()  == (uint32_t)2);
+            assert (par->asInt32()  == (uint32_t)2);
             par = obj.findParameter(par, nullptr, "first");
-            BUG_ON (par->asInt32()  == (uint32_t)3);
+            assert (par->asInt32()  == (uint32_t)3);
             par = obj.findParameter(par, nullptr, "first", true);
-            BUG_ON (!par);
+            assert (!par);
         }
         catch (FormatException& )
         {
-            BUG_ON (0);
+            assert (0);
         }
     }
     {
         cParameterList obj ("(second=0x10, first=0x1, second=0x10, first=0x2, second=0x20, first=0x3, second=0x30)");
-        BUG_ON (obj.isValid ());
+        assert (obj.isValid ());
         try
         {
             const cParameter* par = nullptr;
-            BUG_ON (obj.findParameter("first")->asInt32()  == (uint32_t)1);
+            assert (obj.findParameter("first")->asInt32()  == (uint32_t)1);
 
             par = obj.findParameter("first");
-            BUG_ON (par->asInt32()  == (uint32_t)1);
-            BUG_ON (obj.findParameter(par, nullptr, "second")->asInt32()  == (uint32_t)0x10);
+            assert (par->asInt32()  == (uint32_t)1);
+            assert (obj.findParameter(par, nullptr, "second")->asInt32()  == (uint32_t)0x10);
 
             par = obj.findParameter(par, nullptr, "first");
-            BUG_ON (par->asInt32()  == (uint32_t)2);
-            BUG_ON (obj.findParameter(par, nullptr, "second")->asInt32()  == (uint32_t)0x20);
+            assert (par->asInt32()  == (uint32_t)2);
+            assert (obj.findParameter(par, nullptr, "second")->asInt32()  == (uint32_t)0x20);
 
             par = obj.findParameter(par, nullptr, "first");
-            BUG_ON (par->asInt32()  == (uint32_t)3);
-            BUG_ON (obj.findParameter(par, nullptr, "second")->asInt32()  == (uint32_t)0x30);
+            assert (par->asInt32()  == (uint32_t)3);
+            assert (obj.findParameter(par, nullptr, "second")->asInt32()  == (uint32_t)0x30);
 
             par = obj.findParameter(par, nullptr, "first", true);
-            BUG_ON (!par);
+            assert (!par);
         }
         catch (FormatException& )
         {
-            BUG_ON (0);
+            assert (0);
         }
     }
     {
         cParameterList obj ("(second=0x10, first=0x1, first=0x2, second=0x20, first=0x3, second=0x30)");
-        BUG_ON (obj.isValid ());
+        assert (obj.isValid ());
         try
         {
             const cParameter* par = nullptr;
 
             par = obj.findParameter("first");
-            BUG_ON (par->asInt32()  == (uint32_t)1);
-            BUG_ON (!obj.findParameter(par, "first", "second", true));
+            assert (par->asInt32()  == (uint32_t)1);
+            assert (!obj.findParameter(par, "first", "second", true));
 
             par = obj.findParameter(par, nullptr, "first");
-            BUG_ON (par->asInt32()  == (uint32_t)2);
-            BUG_ON (obj.findParameter(par, "first", "second")->asInt32()  == (uint32_t)0x20);
+            assert (par->asInt32()  == (uint32_t)2);
+            assert (obj.findParameter(par, "first", "second")->asInt32()  == (uint32_t)0x20);
 
             par = obj.findParameter(par, nullptr, "first");
-            BUG_ON (par->asInt32()  == (uint32_t)3);
-            BUG_ON (obj.findParameter(par, nullptr, "second")->asInt32()  == (uint32_t)0x30);
+            assert (par->asInt32()  == (uint32_t)3);
+            assert (obj.findParameter(par, nullptr, "second")->asInt32()  == (uint32_t)0x30);
 
             par = obj.findParameter(par, nullptr, "first", true);
-            BUG_ON (!par);
+            assert (!par);
         }
         catch (FormatException& )
         {
-            BUG_ON (0);
+            assert (0);
         }
     }
     {
         cParameterList obj ("(good=0.1, good2=1, good3=1.0e3, bad=abcd, bad2=3.4., bad3=1.0e400)");
-        BUG_ON (obj.isValid ());
+        assert (obj.isValid ());
         try
         {
-            BUG_ON (obj.findParameter("good")->asDouble()  == 0.1);
+            assert (obj.findParameter("good")->asDouble()  == 0.1);
         }
         catch (...)
         {
-            BUG_ON (0);
+            assert (0);
         }
         try
         {
-            BUG_ON (obj.findParameter("good2")->asDouble() == 1.0);
+            assert (obj.findParameter("good2")->asDouble() == 1.0);
         }
         catch (...)
         {
-            BUG_ON (0);
+            assert (0);
         }
         try
         {
-            BUG_ON (obj.findParameter("good3")->asDouble() == 1000.0);
+            assert (obj.findParameter("good3")->asDouble() == 1000.0);
         }
         catch (...)
         {
-            BUG_ON (0);
+            assert (0);
         }
         catched = false;
         try
@@ -877,10 +877,10 @@ void cParameterList::unitTest ()
         catch (FormatException& e)
         {
             catched = true;
-            BUG_ON (e.what () == exParFormat);
-            BUG_ON (e.value ());
+            assert (e.what () == exParFormat);
+            assert (e.value ());
         }
-        BUG_ON (catched);
+        assert (catched);
         catched = false;
         try
         {
@@ -889,10 +889,10 @@ void cParameterList::unitTest ()
         catch (FormatException& e)
         {
             catched = true;
-            BUG_ON (e.what () == exParFormat);
-            BUG_ON (e.value ());
+            assert (e.what () == exParFormat);
+            assert (e.value ());
         }
-        BUG_ON (catched);
+        assert (catched);
         try
         {
             obj.findParameter("bad3")->asDouble();
@@ -900,284 +900,284 @@ void cParameterList::unitTest ()
         catch (FormatException& e)
         {
             catched = true;
-            BUG_ON (e.what () == exParRange);
-            BUG_ON (e.value ());
+            assert (e.what () == exParRange);
+            assert (e.value ());
         }
-        BUG_ON (catched);
+        assert (catched);
     }
 
     try
     {
         size_t len = 0;
         cParameterList obj ("(first=\"Hello World\", second = \"\", third   =300)");
-        BUG_ON (obj.isValid ());
-        BUG_ON (!std::memcmp (obj.findParameter("first")->asStream(len), "Hello World", len));
+        assert (obj.isValid ());
+        assert (!std::memcmp (obj.findParameter("first")->asStream(len), "Hello World", len));
         obj.findParameter("second")->asStream(len);
-        BUG_ON (len == 0);
-        BUG_ON (obj.findParameter("third")->asInt32()  == (uint32_t)300);
+        assert (len == 0);
+        assert (obj.findParameter("third")->asInt32()  == (uint32_t)300);
     }
     catch (FormatException& )
     {
-        BUG_ON (0);
+        assert (0);
     }
     try
     {
         cParameterList obj ("(first=\"Hello World, second = 2, third   =300)");
-        BUG_ON (!obj.isValid ());
+        assert (!obj.isValid ());
     }
     catch (FormatException& )
     {
-        BUG_ON (0);
+        assert (0);
     }
     {
         cParameterList obj ("(first=*)");
-        BUG_ON (obj.isValid ());
+        assert (obj.isValid ());
         try
         {
             const cParameter* par = nullptr;
 
             par = obj.findParameter("first");
-            BUG_ON (par->asInt32(0,4)  < (uint32_t)5);
-            BUG_ON (par->asInt32(0,4)  < (uint32_t)5);
-            BUG_ON (par->asInt32(0,4)  < (uint32_t)5);
-            BUG_ON (par->asInt32(0,4)  < (uint32_t)5);
+            assert (par->asInt32(0,4)  < (uint32_t)5);
+            assert (par->asInt32(0,4)  < (uint32_t)5);
+            assert (par->asInt32(0,4)  < (uint32_t)5);
+            assert (par->asInt32(0,4)  < (uint32_t)5);
         }
         catch (FormatException& )
         {
-            BUG_ON (0);
+            assert (0);
         }
     }
     {
         catched = false;
         cParameterList obj ("(first=*k)");
-        BUG_ON (obj.isValid ());
+        assert (obj.isValid ());
         try
         {
             const cParameter* par = nullptr;
             par = obj.findParameter("first");
-            BUG_ON (par);
+            assert (par);
             par->asInt32();
         }
         catch (FormatException& e)
         {
             catched = true;
-            BUG_ON (e.what () == exParFormat);
-            BUG_ON (e.value ());
+            assert (e.what () == exParFormat);
+            assert (e.value ());
         }
-        BUG_ON (catched);
+        assert (catched);
     }
     {
         catched = false;
         cParameterList obj ("(first=*1k)");
-        BUG_ON (obj.isValid ());
+        assert (obj.isValid ());
         try
         {
             const cParameter* par = nullptr;
             par = obj.findParameter("first");
-            BUG_ON (par);
+            assert (par);
             par->asInt32();
         }
         catch (FormatException& e)
         {
             catched = true;
-            BUG_ON (e.what () == exParFormat);
-            BUG_ON (e.value ());
+            assert (e.what () == exParFormat);
+            assert (e.value ());
         }
-        BUG_ON (catched);
+        assert (catched);
     }
     {
         catched = false;
         cParameterList obj ("(first=**)");
-        BUG_ON (obj.isValid ());
+        assert (obj.isValid ());
         try
         {
             const cParameter* par = nullptr;
             par = obj.findParameter("first");
-            BUG_ON (par);
+            assert (par);
             par->asInt32();
         }
         catch (FormatException& e)
         {
             catched = true;
-            BUG_ON (e.what () == exParFormat);
-            BUG_ON (e.value ());
+            assert (e.what () == exParFormat);
+            assert (e.value ());
         }
-        BUG_ON (catched);
+        assert (catched);
     }
     {
         catched = false;
         cParameterList obj ("(first=*1)");
-        BUG_ON (obj.isValid ());
+        assert (obj.isValid ());
         try
         {
             const cParameter* par = nullptr;
             par = obj.findParameter("first");
-            BUG_ON (par);
+            assert (par);
             par->asInt32();
         }
         catch (FormatException& e)
         {
             catched = true;
-            BUG_ON (e.what () == exParFormat);
-            BUG_ON (e.value ());
+            assert (e.what () == exParFormat);
+            assert (e.value ());
         }
-        BUG_ON (catched);
+        assert (catched);
     }
     {
         catched = false;
         cParameterList obj ("(first=*k)");
-        BUG_ON (obj.isValid ());
+        assert (obj.isValid ());
         try
         {
             size_t len = 0;
             cParameter* par = nullptr;
             par = obj.findParameter("first");
-            BUG_ON (par);
+            assert (par);
             par->asStream(len);
         }
         catch (FormatException& e)
         {
             catched = true;
-            BUG_ON (e.what () == exParFormat);
-            BUG_ON (e.value ());
+            assert (e.what () == exParFormat);
+            assert (e.value ());
         }
-        BUG_ON (catched);
+        assert (catched);
     }
     {
         catched = false;
         cParameterList obj ("(first=*1k)");
-        BUG_ON (obj.isValid ());
+        assert (obj.isValid ());
         try
         {
             size_t len = 0;
             cParameter* par = nullptr;
             par = obj.findParameter("first");
-            BUG_ON (par);
+            assert (par);
             par->asStream(len);
         }
         catch (FormatException& e)
         {
             catched = true;
-            BUG_ON (e.what () == exParFormat);
-            BUG_ON (e.value ());
+            assert (e.what () == exParFormat);
+            assert (e.value ());
         }
-        BUG_ON (catched);
+        assert (catched);
     }
     {
         catched = false;
         cParameterList obj ("(first=**)");
-        BUG_ON (obj.isValid ());
+        assert (obj.isValid ());
         try
         {
             size_t len = 0;
             cParameter* par = nullptr;
             par = obj.findParameter("first");
-            BUG_ON (par);
+            assert (par);
             par->asStream(len);
         }
         catch (FormatException& e)
         {
             catched = true;
-            BUG_ON (e.what () == exParFormat);
-            BUG_ON (e.value ());
+            assert (e.what () == exParFormat);
+            assert (e.value ());
         }
-        BUG_ON (catched);
+        assert (catched);
     }
     {
         catched = false;
         cParameterList obj ("(first=*65536)");
-        BUG_ON (obj.isValid ());
+        assert (obj.isValid ());
         try
         {
             size_t len = 0;
             cParameter* par = nullptr;
             par = obj.findParameter("first");
-            BUG_ON (par);
+            assert (par);
             par->asStream(len);
         }
         catch (FormatException& e)
         {
             catched = true;
-            BUG_ON (e.what () == exParRange);
-            BUG_ON (e.value ());
+            assert (e.what () == exParRange);
+            assert (e.value ());
         }
-        BUG_ON (catched);
+        assert (catched);
     }
     {
         catched = false;
         cParameterList obj ("(first=*0)");
-        BUG_ON (obj.isValid ());
+        assert (obj.isValid ());
         try
         {
             size_t len = 0;
             cParameter* par = nullptr;
             par = obj.findParameter("first");
-            BUG_ON (par);
+            assert (par);
             par->asStream(len);
         }
         catch (FormatException& e)
         {
             catched = true;
-            BUG_ON (e.what () == exParRange);
-            BUG_ON (e.value ());
+            assert (e.what () == exParRange);
+            assert (e.value ());
         }
-        BUG_ON (catched);
+        assert (catched);
     }
     {
         cParameterList obj ("(first=*, second=*1, third=*100)");
         try
         {
             size_t len = 0;
-            BUG_ON (obj.isValid ());
+            assert (obj.isValid ());
             len = 0;
-            BUG_ON (obj.findParameter("first")->asStream(len));
-            BUG_ON (len == 32);
+            assert (obj.findParameter("first")->asStream(len));
+            assert (len == 32);
             len = 0;
-            BUG_ON (obj.findParameter("second")->asStream(len));
-            BUG_ON (len == 1);
+            assert (obj.findParameter("second")->asStream(len));
+            assert (len == 1);
             len = 0;
-            BUG_ON (obj.findParameter("third")->asStream(len));
-            BUG_ON (len == 100);
+            assert (obj.findParameter("third")->asStream(len));
+            assert (len == 100);
         }
         catch (FormatException& )
         {
-            BUG_ON (0);
+            assert (0);
         }
     }
     {
         try
         {
             cParameterList obj ("(first = 01)3456789abcdef0123456789abcdef)");
-            BUG_ON (!obj.isValid ());
+            assert (!obj.isValid ());
         }
         catch (FormatException& )
         {
-            BUG_ON (0);
+            assert (0);
         }
     }
     try
     {
         cParameterList obj ("(     first, second = 200, third)");
-        BUG_ON (obj.isValid ());
-        BUG_ON (obj.findParameter("first")->asInt32()  == (uint32_t)1);
-        BUG_ON (obj.findParameter("second")->asInt32() == (uint32_t)200);
-        BUG_ON (obj.findParameter("third")->asInt32()  == (uint32_t)1);
+        assert (obj.isValid ());
+        assert (obj.findParameter("first")->asInt32()  == (uint32_t)1);
+        assert (obj.findParameter("second")->asInt32() == (uint32_t)200);
+        assert (obj.findParameter("third")->asInt32()  == (uint32_t)1);
     }
     catch (FormatException& )
     {
-        BUG_ON (0);
+        assert (0);
     }
     try
     {
         cParameterList obj ("(     first=100, second , third   )");
-        BUG_ON (obj.isValid ());
-        BUG_ON (obj.findParameter("first")->asInt32()  == (uint32_t)100);
-        BUG_ON (obj.findParameter("second")->asInt32() == (uint32_t)1);
-        BUG_ON (obj.findParameter("third")->asInt32()  == (uint32_t)1);
+        assert (obj.isValid ());
+        assert (obj.findParameter("first")->asInt32()  == (uint32_t)100);
+        assert (obj.findParameter("second")->asInt32() == (uint32_t)1);
+        assert (obj.findParameter("third")->asInt32()  == (uint32_t)1);
     }
     catch (FormatException& )
     {
-        BUG_ON (0);
+        assert (0);
     }
 
     // TODO fuzzing
