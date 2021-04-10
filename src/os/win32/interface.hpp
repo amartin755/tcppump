@@ -37,7 +37,7 @@ class cInterface : public cNetInterface
 {
 
 public:
-    cInterface(const char* ifname, bool sendOnly);
+    cInterface(const char* ifname);
     virtual ~cInterface();
     bool open (bool sendOnly);
     bool close ();

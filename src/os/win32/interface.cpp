@@ -282,7 +282,7 @@ public:
  * Examples: FriendlyName "WiFi" or "Local Area Connection 1."
  *           AdapterName "{3F4A136A-2ED5-4226-9CB2-7A511E93CD48}"
  */
-cInterface::cInterface(const char* ifname, bool txOnly)
+cInterface::cInterface(const char* ifname)
 : name (ifname)
 {
     ifcHandle  = nullptr;
@@ -292,7 +292,7 @@ cInterface::cInterface(const char* ifname, bool txOnly)
     sentPackets = 0;
     sentBytes = 0;
     duration = 0;
-    sendOnly = txOnly;
+    sendOnly = true;
 }
 
 cInterface::~cInterface()
@@ -300,11 +300,13 @@ cInterface::~cInterface()
     close ();
 }
 
-bool cInterface::open ()
+bool cInterface::open (bool txOnly)
 {
     // aleady open
     if (ifcHandle)
         return true;
+
+    sendOnly = txOnly;
 
     winNetAdapters = getAdapterAddresses ();
     if (!winNetAdapters)
@@ -575,8 +577,10 @@ const uint8_t* cInterface::receivePacket (cTimeval* timestamp, int* len, const c
         if (cSignal::sigintSignalled ())
             return nullptr;
 
-        res = pcap_next_ex(pcapHandle, &header, &pkt_data);
-        if (filter && (res > 0) && !filter->match(header, pkt_data))
+        res = pcap_next_ex(ifcHandle, &header, &pkt_data);
+        if (res > 0)
+            if ( (dropBefore && (cTimeval(header->ts) < *dropBefore)) ||
+                     (filter && !filter->match(header, pkt_data)) )
             res = 0;
     }
     while (!res);

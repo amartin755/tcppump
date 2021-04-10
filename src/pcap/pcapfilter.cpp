@@ -190,7 +190,7 @@ void cPcapFilter::resetBPF (void)
 bool cPcapFilter::match (const struct pcap_pkthdr *h, const u_char *pkt) const
 {
     // if no filter is set, ALL packets match
-    return (!bpfCode.bf_len) ? true : !!pcap_offline_filter (&bpfCode, h, pkt);
+    return (!bpfCode.bf_len) ? true : !!pcap_offline_filter ((struct bpf_program*)&bpfCode, h, pkt);
 }
 
 
