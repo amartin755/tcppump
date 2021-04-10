@@ -255,45 +255,54 @@ cLinkable* cInstructionParser::compileETH (cParameterList& params)
     cEthernetPacket* eth = new cEthernetPacket;
     const cParameter* optionalPar = nullptr;
 
-    // MAC header
-    compileMacHeader (params, eth, false);
-
-    // compile VLAN tags
-    compileVLANTags (params, eth);
-
-    // LLC header
-    // NOTE: dsap and ssap are mandatory parameters for llc header;
-    //       if only one of them is defined, we ignore all LLC parameters
-    optionalPar = params.findParameter ("dsap",  true);
-    if (optionalPar)
+    try
     {
-        uint8_t dsap = optionalPar->asInt8 ();
-        uint8_t ssap = params.findParameter ("ssap")->asInt8 ();
-        eth->addLlcHeader(dsap, ssap, params.findParameter("control", (uint32_t)3)->asInt16 ());
-    }
-    else
-    {
-        // SNAP extension
-        optionalPar = params.findParameter ("oui",  true);
+        // MAC header
+        compileMacHeader (params, eth, false);
+
+        // compile VLAN tags
+        compileVLANTags (params, eth);
+
+        // LLC header
+        // NOTE: dsap and ssap are mandatory parameters for llc header;
+        //       if only one of them is defined, we ignore all LLC parameters
+        optionalPar = params.findParameter ("dsap",  true);
         if (optionalPar)
         {
-            eth->addSnapHeader (optionalPar->asInt32 (0, 0x00ffffff),
-                    params.findParameter ("protocol")->asInt16 ());
+            uint8_t dsap = optionalPar->asInt8 ();
+            uint8_t ssap = params.findParameter ("ssap")->asInt8 ();
+            eth->addLlcHeader(dsap, ssap, params.findParameter("control", (uint32_t)3)->asInt16 ());
+        }
+        else
+        {
+            // SNAP extension
+            optionalPar = params.findParameter ("oui",  true);
+            if (optionalPar)
+            {
+                eth->addSnapHeader (optionalPar->asInt32 (0, 0x00ffffff),
+                        params.findParameter ("protocol")->asInt16 ());
+            }
+        }
+
+        size_t len;
+        const uint8_t* value = params.findParameter ("payload")->asStream(len);
+        eth->setPayload (value, len);
+
+        // if llc header or no ethertype/length is provided, we calculate the length ourself
+        if (eth->hasLlcHeader() || (optionalPar = params.findParameter ("ethertype", true)) == NULL)
+        {
+            eth->setLength ();
+        }
+        else
+        {
+            eth->setTypeLength (optionalPar->asInt16 ());
         }
     }
-
-    size_t len;
-    const uint8_t* value = params.findParameter ("payload")->asStream(len);
-    eth->setPayload (value, len);
-
-    // if llc header or no ethertype/length is provided, we calculate the length ourself
-    if (eth->hasLlcHeader() || (optionalPar = params.findParameter ("ethertype", true)) == NULL)
+    catch (...)
     {
-        eth->setLength ();
-    }
-    else
-    {
-        eth->setTypeLength (optionalPar->asInt16 ());
+        delete eth;
+        eth = nullptr;
+        throw;
     }
 
     return eth;
@@ -318,32 +327,41 @@ size_t cInstructionParser::compileVLANTags (cParameterList& params, cEthernetPac
 
 cLinkable* cInstructionParser::compileARP (cParameterList& params, bool isProbe, bool isGratuitous)
 {
-    cArpPacket*  arp = new cArpPacket;
-
     BUG_ON ((!isProbe && !isGratuitous) || (isProbe != isGratuitous));
 
-    if (isProbe)
+    cArpPacket*  arp = new cArpPacket;
+    try
     {
-        arp->probe (ownMac, params.findParameter ("dip")->asIPv4());
-    }
-    else if (isGratuitous)
-    {
-        arp->announce (ownMac, params.findParameter ("dip", ownIPv4)->asIPv4());
-    }
-    else
-    {
-        cMacAddress targetMac = params.findParameter ("dmac", cMacAddress ((unsigned)0))->asMac();
 
-        arp->setAll (params.findParameter ("op", (uint32_t)1)->asInt16(),
-                    params.findParameter ("smac", ownMac)->asMac(),
-                    params.findParameter ("sip", ownIPv4)->asIPv4(),
-                    targetMac,
-                    params.findParameter ("dip")->asIPv4()
-                    );
-    }
+        if (isProbe)
+        {
+            arp->probe (ownMac, params.findParameter ("dip")->asIPv4());
+        }
+        else if (isGratuitous)
+        {
+            arp->announce (ownMac, params.findParameter ("dip", ownIPv4)->asIPv4());
+        }
+        else
+        {
+            cMacAddress targetMac = params.findParameter ("dmac", cMacAddress ((unsigned)0))->asMac();
 
-    // compile VLAN tags
-    compileVLANTags (params, arp);
+            arp->setAll (params.findParameter ("op", (uint32_t)1)->asInt16(),
+                        params.findParameter ("smac", ownMac)->asMac(),
+                        params.findParameter ("sip", ownIPv4)->asIPv4(),
+                        targetMac,
+                        params.findParameter ("dip")->asIPv4()
+                        );
+        }
+
+        // compile VLAN tags
+        compileVLANTags (params, arp);
+    }
+    catch (...)
+    {
+        delete arp;
+        arp = nullptr;
+        throw;
+    }
 
     return arp;
 }
@@ -375,17 +393,25 @@ bool cInstructionParser::parseIPv4Params (cParameterList& params, cIPv4Packet* p
 cLinkable* cInstructionParser::compileIPv4 (cParameterList& params)
 {
     cIPv4Packet* ippacket = new cIPv4Packet;
-    cEthernetPacket& eth = ippacket->getFirstEthernetPacket();
-    bool destIsMulticast = parseIPv4Params (params, ippacket);
+    try
+    {
+        cEthernetPacket& eth = ippacket->getFirstEthernetPacket();
+        bool destIsMulticast = parseIPv4Params (params, ippacket);
 
-    // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
-    compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
-    compileVLANTags   (params, &eth);
+        // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+        compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
+        compileVLANTags   (params, &eth);
 
-    size_t len;
-    const uint8_t* payload = params.findParameter ("payload")->asStream(len);
-    ippacket->compile (params.findParameter ("protocol")->asInt8(), nullptr, 0, payload, len);
-
+        size_t len;
+        const uint8_t* payload = params.findParameter ("payload")->asStream(len);
+        ippacket->compile (params.findParameter ("protocol")->asInt8(), nullptr, 0, payload, len);
+    }
+    catch (...)
+    {
+        delete ippacket;
+        ippacket = nullptr;
+        throw;
+    }
     return ippacket;
 }
 
@@ -393,26 +419,35 @@ cLinkable* cInstructionParser::compileIPv4 (cParameterList& params)
 cLinkable* cInstructionParser::compileUDP (cParameterList& params)
 {
     cUdpPacket* udppacket = new cUdpPacket;
-    cEthernetPacket& eth = udppacket->getFirstEthernetPacket();
-    bool destIsMulticast = parseIPv4Params (params, udppacket);
+    try
+    {
+        cEthernetPacket& eth = udppacket->getFirstEthernetPacket();
+        bool destIsMulticast = parseIPv4Params (params, udppacket);
 
-    // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
-    compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
-    compileVLANTags   (params, &eth);
+        // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+        compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
+        compileVLANTags   (params, &eth);
 
-    udppacket->setSourcePort(params.findParameter ("sport")->asInt16());
-    udppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
+        udppacket->setSourcePort(params.findParameter ("sport")->asInt16());
+        udppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
 
-    size_t len = 0;
-    const uint8_t* payload = nullptr;
-    cParameter* optionalPar = params.findParameter ("payload", true);
-    if (optionalPar)
-        payload = optionalPar->asStream(len);
-    udppacket->setPayload (payload, len);
+        size_t len = 0;
+        const uint8_t* payload = nullptr;
+        cParameter* optionalPar = params.findParameter ("payload", true);
+        if (optionalPar)
+            payload = optionalPar->asStream(len);
+        udppacket->setPayload (payload, len);
 
-    optionalPar = params.findParameter ("chksum", true);
-    if (optionalPar)
-        udppacket->setChecksum (optionalPar->asInt16());
+        optionalPar = params.findParameter ("chksum", true);
+        if (optionalPar)
+            udppacket->setChecksum (optionalPar->asInt16());
+    }
+    catch (...)
+    {
+        delete udppacket;
+        udppacket = nullptr;
+        throw;
+    }
 
     return udppacket;
 }
@@ -421,49 +456,58 @@ cLinkable* cInstructionParser::compileUDP (cParameterList& params)
 cLinkable* cInstructionParser::compileTCP (cParameterList& params)
 {
     cTcpPacket* tcppacket = new cTcpPacket;
-    cEthernetPacket& eth = tcppacket->getFirstEthernetPacket();
-    bool destIsMulticast = parseIPv4Params (params, tcppacket);
-    bool userDefinedChecksum = false;
-    cParameter* optionalPar;
-
-    // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
-    compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
-    compileVLANTags   (params, &eth);
-
-    tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
-    tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
-
-    tcppacket->setSeqNumber (params.findParameter ("seq")->asInt32());
-    tcppacket->setAckNumber (params.findParameter ("ack")->asInt32());
-
-    tcppacket->setWindow (params.findParameter ("win", (uint32_t)1024)->asInt16());
-    tcppacket->setUrgentPointer (params.findParameter ("urgptr", (uint32_t)0)->asInt16());
-
-    // Flags
-    tcppacket->setFlagFIN (!!(params.findParameter ("FIN",    (uint32_t)0)->asInt8(0, 1)));
-    tcppacket->setFlagSYN (!!(params.findParameter ("SYN",    (uint32_t)0)->asInt8(0, 1)));
-    tcppacket->setFlagRST (!!(params.findParameter ("RESET",  (uint32_t)0)->asInt8(0, 1)));
-    tcppacket->setFlagPSH (!!(params.findParameter ("PUSH",   (uint32_t)0)->asInt8(0, 1)));
-    tcppacket->setFlagACK (!!(params.findParameter ("ACK",    (uint32_t)0)->asInt8(0, 1)));
-    tcppacket->setFlagURG (!!(params.findParameter ("URGENT", (uint32_t)0)->asInt8(0, 1)));
-    tcppacket->setFlagECE (!!(params.findParameter ("ECN",    (uint32_t)0)->asInt8(0, 1)));
-    tcppacket->setFlagCWR (!!(params.findParameter ("CWR",    (uint32_t)0)->asInt8(0, 1)));
-    tcppacket->setFlagNON (!!(params.findParameter ("NONCE",  (uint32_t)0)->asInt8(0, 1)));
-
-    size_t len = 0;
-    const uint8_t* payload = nullptr;
-    optionalPar = params.findParameter ("payload", true);
-    if (optionalPar)
-        payload = optionalPar->asStream(len);
-
-    optionalPar = params.findParameter ("chksum", true);
-    if (optionalPar)
+    try
     {
-        userDefinedChecksum = true;
-        tcppacket->setChecksum (optionalPar->asInt16());
-    }
+        cEthernetPacket& eth = tcppacket->getFirstEthernetPacket();
+        bool destIsMulticast = parseIPv4Params (params, tcppacket);
+        bool userDefinedChecksum = false;
+        cParameter* optionalPar;
 
-    tcppacket->compile (payload, len, !userDefinedChecksum);
+        // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+        compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
+        compileVLANTags   (params, &eth);
+
+        tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
+        tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
+
+        tcppacket->setSeqNumber (params.findParameter ("seq")->asInt32());
+        tcppacket->setAckNumber (params.findParameter ("ack")->asInt32());
+
+        tcppacket->setWindow (params.findParameter ("win", (uint32_t)1024)->asInt16());
+        tcppacket->setUrgentPointer (params.findParameter ("urgptr", (uint32_t)0)->asInt16());
+
+        // Flags
+        tcppacket->setFlagFIN (!!(params.findParameter ("FIN",    (uint32_t)0)->asInt8(0, 1)));
+        tcppacket->setFlagSYN (!!(params.findParameter ("SYN",    (uint32_t)0)->asInt8(0, 1)));
+        tcppacket->setFlagRST (!!(params.findParameter ("RESET",  (uint32_t)0)->asInt8(0, 1)));
+        tcppacket->setFlagPSH (!!(params.findParameter ("PUSH",   (uint32_t)0)->asInt8(0, 1)));
+        tcppacket->setFlagACK (!!(params.findParameter ("ACK",    (uint32_t)0)->asInt8(0, 1)));
+        tcppacket->setFlagURG (!!(params.findParameter ("URGENT", (uint32_t)0)->asInt8(0, 1)));
+        tcppacket->setFlagECE (!!(params.findParameter ("ECN",    (uint32_t)0)->asInt8(0, 1)));
+        tcppacket->setFlagCWR (!!(params.findParameter ("CWR",    (uint32_t)0)->asInt8(0, 1)));
+        tcppacket->setFlagNON (!!(params.findParameter ("NONCE",  (uint32_t)0)->asInt8(0, 1)));
+
+        size_t len = 0;
+        const uint8_t* payload = nullptr;
+        optionalPar = params.findParameter ("payload", true);
+        if (optionalPar)
+            payload = optionalPar->asStream(len);
+
+        optionalPar = params.findParameter ("chksum", true);
+        if (optionalPar)
+        {
+            userDefinedChecksum = true;
+            tcppacket->setChecksum (optionalPar->asInt16());
+        }
+
+        tcppacket->compile (payload, len, !userDefinedChecksum);
+    }
+    catch (...)
+    {
+        delete tcppacket;
+        tcppacket = nullptr;
+        throw;
+    }
 
     return tcppacket;
 }
@@ -472,22 +516,31 @@ cLinkable* cInstructionParser::compileTCP (cParameterList& params)
 cLinkable* cInstructionParser::compileTCPSYN (cParameterList& params)
 {
     cTcpPacket* tcppacket = new cTcpPacket;
-    cEthernetPacket& eth = tcppacket->getFirstEthernetPacket();
-    bool destIsMulticast = parseIPv4Params (params, tcppacket);
+    try
+    {
+        cEthernetPacket& eth = tcppacket->getFirstEthernetPacket();
+        bool destIsMulticast = parseIPv4Params (params, tcppacket);
 
-    // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
-    compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
-    compileVLANTags   (params, &eth);
+        // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+        compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
+        compileVLANTags   (params, &eth);
 
-    tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
-    tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
+        tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
+        tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
 
-    tcppacket->setSeqNumber (0);
-    tcppacket->setAckNumber (0);
-    tcppacket->setWindow (1024);
-    tcppacket->setFlagSYN (true);
+        tcppacket->setSeqNumber (0);
+        tcppacket->setAckNumber (0);
+        tcppacket->setWindow (1024);
+        tcppacket->setFlagSYN (true);
 
-    tcppacket->compile (nullptr, 0, true);
+        tcppacket->compile (nullptr, 0, true);
+    }
+    catch (...)
+    {
+        delete tcppacket;
+        tcppacket = nullptr;
+        throw;
+    }
 
     return tcppacket;
 }
@@ -496,23 +549,32 @@ cLinkable* cInstructionParser::compileTCPSYN (cParameterList& params)
 cLinkable* cInstructionParser::compileTCPSYNACK (cParameterList& params)
 {
     cTcpPacket* tcppacket = new cTcpPacket;
-    cEthernetPacket& eth = tcppacket->getFirstEthernetPacket();
-    bool destIsMulticast = parseIPv4Params (params, tcppacket);
+    try
+    {
+        cEthernetPacket& eth = tcppacket->getFirstEthernetPacket();
+        bool destIsMulticast = parseIPv4Params (params, tcppacket);
 
-    // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
-    compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
-    compileVLANTags   (params, &eth);
+        // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+        compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
+        compileVLANTags   (params, &eth);
 
-    tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
-    tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
+        tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
+        tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
 
-    tcppacket->setSeqNumber (0);
-    tcppacket->setAckNumber (1);
-    tcppacket->setWindow (1024);
-    tcppacket->setFlagSYN (true);
-    tcppacket->setFlagACK (true);
+        tcppacket->setSeqNumber (0);
+        tcppacket->setAckNumber (1);
+        tcppacket->setWindow (1024);
+        tcppacket->setFlagSYN (true);
+        tcppacket->setFlagACK (true);
 
-    tcppacket->compile (nullptr, 0, true);
+        tcppacket->compile (nullptr, 0, true);
+    }
+    catch (...)
+    {
+        delete tcppacket;
+        tcppacket = nullptr;
+        throw;
+    }
 
     return tcppacket;
 }
@@ -521,22 +583,31 @@ cLinkable* cInstructionParser::compileTCPSYNACK (cParameterList& params)
 cLinkable* cInstructionParser::compileTCPSYNACK2 (cParameterList& params)
 {
     cTcpPacket* tcppacket = new cTcpPacket;
-    cEthernetPacket& eth = tcppacket->getFirstEthernetPacket();
-    bool destIsMulticast = parseIPv4Params (params, tcppacket);
+    try
+    {
+        cEthernetPacket& eth = tcppacket->getFirstEthernetPacket();
+        bool destIsMulticast = parseIPv4Params (params, tcppacket);
 
-    // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
-    compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
-    compileVLANTags   (params, &eth);
+        // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+        compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
+        compileVLANTags   (params, &eth);
 
-    tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
-    tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
+        tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
+        tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
 
-    tcppacket->setSeqNumber (1);
-    tcppacket->setAckNumber (1);
-    tcppacket->setWindow (1024);
-    tcppacket->setFlagACK (true);
+        tcppacket->setSeqNumber (1);
+        tcppacket->setAckNumber (1);
+        tcppacket->setWindow (1024);
+        tcppacket->setFlagACK (true);
 
-    tcppacket->compile (nullptr, 0, true);
+        tcppacket->compile (nullptr, 0, true);
+    }
+    catch (...)
+    {
+        delete tcppacket;
+        tcppacket = nullptr;
+        throw;
+    }
 
     return tcppacket;
 }
@@ -545,23 +616,32 @@ cLinkable* cInstructionParser::compileTCPSYNACK2 (cParameterList& params)
 cLinkable* cInstructionParser::compileTCPFIN (cParameterList& params)
 {
     cTcpPacket* tcppacket = new cTcpPacket;
-    cEthernetPacket& eth = tcppacket->getFirstEthernetPacket();
-    bool destIsMulticast = parseIPv4Params (params, tcppacket);
+    try
+    {
+        cEthernetPacket& eth = tcppacket->getFirstEthernetPacket();
+        bool destIsMulticast = parseIPv4Params (params, tcppacket);
 
-    // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
-    compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
-    compileVLANTags   (params, &eth);
+        // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+        compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
+        compileVLANTags   (params, &eth);
 
-    tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
-    tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
+        tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
+        tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
 
-    tcppacket->setSeqNumber (1);
-    tcppacket->setAckNumber (1);
-    tcppacket->setWindow (1024);
-    tcppacket->setFlagFIN (true);
-    tcppacket->setFlagACK (true);
+        tcppacket->setSeqNumber (1);
+        tcppacket->setAckNumber (1);
+        tcppacket->setWindow (1024);
+        tcppacket->setFlagFIN (true);
+        tcppacket->setFlagACK (true);
 
-    tcppacket->compile (nullptr, 0, true);
+        tcppacket->compile (nullptr, 0, true);
+    }
+    catch (...)
+    {
+        delete tcppacket;
+        tcppacket = nullptr;
+        throw;
+    }
 
     return tcppacket;
 }
@@ -570,23 +650,32 @@ cLinkable* cInstructionParser::compileTCPFIN (cParameterList& params)
 cLinkable* cInstructionParser::compileTCPFINACK (cParameterList& params)
 {
     cTcpPacket* tcppacket = new cTcpPacket;
-    cEthernetPacket& eth = tcppacket->getFirstEthernetPacket();
-    bool destIsMulticast = parseIPv4Params (params, tcppacket);
+    try
+    {
+        cEthernetPacket& eth = tcppacket->getFirstEthernetPacket();
+        bool destIsMulticast = parseIPv4Params (params, tcppacket);
 
-    // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
-    compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
-    compileVLANTags   (params, &eth);
+        // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+        compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
+        compileVLANTags   (params, &eth);
 
-    tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
-    tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
+        tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
+        tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
 
-    tcppacket->setSeqNumber (1);
-    tcppacket->setAckNumber (2);
-    tcppacket->setWindow (1024);
-    tcppacket->setFlagFIN (true);
-    tcppacket->setFlagACK (true);
+        tcppacket->setSeqNumber (1);
+        tcppacket->setAckNumber (2);
+        tcppacket->setWindow (1024);
+        tcppacket->setFlagFIN (true);
+        tcppacket->setFlagACK (true);
 
-    tcppacket->compile (nullptr, 0, true);
+        tcppacket->compile (nullptr, 0, true);
+    }
+    catch (...)
+    {
+        delete tcppacket;
+        tcppacket = nullptr;
+        throw;
+    }
 
     return tcppacket;
 }
@@ -595,22 +684,31 @@ cLinkable* cInstructionParser::compileTCPFINACK (cParameterList& params)
 cLinkable* cInstructionParser::compileTCPFINACK2 (cParameterList& params)
 {
     cTcpPacket* tcppacket = new cTcpPacket;
-    cEthernetPacket& eth = tcppacket->getFirstEthernetPacket();
-    bool destIsMulticast = parseIPv4Params (params, tcppacket);
+    try
+    {
+        cEthernetPacket& eth = tcppacket->getFirstEthernetPacket();
+        bool destIsMulticast = parseIPv4Params (params, tcppacket);
 
-    // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
-    compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
-    compileVLANTags   (params, &eth);
+        // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+        compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
+        compileVLANTags   (params, &eth);
 
-    tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
-    tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
+        tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
+        tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
 
-    tcppacket->setSeqNumber (2);
-    tcppacket->setAckNumber (2);
-    tcppacket->setWindow (1024);
-    tcppacket->setFlagACK (true);
+        tcppacket->setSeqNumber (2);
+        tcppacket->setAckNumber (2);
+        tcppacket->setWindow (1024);
+        tcppacket->setFlagACK (true);
 
-    tcppacket->compile (nullptr, 0, true);
+        tcppacket->compile (nullptr, 0, true);
+    }
+    catch (...)
+    {
+        delete tcppacket;
+        tcppacket = nullptr;
+        throw;
+    }
 
     return tcppacket;
 }
@@ -619,22 +717,31 @@ cLinkable* cInstructionParser::compileTCPFINACK2 (cParameterList& params)
 cLinkable* cInstructionParser::compileTCPRST (cParameterList& params)
 {
     cTcpPacket* tcppacket = new cTcpPacket;
-    cEthernetPacket& eth = tcppacket->getFirstEthernetPacket();
-    bool destIsMulticast = parseIPv4Params (params, tcppacket);
+    try
+    {
+        cEthernetPacket& eth = tcppacket->getFirstEthernetPacket();
+        bool destIsMulticast = parseIPv4Params (params, tcppacket);
 
-    // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
-    compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
-    compileVLANTags   (params, &eth);
+        // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+        compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
+        compileVLANTags   (params, &eth);
 
-    tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
-    tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
+        tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
+        tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
 
-    tcppacket->setSeqNumber (0);
-    tcppacket->setAckNumber (0);
-    tcppacket->setWindow (1024);
-    tcppacket->setFlagRST (true);
+        tcppacket->setSeqNumber (0);
+        tcppacket->setAckNumber (0);
+        tcppacket->setWindow (1024);
+        tcppacket->setFlagRST (true);
 
-    tcppacket->compile (nullptr, 0, true);
+        tcppacket->compile (nullptr, 0, true);
+    }
+    catch (...)
+    {
+        delete tcppacket;
+        tcppacket = nullptr;
+        throw;
+    }
 
     return tcppacket;
 }
@@ -642,42 +749,51 @@ cLinkable* cInstructionParser::compileTCPRST (cParameterList& params)
 
 cLinkable* cInstructionParser::compileVRRP (cParameterList& params, int version)
 {
-    bool userDefinedChecksum = false;
     cVrrpPacket* vrrp = new cVrrpPacket;
-    cEthernetPacket& eth = vrrp->getFirstEthernetPacket();
-
-    parseIPv4Params   (params, vrrp, true);
-    compileMacHeader  (params, &eth, true);
-    compileVLANTags   (params, &eth);
-
-    const cParameter* firstVRIP = params.findParameter ("vrip");
-
-    vrrp->setVersion(version);
-    vrrp->setVRID(params.findParameter ("vrid")->asInt8(1, 255));
-    vrrp->addVirtualIP(firstVRIP->asIPv4());
-    vrrp->setPrio(params.findParameter ("vrprio", (uint32_t)100)->asInt8());
-    vrrp->setType(params.findParameter ("type", (uint32_t)1)->asInt8(0, 15));
-    if (version == 2)
-        vrrp->setInterval(params.findParameter ("aint", (uint32_t)1)->asInt8());
-    else
-        vrrp->setInterval(params.findParameter ("aint", (uint32_t)100)->asInt16(0, 4095));
-    const cParameter* optionalPar = params.findParameter ("chksum", true);
-    if (optionalPar)
+    try
     {
-        userDefinedChecksum = true;
-        vrrp->setChecksum (optionalPar->asInt16());
-    }
+        bool userDefinedChecksum = false;
+        cEthernetPacket& eth = vrrp->getFirstEthernetPacket();
 
-    // additional virtual IPs (optional)
-    optionalPar = firstVRIP;
-    int vripCount = 1;
-    while ((++vripCount <= 255 ) &&
-           ((optionalPar = params.findParameter(optionalPar, nullptr, "vrip", true)) != nullptr))
+        parseIPv4Params   (params, vrrp, true);
+        compileMacHeader  (params, &eth, true);
+        compileVLANTags   (params, &eth);
+
+        const cParameter* firstVRIP = params.findParameter ("vrip");
+
+        vrrp->setVersion(version);
+        vrrp->setVRID(params.findParameter ("vrid")->asInt8(1, 255));
+        vrrp->addVirtualIP(firstVRIP->asIPv4());
+        vrrp->setPrio(params.findParameter ("vrprio", (uint32_t)100)->asInt8());
+        vrrp->setType(params.findParameter ("type", (uint32_t)1)->asInt8(0, 15));
+        if (version == 2)
+            vrrp->setInterval(params.findParameter ("aint", (uint32_t)1)->asInt8());
+        else
+            vrrp->setInterval(params.findParameter ("aint", (uint32_t)100)->asInt16(0, 4095));
+        const cParameter* optionalPar = params.findParameter ("chksum", true);
+        if (optionalPar)
+        {
+            userDefinedChecksum = true;
+            vrrp->setChecksum (optionalPar->asInt16());
+        }
+
+        // additional virtual IPs (optional)
+        optionalPar = firstVRIP;
+        int vripCount = 1;
+        while ((++vripCount <= 255 ) &&
+               ((optionalPar = params.findParameter(optionalPar, nullptr, "vrip", true)) != nullptr))
+        {
+            vrrp->addVirtualIP (optionalPar->asIPv4());
+        }
+
+        vrrp->compile (!userDefinedChecksum);
+    }
+    catch (...)
     {
-        vrrp->addVirtualIP (optionalPar->asIPv4());
+        delete vrrp;
+        vrrp = nullptr;
+        throw;
     }
-
-    vrrp->compile (!userDefinedChecksum);
 
     return vrrp;
 }
@@ -687,53 +803,62 @@ cLinkable* cInstructionParser::compileSTP (cParameterList& params, bool isRSTP, 
 {
     cStpPacket*  stp = new cStpPacket;
 
-    compileMacHeader (params, stp, true);
-    compileVLANTags  (params, stp);
-
-    if (!isTCN)
+    try
     {
-        int flags = 0;
-        uint32_t pathCost;
-        unsigned rootBridgePrio          = params.findParameter ("rbprio", (uint32_t)8)->asInt8 (0, 15);
-        unsigned rootBridgeId            = params.findParameter ("rbidext", (uint32_t)0)->asInt16 (0, 4095);
-        const cMacAddress& rootBridgeMac = params.findParameter ("rbmac",  ownMac)->asMac ();
-        unsigned bridgePrio              = params.findParameter ("bprio", (uint32_t)8)->asInt8 (0, 15);
-        unsigned bridgeId                = params.findParameter ("bidext", (uint32_t)0)->asInt16 (0, 4095);
-        const cMacAddress& bridgeMac     = params.findParameter ("bmac",  ownMac)->asMac ();
-        unsigned portPrio                = params.findParameter ("pprio", (uint32_t)8)->asInt8 (0, 15);
-        unsigned portNumber              = params.findParameter ("pnum", (uint32_t)1)->asInt16 (1, 4095);
-        double msgAge                    = params.findParameter ("msgage", 0.0)->asDouble (0.0, 255.996);
-        double maxAge                    = params.findParameter ("maxage", 20.0)->asDouble (0.0, 255.996);
-        double helloTime                 = params.findParameter ("hello", 2.0)->asDouble (0.0, 255.996);
-        double forwardDelay              = params.findParameter ("delay", 15.0)->asDouble (0.0, 255.996);
+        compileMacHeader (params, stp, true);
+        compileVLANTags  (params, stp);
 
-        flags |= params.findParameter ("topochange",    (uint32_t)0)->asInt8 (0, 1) ? cStpPacket::TOPO_CHANGE : 0;
-        flags |= params.findParameter ("topochangeack", (uint32_t)0)->asInt8 (0, 1) ? cStpPacket::TOPO_CHANGE_ACK : 0;
-
-        if (isRSTP)
+        if (!isTCN)
         {
-            pathCost      = params.findParameter ("rpathcost", (uint32_t)20000)->asInt32 (1, 4294967295);
-            unsigned role = params.findParameter ("portrole",  (uint32_t)3)->asInt8 (1, 3);
+            int flags = 0;
+            uint32_t pathCost;
+            unsigned rootBridgePrio          = params.findParameter ("rbprio", (uint32_t)8)->asInt8 (0, 15);
+            unsigned rootBridgeId            = params.findParameter ("rbidext", (uint32_t)0)->asInt16 (0, 4095);
+            const cMacAddress& rootBridgeMac = params.findParameter ("rbmac",  ownMac)->asMac ();
+            unsigned bridgePrio              = params.findParameter ("bprio", (uint32_t)8)->asInt8 (0, 15);
+            unsigned bridgeId                = params.findParameter ("bidext", (uint32_t)0)->asInt16 (0, 4095);
+            const cMacAddress& bridgeMac     = params.findParameter ("bmac",  ownMac)->asMac ();
+            unsigned portPrio                = params.findParameter ("pprio", (uint32_t)8)->asInt8 (0, 15);
+            unsigned portNumber              = params.findParameter ("pnum", (uint32_t)1)->asInt16 (1, 4095);
+            double msgAge                    = params.findParameter ("msgage", 0.0)->asDouble (0.0, 255.996);
+            double maxAge                    = params.findParameter ("maxage", 20.0)->asDouble (0.0, 255.996);
+            double helloTime                 = params.findParameter ("hello", 2.0)->asDouble (0.0, 255.996);
+            double forwardDelay              = params.findParameter ("delay", 15.0)->asDouble (0.0, 255.996);
 
-            flags |= params.findParameter ("proposal",   (uint32_t)0)->asInt8 (0, 1) ? cStpPacket::PROPOSAL   : 0;
-            flags |= params.findParameter ("learning",   (uint32_t)1)->asInt8 (0, 1) ? cStpPacket::LEARNING   : 0;
-            flags |= params.findParameter ("forwarding", (uint32_t)1)->asInt8 (0, 1) ? cStpPacket::FORWARDING : 0;
-            flags |= params.findParameter ("agreement",  (uint32_t)0)->asInt8 (0, 1) ? cStpPacket::AGREEMENT  : 0;
+            flags |= params.findParameter ("topochange",    (uint32_t)0)->asInt8 (0, 1) ? cStpPacket::TOPO_CHANGE : 0;
+            flags |= params.findParameter ("topochangeack", (uint32_t)0)->asInt8 (0, 1) ? cStpPacket::TOPO_CHANGE_ACK : 0;
 
-            stp->compileConfigPduRstp (rootBridgePrio, rootBridgeId, rootBridgeMac, pathCost, bridgePrio, bridgeId,
-                    bridgeMac, portPrio, portNumber, msgAge, maxAge, helloTime, forwardDelay, flags, role);
+            if (isRSTP)
+            {
+                pathCost      = params.findParameter ("rpathcost", (uint32_t)20000)->asInt32 (1, 4294967295);
+                unsigned role = params.findParameter ("portrole",  (uint32_t)3)->asInt8 (1, 3);
+
+                flags |= params.findParameter ("proposal",   (uint32_t)0)->asInt8 (0, 1) ? cStpPacket::PROPOSAL   : 0;
+                flags |= params.findParameter ("learning",   (uint32_t)1)->asInt8 (0, 1) ? cStpPacket::LEARNING   : 0;
+                flags |= params.findParameter ("forwarding", (uint32_t)1)->asInt8 (0, 1) ? cStpPacket::FORWARDING : 0;
+                flags |= params.findParameter ("agreement",  (uint32_t)0)->asInt8 (0, 1) ? cStpPacket::AGREEMENT  : 0;
+
+                stp->compileConfigPduRstp (rootBridgePrio, rootBridgeId, rootBridgeMac, pathCost, bridgePrio, bridgeId,
+                        bridgeMac, portPrio, portNumber, msgAge, maxAge, helloTime, forwardDelay, flags, role);
+            }
+            else
+            {
+                pathCost = params.findParameter ("rpathcost", (uint32_t)4)->asInt32 (1, 65535);
+
+                stp->compileConfigPdu (rootBridgePrio, rootBridgeId, rootBridgeMac, pathCost, bridgePrio, bridgeId,
+                        bridgeMac, portPrio, portNumber, msgAge, maxAge, helloTime, forwardDelay, flags);
+            }
         }
         else
         {
-            pathCost = params.findParameter ("rpathcost", (uint32_t)4)->asInt32 (1, 65535);
-
-            stp->compileConfigPdu (rootBridgePrio, rootBridgeId, rootBridgeMac, pathCost, bridgePrio, bridgeId,
-                    bridgeMac, portPrio, portNumber, msgAge, maxAge, helloTime, forwardDelay, flags);
+            stp->compileTcnPdu ();
         }
     }
-    else
+    catch (...)
     {
-        stp->compileTcnPdu ();
+        delete stp;
+        stp = nullptr;
+        throw;
     }
 
     return stp;
@@ -743,62 +868,72 @@ cLinkable* cInstructionParser::compileSTP (cParameterList& params, bool isRSTP, 
 cLinkable* cInstructionParser::compileIGMP  (cParameterList& params, bool v3, bool query, bool report, bool leave)
 {
     cIgmpPacket* igmp = new cIgmpPacket;
-    cEthernetPacket& eth = igmp->getFirstEthernetPacket ();
-
-    bool destIsMulticast = parseIPv4Params (params, igmp, query || report || leave);
-    compileMacHeader  (params, &eth, destIsMulticast || ipOptionalDestMAC || query || report || leave);
-    compileVLANTags   (params, &eth);
-
-    if (query)
+    try
     {
-        bool s        = false;
-        unsigned qrv  = 0;
-        double   qqic = 0;
-        double   time = 0;
+        cEthernetPacket& eth = igmp->getFirstEthernetPacket ();
 
-        if (v3)
+        bool destIsMulticast = parseIPv4Params (params, igmp, query || report || leave);
+        compileMacHeader  (params, &eth, destIsMulticast || ipOptionalDestMAC || query || report || leave);
+        compileVLANTags   (params, &eth);
+
+        if (query)
         {
-            cParameter* optionalPar = nullptr;
-            s    = !!params.findParameter ("s", (uint32_t)0)->asInt8 (0, 1);
-            qrv  =   params.findParameter ("qrv", (uint32_t)2)->asInt8 (0, 7);
-            qqic =   params.findParameter ("qqic", 125.0)->asDouble (0, 31744.0);
-            time =   params.findParameter ("time", 10.0)->asDouble (0, 3174.4);
+            bool s        = false;
+            unsigned qrv  = 0;
+            double   qqic = 0;
+            double   time = 0;
 
-            int sources = 0;
-            while ((++sources <= 366 ) &&
-                   ((optionalPar = params.findParameter(optionalPar, nullptr, "rsip", true)) != nullptr))
+            if (v3)
             {
-                igmp->v3addSource (optionalPar->asIPv4());
+                cParameter* optionalPar = nullptr;
+                s    = !!params.findParameter ("s", (uint32_t)0)->asInt8 (0, 1);
+                qrv  =   params.findParameter ("qrv", (uint32_t)2)->asInt8 (0, 7);
+                qqic =   params.findParameter ("qqic", 125.0)->asDouble (0, 31744.0);
+                time =   params.findParameter ("time", 10.0)->asDouble (0, 3174.4);
+
+                int sources = 0;
+                while ((++sources <= 366 ) &&
+                       ((optionalPar = params.findParameter(optionalPar, nullptr, "rsip", true)) != nullptr))
+                {
+                    igmp->v3addSource (optionalPar->asIPv4());
+                }
+            }
+            else
+            {
+                time = params.findParameter ("time", 10.0)->asDouble (0, 25.5);
+            }
+            cParameter* optionalPar = params.findParameter ("group", true);
+            if (optionalPar)
+                igmp->compileGroupQuery(v3, time, s, qrv, qqic, optionalPar->asIPv4 ());
+            else
+                igmp->compileGeneralQuery (v3, time, s, qrv, qqic);
+        }
+        else
+        {
+            cIpAddress group = params.findParameter ("group")->asIPv4 ();
+            if (report)
+            {
+                igmp->compileReport (group);
+            }
+            else if (leave)
+            {
+                igmp->v2compileLeaveGroup (group);
+            }
+            else    // raw v12 packet
+            {
+                uint8_t type = params.findParameter ("type")->asInt8();
+                uint8_t time = params.findParameter ("time", (uint32_t)0)->asInt8();
+                igmp->v12compile (type, time, group);
             }
         }
-        else
-        {
-            time = params.findParameter ("time", 10.0)->asDouble (0, 25.5);
-        }
-        cParameter* optionalPar = params.findParameter ("group", true);
-        if (optionalPar)
-            igmp->compileGroupQuery(v3, time, s, qrv, qqic, optionalPar->asIPv4 ());
-        else
-            igmp->compileGeneralQuery (v3, time, s, qrv, qqic);
     }
-    else
+    catch (...)
     {
-        cIpAddress group = params.findParameter ("group")->asIPv4 ();
-        if (report)
-        {
-            igmp->compileReport (group);
-        }
-        else if (leave)
-        {
-            igmp->v2compileLeaveGroup (group);
-        }
-        else    // raw v12 packet
-        {
-            uint8_t type = params.findParameter ("type")->asInt8();
-            uint8_t time = params.findParameter ("time", (uint32_t)0)->asInt8();
-            igmp->v12compile (type, time, group);
-        }
+        delete igmp;
+        igmp = nullptr;
+        throw;
     }
+
     return igmp;
 }
 
@@ -806,27 +941,36 @@ cLinkable* cInstructionParser::compileIGMP  (cParameterList& params, bool v3, bo
 cLinkable* cInstructionParser::compileICMP  (cParameterList& params)
 {
     cIcmpPacket* icmppacket = new cIcmpPacket;
-    cEthernetPacket& eth = icmppacket->getFirstEthernetPacket();
-    bool destIsMulticast = parseIPv4Params (params, icmppacket);
+    try
+    {
+        cEthernetPacket& eth = icmppacket->getFirstEthernetPacket();
+        bool destIsMulticast = parseIPv4Params (params, icmppacket);
 
-    // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
-    compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
-    compileVLANTags   (params, &eth);
+        // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+        compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
+        compileVLANTags   (params, &eth);
 
-    uint8_t type = params.findParameter ("type")->asInt8();
-    uint8_t code = params.findParameter ("code")->asInt8();
+        uint8_t type = params.findParameter ("type")->asInt8();
+        uint8_t code = params.findParameter ("code")->asInt8();
 
-    size_t len = 0;
-    const uint8_t* payload = nullptr;
-    cParameter* optionalPar = params.findParameter ("payload", true);
-    if (optionalPar)
-        payload = optionalPar->asStream(len);
+        size_t len = 0;
+        const uint8_t* payload = nullptr;
+        cParameter* optionalPar = params.findParameter ("payload", true);
+        if (optionalPar)
+            payload = optionalPar->asStream(len);
 
-    optionalPar = params.findParameter ("chksum", true);
-    if (optionalPar)
-        icmppacket->compileRaw(type, code, optionalPar->asInt16(), payload, len);
-    else
-        icmppacket->compileRaw(type, code, payload, len);
+        optionalPar = params.findParameter ("chksum", true);
+        if (optionalPar)
+            icmppacket->compileRaw(type, code, optionalPar->asInt16(), payload, len);
+        else
+            icmppacket->compileRaw(type, code, payload, len);
+    }
+    catch (...)
+    {
+        delete icmppacket;
+        icmppacket = nullptr;
+        throw;
+    }
 
     return icmppacket;
 }
@@ -835,15 +979,30 @@ cLinkable* cInstructionParser::compileICMP  (cParameterList& params)
 cLinkable* cInstructionParser::compileWait (cParameterList& params)
 {
     cTrigger* event = new cTrigger;
-    cParameter* optionalPar = params.findParameter ("filter", true);
-
-    if (optionalPar)
+    try
     {
-        size_t len;
-        const char* p = (const char*)optionalPar->asStream (len);
-        std::string s (p, len);
-        if (!event->compileFilter (s.c_str()))
-            optionalPar->throwValueExcetion ();
+        cParameter* optionalPar = params.findParameter ("filter", true);
+
+        // TODO
+        // rename filter to bpf
+        // - new parameter "pattern=STREAM" memmem(STREAM)
+        // - new parameter "packet="eth(kdkd, dlsl)" which compiles the provided embedded packet
+        // - packet and pattern can be combined with bpf, whereas bpf has to match first
+        // - only packet OR pattern are possible. they exclude each other
+        if (optionalPar)
+        {
+            size_t len;
+            const char* p = (const char*)optionalPar->asStream (len);
+            std::string s (p, len);
+            if (!event->compileFilter (s.c_str()))
+                optionalPar->throwValueExcetion ();
+        }
+    }
+    catch (...)
+    {
+        delete event;
+        event = nullptr;
+        throw;
     }
     return event;
 }
