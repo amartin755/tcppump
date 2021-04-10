@@ -293,6 +293,13 @@ cInterface::cInterface(const char* ifname)
     sentBytes = 0;
     duration = 0;
     sendOnly = true;
+
+    winNetAdapters = getAdapterAddresses ();
+    adapterInfo    = getAdapterInfo (); // find selected adapter
+    if (!adapterInfo)
+    {
+        Console::PrintError ("Unknown network interface '%s'\n", name.c_str());
+    }
 }
 
 cInterface::~cInterface()
@@ -308,21 +315,12 @@ bool cInterface::open (bool txOnly)
 
     sendOnly = txOnly;
 
-    winNetAdapters = getAdapterAddresses ();
-    if (!winNetAdapters)
+    if (!adapterInfo)
         return false;
-
-    // find selected adapter
-    PIP_ADAPTER_ADDRESSES adapter = getAdapterInfo ();
-    if (!adapter)
-    {
-        Console::PrintError ("Unknown network interface '%s'\n", name.c_str());
-        return false;
-    }
 
     // convert windows' AdapterName to pcap known interface name
     std::string pcapIfName ("\\Device\\NPF_");
-    pcapIfName += adapter->AdapterName;
+    pcapIfName += adapterInfo->AdapterName;
 
     char errbuf[PCAP_ERRBUF_SIZE] = {0};
     ifcHandle = pcap_open (pcapIfName.c_str(),
@@ -336,7 +334,7 @@ bool cInterface::open (bool txOnly)
         Console::PrintError ("pcap error: %s\n", errbuf);
     }
 
-    linkSpeed = getLinkSpeed (adapter->AdapterName);
+    linkSpeed = getLinkSpeed (adapterInfo->AdapterName);
 
     return ifcHandle != NULL;
 }
@@ -414,23 +412,21 @@ void cInterface::getSendStatistic (uint64_t& sentPackets, uint64_t& sentBytes, d
 
 bool cInterface::getMAC (cMacAddress& mac)
 {
-    PIP_ADAPTER_ADDRESSES pAdapterInfo = getAdapterInfo ();
-    if (!pAdapterInfo)
+    if (!adapterInfo)
         return false;
 
-    BUG_ON (pAdapterInfo->PhysicalAddressLength != cMacAddress::size());
-    mac.set ((void*)pAdapterInfo->PhysicalAddress, pAdapterInfo->PhysicalAddressLength);
+    BUG_ON (adapterInfo->PhysicalAddressLength != cMacAddress::size());
+    mac.set ((void*)adapterInfo->PhysicalAddress, adapterInfo->PhysicalAddressLength);
 
     return true;
 }
 
 bool cInterface::getIPv4 (cIpAddress& ip)
 {
-    PIP_ADAPTER_ADDRESSES pAdapterInfo = getAdapterInfo ();
-    if (!pAdapterInfo)
+    if (!adapterInfo)
         return false;
 
-    PIP_ADAPTER_UNICAST_ADDRESS pUnicast = pAdapterInfo->FirstUnicastAddress;
+    PIP_ADAPTER_UNICAST_ADDRESS pUnicast = adapterInfo->FirstUnicastAddress;
     while (pUnicast)
     {
          if (pUnicast->Address.lpSockaddr && pUnicast->Address.lpSockaddr->sa_family == AF_INET)
@@ -450,11 +446,10 @@ bool cInterface::getIPv4 (cIpAddress& ip)
 
 uint32_t cInterface::getMTU (void)
 {
-    PIP_ADAPTER_ADDRESSES pAdapterInfo = getAdapterInfo ();
-    if (!pAdapterInfo)
+    if (!adapterInfo)
         return 0;
 
-    return (uint32_t)pAdapterInfo->Mtu;
+    return (uint32_t)adapterInfo->Mtu;
 }
 
 bool cInterface::isOpen () const

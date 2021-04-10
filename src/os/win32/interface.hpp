@@ -66,6 +66,7 @@ private:
     std::string name;
     pcap_t *ifcHandle;
     PIP_ADAPTER_ADDRESSES winNetAdapters;
+    PIP_ADAPTER_ADDRESSES adapterInfo;
     uint64_t linkSpeed;
 
     uint64_t sentPackets;
