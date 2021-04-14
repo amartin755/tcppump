@@ -17,7 +17,6 @@
  */
 
 #if HAVE_MEMMEM
-#define _GNU_SOURCE
 #include <string.h>
 #else
 #include <algorithm>

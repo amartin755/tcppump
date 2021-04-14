@@ -25,7 +25,6 @@
 #include <cstdlib>
 #define HAVE_REMOTE 1
 #include <pcap.h>
-#include <Win32-Extensions.h>
 
 #include "bug.hpp"
 #include "console.hpp"
