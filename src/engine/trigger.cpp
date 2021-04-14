@@ -16,8 +16,13 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-
+#if HAVE_MEMMEM
+#define _GNU_SOURCE
+#include <cstring>
+#else
 #include <algorithm>
+#endif
+
 #include "trigger.hpp"
 #include "netinterface.hpp"
 #include "timeval.hpp"
@@ -75,7 +80,10 @@ bool cTrigger::matchPattern (const uint8_t* packet, int len) const
 {
     if (!patternFilter)
         return true;
-
+#if HAVE_MEMMEM
+    return !!std::memmem (packet, len, patternFilter->data(), patternFilter->size());
+#else
     auto it = std::search (packet, packet + len, patternFilter->begin(), patternFilter->end());
     return it != (packet + len);
+#endif
 }
