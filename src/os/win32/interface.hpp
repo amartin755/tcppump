@@ -50,15 +50,16 @@ public:
     uint32_t getMTU (void);
     bool isOpen () const;
     const char* getName (void) const;
-    bool waitForPacket (void);
-    const uint8_t* receivePacket (cTimeval* timestamp, int* len, const cPcapFilter* filter = nullptr, const cTimeval* dropBefore = nullptr);
     bool addReceiveFilter (const char* filter);
-    bool addReceiveFilter (bool tcp, bool udp,
-                           const std::list<const char*>* ethertypes,
-                           const std::list<const char*>* hostsMAC,
-                           const std::list<const char*>* hostsIP);
 
 private:
+    pcap_t* getCaptureInterface (void)
+    {
+        BUG_ON (sendOnly);
+        return ifcHandle;
+    }
+
+
     PIP_ADAPTER_ADDRESSES getAdapterInfo ();
     PIP_ADAPTER_ADDRESSES getAdapterAddresses ();
     uint64_t getLinkSpeed (const char* adapterName);

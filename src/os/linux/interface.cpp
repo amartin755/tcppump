@@ -358,62 +358,10 @@ const char* cInterface::getName (void) const
     return name.c_str();
 }
 
-bool cInterface::waitForPacket (void)
-{
-    return !!receivePacket (nullptr, nullptr);
-}
-
-const uint8_t* cInterface::receivePacket (cTimeval* timestamp, int* len, const cPcapFilter* filter, const cTimeval* dropBefore)
-{
-    BUG_ON (sendOnly);
-
-    struct pcap_pkthdr *header;
-    const u_char *pkt_data;
-    int res;
-
-    do
-    {
-        if (cSignal::sigintSignalled ())
-            return nullptr;
-
-        res = pcap_next_ex(pcapHandle, &header, &pkt_data);
-        if (res > 0)
-            if ( (dropBefore && (cTimeval(header->ts) < *dropBefore)) ||
-                     (filter && !filter->match(header, pkt_data)) )
-            res = 0;
-    }
-    while (!res);
-
-
-    if (res < 0)
-    {
-        Console::PrintError ("Error while reading packets: %s\n", pcap_geterr (pcapHandle));
-        return nullptr;
-    }
-
-    if (timestamp)
-        timestamp->set (header->ts);
-    if (len)
-        *len = (int)header->len;
-
-    return (uint8_t*)pkt_data;
-}
-
 bool cInterface::addReceiveFilter (const char* filter)
 {
     if (sendOnly)
         return true;
     cPcapFilter f(pcapHandle);
     return f.compile (filter) && f.apply();
-}
-
-bool cInterface::addReceiveFilter (bool tcp, bool udp,
-                                   const std::list<const char*>* ethertypes,
-                                   const std::list<const char*>* hostsMAC,
-                                   const std::list<const char*>* hostsIP)
-{
-    if (sendOnly)
-        return true;
-    cPcapFilter f(pcapHandle);
-    return f.compile (tcp, udp, ethertypes, hostsMAC, hostsIP) && f.apply();
 }

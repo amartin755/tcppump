@@ -18,6 +18,11 @@
 
 
 
+#include <pcap.h>
+
+#include "bug.hpp"
+#include "console.hpp"
+#include "signal.hpp"
 #include "netinterface.hpp"
 #include "interface.hpp"
 
@@ -26,3 +31,43 @@ cNetInterface* cNetInterface::create(const char* ifname)
     return new cInterface (ifname);
 }
 
+const uint8_t* cNetInterface::receivePacket (cTimeval* timestamp, int* len, const cPcapFilter* filter, const cTimeval* dropBefore)
+{
+    struct pcap_pkthdr *header;
+    const u_char *pkt_data;
+    int res;
+    pcap_t *ifcHandle = this->getCaptureInterface();
+
+
+    do
+    {
+        if (cSignal::sigintSignalled ())
+            return nullptr;
+
+        res = pcap_next_ex(ifcHandle, &header, &pkt_data);
+        if (res > 0)
+            if ( (dropBefore && (cTimeval(header->ts) < *dropBefore)) ||
+                     (filter && !filter->match(header, pkt_data)) )
+                res = 0;
+    }
+    while (!res);
+
+
+    if (res < 0)
+    {
+        Console::PrintError ("Error while reading packets: %s\n", pcap_geterr (ifcHandle));
+        return nullptr;
+    }
+
+    if (timestamp)
+        timestamp->set (header->ts);
+    if (len)
+        *len = (int)header->len;
+
+    return (uint8_t*)pkt_data;
+}
+
+bool cNetInterface::waitForPacket (void)
+{
+    return !!receivePacket (nullptr, nullptr);
+}

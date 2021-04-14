@@ -30,6 +30,8 @@
 #include "timeval.hpp"
 #include "pcapfilter.hpp"
 
+// forward declarations
+typedef struct pcap pcap_t;
 
 class cNetInterface
 {
@@ -47,17 +49,14 @@ public:
     virtual bool getIPv4 (cIpAddress&) = 0;
     virtual uint32_t getMTU (void) = 0;
     virtual bool isOpen () const = 0;
-    virtual bool waitForPacket (void) = 0;
-    virtual const uint8_t* receivePacket (cTimeval* timestamp, int* len, const cPcapFilter* filter = nullptr, const cTimeval* dropBefore = nullptr) = 0;
     virtual bool addReceiveFilter (const char* filter) = 0;
-    virtual bool addReceiveFilter (bool tcp, bool udp,
-                           const std::list<const char*>* ethertypes,
-                           const std::list<const char*>* hostsMAC,
-                           const std::list<const char*>* hostsIP) = 0;
     virtual const char* getName (void) const = 0;
+    bool waitForPacket (void);
+    const uint8_t* receivePacket (cTimeval* timestamp, int* len, const cPcapFilter* filter = nullptr, const cTimeval* dropBefore = nullptr);
 
-protected:
-  //  cNetInterface ();
+private:
+    virtual pcap_t* getCaptureInterface (void) = 0;
+
 };
 
 #endif /* NETINTERFACE_H_ */
