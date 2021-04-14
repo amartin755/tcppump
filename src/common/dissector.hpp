@@ -28,6 +28,7 @@ class cDissector
 {
 public:
     cDissector (const cEthernetPacket& packet);
+    cDissector (const uint8_t* packet, size_t len);
     ~cDissector();
 
     bool dissect () const;

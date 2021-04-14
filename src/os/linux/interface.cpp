@@ -401,7 +401,8 @@ const uint8_t* cInterface::receivePacket (cTimeval* timestamp, int* len, const c
 
 bool cInterface::addReceiveFilter (const char* filter)
 {
-    BUG_ON (sendOnly);
+    if (sendOnly)
+        return true;
     cPcapFilter f(pcapHandle);
     return f.compile (filter) && f.apply();
 }
@@ -411,7 +412,8 @@ bool cInterface::addReceiveFilter (bool tcp, bool udp,
                                    const std::list<const char*>* hostsMAC,
                                    const std::list<const char*>* hostsIP)
 {
-    BUG_ON (sendOnly);
+    if (sendOnly)
+        return true;
     cPcapFilter f(pcapHandle);
     return f.compile (tcp, udp, ethertypes, hostsMAC, hostsIP) && f.apply();
 }

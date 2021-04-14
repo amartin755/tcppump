@@ -979,21 +979,29 @@ cLinkable* cInstructionParser::compileWait (cParameterList& params)
     cTrigger* event = new cTrigger;
     try
     {
-        cParameter* optionalPar = params.findParameter ("filter", true);
-
+        cParameter* optionalPar;
         // TODO
-        // rename filter to bpf
         // - new parameter "pattern=STREAM" memmem(STREAM)
         // - new parameter "packet="eth(kdkd, dlsl)" which compiles the provided embedded packet
         // - packet and pattern can be combined with bpf, whereas bpf has to match first
         // - only packet OR pattern are possible. they exclude each other
+        // - new parameter timeout
+
+        optionalPar = params.findParameter ("bpf", true);
         if (optionalPar)
         {
             size_t len;
             const char* p = (const char*)optionalPar->asStream (len);
             std::string s (p, len);
-            if (!event->compileFilter (s.c_str()))
+            if (!event->compileBpfFilter (s.c_str()))
                 optionalPar->throwValueExcetion ();
+        }
+        optionalPar = params.findParameter ("pattern", true);
+        if (optionalPar)
+        {
+            size_t len = 0;
+            const uint8_t* pattern = optionalPar->asStream(len);
+            event->setPatternFilter (pattern, len);
         }
     }
     catch (...)

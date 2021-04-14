@@ -175,14 +175,6 @@ int cTcpPump::execute (const std::list<std::string>& args)
             return -2;
         }
     }
-    else
-    {
-        if (options.bpf)
-        {
-            Console::PrintError ("Option --bpf can only be used in conjunction with option --responder.\n");
-            return -2;
-        }
-    }
 
     if (!args.size() && (responder != ACK) && (responder != MIRROR))
     {
@@ -232,10 +224,6 @@ int cTcpPump::execute (const std::list<std::string>& args)
         Console::PrintError ("Options -s and -p can't be used at the same time.\n");
         return -1;
     }
-    if (options.bpf && !ifc->addReceiveFilter (options.bpf))
-    {
-        return -1;
-    }
 
     activeDelay.setUs((uint64_t)options.delay * (uint64_t)timeScale);
 
@@ -250,6 +238,10 @@ int cTcpPump::execute (const std::list<std::string>& args)
     {
         if (!ifc->open (false))
             return -1;
+
+        if (options.bpf && !ifc->addReceiveFilter (options.bpf))
+            return -1;
+
         cResponder resp (*ifc);
 
         if (responder == MIRROR)
@@ -273,6 +265,8 @@ int cTcpPump::execute (const std::list<std::string>& args)
             cPacketData& packetData = compiler  << args;
 
             if (!ifc->open (!packetData.hasTriggerPoints ()))
+                return -1;
+            if (options.bpf && !ifc->addReceiveFilter (options.bpf))
                 return -1;
 
             filter    << packetData;

@@ -127,6 +127,9 @@ endif ()
 
 check_include_files("sys/time.h" HAVE_SYSTIME_H)
 check_include_files("arpa/inet.h" HAVE_ARPAINET_H)
+set (CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE=1)
+check_symbol_exists (memmem "string.h" HAVE_MEMMEM)
+set (CMAKE_REQUIRED_DEFINITIONS "")
 
 
 # preprocessor definitions
@@ -150,6 +153,9 @@ if (HAVE_PTON)
 endif ()
 if (HAVE_NTOP)
     add_compile_definitions (HAVE_NTOP)
+endif ()
+if (HAVE_MEMMEM)
+    add_compile_definitions (HAVE_MEMMEM)
 endif ()
 
 if (WIN32)

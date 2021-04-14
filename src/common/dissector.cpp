@@ -32,6 +32,11 @@ cDissector::cDissector (const cEthernetPacket& p)
 {
 }
 
+cDissector::cDissector (const uint8_t* p, size_t l)
+: packet (p), packetLength(l)
+{
+}
+
 cDissector::~cDissector()
 {
     // TODO Auto-generated destructor stub

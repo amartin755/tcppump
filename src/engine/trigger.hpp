@@ -19,6 +19,7 @@
 #ifndef TRIGGER_HPP
 #define TRIGGER_HPP
 
+#include <vector>
 #include "linkable.hpp"
 #include "pcapfilter.hpp"
 
@@ -27,11 +28,16 @@ class cNetInterface;
 class cTrigger : public cLinkable
 {
 public:
-    bool compileFilter (const char* filter);
-    bool wait (cNetInterface &netif);
+    cTrigger();
+    ~cTrigger();
+    bool compileBpfFilter (const char* filter);
+    void setPatternFilter (const uint8_t* pattern, size_t len);
+    bool wait (cNetInterface &netif) const;
 
 private:
+    bool matchPattern (const uint8_t* packet, int len) const;
     cPcapFilter pcapFilter;
+    std::vector<uint8_t>* patternFilter;
 };
 
 #endif /* TRIGGER_HPP */

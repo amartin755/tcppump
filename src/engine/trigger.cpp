@@ -17,23 +17,65 @@
  */
 
 
+#include <algorithm>
 #include "trigger.hpp"
 #include "netinterface.hpp"
 #include "timeval.hpp"
+#include "dissector.hpp"
+
+cTrigger::cTrigger()
+{
+    patternFilter = nullptr;
+}
 
 
-bool cTrigger::compileFilter (const char* filter)
+cTrigger::~cTrigger()
+{
+    if (patternFilter)
+        delete patternFilter;
+    patternFilter = nullptr;
+}
+
+
+bool cTrigger::compileBpfFilter (const char* filter)
 {
     return pcapFilter.compile (filter);
 }
 
 
-bool cTrigger::wait (cNetInterface &netif)
+bool cTrigger::wait (cNetInterface &netif) const
 {
     // TODO filtering should be done here and not in interface code
     // --> remove filter parameter in receivePacket function
     // see TODOs in cInstructionParser::compileWait
     cTimeval t;
     t.now();
-    return !!netif.receivePacket(nullptr, nullptr, &pcapFilter, &t);
+    int len = 0;
+    const uint8_t* p;
+    bool match;
+    do
+    {
+        // return on receive AND filter matches OR on error (return==nullptr)
+        p = netif.receivePacket (nullptr, &len, &pcapFilter, &t);
+        cDissector(p, len).dissect();
+        match = p && matchPattern (p, len);
+    }
+    while (p && !match);
+
+    return match;
+}
+
+
+void cTrigger::setPatternFilter (const uint8_t* pattern, size_t len)
+{
+    patternFilter = new std::vector<uint8_t>(pattern, pattern + len);
+}
+
+bool cTrigger::matchPattern (const uint8_t* packet, int len) const
+{
+    if (!patternFilter)
+        return true;
+
+    auto it = std::search (packet, packet + len, patternFilter->begin(), patternFilter->end());
+    return it != (packet + len);
 }
