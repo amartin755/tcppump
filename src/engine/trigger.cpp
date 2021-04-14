@@ -18,7 +18,7 @@
 
 #if HAVE_MEMMEM
 #define _GNU_SOURCE
-#include <cstring>
+#include <string.h>
 #else
 #include <algorithm>
 #endif
@@ -31,6 +31,7 @@
 cTrigger::cTrigger()
 {
     patternFilter = nullptr;
+    timeout = 0;
 }
 
 
@@ -76,12 +77,18 @@ void cTrigger::setPatternFilter (const uint8_t* pattern, size_t len)
     patternFilter = new std::vector<uint8_t>(pattern, pattern + len);
 }
 
+
+void cTrigger::setTimeout (uint32_t t)
+{
+    timeout = t;
+}
+
 bool cTrigger::matchPattern (const uint8_t* packet, int len) const
 {
     if (!patternFilter)
         return true;
 #if HAVE_MEMMEM
-    return !!std::memmem (packet, len, patternFilter->data(), patternFilter->size());
+    return !!memmem (packet, len, patternFilter->data(), patternFilter->size());
 #else
     auto it = std::search (packet, packet + len, patternFilter->begin(), patternFilter->end());
     return it != (packet + len);

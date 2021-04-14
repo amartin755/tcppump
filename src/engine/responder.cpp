@@ -85,7 +85,7 @@ void cResponder::mirror (void)
                     // if UDP or TCP --> swap sport and dport
                     if (ipHeader->protocol == cIPv4Packet::protocols::PROTO_UDP)
                     {
-                        size_t udpHeaderOffset = (size_t)ipHeader->getHeaderLenght() * 4;
+                        unsigned udpHeaderOffset = ipHeader->getHeaderLenght() * 4;
                         const udp_header_t *udpHeader = reinterpret_cast <const udp_header_t *>(reinterpret_cast<const uint8_t*>(ipHeader) + udpHeaderOffset);
                         uint16_t srcPort = udpHeader->srcPort;
                         uint16_t dstPort = udpHeader->dstPort;
@@ -95,7 +95,7 @@ void cResponder::mirror (void)
                     }
                     else if (ipHeader->protocol == cIPv4Packet::protocols::PROTO_TCP)
                     {
-                        size_t udpHeaderOffset = (size_t)ipHeader->getHeaderLenght() * 4;
+                        unsigned udpHeaderOffset = ipHeader->getHeaderLenght() * 4;
                         const tcp_header_t *udpHeader = reinterpret_cast <const tcp_header_t *>(reinterpret_cast<const uint8_t*>(ipHeader) + udpHeaderOffset);
                         uint16_t srcPort = udpHeader->srcPort;
                         uint16_t dstPort = udpHeader->dstPort;

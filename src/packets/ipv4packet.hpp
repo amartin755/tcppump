@@ -62,13 +62,13 @@ typedef struct
     {
         vers_ihl = ((version & 0x0F) << 4) | (vers_ihl & 0x0F);
     }
-    void setHeaderLenght (int length)
+    void setHeaderLenght (unsigned length)
     {
         vers_ihl = (length & 0x0F) | (vers_ihl & 0xF0);
     }
-    int getHeaderLenght () const
+    unsigned getHeaderLenght () const
     {
-        return (int)(vers_ihl & 0x0F);
+        return (unsigned)(vers_ihl & 0x0F);
     }
     void setDSCP (int dscp)
     {

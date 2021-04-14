@@ -30,14 +30,18 @@ class cTrigger : public cLinkable
 public:
     cTrigger();
     ~cTrigger();
+
+    bool wait (cNetInterface &netif) const;
+
     bool compileBpfFilter (const char* filter);
     void setPatternFilter (const uint8_t* pattern, size_t len);
-    bool wait (cNetInterface &netif) const;
+    void setTimeout (uint32_t timeout);
 
 private:
     bool matchPattern (const uint8_t* packet, int len) const;
     cPcapFilter pcapFilter;
     std::vector<uint8_t>* patternFilter;
+    uint32_t timeout;
 };
 
 #endif /* TRIGGER_HPP */
