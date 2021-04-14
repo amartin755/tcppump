@@ -58,7 +58,7 @@ private:
     pcap_t* getCaptureInterface (void)
     {
         BUG_ON (sendOnly);
-        return ifcHandle;
+        return pcapHandle;
     }
 
     std::string name;
