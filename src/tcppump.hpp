@@ -37,6 +37,7 @@ typedef struct
     const char*  timeRes;
     int          script;
     int          pcap;
+    const char*  pcapScaling;
     const char*  outpcap;
     const char*  myIP;
     const char*  myMAC;

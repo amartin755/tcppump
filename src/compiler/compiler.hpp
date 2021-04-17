@@ -38,7 +38,8 @@ public:
         PACKET, SCRIPT, PCAP
     };
 
-    cCompiler (inputType type, const cMacAddress& ownMac, const cIpAddress& ownIP, const cTimeval& activeDelay, unsigned defaultDelayScale, bool ipOptionalDestMAC);
+    cCompiler (inputType type, const cMacAddress& ownMac, const cIpAddress& ownIP,
+            const cTimeval& activeDelay, unsigned defaultDelayScale, bool ipOptionalDestMAC, double pcapScaling);
     cPacketData& operator<< (const std::list<std::string>& input);
 
 private:
@@ -54,6 +55,7 @@ private:
     unsigned defaultDelayScale;
     bool ipOptionalDestMAC;
     cFileParser fileParser;
+    double pcapScalingFactor;
 };
 
 #endif /* COMPILER_HPP_ */
