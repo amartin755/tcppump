@@ -113,6 +113,11 @@ public:
         sub (cTimeval (tv));
         return *this;
     }
+    cTimeval& mul (double val)
+    {
+        value = (uint64_t)((double)value * val);
+        return *this;
+    }
     cTimeval& roundDown (const cTimeval& div)
     {
         value = (value / div.value) * div.value;
@@ -192,6 +197,7 @@ public:
 
         BUG_ON (cTimeval(2) < cTimeval(3));
         BUG_ON (cTimeval(1) > cTimeval(0));
+        BUG_ON (cTimeval(10).mul(1.5) == cTimeval(15));
     }
 #endif
 };

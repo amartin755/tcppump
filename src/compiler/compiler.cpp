@@ -26,9 +26,9 @@
 #include "pcapfileio.hpp"
 
 
-cCompiler::cCompiler (inputType t, const cMacAddress& mac, const cIpAddress& ip, const cTimeval& delay, unsigned delayScale, bool optDestMAC)
+cCompiler::cCompiler (inputType t, const cMacAddress& mac, const cIpAddress& ip, const cTimeval& delay, unsigned delayScale, bool optDestMAC, double pcapScaling)
 : type(t), ownMac(mac), ownIP(ip), defaultDelay(delay), defaultDelayScale(delayScale), ipOptionalDestMAC(optDestMAC),
-  fileParser (defaultDelay.us()/defaultDelayScale, ownMac, ownIP, ipOptionalDestMAC)
+  fileParser (defaultDelay.us()/defaultDelayScale, ownMac, ownIP, ipOptionalDestMAC), pcapScalingFactor(pcapScaling)
 {
 }
 
@@ -72,14 +72,14 @@ void cCompiler::processPcapFiles (const std::list<std::string>& input)
         }
 
         uint8_t* pcapdata;
-        data.hasUserTimestamps = true;
+        data.hasUserTimestamps = pcapScalingFactor == 0 ? false : true;
 
         while ((pcapdata = pcap.read(&t, &len)) != nullptr)
         {
             cEthernetPacket* packet = new cEthernetPacket(len);
             packet->setRaw (pcapdata, len);
             cTimeval delta(t);
-            packet->setTime (delta.sub (currtime));
+            packet->setTime (delta.sub (currtime).mul(pcapScalingFactor));
             currtime.set(t);
 
             data.addPacket(packet);

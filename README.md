@@ -85,49 +85,55 @@ For debugging add:
 
     Options:
     -h --help
-        Display this text
+            Display this text
     --version
-        Show detailed version infos
+            Show detailed version infos
     -i IFC --interface=IFC
-        Name of the network interface via which the packets are sent.
+            Name of the network interface via which the packets are sent.
+            It can either be the AdapterName (GUID) like "{3F4A136A-2ED5-4226-9CB2-7A511E93CD48}",
+            or the so-called FriendlyName, which is changeable by the user.
+            For example "WiFi" or "Local Area Connection 1".
     --myip4=IPV4
-        Use IPV4 as source IPv4 address instead of the network adapters ip address
+            Use IPV4 as source IPv4 address instead of the network adapters ip address
     --mymac=MAC
-        Use MAC as source MAC address instead of the network adapters MAC address
+            Use MAC as source MAC address instead of the network adapters MAC address
     --rand-smac
-        Use random source MAC address. Overwrites --mymac as well as explicitly defined addresses in packets.
+            Use random source MAC address. Overwrites --mymac as well as explicitly defined addresses in packets.
     --rand-dmac
-        Use random destination MAC address. Overwrites all explicitly defined addresses in packets.
+            Use random destination MAC address. Overwrites all explicitly defined addresses in packets.
     --overwrite-dmac=MAC
-        Overwrite destination MAC address of all packets to MAC
+            Overwrite destination MAC address of all packets to MAC
     -v --verbose
-        When parsing and printing, produce verbose output. This option can be supplied multiple times
-        (max. 4 times, i.e. -vvvv) for even more debug output.
+            When parsing and printing, produce verbose output. This option can be supplied multiple times
+            (max. 4 times, i.e. -vvvv) for even more debug output.
     -s --script
-        Packets are defined in script files, that contain token based packets.
-    -p --pcap
-        pcap file of captured packets (e.g via wireshark or tcpdump) will be replayed.
+            Packets are defined in script files, that contain token based packets.
+    --pcap[=SCALE]
+            pcap file of captured packets (e.g via wireshark or tcpdump) will be replayed.
+            The transmission time can be scaled via the optional parameter SCALE.
+            Default value of SCALE is 1.0, which means the file is played in realtime.
+            For example a value of 2.0 means it is played half as fast, 0.5 means twice as fast.
+            If SCALE is 0 the file will be played as fast as possible.
     -l N --loop=N
-        Send all files/packets N times. Default: N = 1. If N = 0, packets will be sent infinitely
-        until ctrl+c is pressed.
+            Send all files/packets N times. Default: N = 1. If N = 0, packets will be sent infinitely
+            until ctrl+c is pressed.
     -d TIME --delay=TIME
-        Packet transmission is delayed TIME.Resolution depends on -t parameter. Default is no delay.
+            Packet transmission is delayed TIME.Resolution depends on -t parameter. Default is no delay.
     -t RESOLUTION --resolution=RESOLUTION
-        Resolution of transmission time. This affects -d parameter as well as all timestamps in script files.
-        Possible values are 'u'= microseconds, 'm'= milliseconds(default), 'c'= centiseconds and 's'= seconds
+            Resolution of transmission time. This affects -d parameter as well as all timestamps in script files.
+            Possible values are 'u'= microseconds, 'm'= milliseconds(default), 'c'= centiseconds and 's'= seconds
     -o OUTFILE --write-to-file=OUTFILE
-        Write generated packets to pcap file OUTFILE instead of sending them to the network.
+            Write generated packets to pcap file OUTFILE instead of sending them to the network.
     -a --arp
-        Resolve destination MAC address for IPv4 packets.
-        If dmac parameter of IPv4 based packets is omitted, the destination MAC will be automatically
-        determined via ARP.
+            Resolve destination MAC address for IPv4 packets.
+            If dmac parameter of IPv4 based packets is omitted, the destination MAC will be automatically
+            determined via ARP.
     --responder=MODE
-        Enable responder mode (EXPERIMENTAL). Possible values for MODE are:
-        mirror  Each received packet will be mirrored back to the sender.
-        trigger Each received packet will trigger sending of specified packets.
+            Enable responder mode (EXPERIMENTAL). Possible values for MODE are:
+            mirror  Each received packet will be mirrored back to the sender.
+            trigger Each received packet will trigger sending of specified packets.
     --bpf-filter=FILTER
-        Receive bpf filter for responder mode.
-
+            Receive bpf filter for responder mode.
 
 ### Examples
 

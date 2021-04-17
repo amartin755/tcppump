@@ -81,7 +81,14 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
             "(max. 4 times, i.e. -vvvv) for even more debug output. "
             , &options.verbosity);
     addCmdLineOption (true, 's', "script", "Packets are defined in script files, that contain token based packets.", &options.script);
-    addCmdLineOption (true, 'p', "pcap", "pcap file of captured packets (e.g via wireshark or tcpdump) will be replayed.", &options.pcap);
+//    addCmdLineOption (true, 'p', "pcap", "pcap file of captured packets (e.g via wireshark or tcpdump) will be replayed.", &options.pcap);
+    addCmdLineOption (true, "pcap", "SCALE",
+            "pcap file of captured packets (e.g via wireshark or tcpdump) will be replayed.\n\t"
+            "The transmission time can be scaled via the optional parameter SCALE. \n\t"
+            "Default value of SCALE is 1.0, which means the file is played in realtime.\n\t"
+            "For example a value of 2.0 means it is played half as fast, 0.5 means twice as fast.\n\t"
+            "If SCALE is 0 the file will be played as fast as possible."
+            , &options.pcap, &options.pcapScaling);
     addCmdLineOption (true, 'l', "loop", "N",
             "Send all files/packets N times. Default: N = 1. If N = 0, packets will be sent infinitely\n\t"
             "until ctrl+c is pressed.", &options.repeat);
@@ -118,6 +125,7 @@ int cTcpPump::execute (const std::list<std::string>& args)
 {
     cMacAddress ownMac, overwriteDMAC;
     cIpAddress  ownIP;
+    double pcapScale = 1.0;
 
 
     switch (options.verbosity)
@@ -155,6 +163,22 @@ int cTcpPump::execute (const std::list<std::string>& args)
     default:
         Console::PrintError ("Unsupported time resolution '%c'\n", options.timeRes[0]);
         return -2;
+    }
+
+    if (options.pcap)
+    {
+        if (options.pcapScaling)
+        {
+            try
+            {
+                pcapScale = std::stod (options.pcapScaling);
+            }
+            catch (...)
+            {
+                Console::PrintError ("Unsupported pcap scaling value '%s'\n", options.pcapScaling);
+                return -2;
+            }
+        }
     }
 
     if (options.responderMode)
@@ -257,7 +281,7 @@ int cTcpPump::execute (const std::list<std::string>& args)
     else
     {
         cCompiler compiler (options.script ? cCompiler::SCRIPT : options.pcap ? cCompiler::PCAP : cCompiler::PACKET,
-                ownMac, ownIP, activeDelay, timeScale, !!options.arp);
+                ownMac, ownIP, activeDelay, timeScale, !!options.arp, pcapScale);
         cFilter    filter (options.overwriteDMAC ? &overwriteDMAC : nullptr);
         cResolver  resolver (*ifc);
         cScheduler scheduler;
