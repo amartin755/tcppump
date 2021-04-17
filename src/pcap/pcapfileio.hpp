@@ -53,6 +53,7 @@ private:
     bool fileError;
     bool eof;
     cTimeval offset;
+    bool firstRead;
 };
 
 #endif /* PCAPFILEIO_HPP_ */

@@ -651,3 +651,8 @@ add_test(NAME loop-05--nok COMMAND tcppump ${DEFAULT_PARAMS} -s ${TEST_FILE_PREF
 set_tests_properties(loop-05--nok PROPERTIES PASS_REGULAR_EXPRESSION "Expected \‘}\’ at end of input")
 add_test(NAME loop-06--ok COMMAND tcppump ${DEFAULT_PARAMS} -s ${TEST_FILE_PREFIX}/loop-06.pump WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 # TODO loop-06--diff
+
+add_test(NAME pcap-1--ok COMMAND tcppump ${DEFAULT_PARAMS} -p ${TEST_FILE_PREFIX}/delay-13.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME pcap-1--ok--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/delay-13.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME pcap-2--ok COMMAND tcppump ${DEFAULT_PARAMS} -p ${TEST_FILE_PREFIX}/delay-18.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME pcap-2--ok--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/pcap-02.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})

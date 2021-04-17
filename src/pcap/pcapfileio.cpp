@@ -34,6 +34,7 @@ cPcapFileIO::cPcapFileIO ()
     fileError  = false;
     path       = NULL;
     eof        = false;
+    firstRead  = false;
 }
 
 
@@ -52,6 +53,7 @@ bool cPcapFileIO::open (const char* path, bool write)
     if (!write)
     {
         fileHandle = pcap_open_offline (path, errbuf);
+        firstRead  = true;
     }
     else
     {
@@ -117,9 +119,10 @@ bool cPcapFileIO::read (struct pcap_pkthdr **header, const u_char **data)
             Console::PrintError ("Could not read file %s.\n", path);
             printError (pcap_geterr (fileHandle));
         }
-        if (offset.isNull ())
+        if (firstRead)
         {
             offset = (*header)->ts;
+            firstRead = false;
         }
         (*header)->ts = cTimeval ((*header)->ts).sub(offset).timeval();
     }
