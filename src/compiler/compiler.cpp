@@ -57,6 +57,7 @@ void cCompiler::processPcapFiles (const std::list<std::string>& input)
 {
     Console::PrintDebug ("Parsing %d PCAP files ...\n", (int)input.size());
 
+    cTimeval currtime;
     for (const auto & file : input)
     {
         cPcapFileIO pcap;
@@ -71,12 +72,15 @@ void cCompiler::processPcapFiles (const std::list<std::string>& input)
         }
 
         uint8_t* pcapdata;
+        data.hasUserTimestamps = true;
 
         while ((pcapdata = pcap.read(&t, &len)) != nullptr)
         {
             cEthernetPacket* packet = new cEthernetPacket(len);
             packet->setRaw (pcapdata, len);
-            packet->setTime (t);
+            cTimeval delta(t);
+            packet->setTime (delta.sub (currtime));
+            currtime.set(t);
 
             data.addPacket(packet);
         }
