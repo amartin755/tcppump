@@ -1003,6 +1003,7 @@ cLinkable* cInstructionParser::compileWait (cParameterList& params)
             const uint8_t* pattern = optionalPar->asStream(len);
             event->setPatternFilter (pattern, len);
         }
+        event->setTimeout (params.findParameter ("timeout", (uint32_t)0)->asInt32());
     }
     catch (...)
     {
