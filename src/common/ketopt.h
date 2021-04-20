@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 /* taken from https://github.com/attractivechaos/klib */
 
 #ifndef KETOPT_H
