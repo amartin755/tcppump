@@ -22,19 +22,19 @@
 #include <algorithm>
 #endif
 
-#include "trigger.hpp"
+#include "listener.hpp"
 #include "netinterface.hpp"
 #include "timeval.hpp"
 #include "dissector.hpp"
 
-cTrigger::cTrigger()
+cListener::cListener()
 {
     patternFilter = nullptr;
     timeout = 0;
 }
 
 
-cTrigger::~cTrigger()
+cListener::~cListener()
 {
     if (patternFilter)
         delete patternFilter;
@@ -42,13 +42,13 @@ cTrigger::~cTrigger()
 }
 
 
-bool cTrigger::compileBpfFilter (const char* filter)
+bool cListener::compileBpfFilter (const char* filter)
 {
     return pcapFilter.compile (filter);
 }
 
 
-bool cTrigger::wait (cNetInterface &netif) const
+bool cListener::wait (cNetInterface &netif) const
 {
     // TODO filtering should be done here and not in interface code
     // --> remove filter parameter in receivePacket function
@@ -71,18 +71,18 @@ bool cTrigger::wait (cNetInterface &netif) const
 }
 
 
-void cTrigger::setPatternFilter (const uint8_t* pattern, size_t len)
+void cListener::setPatternFilter (const uint8_t* pattern, size_t len)
 {
     patternFilter = new std::vector<uint8_t>(pattern, pattern + len);
 }
 
 
-void cTrigger::setTimeout (uint32_t t)
+void cListener::setTimeout (uint32_t t)
 {
     timeout = t;
 }
 
-bool cTrigger::matchPattern (const uint8_t* packet, int len) const
+bool cListener::matchPattern (const uint8_t* packet, int len) const
 {
     if (!patternFilter)
         return true;

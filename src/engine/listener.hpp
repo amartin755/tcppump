@@ -16,8 +16,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TRIGGER_HPP
-#define TRIGGER_HPP
+#ifndef LISTENER_HPP
+#define LISTENER_HPP
 
 #include <vector>
 #include "linkable.hpp"
@@ -25,11 +25,11 @@
 
 class cNetInterface;
 
-class cTrigger : public cLinkable
+class cListener : public cLinkable
 {
 public:
-    cTrigger();
-    ~cTrigger();
+    cListener();
+    ~cListener();
 
     bool wait (cNetInterface &netif) const;
 
@@ -44,4 +44,4 @@ private:
     uint32_t timeout;
 };
 
-#endif /* TRIGGER_HPP */
+#endif /* LISTENER_HPP */

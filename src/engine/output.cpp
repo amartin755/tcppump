@@ -25,7 +25,7 @@
 #include "fileioexception.hpp"
 #include "console.hpp"
 #include "signal.hpp"
-#include "trigger.hpp"
+#include "listener.hpp"
 
 
 cOutput::cOutput (const cPreprocessor &p)
@@ -73,7 +73,7 @@ cPacketData& cOutput::operator<< (cPacketData& input)
             if (responderMode && !netif->waitForPacket())
                 break;
 
-            cTrigger* event = dynamic_cast<cTrigger*>(p);
+            cListener* event = dynamic_cast<cListener*>(p);
             if (event && !event->wait (*netif))
                 break;
 

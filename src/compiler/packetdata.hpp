@@ -21,7 +21,7 @@
 
 #include "ethernetpacket.hpp"
 #include "ipv4packet.hpp"
-#include "trigger.hpp"
+#include "listener.hpp"
 #include "timeval.hpp"
 #include "linkable.hpp"
 
@@ -125,7 +125,7 @@ private:
             }
             else
             {
-                cTrigger* event = dynamic_cast<cTrigger*>(packet);
+                cListener* event = dynamic_cast<cListener*>(packet);
                 if (event)
                     triggerPoints++;
             }

@@ -26,7 +26,7 @@ set (SOURCES
      ${CMAKE_CURRENT_SOURCE_DIR}/output.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/preprocessor.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/responder.cpp
-     ${CMAKE_CURRENT_SOURCE_DIR}/trigger.cpp
+     ${CMAKE_CURRENT_SOURCE_DIR}/listener.cpp
      PARENT_SCOPE
 )
 set (INCLUDES

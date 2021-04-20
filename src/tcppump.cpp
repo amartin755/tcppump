@@ -83,7 +83,6 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
             "(max. 4 times, i.e. -vvvv) for even more debug output. "
             , &options.verbosity);
     addCmdLineOption (true, 's', "script", "Packets are defined in script files, that contain token based packets.", &options.script);
-//    addCmdLineOption (true, 'p', "pcap", "pcap file of captured packets (e.g via wireshark or tcpdump) will be replayed.", &options.pcap);
     addCmdLineOption (true, "pcap", "SCALE",
             "pcap file of captured packets (e.g via wireshark or tcpdump) will be replayed.\n\t"
             "The transmission time can be scaled via the optional parameter SCALE. \n\t"
@@ -105,9 +104,9 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
             "If dmac parameter of IPv4 based packets is omitted, the destination MAC will be automatically\n\t"
             "determined via ARP.",
             &options.arp);
-    addCmdLineOption (true, 0, "responder", "MODE",
+    addCmdLineOption (true, 0, "listener", "MODE",
             "Enable responder mode (EXPERIMENTAL). Possible values for MODE are:\n\t"
-//            "ack     An acknowledge for every received TCP packet will be send.\n\t"
+//            "watchdog     Monitoring of hosts (based on MAC or IP) \n\t"
             "mirror  Each received packet will be mirrored back to the sender.\n\t"
             "trigger Each received packet will trigger sending of specified packets.",
             &options.responderMode);
@@ -187,8 +186,8 @@ int cTcpPump::execute (const std::list<std::string>& args)
 
     if (options.responderMode)
     {
-/*        if (!std::strcmp ("ack", options.responderMode))
-            responder = ACK;
+/*        if (!std::strcmp ("watchdog", options.responderMode))
+            responder = WATCHDOG;
         else */ if (!std::strcmp ("mirror", options.responderMode))
             responder = MIRROR;
         else if (!std::strcmp ("trigger", options.responderMode))
@@ -200,7 +199,7 @@ int cTcpPump::execute (const std::list<std::string>& args)
         }
     }
 
-    if (!args.size() && (responder != ACK) && (responder != MIRROR))
+    if (!args.size() && (responder != MIRROR))
     {
         Console::PrintError (options.script ? "no script files provided\n": "no packet data provided\n");
         return -2;
@@ -258,7 +257,7 @@ int cTcpPump::execute (const std::list<std::string>& args)
     // Install a signal handler
     cSignal::sigintEnable ();
 
-    if (responder == MIRROR || responder == ACK)
+    if (responder == MIRROR || responder == WATCHDOG)
     {
         if (!ifc->open (false))
             return -1;

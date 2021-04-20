@@ -35,7 +35,7 @@
 #include "stppacket.hpp"
 #include "igmppacket.hpp"
 #include "icmppacket.hpp"
-#include "trigger.hpp"
+#include "listener.hpp"
 
 
 cInstructionParser::cInstructionParser (const cMacAddress& ownMac, const cIpAddress& ownIPv4, bool optDestMAC)
@@ -126,8 +126,8 @@ void cInstructionParser::parse (const char* instruction, cResult& result)
             result.packets = compileTCPFINACK2 (params);
         else if (!strncmp ("tcp-reset", keyword, keywordLen))
             result.packets = compileTCPRST (params);
-        else if (!strncmp ("WAIT", keyword, keywordLen))
-            result.packets = compileWait (params);
+        else if (!strncmp ("LISTEN", keyword, keywordLen))
+            result.packets = compileListen (params);
         else
             throwParseException ("Unknown protocol type", keyword, keywordLen);
 
@@ -974,9 +974,9 @@ cLinkable* cInstructionParser::compileICMP  (cParameterList& params)
 }
 
 
-cLinkable* cInstructionParser::compileWait (cParameterList& params)
+cLinkable* cInstructionParser::compileListen (cParameterList& params)
 {
-    cTrigger* event = new cTrigger;
+    cListener* event = new cListener;
     try
     {
         cParameter* optionalPar;

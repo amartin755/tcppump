@@ -88,7 +88,7 @@ private:
     cLinkable* compileTCPFINACK  (cParameterList& params);
     cLinkable* compileTCPFINACK2  (cParameterList& params);
     cLinkable* compileTCPRST  (cParameterList& params);
-    cLinkable* compileWait  (cParameterList& params);
+    cLinkable* compileListen  (cParameterList& params);
 
     bool   compileMacHeader (cParameterList& params, cEthernetPacket* packet, bool noDestination, bool destIsOptional = false);
     size_t compileVLANTags (cParameterList& params, cEthernetPacket* packet);
