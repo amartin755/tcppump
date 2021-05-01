@@ -36,6 +36,7 @@ arp(op=2, dip=10.20.30.40, dmac=80:81:82:83:84:85, smac=90:91:92:93:94:95, sip=1
 arp(dip=10.20.30.40, vid=42, prio=5, dei=1);
 arp-probe(dip=10.20.30.40);
 arp-announce(dip=10.20.30.40);
+arp-announce();
 ipv4(dip=10.20.30.40, dmac=11:22:33:44:55:66, protocol=255, payload = 0123456789abcdef0123456789abcdef);
 ipv4(dip=10.20.30.40, dmac=11:22:33:44:55:66, protocol=0, payload = 0123456789abcdef0123456789abcdef);
 ipv4(dip=10.20.30.40, dmac=11:22:33:44:55:66, dscp=0, protocol=255, payload = 0123456789abcdef0123456789abcdef);

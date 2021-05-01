@@ -27,9 +27,9 @@
 #include "pcapfileio.hpp"
 
 
-cCompiler::cCompiler (inputType t, const cMacAddress& mac, const cIpAddress& ip, const cTimeval& delay, unsigned delayScale, bool optDestMAC, double pcapScaling)
-: type(t), ownMac(mac), ownIP(ip), defaultDelay(delay), defaultDelayScale(delayScale), ipOptionalDestMAC(optDestMAC),
-  fileParser (defaultDelay.us()/defaultDelayScale, ownMac, ownIP, ipOptionalDestMAC), pcapScalingFactor(pcapScaling)
+cCompiler::cCompiler (inputType t, const cTimeval& delay, unsigned delayScale, bool optDestMAC, double pcapScaling)
+: type(t), defaultDelay(delay), defaultDelayScale(delayScale), ipOptionalDestMAC(optDestMAC),
+  fileParser (defaultDelay.us()/defaultDelayScale, ipOptionalDestMAC), pcapScalingFactor(pcapScaling)
 {
 }
 
@@ -104,7 +104,7 @@ void cCompiler::processPackets (const std::list<std::string>& input)
 
     for (const auto & packet : input)
     {
-        cInstructionParser (ownMac, ownIP, ipOptionalDestMAC).parse (packet.c_str(), result);
+        cInstructionParser (ipOptionalDestMAC).parse (packet.c_str(), result);
         if (result.hasTimestamp)
         {
             data.hasUserTimestamps = true;

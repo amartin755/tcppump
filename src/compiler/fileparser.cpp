@@ -30,7 +30,7 @@
 #include "parsehelper.hpp"
 
 
-cFileParser::cFileParser (uint64_t defaultDelay, const cMacAddress& ownMac, const cIpAddress&  ownIPv4, bool ipOptionalDestMAC)
+cFileParser::cFileParser (uint64_t defaultDelay, bool ipOptionalDestMAC)
 {
     instructionBufferSize = 0;
     instructionBuffer     = nullptr;
@@ -40,8 +40,6 @@ cFileParser::cFileParser (uint64_t defaultDelay, const cMacAddress& ownMac, cons
     path                  = nullptr;
     openControlBlocks     = 0;
 
-    this->ownMac .set (ownMac);
-    this->ownIPv4.set (ownIPv4);
     this->ipOptionalDestMAC = ipOptionalDestMAC;
 }
 
@@ -133,7 +131,7 @@ int cFileParser::parse (cInstructionParser::cResult& result)
                     result.timestamp  = delay;
                     try
                     {
-                        cInstructionParser (ownMac, ownIPv4, ipOptionalDestMAC)
+                        cInstructionParser (ipOptionalDestMAC)
                                 .parse (instructionBuffer, result);
                         return 0;
                     }

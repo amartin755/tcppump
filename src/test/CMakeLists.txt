@@ -162,6 +162,8 @@ add_test(NAME arp-12--ok COMMAND tcppump ${DEFAULT_PARAMS} "arp-probe(dip=10.20.
 add_test(NAME arp-12--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/arp-12.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 add_test(NAME arp-13--ok COMMAND tcppump ${DEFAULT_PARAMS} "arp-announce(dip=10.20.30.40)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 add_test(NAME arp-13--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/arp-13.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME arp-14--ok COMMAND tcppump ${DEFAULT_PARAMS} "arp-announce()" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME arp-14--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/arp-14.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 add_test(NAME ipv4-1--nok COMMAND tcppump ${DEFAULT_PARAMS} "ipv4(dip=10.20.30.40)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 set_tests_properties(ipv4-1--nok PROPERTIES WILL_FAIL TRUE)
@@ -517,7 +519,7 @@ add_test(NAME igmp-10--nok COMMAND tcppump ${DEFAULT_PARAMS} "igmp(dip=225.0.0.1
 set_tests_properties(igmp-10--nok PROPERTIES WILL_FAIL TRUE)
 
 add_test(NAME script-01--ok COMMAND tcppump ${DEFAULT_PARAMS} -vvv -s ${TEST_FILE_PREFIX}/all.pump WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-set_tests_properties(script-01--ok PROPERTIES PASS_REGULAR_EXPRESSION "Will send 242 packets.*Successfully wrote 242 packets")
+set_tests_properties(script-01--ok PROPERTIES PASS_REGULAR_EXPRESSION "Will send 243 packets.*Successfully wrote 243 packets")
 add_test(NAME script-01--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/all.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 ### AFL findings

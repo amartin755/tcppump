@@ -28,6 +28,7 @@
 #include "tcppump.hpp"
 
 #include "bug.hpp"
+#include "settings.hpp"
 #include "signal.hpp"
 #include "sleep.hpp"
 #include "ipaddress.hpp"
@@ -125,8 +126,7 @@ cTcpPump::~cTcpPump()
 
 int cTcpPump::execute (const std::list<std::string>& args)
 {
-    cMacAddress ownMac, overwriteDMAC;
-    cIpAddress  ownIP;
+    cMacAddress overwriteDMAC;
     double pcapScale = 1.0;
 
 
@@ -207,7 +207,7 @@ int cTcpPump::execute (const std::list<std::string>& args)
 
     if (options.myIP)
     {
-        if (!ownIP.set (options.myIP))
+        if (!cSettings::get().setMyIPv4 (options.myIP))
         {
             Console::PrintError ("Wrong IPv4 address format %s\n", options.myIP);
             return -1;
@@ -215,7 +215,7 @@ int cTcpPump::execute (const std::list<std::string>& args)
     }
     if (options.myMAC)
     {
-        if (!ownMac.set (options.myMAC))
+        if (!cSettings::get().setMyMAC  (options.myMAC))
         {
             Console::PrintError ("Wrong MAC address format %s\n", options.myMAC);
             return -1;
@@ -229,24 +229,30 @@ int cTcpPump::execute (const std::list<std::string>& args)
             return -1;
         }
     }
-
-    ifc = cNetInterface::create (options.ifc);
-    if (!options.myMAC && !ifc->getMAC(ownMac))
-    {
-        Console::PrintError ("Could not determine mac address of interface.\n");
-        return -1;
-    }
-    if (!options.myIP && !ifc->getIPv4(ownIP))
-    {
-        Console::PrintError ("Could not determine IPv4 address of interface.\n");
-        return -1;
-    }
-
     if (options.script && options.pcap)
     {
         Console::PrintError ("Options -s and -p can't be used at the same time.\n");
         return -1;
     }
+
+    ifc = cNetInterface::create (options.ifc);
+    if (!cSettings::get().isMacSet())
+    {
+        cMacAddress ifMAC;
+        if (ifc->getMAC(ifMAC))
+            cSettings::get().setMyMAC(ifMAC);
+        else
+            Console::PrintError ("Warning: Could not determine mac address of interface.\n");
+    }
+    if (!cSettings::get().isIPSet())
+    {
+        cIpAddress ifIPv4;
+        if (ifc->getIPv4(ifIPv4))
+            cSettings::get().setMyIPv4(ifIPv4);
+        else
+            Console::PrintVerbose ("Warning: Could not determine IPv4 address of interface.\n");
+    }
+
 
     activeDelay.setUs((uint64_t)options.delay * (uint64_t)timeScale);
 
@@ -276,7 +282,7 @@ int cTcpPump::execute (const std::list<std::string>& args)
     else
     {
         cCompiler compiler (options.script ? cCompiler::SCRIPT : options.pcap ? cCompiler::PCAP : cCompiler::PACKET,
-                ownMac, ownIP, activeDelay, timeScale, !!options.arp, pcapScale);
+                activeDelay, timeScale, !!options.arp, pcapScale);
         cFilter    filter (options.overwriteDMAC ? &overwriteDMAC : nullptr);
         cResolver  resolver (*ifc);
         cScheduler scheduler;

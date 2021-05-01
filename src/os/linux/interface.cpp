@@ -222,7 +222,7 @@ bool cInterface::getMAC (cMacAddress &mac)
         errno = 0;
         if ((s = socket (AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0)
         {
-            Console::PrintError ("error: %s\n", strerror (errno));
+            Console::PrintDebug ("error: %s\n", strerror (errno));
             return false;
         }
 
@@ -231,7 +231,7 @@ bool cInterface::getMAC (cMacAddress &mac)
         snprintf (ifr.ifr_name, sizeof (ifr.ifr_name), "%s", name.c_str());
         if (ioctl (s, SIOCGIFHWADDR, &ifr) < 0)
         {
-            Console::PrintError ("error: %s\n", strerror (errno));
+            Console::PrintDebug ("error: %s\n", strerror (errno));
             return false;
         }
 
@@ -260,7 +260,7 @@ bool cInterface::getIPv4 (cIpAddress &ip)
         errno = 0;
         if ((s = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
         {
-            Console::PrintError ("error: %s\n", strerror (errno));
+            Console::PrintDebug ("error: %s\n", strerror (errno));
             return false;
         }
 
@@ -270,7 +270,7 @@ bool cInterface::getIPv4 (cIpAddress &ip)
         snprintf (ifr.ifr_name, sizeof (ifr.ifr_name), "%s", name.c_str());
         if (ioctl (s, SIOCGIFADDR, &ifr) < 0)
         {
-            Console::PrintError ("error: %s\n", strerror (errno));
+            Console::PrintDebug ("error: %s\n", strerror (errno));
             return false;
         }
 

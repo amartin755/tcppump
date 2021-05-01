@@ -36,7 +36,7 @@ class cParameterList;
 class cFileParser
 {
 public:
-    cFileParser (uint64_t defaultDelay, const cMacAddress& ownMac, const cIpAddress&  ownIPv4, bool ipOptionalDestMAC);
+    cFileParser (uint64_t defaultDelay, bool ipOptionalDestMAC);
     ~cFileParser ();
     bool open (const char* path);
     int parse (cInstructionParser::cResult& result);
@@ -49,8 +49,6 @@ private:
     int    instructionBufferSize;
 
     uint64_t     delay;
-    cMacAddress  ownMac;
-    cIpAddress   ownIPv4;
     bool         ipOptionalDestMAC;
     FILE*        fp;
     const char*  path;

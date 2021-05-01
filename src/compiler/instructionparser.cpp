@@ -36,12 +36,11 @@
 #include "igmppacket.hpp"
 #include "icmppacket.hpp"
 #include "listener.hpp"
+#include "settings.hpp"
 
 
-cInstructionParser::cInstructionParser (const cMacAddress& ownMac, const cIpAddress& ownIPv4, bool optDestMAC)
+cInstructionParser::cInstructionParser (bool optDestMAC)
 {
-    this->ownMac.set(ownMac);
-    this->ownIPv4.set(ownIPv4);
     currentInstruction = nullptr;
     ipOptionalDestMAC = optDestMAC;
 }
@@ -236,7 +235,8 @@ cLinkable* cInstructionParser::compileRAW (cParameterList& params)
 bool cInstructionParser::compileMacHeader (cParameterList& params, cEthernetPacket *packet, bool noDestination, bool destIsOptional)
 {
     // default value of source mac is our own mac address
-    packet->setSrcMac (params.findParameter ("smac", ownMac)->asMac ());
+    packet->setSrcMac (getParameterOrOwnMac (params, "smac"));
+
     if (!noDestination)
     {
         const cParameter* destMacPar = params.findParameter ("dmac", destIsOptional);
@@ -247,6 +247,22 @@ bool cInstructionParser::compileMacHeader (cParameterList& params, cEthernetPack
         }
     }
     return false;
+}
+
+
+cMacAddress cInstructionParser::getParameterOrOwnMac (cParameterList& params, const char* par) const
+{
+    const cParameter* optionalPar = params.findParameter (par, true);
+
+    return optionalPar ? optionalPar->asMac () : cSettings::get().getMyMAC();
+}
+
+
+cIpAddress cInstructionParser::getParameterOrOwnIPv4 (cParameterList& params, const char* par) const
+{
+    const cParameter* optionalPar = params.findParameter (par, true);
+
+    return optionalPar ? optionalPar->asIPv4() : cSettings::get().getMyIPv4();
 }
 
 
@@ -333,21 +349,21 @@ cLinkable* cInstructionParser::compileARP (cParameterList& params, bool isProbe,
 
         if (isProbe)
         {
-            arp->probe (ownMac, params.findParameter ("dip")->asIPv4());
+            arp->probe (cSettings::get().getMyMAC(), params.findParameter ("dip")->asIPv4());
         }
         else if (isGratuitous)
         {
-            arp->announce (ownMac, params.findParameter ("dip", ownIPv4)->asIPv4());
+            arp->announce (cSettings::get().getMyMAC(), getParameterOrOwnIPv4 (params, "dip"));
         }
         else
         {
             cMacAddress targetMac = params.findParameter ("dmac", cMacAddress ((unsigned)0))->asMac();
 
             arp->setAll (params.findParameter ("op", (uint32_t)1)->asInt16(),
-                        params.findParameter ("smac", ownMac)->asMac(),
-                        params.findParameter ("sip", ownIPv4)->asIPv4(),
-                        targetMac,
-                        params.findParameter ("dip")->asIPv4()
+                         getParameterOrOwnMac (params, "smac"),
+                         getParameterOrOwnIPv4 (params, "sip"),
+                         targetMac,
+                         params.findParameter ("dip")->asIPv4()
                         );
         }
 
@@ -379,7 +395,7 @@ bool cInstructionParser::parseIPv4Params (cParameterList& params, cIPv4Packet* p
         packet->setDestination (destIP);
         isMulticast = destIP.isMulticast();
     }
-    packet->setSource       (params.findParameter ("sip", ownIPv4)->asIPv4());
+    packet->setSource (getParameterOrOwnIPv4 (params, "sip"));
     cParameter* optionalPar = params.findParameter ("id", true);
     if (optionalPar)
         packet->setIdentification(optionalPar->asInt16());
@@ -812,10 +828,10 @@ cLinkable* cInstructionParser::compileSTP (cParameterList& params, bool isRSTP, 
             uint32_t pathCost;
             unsigned rootBridgePrio          = params.findParameter ("rbprio", (uint32_t)8)->asInt8 (0, 15);
             unsigned rootBridgeId            = params.findParameter ("rbidext", (uint32_t)0)->asInt16 (0, 4095);
-            const cMacAddress& rootBridgeMac = params.findParameter ("rbmac",  ownMac)->asMac ();
+            const cMacAddress& rootBridgeMac = getParameterOrOwnMac (params, "rbmac");
             unsigned bridgePrio              = params.findParameter ("bprio", (uint32_t)8)->asInt8 (0, 15);
             unsigned bridgeId                = params.findParameter ("bidext", (uint32_t)0)->asInt16 (0, 4095);
-            const cMacAddress& bridgeMac     = params.findParameter ("bmac",  ownMac)->asMac ();
+            const cMacAddress& bridgeMac     = getParameterOrOwnMac (params, "bmac");
             unsigned portPrio                = params.findParameter ("pprio", (uint32_t)8)->asInt8 (0, 15);
             unsigned portNumber              = params.findParameter ("pnum", (uint32_t)1)->asInt16 (1, 4095);
             double msgAge                    = params.findParameter ("msgage", 0.0)->asDouble (0.0, 255.996);
@@ -1203,10 +1219,12 @@ void cInstructionParser::unitTest ()
     bool hasTimestamp;
     cMacAddress ownMac("ba:ba:ba:ba:ba:ba");
     cIpAddress ownIPv4;
-    std::list <cEthernetPacket> packets;
-    cInstructionParser obj (ownMac, ownIPv4, false);
-
     ownIPv4.set("10.10.10.10");
+    cSettings::get().setMyMAC(ownMac);
+    cSettings::get().setMyIPv4(ownIPv4);
+    std::list <cEthernetPacket> packets;
+    cInstructionParser obj (false);
+
 
     {
         const char s[] = "  abc \tde_0f  ghi";
@@ -1505,7 +1523,7 @@ void cInstructionParser::unitTest ()
         cInstructionParser::cResult result;
 
         Console::PrintDebug("packet %d", n);
-        cInstructionParser obj (ownMac, ownIPv4, false);
+        cInstructionParser obj (false);
         try
         {
             obj.parse (tests[n].tokens, result);

@@ -58,7 +58,7 @@ public:
         cLinkable* packets;
     };
 
-    cInstructionParser (const cMacAddress& ownMac, const cIpAddress& ownIPv4, bool ipOptionalDestMAC);
+    cInstructionParser (bool ipOptionalDestMAC);
     ~cInstructionParser ();
     void parse (const char* instruction, cResult& result);
 
@@ -93,11 +93,11 @@ private:
     bool   compileMacHeader (cParameterList& params, cEthernetPacket* packet, bool noDestination, bool destIsOptional = false);
     size_t compileVLANTags (cParameterList& params, cEthernetPacket* packet);
     bool   parseIPv4Params (cParameterList& params, cIPv4Packet* packet, bool noDestinationIP = false);
+    cMacAddress getParameterOrOwnMac (cParameterList& params, const char* par) const;
+    cIpAddress getParameterOrOwnIPv4 (cParameterList& params, const char* par) const;
 
     void throwParseException (const char* msg, const char* val, size_t valLen = 0, const char* details = nullptr);
 
-    cMacAddress ownMac;
-    cIpAddress  ownIPv4;
     const char* currentInstruction;
     bool ipOptionalDestMAC;
 };
