@@ -30,6 +30,7 @@
 #include "arppacket.hpp"
 #include "ipv4packet.hpp"
 #include "udppacket.hpp"
+#include "vxlanpacket.hpp"
 #include "tcppacket.hpp"
 #include "vrrppacket.hpp"
 #include "stppacket.hpp"
@@ -125,6 +126,8 @@ void cInstructionParser::parse (const char* instruction, cResult& result)
             result.packets = compileTCPFINACK2 (params);
         else if (!strncmp ("tcp-reset", keyword, keywordLen))
             result.packets = compileTCPRST (params);
+        else if (!strncmp ("vxlan", keyword, keywordLen))
+            result.packets = compileVXLAN (params);
         else if (!strncmp ("LISTEN", keyword, keywordLen))
             result.packets = compileListen (params);
         else
@@ -464,6 +467,39 @@ cLinkable* cInstructionParser::compileUDP (cParameterList& params)
     }
 
     return udppacket;
+}
+
+cLinkable* cInstructionParser::compileVXLAN (cParameterList& params)
+{
+    cVxlanPacket* vxlanpacket = new cVxlanPacket;
+    try
+    {
+        cEthernetPacket& eth = vxlanpacket->getFirstEthernetPacket();
+        bool destIsMulticast = parseIPv4Params (params, vxlanpacket);
+
+        // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+        compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
+        compileVLANTags   (params, &eth);
+
+        vxlanpacket->setSourcePort(params.findParameter ("sport")->asInt16());
+        vxlanpacket->setDestinationPort(params.findParameter ("dport", (uint32_t)4789)->asInt16());
+        vxlanpacket->setVni(params.findParameter ("vni", (uint32_t)0)->asInt32(0, 0x00ffffff));
+
+        size_t len = 0;
+        const uint8_t* payload = nullptr;
+        cParameter* optionalPar = params.findParameter ("payload", true);
+        if (optionalPar)
+            payload = optionalPar->asStream(len);
+        vxlanpacket->compile (payload, len);
+    }
+    catch (...)
+    {
+        delete vxlanpacket;
+        vxlanpacket = nullptr;
+        throw;
+    }
+
+    return vxlanpacket;
 }
 
 

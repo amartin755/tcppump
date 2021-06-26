@@ -776,3 +776,49 @@ RSTP only: Agreement Flag (integer: default 0; 1 = agreement)
 
 #### Parameters
 This packet has no parameters.
+
+### VXLAN
+RFC7348
+#### Protocol Specifier
+
+    vxlan
+
+#### Parameters
+Destination EUI-48 MAC address. Note: If `dip` is a multicast address `dmac` will be set automatically.
+
+    dmac (optional if dip is multicast)
+
+Destination IPv4 address
+
+    dip
+
+Source EUI-48 MAC address. If ommited, address of the network interface is used
+
+    smac (optional)
+
+Source IPv4 address; If ommited, address of the network interface is used
+
+    sip (optional)
+
+Source port (integer: range 0 - 0xffff)
+
+    sport
+
+Destination port (integer: range 0 - 0xffff; default 4789)
+
+    dport (optional)
+
+VXLAN Network Identifier (integer: range 0 - 0xffffff; default 0)
+
+    vni (optional)
+
+Payload (bytestream)
+
+    payload (optional)
+
+Optionally all vlan tag parameters and all optional ipv4 parameters (see above) are also allowed.
+
+#### Examples
+
+    # VXLAN packet with source-mac and ip taken from network interface
+    vxlan(dmac=12:23:34:34:44:44, dip=1.2.3.4, sport=1234, vni=42, payload=1234567812345678);

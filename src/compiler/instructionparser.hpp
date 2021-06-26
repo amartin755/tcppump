@@ -76,6 +76,7 @@ private:
     cLinkable* compileSNAP (cParameterList& params);
     cLinkable* compileIPv4 (cParameterList& params);
     cLinkable* compileUDP  (cParameterList& params);
+    cLinkable* compileVXLAN (cParameterList& params);
     cLinkable* compileVRRP (cParameterList& params, int version);
     cLinkable* compileSTP  (cParameterList& params, bool isRSTP = false, bool isTCN = false);
     cLinkable* compileIGMP (cParameterList& params, bool v3, bool query, bool report, bool leave);

@@ -38,6 +38,7 @@ Supported protocols and packet formats
 * STP/RSTP
 * IGMP (v1/v2 only, v3 is on the way)
 * ICMP
+* VXLAN
 
 **Note: This tool is in alpha state.**
 

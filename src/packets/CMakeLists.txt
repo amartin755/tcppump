@@ -29,6 +29,7 @@ set (SOURCES
      ${CMAKE_CURRENT_SOURCE_DIR}/tcppacket.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/udppacket.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/vrrppacket.cpp
+     ${CMAKE_CURRENT_SOURCE_DIR}/vxlanpacket.cpp
      PARENT_SCOPE
 )
 set (INCLUDES
