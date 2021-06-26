@@ -48,6 +48,7 @@ typedef struct
     int          testPredictableRandom;
     const char*  responderMode;
     const char*  bpf;
+    unsigned     mtu;
 }appOptions;
 
 class cInterface;

@@ -24,6 +24,7 @@
 
 #include "bug.hpp"
 #include "inetchecksum.hpp"
+#include "settings.hpp"
 
 
 uint16_t cIPv4Packet::identification = 1;
@@ -33,7 +34,7 @@ cIPv4Packet::cIPv4Packet ()
 {
     ipHeader.init();
 
-    mtu = 1500; // FIXME real MTU
+    mtu = cSettings::get().getMyMTU();
 
     cEthernetPacket firstPacket;
     firstPacket.setTypeLength (ETHERTYPE_IPV4);
@@ -157,6 +158,11 @@ void cIPv4Packet::compile (uint8_t protocol, const uint8_t* l4header, size_t l4h
         else
             fragLen = payloadLen + ipHeaderLen > mtu ? mtu - ipHeaderLen : payloadLen;
 
+        if ((n + 1) != packets.size())
+        {
+            fragLen /= 8;
+            fragLen *= 8;
+        }
         ipHeader.ip.totalLength = htons (uint16_t(ipHeaderLen + fragLen));
         ipHeader.ip.setFlagMF (n + 1 != fragCnt);
         ipHeader.ip.setOffset ((unsigned)offset);

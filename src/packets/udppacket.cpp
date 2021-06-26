@@ -22,7 +22,7 @@
 #include "inet.h"
 #include "udppacket.hpp"
 #include "bug.hpp"
-
+#include "inetchecksum.hpp"
 
 
 cUdpPacket::cUdpPacket ()
@@ -36,7 +36,7 @@ void cUdpPacket::setPayload (const uint8_t* payload, size_t len)
 
     header.length = htons(uint16_t(sizeof (header) + len));
     cIPv4Packet::compile (PROTO_UDP, (const uint8_t*)&header, sizeof (header), payload, len);
-    header.checksum = calcChecksum();
+    header.checksum = calcChecksum(payload, len);
     cIPv4Packet::updateL4Header ((const uint8_t*)&header, sizeof (header));
 }
 
@@ -57,7 +57,7 @@ void cUdpPacket::setChecksum (uint16_t checksum)
 }
 
 // FIXME use cInetChecksum instead
-uint16_t cUdpPacket::calcChecksum () const
+uint16_t cUdpPacket::calcChecksum (const uint8_t* payload, size_t len) const
 {
     ipv4_pseudo_header_t ipPseudoHeader;
     const ipv4_header_t& ipHeader = cIPv4Packet::getHeader();
@@ -68,16 +68,7 @@ uint16_t cUdpPacket::calcChecksum () const
     ipPseudoHeader.protocol = ipHeader.protocol;
     ipPseudoHeader.len      = htons((uint16_t)cIPv4Packet::getPayloadLength());
 
-    uint32_t sum;
-
-    sum  = csum ((const uint16_t*)&ipPseudoHeader, sizeof (ipPseudoHeader));
-    sum += csum ();
-
-    while (sum >> 16)
-        sum = (sum & 0xffff) + (sum >> 16);
-
-    uint16_t ret = (uint16_t)~sum;
-    return ret ? ret : 0xffff;
+    return cInetChecksum::rfc1071 ((const uint16_t*)&ipPseudoHeader, sizeof (ipPseudoHeader), &header, sizeof(header), payload, len);
 }
 
 uint32_t cUdpPacket::csum (const uint16_t* p, unsigned len) const

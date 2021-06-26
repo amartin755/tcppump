@@ -73,6 +73,8 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
             "Use IPV4 as source IPv4 address instead of the network adapters ip address", &options.myIP);
     addCmdLineOption (true, 0, "mymac", "MAC",
             "Use MAC as source MAC address instead of the network adapters MAC address", &options.myMAC);
+    addCmdLineOption (true, 0, "mtu", "MTU",
+            "Use MTU instead of the network adapters mtu", (int*)&options.mtu);
     addCmdLineOption (true, 0, "rand-smac",
             "Use random source MAC address. Overwrites --mymac as well as explicitly defined addresses in packets.", &options.randSrcMac);
     addCmdLineOption (true, 0, "rand-dmac",
@@ -251,6 +253,23 @@ int cTcpPump::execute (const std::list<std::string>& args)
             cSettings::get().setMyIPv4(ifIPv4);
         else
             Console::PrintVerbose ("Warning: Could not determine IPv4 address of interface.\n");
+    }
+    if (options.mtu)
+    {
+        if (options.mtu < 68 || options.mtu > 1024*1024) // limit the configurable MTU
+        {
+            Console::PrintError ("MTU must be between 68 and 1048576\n");
+            return -1;
+        }
+        cSettings::get().setMyMTU (options.mtu);
+    }
+    else
+    {
+        unsigned mtu = (unsigned)ifc->getMTU();
+        if (mtu)
+            cSettings::get().setMyMTU (mtu);
+        else
+            Console::PrintError ("Warning: Could not determine MTU of interface. Using default value %u\n", cSettings::get().getMyMTU());
     }
 
 
