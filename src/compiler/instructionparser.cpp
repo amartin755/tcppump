@@ -450,7 +450,7 @@ cLinkable* cInstructionParser::compileUDP (cParameterList& params)
         cParameter* optionalPar = params.findParameter ("payload", true);
         if (optionalPar)
             payload = optionalPar->asStream(len);
-        udppacket->setPayload (payload, len);
+        udppacket->compile (payload, len);
 
         optionalPar = params.findParameter ("chksum", true);
         if (optionalPar)

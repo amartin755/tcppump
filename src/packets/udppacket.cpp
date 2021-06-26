@@ -30,7 +30,7 @@ cUdpPacket::cUdpPacket ()
     std::memset (&header, 0, sizeof(header));
 }
 
-void cUdpPacket::setPayload (const uint8_t* payload, size_t len)
+void cUdpPacket::compile (const uint8_t* payload, size_t len)
 {
     // TODO check max udp length
 
@@ -56,7 +56,6 @@ void cUdpPacket::setChecksum (uint16_t checksum)
     cIPv4Packet::updateL4Header ((const uint8_t*)&header, sizeof (header));
 }
 
-// FIXME use cInetChecksum instead
 uint16_t cUdpPacket::calcChecksum (const uint8_t* payload, size_t len) const
 {
     ipv4_pseudo_header_t ipPseudoHeader;
