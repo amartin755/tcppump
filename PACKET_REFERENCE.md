@@ -612,7 +612,7 @@ Optionally all vlan tag parameters and all optional ipv4 parameters (see above) 
 
     # TODO
 
-### VRRP Virtual Router Redundancy Protocol
+### Virtual Router Redundancy Protocol (VRRP)
 Supported are the protocol versions 2 according to RFC3768 (vrrp) and version 3 according to RFC5798 (vrrp3).
 
 #### Protocol Specifier
@@ -777,7 +777,7 @@ RSTP only: Agreement Flag (integer: default 0; 1 = agreement)
 #### Parameters
 This packet has no parameters.
 
-### VXLAN
+### Virtual eXtensible Local Area Network (VXLAN)
 RFC7348
 #### Protocol Specifier
 
@@ -822,3 +822,57 @@ Optionally all vlan tag parameters and all optional ipv4 parameters (see above) 
 
     # VXLAN packet with source-mac and ip taken from network interface
     vxlan(dmac=12:23:34:34:44:44, dip=1.2.3.4, sport=1234, vni=42, payload=1234567812345678);
+
+### Generic Routing Encapsulation (GRE)
+RFC2784, RFC2890
+#### Protocol Specifier
+
+    vxlan
+
+#### Parameters
+Destination EUI-48 MAC address. Note: If `dip` is a multicast address `dmac` will be set automatically.
+
+    dmac (optional if dip is multicast)
+
+Destination IPv4 address
+
+    dip
+
+Source EUI-48 MAC address. If ommited, address of the network interface is used
+
+    smac (optional)
+
+Source IPv4 address; If ommited, address of the network interface is used
+
+    sip (optional)
+
+Protocol type (integer: range 0 - 0xffff)
+
+    protocol
+
+Key field (integer: range 0 - 0xffffffff)
+
+    key (optional)
+
+Sequence number (integer: range 0 - 0xffffffff)
+
+    seq (optional)
+
+Checksum (integer: range 0 - 0xffff) If zero, checksum is calculated automatically. Setting the checksum manually is only useful to force creation of malformed packets.
+
+    chksum (optional)
+
+Payload (bytestream)
+
+    payload (optional)
+
+Optionally all vlan tag parameters and all optional ipv4 parameters (see above) are also allowed.
+
+#### Examples
+
+    # minimum GRE packet with source-mac and ip taken from network interface
+    gre(dmac=12:23:34:34:44:44, dip=1.2.3.4, protocol=1234);
+    # full blown GRE packet with random payload and automatic calculated checksum
+    gre(dmac=12:23:34:34:44:44, dip=1.2.3.4, protocol=1234, key=1, seq=10, chksum=0, payload=*);
+    # full blown GRE packet with random payload and wrong checksum
+    gre(dmac=12:23:34:34:44:44, dip=1.2.3.4, protocol=1234, key=1, seq=10, chksum=44444, payload=*);

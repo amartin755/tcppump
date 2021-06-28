@@ -67,40 +67,8 @@ uint16_t cUdpPacket::calcChecksum (const uint8_t* payload, size_t len) const
     ipPseudoHeader.protocol = ipHeader.protocol;
     ipPseudoHeader.len      = htons((uint16_t)cIPv4Packet::getPayloadLength());
 
-    return cInetChecksum::rfc1071 ((const uint16_t*)&ipPseudoHeader, sizeof (ipPseudoHeader), &header, sizeof(header), payload, len);
-}
-
-uint32_t cUdpPacket::csum (const uint16_t* p, unsigned len) const
-{
-    uint32_t sum = 0;
-
-    while (len > 1)
-    {
-        sum += *p++;
-        len -= 2;
-    }
-    if (len)
-        sum += *(uint8_t*)p;
-
-    return sum;
-}
-
-uint32_t cUdpPacket::csum () const
-{
-    uint32_t sum = 0;
-    unsigned offset = 0;
-    unsigned len = (unsigned)cIPv4Packet::getPayloadLength ();
-
-    while (len > 1)
-    {
-        sum += cIPv4Packet::getPayloadAt16(offset);
-        len -= 2;
-        offset += 2;
-    }
-    if (len)
-        sum += cIPv4Packet::getPayloadAt8(offset);
-
-    return sum;
+    uint16_t ret = cInetChecksum::rfc1071 ((const uint16_t*)&ipPseudoHeader, sizeof (ipPseudoHeader), &header, sizeof(header), payload, len);
+    return ret ? ret : 0xffff;
 }
 
 #ifdef WITH_UNITTESTS

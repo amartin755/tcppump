@@ -36,6 +36,7 @@
 #include "stppacket.hpp"
 #include "igmppacket.hpp"
 #include "icmppacket.hpp"
+#include "grepacket.hpp"
 #include "listener.hpp"
 #include "settings.hpp"
 
@@ -128,6 +129,8 @@ void cInstructionParser::parse (const char* instruction, cResult& result)
             result.packets = compileTCPRST (params);
         else if (!strncmp ("vxlan", keyword, keywordLen))
             result.packets = compileVXLAN (params);
+        else if (!strncmp ("gre", keyword, keywordLen))
+            result.packets = compileGRE (params);
         else if (!strncmp ("LISTEN", keyword, keywordLen))
             result.packets = compileListen (params);
         else
@@ -1023,6 +1026,55 @@ cLinkable* cInstructionParser::compileICMP  (cParameterList& params)
     }
 
     return icmppacket;
+}
+
+cLinkable* cInstructionParser::compileGRE (cParameterList& params)
+{
+    cGrePacket* grepacket = new cGrePacket;
+    try
+    {
+        cEthernetPacket& eth = grepacket->getFirstEthernetPacket();
+        bool destIsMulticast = parseIPv4Params (params, grepacket);
+
+        // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+        compileMacHeader (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
+        compileVLANTags  (params, &eth);
+
+        grepacket->setProtocolType (params.findParameter ("protocol")->asInt16());
+
+        cParameter* optionalPar;
+        optionalPar = params.findParameter ("key", true);
+        if (optionalPar)
+            grepacket->setKey (optionalPar->asInt32 ());
+        optionalPar = params.findParameter ("seq", true);
+        if (optionalPar)
+            grepacket->setSequence (optionalPar->asInt32 ());
+
+        bool calcChecksum = false;
+        optionalPar = params.findParameter ("chksum", true);
+        if (optionalPar)
+        {
+            uint16_t checksum = optionalPar->asInt16();
+            calcChecksum = checksum == 0;
+            grepacket->setChecksum (checksum);
+        }
+
+        size_t len = 0;
+        const uint8_t* payload = nullptr;
+        optionalPar = params.findParameter ("payload", true);
+        if (optionalPar)
+            payload = optionalPar->asStream(len);
+        grepacket->compile (payload, len, calcChecksum);
+
+    }
+    catch (...)
+    {
+        delete grepacket;
+        grepacket = nullptr;
+        throw;
+    }
+
+    return grepacket;
 }
 
 

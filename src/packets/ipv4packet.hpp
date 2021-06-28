@@ -149,6 +149,7 @@ public:
         PROTO_IGMP = 2,
         PROTO_TCP  = 6,
         PROTO_UDP  = 17,
+        PROTO_GRE  = 47,
         PROTO_VRRP = 112,
     };
 
