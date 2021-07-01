@@ -490,9 +490,25 @@ cLinkable* cInstructionParser::compileVXLAN (cParameterList& params)
 
         size_t len = 0;
         const uint8_t* payload = nullptr;
+
+        bool isEmbedded = false;
         cParameter* optionalPar = params.findParameter ("payload", true);
         if (optionalPar)
-            payload = optionalPar->asStream(len);
+        {
+            payload = optionalPar->asEmbedded(isEmbedded, len);
+            if (isEmbedded)
+            {
+                cResult res;
+                std::string s((char*)payload, len);
+                this->parse(s.c_str(), res);
+                cEthernetPacket* eth = dynamic_cast<cEthernetPacket*>(res.packets);
+                if (eth)
+                {
+                    payload = eth->get();
+                    len = eth->getLength();
+                }
+            }
+        }
         vxlanpacket->compile (payload, len);
     }
     catch (...)

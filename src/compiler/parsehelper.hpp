@@ -40,8 +40,8 @@ public:
     }
     static const char* nextValueStart (const char* p)
     {
-        // Values always start with an alphabetic character, a number, ", or *
-        return nextTokenStart (p, true, true, "\"*");
+        // Values always start with an alphabetic character, a number, ", < or *
+        return nextTokenStart (p, true, true, "\"*<");
     }
     static const char* nextValueEnd (const char* p)
     {

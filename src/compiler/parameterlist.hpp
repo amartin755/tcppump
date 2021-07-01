@@ -40,7 +40,8 @@ public:
     virtual uint8_t     asInt8  (uint8_t  rangeBegin = 0, uint8_t rangeEnd = 0xff) const;
     virtual double      asDouble(double rangeBegin = DBL_MIN, double rangeEnd = DBL_MAX) const;
     virtual cMacAddress asMac   () const;
-    virtual const uint8_t* asStream   (size_t& len);
+    virtual const uint8_t* asStream (size_t& len);
+    virtual const uint8_t* asEmbedded (bool &isEmbedded, size_t& len);
     virtual cIpAddress  asIPv4  () const;
 
     void throwValueExcetion (void) const;
@@ -48,6 +49,7 @@ public:
 private:
     void clear ();
     int isRandom (bool allowRange) const;
+    const uint8_t* asStream (bool allowEmbPacket, bool &isEmbedded, size_t& len);
 
     const char* parameter;
     size_t      parLen;
@@ -72,6 +74,11 @@ public:
     virtual double      asDouble(double,  double) const {return dbl;}
     virtual cMacAddress asMac   () const {return mac;}
     virtual const uint8_t* asStream   (size_t&)
+    {
+        BUG ("no raw access for optional parameters");
+        return NULL;
+    }
+    virtual const uint8_t* asEmbedded (bool&, size_t&)
     {
         BUG ("no raw access for optional parameters");
         return NULL;

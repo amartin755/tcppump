@@ -200,8 +200,22 @@ cMacAddress cParameter::asMac () const
 
 const uint8_t* cParameter::asStream (size_t& len)
 {
+    bool dummy;
+    return asStream (false, dummy, len);
+}
+
+
+const uint8_t* cParameter::asEmbedded (bool &isEmbedded, size_t& len)
+{
+    return asStream (true, isEmbedded, len);
+}
+
+
+const uint8_t* cParameter::asStream (bool allowEmbPacket, bool &isEmbedded, size_t& len)
+{
     if (!data)
     {
+        isEmbedded = false;
         int randLen = isRandom (true);
 
         if (randLen >= 0)
@@ -225,12 +239,14 @@ const uint8_t* cParameter::asStream (size_t& len)
                  * results in continuous sequence over all packets.
                  * --> in debug mode every "random" byte stream starts with 0
                  */
-                data[n] = (uint8_t)n; // we need this hack to keep ctest cases
+                data[n] = (uint8_t)n; // we need this hack to keep ctest cases reliable
 #endif
         }
-        else if (*value == '"')
+        else if ( (allowEmbPacket && (*value == '"' || *value == '<')) ||
+                 (!allowEmbPacket && *value == '"'))
         {
-            len = valLen - 2; // don't count " at the begin an end of string
+            isEmbedded = *value == '<';
+            len = valLen - 2; // don't count " or <> at the begin an end of string/embedded packet
             return (uint8_t*)value + 1;
         }
         else
@@ -424,6 +440,7 @@ const char* cParameterList::parseParameters (const char* parameters)
     const char* p = parameters;
     cParameter v;
     bool isString = false;
+    bool isEmbedded = false;
 
     list.clear ();
     used.clear ();
@@ -473,13 +490,14 @@ const char* cParameterList::parseParameters (const char* parameters)
                 return p; // syntax error
             else
                 p = token;
-            isString = *p == '"';
+            isString   = *p == '"';
+            isEmbedded = *p == '<';
 
             // find end of value
-            if (isString)
+            if (isString || isEmbedded)
             {
                 p++;
-                const char* end = std::strchr (p, '"');
+                const char* end = std::strchr (p, isString ? '"' : '>');
                 if (!end)
                     return p;
                 p = *end == '\0' ? end : end + 1;
