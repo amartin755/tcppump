@@ -827,7 +827,7 @@ Optionally all vlan tag parameters and all optional ipv4 parameters (see above) 
 RFC2784, RFC2890
 #### Protocol Specifier
 
-    vxlan
+    gre
 
 #### Parameters
 Destination EUI-48 MAC address. Note: If `dip` is a multicast address `dmac` will be set automatically.
