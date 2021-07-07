@@ -283,9 +283,9 @@ void cParameter::throwValueExcetion (void) const
 }
 
 
-cParameterList::cParameterList (const char* parameters)
+cParameterList::cParameterList (const char* parameters, bool ignoreTrailingGarbage)
 {
-    parseError = parseParameters (parameters);
+    parseError = parseParameters (parameters, ignoreTrailingGarbage);
 }
 
 
@@ -434,7 +434,7 @@ cParameter* cParameterList::findParameter (const char* parameter, const cIpAddre
 }
 
 // returns nullptr on success. Otherwise a pointer to the syntax error
-const char* cParameterList::parseParameters (const char* parameters)
+const char* cParameterList::parseParameters (const char* parameters, bool ignoreTrailingGarbage)
 {
     static const char BOOLVALUE[] = "1";
     const char* p = parameters;
@@ -528,11 +528,13 @@ const char* cParameterList::parseParameters (const char* parameters)
     if (*p != ')')
         return p;
 
-    p++;
-    p = cParseHelper::skipWhitespaces (p);
-    if (*p != '\0')
-        return p;
-
+    if (!ignoreTrailingGarbage)
+    {
+        p++;
+        p = cParseHelper::skipWhitespaces (p);
+        if (*p != '\0')
+            return p;
+    }
     return nullptr; // everything ok
 }
 

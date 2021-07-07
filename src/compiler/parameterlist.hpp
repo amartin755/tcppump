@@ -96,7 +96,7 @@ private:
 class cParameterList
 {
 public:
-    cParameterList (const char*);
+    cParameterList (const char*, bool ignoreTrailingGarbage = false);
     bool isValid (void);
     const char* getParseError (void);
     void checkForUnusedParameters (void);
@@ -116,7 +116,7 @@ public:
 #endif
 
 private:
-    const char* parseParameters (const char*);
+    const char* parseParameters (const char*, bool);
     std::vector<cParameter> list;
     std::vector<bool> used;
     const char* parseError;

@@ -31,6 +31,7 @@
 #include "linkable.hpp"
 
 class cParameterList;
+class cParameter;
 class cIPv4Packet;
 
 
@@ -60,7 +61,7 @@ public:
 
     cInstructionParser (bool ipOptionalDestMAC);
     ~cInstructionParser ();
-    void parse (const char* instruction, cResult& result);
+    void parse (const char* instruction, cResult& result, bool ignoreTrailingGarbage = false);
 
 #ifdef WITH_UNITTESTS
         static void unitTest ();
@@ -93,10 +94,12 @@ private:
     cLinkable* compileGRE (cParameterList& params);
 
     bool   compileMacHeader (cParameterList& params, cEthernetPacket* packet, bool noDestination, bool destIsOptional = false);
-    size_t compileVLANTags (cParameterList& params, cEthernetPacket* packet);
-    bool   parseIPv4Params (cParameterList& params, cIPv4Packet* packet, bool noDestinationIP = false);
+    size_t compileVLANTags  (cParameterList& params, cEthernetPacket* packet);
+    bool   parseIPv4Params  (cParameterList& params, cIPv4Packet* packet, bool noDestinationIP = false);
+    const uint8_t* compileEmbedded  (cParameter* emb, bool skipEthHeader, size_t& len);
     cMacAddress getParameterOrOwnMac (cParameterList& params, const char* par) const;
-    cIpAddress getParameterOrOwnIPv4 (cParameterList& params, const char* par) const;
+    cIpAddress  getParameterOrOwnIPv4 (cParameterList& params, const char* par) const;
+
 
     void throwParseException (const char* msg, const char* val, size_t valLen = 0, const char* details = nullptr);
 

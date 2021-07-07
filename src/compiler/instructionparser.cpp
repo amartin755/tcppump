@@ -52,7 +52,7 @@ cInstructionParser::~cInstructionParser ()
 {
 }
 
-void cInstructionParser::parse (const char* instruction, cResult& result)
+void cInstructionParser::parse (const char* instruction, cResult& result, bool ignoreTrailingGarbage)
 {
     currentInstruction = instruction;
 
@@ -65,7 +65,7 @@ void cInstructionParser::parse (const char* instruction, cResult& result)
     p = parseProtocollIdentifier (p, &keyword, &keywordLen);
 
     // parse protocol parameter list
-    cParameterList params (p);
+    cParameterList params (p, ignoreTrailingGarbage);
     if (!params.isValid ())
     {
         throwParseException ("Syntax error", params.getParseError ());
@@ -272,6 +272,49 @@ cIpAddress cInstructionParser::getParameterOrOwnIPv4 (cParameterList& params, co
 }
 
 
+const uint8_t* cInstructionParser::compileEmbedded (cParameter* emb, bool skipEthHeader, size_t& len)
+{
+    bool isEmbedded = false;
+    const uint8_t* payload = emb->asEmbedded (isEmbedded, len);
+
+    if (isEmbedded)
+    {
+        cResult res;
+        parse ((char*)payload, res, true);
+
+        cEthernetPacket* eth = dynamic_cast<cEthernetPacket*>(res.packets);
+        if (!eth)
+        {
+            cIPv4Packet* ipv4 = dynamic_cast<cIPv4Packet*>(res.packets);
+            if (ipv4)
+            {
+                eth = &ipv4->getFirstEthernetPacket();
+            }
+        }
+
+        if (eth)
+        {
+            if (!skipEthHeader)
+            {
+                payload = eth->get ();
+                len     = eth->getLength ();
+            }
+            else
+            {
+                payload = eth->getPayload ();
+                len     = eth->getPayloadLength ();
+            }
+        }
+        else
+        {
+            //TODO error
+            BUG ("unhandled compile error");
+        }
+    }
+    return payload;
+}
+
+
 cLinkable* cInstructionParser::compileETH (cParameterList& params)
 {
     cEthernetPacket* eth = new cEthernetPacket;
@@ -472,6 +515,7 @@ cLinkable* cInstructionParser::compileUDP (cParameterList& params)
     return udppacket;
 }
 
+
 cLinkable* cInstructionParser::compileVXLAN (cParameterList& params)
 {
     cVxlanPacket* vxlanpacket = new cVxlanPacket;
@@ -481,33 +525,20 @@ cLinkable* cInstructionParser::compileVXLAN (cParameterList& params)
         bool destIsMulticast = parseIPv4Params (params, vxlanpacket);
 
         // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
-        compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
-        compileVLANTags   (params, &eth);
+        compileMacHeader (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
+        compileVLANTags  (params, &eth);
 
-        vxlanpacket->setSourcePort(params.findParameter ("sport")->asInt16());
-        vxlanpacket->setDestinationPort(params.findParameter ("dport", (uint32_t)4789)->asInt16());
-        vxlanpacket->setVni(params.findParameter ("vni", (uint32_t)0)->asInt32(0, 0x00ffffff));
+        vxlanpacket->setSourcePort (params.findParameter ("sport")->asInt16());
+        vxlanpacket->setDestinationPort (params.findParameter ("dport", (uint32_t)4789)->asInt16());
+        vxlanpacket->setVni (params.findParameter ("vni", (uint32_t)0)->asInt32(0, 0x00ffffff));
 
         size_t len = 0;
         const uint8_t* payload = nullptr;
 
-        bool isEmbedded = false;
         cParameter* optionalPar = params.findParameter ("payload", true);
         if (optionalPar)
         {
-            payload = optionalPar->asEmbedded(isEmbedded, len);
-            if (isEmbedded)
-            {
-                cResult res;
-                std::string s((char*)payload, len);
-                this->parse(s.c_str(), res);
-                cEthernetPacket* eth = dynamic_cast<cEthernetPacket*>(res.packets);
-                if (eth)
-                {
-                    payload = eth->get();
-                    len = eth->getLength();
-                }
-            }
+            payload = compileEmbedded (optionalPar, false, len);
         }
         vxlanpacket->compile (payload, len);
     }
@@ -1079,7 +1110,7 @@ cLinkable* cInstructionParser::compileGRE (cParameterList& params)
         const uint8_t* payload = nullptr;
         optionalPar = params.findParameter ("payload", true);
         if (optionalPar)
-            payload = optionalPar->asStream(len);
+            payload = compileEmbedded (optionalPar, true, len);
         grepacket->compile (payload, len, calcChecksum);
 
     }
