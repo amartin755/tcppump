@@ -28,8 +28,8 @@
 typedef struct
 {
     uint8_t  flags;
-    uint8_t resevered[3];
-    uint32_t vni; // only 24 bits
+    uint8_t  reserved[3];
+    uint32_t vni; // 24 bits only
 
 }vxlan_header_t;
 #pragma pack()

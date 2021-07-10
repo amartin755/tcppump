@@ -55,58 +55,6 @@ typedef struct
         flags |= 0x10;
     }
 }gre_basic_header_t;
-
-typedef struct
-{
-    uint8_t  flags;
-    uint8_t  version;
-    uint16_t protocol;
-    uint16_t checksum; //1
-    uint16_t reserved;
-    uint32_t key;	//2
-    uint32_t seq;//3
-
-    void setChecksum (uint16_t cksum)
-    {
-        checksum = htons(cksum);
-        flags |= 0x80;
-    }
-    bool hasChecksum (void)
-    {
-        return !!(flags & 0x80);
-    }
-    void setKey (uint32_t k)
-    {
-        key = htonl(k);
-        flags |= 0x20;
-    }
-    bool hasKey (void)
-    {
-        return !!(flags & 0x20);
-    }
-    void setSequence (uint32_t seq)
-    {
-        seq = htonl(seq);
-        flags |= 0x10;
-    }
-    bool hasSequence (void)
-    {
-        return !!(flags & 0x10);
-    }
-
-    unsigned getHeaderSize (void)
-    {
-        unsigned len = sizeof (*this);
-        if (!hasChecksum ())
-            len -= sizeof (checksum) + sizeof (reserved);
-        if (!hasKey ())
-            len -= sizeof (key);
-        if (!hasSequence ())
-            len -= sizeof (seq);
-        return len;
-    }
-
-}gre_header_t;
 #pragma pack()
 
 
