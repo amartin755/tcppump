@@ -36,7 +36,8 @@ endif ()
 message(STATUS "Using network adapter '${OUT_IFC}' for ctest")
 
 set (TEST_OUTPUT testoutput.pcap)
-set (DEFAULT_PARAMS -i ${OUT_IFC} --test-norandom --myip4=1.2.3.4 --mymac=80:23:45:67:89:AB -o ${TEST_OUTPUT})
+set (DEFAULT_PARAMS_NO_MTU -i ${OUT_IFC} --test-norandom --myip4=1.2.3.4 --mymac=80:23:45:67:89:AB -o ${TEST_OUTPUT})
+set (DEFAULT_PARAMS ${DEFAULT_PARAMS_NO_MTU} --mtu 1500)
 set (TEST_FILE_PREFIX ${CMAKE_BINARY_DIR}/../src/test)
 
 
