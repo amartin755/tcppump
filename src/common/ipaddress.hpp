@@ -25,9 +25,8 @@
 #include <cstdint>
 
 #include "inet.h"
-#ifdef WITH_UNITTESTS
 #include "bug.hpp"
-#endif
+#include "random.hpp"
 
 
 class cIpAddress
@@ -51,6 +50,10 @@ public:
     cIpAddress (const char* ip)
     {
         set (ip);
+    }
+    cIpAddress (bool randUnicast, bool randMulticast) // construct random IPv4 address
+    {
+        setRandom (randUnicast, randMulticast);
     }
     void set (const cIpAddress& i)
     {
@@ -76,6 +79,26 @@ public:
 #else
         return (ipv4.s_addr = inet_addr (ip)) != INADDR_NONE;
 #endif
+    }
+    void setRandom (bool unicast = true, bool multicast = false)
+    {
+        BUG_ON (!unicast && !multicast);
+
+        uint32_t ip = cRandom::rand32 ();
+
+        if (unicast && !multicast) // unicast only
+        {
+            // if random value is multicast, convert it to unicast by clearing the MSB
+            if ((ip & 0xF0000000) == 0xE0000000)
+                ip &= 0x7FFFFFFF;
+        }
+        else if (!unicast && multicast) // multicast only
+        {
+            ip &= 0xEFFFFFFF;
+            ip |= 0xE0000000;
+        }
+
+        ipv4.s_addr = htonl(ip);
     }
     void clear ()
     {
@@ -150,6 +173,11 @@ public:
         assert (cIpAddress("1.2.3.4").getAsArray()[1] == 2);
         assert (cIpAddress("1.2.3.4").getAsArray()[2] == 3);
         assert (cIpAddress("1.2.3.4").getAsArray()[3] == 4);
+        for (int n = 0; n < 10000; n++)
+        {
+            assert (!cIpAddress(true, false).isMulticast());
+            assert (cIpAddress(false, true).isMulticast());
+        }
     }
 #endif
 

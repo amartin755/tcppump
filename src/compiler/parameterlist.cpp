@@ -116,8 +116,8 @@ uint32_t cParameter::asInt32 (uint32_t rangeBegin, uint32_t rangeEnd) const
 
     if (isRandom(false) == 0)
     {
-        uint32_t range = rangeEnd - rangeBegin > RAND_MAX ? RAND_MAX : rangeEnd - rangeBegin + 1;
-        v = (cRandom::rand() % range) + rangeBegin;
+        uint32_t range = rangeEnd - rangeBegin + 1;
+        v = (range ? cRandom::rand32() % range : cRandom::rand32()) + rangeBegin;
     }
     else
     {
@@ -185,15 +185,22 @@ double cParameter::asDouble (double rangeBegin, double rangeEnd) const
 
 cMacAddress cParameter::asMac () const
 {
-    cMacAddress mac;
-
-    if (mac.set(value, valLen))
+    if (isRandom(false) == 0)
     {
+        cMacAddress mac (true, false);
         return mac;
     }
     else
     {
-        throw FormatException(exParFormat, value, (int)valLen);
+        cMacAddress mac;
+        if (mac.set(value, valLen))
+        {
+            return mac;
+        }
+        else
+        {
+            throw FormatException(exParFormat, value, (int)valLen);
+        }
     }
 }
 
@@ -227,7 +234,7 @@ const uint8_t* cParameter::asStream (bool allowEmbPacket, bool &isEmbedded, size
 
             for (int n = 0; n < randLen; n++)
 #ifdef NDEBUG
-                data[n] = (uint8_t)cRandom::rand();
+                data[n] = cRandom::rand8();
 #else
                 /*
                  * Just setting commandline option --test-norandom is not enough
@@ -266,13 +273,21 @@ const uint8_t* cParameter::asStream (bool allowEmbPacket, bool &isEmbedded, size
 cIpAddress cParameter::asIPv4 () const
 {
     cIpAddress ip;
-    if (ip.set(value, valLen))
+    if (isRandom(false) == 0)
     {
+        ip.setRandom (true, false);
         return ip;
     }
     else
     {
-        throw FormatException (exParFormat, value, (int)valLen);
+        if (ip.set(value, valLen))
+        {
+            return ip;
+        }
+        else
+        {
+            throw FormatException (exParFormat, value, (int)valLen);
+        }
     }
 }
 

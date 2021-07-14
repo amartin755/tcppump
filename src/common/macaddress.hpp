@@ -133,12 +133,12 @@ public:
     {
         BUG_ON (!unicast && !multicast);
 
-        mac[0] = uint8_t(cRandom::rand () % 256);
-        mac[1] = uint8_t(cRandom::rand () % 256);
-        mac[2] = uint8_t(cRandom::rand () % 256);
-        mac[3] = uint8_t(cRandom::rand () % 256);
-        mac[4] = uint8_t(cRandom::rand () % 256);
-        mac[5] = uint8_t(cRandom::rand () % 256);
+        mac[0] = cRandom::rand8 ();
+        mac[1] = cRandom::rand8 ();
+        mac[2] = cRandom::rand8 ();
+        mac[3] = cRandom::rand8 ();
+        mac[4] = cRandom::rand8 ();
+        mac[5] = cRandom::rand8 ();
 
         if (unicast && !multicast)
             mac[0] &= 0xfe;

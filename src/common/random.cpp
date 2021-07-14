@@ -55,21 +55,34 @@ cRandom::cRandom () : countOnly(false), seq(0)
         std::srand ((unsigned)std::time (NULL));
 }
 
-int cRandom::rand (void)
+uint32_t cRandom::rand32 (void)
+{
+    return rand ();
+}
+
+uint16_t cRandom::rand16 (void)
+{
+    return (uint16_t)rand ();
+}
+
+uint8_t cRandom::rand8 (void)
+{
+    return (uint8_t)rand ();
+}
+
+uint32_t cRandom::rand (void)
 {
     assert (instance);
     return instance->countOnly ? instance->sequence() : instance->pseudoRandom();
 }
 
-int cRandom::pseudoRandom (void)
+uint32_t cRandom::pseudoRandom (void)
 {
     // TODO use lockless replacement for rand
-    return std::rand();
+    return ((uint32_t)std::rand() << 30) | ((uint32_t)std::rand() << 15) | (uint32_t)std::rand();
 }
 
-int cRandom::sequence (void)
+uint32_t cRandom::sequence (void)
 {
-    if (seq > RAND_MAX)
-        seq = 0;
-    return (int)seq++;
+    return seq++;
 }

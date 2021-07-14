@@ -20,21 +20,26 @@
 #ifndef RANDOM_HPP_
 #define RANDOM_HPP_
 
+#include <cstdint>
+
 class cRandom
 {
 public:
     static cRandom* create (void);
     static void destroy (void);
-    static int rand (void);
+    static uint32_t rand32 (void);
+    static uint16_t rand16 (void);
+    static uint8_t  rand8 (void);
     static void setCounterMode (unsigned startValue);
 
 private:
     cRandom ();
-    int pseudoRandom (void);
-    int sequence (void);
+    uint32_t pseudoRandom (void);
+    uint32_t sequence (void);
+    static uint32_t rand (void);
     static cRandom* instance;
     bool countOnly;
-    unsigned seq;
+    uint32_t seq;
 };
 
 #endif /* RANDOM_HPP_ */
