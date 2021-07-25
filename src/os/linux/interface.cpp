@@ -149,6 +149,12 @@ bool cInterface::close ()
 bool cInterface::prepareSendQueue (__attribute__((unused)) size_t packetCnt,
         __attribute__((unused)) size_t totalBytes, __attribute__((unused)) bool synchronized)
 {
+    if (synchronized)
+    {
+        cTimeval accuracy = tcppump::SleepInit ();
+        Console::PrintMostVerbose ("System timer accuracy is %u usec. For packet delays below that value we do busy waiting.\n", (unsigned)accuracy.us());
+    }
+
     // STUB
     return true;
 }

@@ -30,7 +30,6 @@
 #include "bug.hpp"
 #include "settings.hpp"
 #include "signal.hpp"
-#include "sleep.hpp"
 #include "ipaddress.hpp"
 #include "macaddress.hpp"
 #include "fileparser.hpp"
@@ -275,10 +274,6 @@ int cTcpPump::execute (const std::list<std::string>& args)
 
     activeDelay.setUs((uint64_t)options.delay * (uint64_t)timeScale);
 
-#if HAVE_WINDOWS == 0
-    cTimeval accuracy = tcppump::SleepInit ();
-    Console::PrintMostVerbose ("System timer accuracy is %u usec. For packet delays below that value we do busy waiting.\n", (unsigned)accuracy.us());
-#endif
     // Install a signal handler
     cSignal::sigintEnable ();
 
