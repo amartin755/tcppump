@@ -111,6 +111,14 @@ void cInstructionParser::parse (const char* instruction, cResult& result, bool i
             result.packets = compileIGMP (params, false, false, false, true);
         else if (!strncmp ("icmp", keyword, keywordLen))
             result.packets = compileICMP (params);
+        else if (!strncmp ("icmp-unreachable", keyword, keywordLen))
+            result.packets = compileICMPWithEmbedded (params, 3);
+        else if (!strncmp ("icmp-quench", keyword, keywordLen))
+            result.packets = compileICMPWithEmbedded (params, 4);
+        else if (!strncmp ("icmp-exceeded", keyword, keywordLen))
+            result.packets = compileICMPWithEmbedded (params, 11);
+        else if (!strncmp ("icmp-redirect", keyword, keywordLen))
+            result.packets = compileICMPRedirect (params);
         else if (!strncmp ("tcp", keyword, keywordLen))
             result.packets = compileTCP (params);
         else if (!strncmp ("tcp-syn", keyword, keywordLen))
@@ -1064,6 +1072,71 @@ cLinkable* cInstructionParser::compileICMP  (cParameterList& params)
             icmppacket->compileRaw(type, code, optionalPar->asInt16(), payload, len);
         else
             icmppacket->compileRaw(type, code, payload, len);
+    }
+    catch (...)
+    {
+        delete icmppacket;
+        icmppacket = nullptr;
+        throw;
+    }
+
+    return icmppacket;
+}
+
+cLinkable* cInstructionParser::compileICMPWithEmbedded  (cParameterList& params, uint8_t type)
+{
+    cIcmpPacket* icmppacket = new cIcmpPacket;
+    try
+    {
+        cEthernetPacket& eth = icmppacket->getFirstEthernetPacket();
+        bool destIsMulticast = parseIPv4Params (params, icmppacket);
+
+        // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+        compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
+        compileVLANTags   (params, &eth);
+
+        uint8_t code = params.findParameter ("code", (uint32_t)0)->asInt8();
+
+        size_t len = 0;
+        const uint8_t* payload = nullptr;
+        cParameter* optionalPar = params.findParameter ("payload", true);
+        if (optionalPar)
+            payload = compileEmbedded (optionalPar, true, len);
+
+        icmppacket->compileWithEmbeddedInet(type, code, payload, len);
+    }
+    catch (...)
+    {
+        delete icmppacket;
+        icmppacket = nullptr;
+        throw;
+    }
+
+    return icmppacket;
+}
+
+cLinkable* cInstructionParser::compileICMPRedirect  (cParameterList& params)
+{
+    cIcmpPacket* icmppacket = new cIcmpPacket;
+    try
+    {
+        cEthernetPacket& eth = icmppacket->getFirstEthernetPacket();
+        bool destIsMulticast = parseIPv4Params (params, icmppacket);
+
+        // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+        compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
+        compileVLANTags   (params, &eth);
+
+        uint8_t code = params.findParameter ("code", (uint32_t)0)->asInt8();
+        const cIpAddress gw = params.findParameter ("gw")->asIPv4();
+
+        size_t len = 0;
+        const uint8_t* payload = nullptr;
+        cParameter* optionalPar = params.findParameter ("payload", true);
+        if (optionalPar)
+            payload = compileEmbedded (optionalPar, true, len);
+
+        icmppacket->compileRedirect (code, gw, payload, len);
     }
     catch (...)
     {

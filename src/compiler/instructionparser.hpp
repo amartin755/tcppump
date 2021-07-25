@@ -82,6 +82,8 @@ private:
     cLinkable* compileSTP  (cParameterList& params, bool isRSTP = false, bool isTCN = false);
     cLinkable* compileIGMP (cParameterList& params, bool v3, bool query, bool report, bool leave);
     cLinkable* compileICMP (cParameterList& params);
+    cLinkable* compileICMPWithEmbedded (cParameterList& params, uint8_t type);
+    cLinkable* compileICMPRedirect (cParameterList& params);
     cLinkable* compileTCP  (cParameterList& params);
     cLinkable* compileTCPSYN  (cParameterList& params);
     cLinkable* compileTCPSYNACK  (cParameterList& params);

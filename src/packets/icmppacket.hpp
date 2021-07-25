@@ -23,6 +23,7 @@
 #include <cstdint>
 
 #include "ipv4packet.hpp"
+#include "udppacket.hpp"
 
 #pragma pack(1)
 typedef struct
@@ -32,6 +33,19 @@ typedef struct
     uint16_t checksum;
 
 }icmp_header_t;
+
+typedef struct
+{
+    icmp_header_t head;
+    uint32_t      unused;
+}icmp_empty_header_t;
+
+typedef struct
+{
+    ipv4_header_t ip;
+    udp_header_t udp;
+}generic_inet_header;
+
 #pragma pack()
 
 
@@ -42,6 +56,8 @@ public:
 
     void compileRaw (uint8_t type, uint8_t code, uint16_t checksum, const uint8_t* payload, size_t len);
     void compileRaw (uint8_t type, uint8_t code, const uint8_t* payload, size_t len);
+    void compileWithEmbeddedInet (uint8_t type, uint8_t code, const uint8_t* inetheader, size_t len);
+    void compileRedirect (uint8_t code, const cIpAddress& gw, const uint8_t* inetheader, size_t len);
 
 
 #ifdef WITH_UNITTESTS
@@ -49,7 +65,8 @@ public:
 #endif
 
 private:
-    bool hasEmbeddedInetHeader (unsigned type);
+    const uint8_t* compileGenericInetHeader (size_t& len);
+    generic_inet_header genInetHeader;
 };
 
 

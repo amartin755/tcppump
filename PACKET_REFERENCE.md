@@ -571,7 +571,7 @@ Optionally all vlan tag parameters and all optional ipv4 parameters (see above) 
 RFC792
 #### Protocol Specifier
 
-    ICMP
+    icmp
 
 #### Parameters
 Destination EUI-48 MAC address. Note: If `dip` is a multicast address `dmac` will be set automatically.
