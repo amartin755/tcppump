@@ -84,6 +84,7 @@ private:
     cLinkable* compileICMP (cParameterList& params);
     cLinkable* compileICMPWithEmbedded (cParameterList& params, uint8_t type);
     cLinkable* compileICMPRedirect (cParameterList& params);
+    cLinkable* compileICMPPing (cParameterList& params, bool reply);
     cLinkable* compileTCP  (cParameterList& params);
     cLinkable* compileTCPSYN  (cParameterList& params);
     cLinkable* compileTCPSYNACK  (cParameterList& params);

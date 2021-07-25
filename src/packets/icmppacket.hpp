@@ -46,6 +46,13 @@ typedef struct
     udp_header_t udp;
 }generic_inet_header;
 
+typedef struct
+{
+    icmp_header_t head;
+    uint16_t      id;
+    uint16_t      seq;
+}icmp_ping_t;
+
 #pragma pack()
 
 
@@ -58,6 +65,7 @@ public:
     void compileRaw (uint8_t type, uint8_t code, const uint8_t* payload, size_t len);
     void compileWithEmbeddedInet (uint8_t type, uint8_t code, const uint8_t* inetheader, size_t len);
     void compileRedirect (uint8_t code, const cIpAddress& gw, const uint8_t* inetheader, size_t len);
+    void compilePing (bool reply, uint16_t id, uint16_t seq, const uint8_t* data, size_t len);
 
 
 #ifdef WITH_UNITTESTS

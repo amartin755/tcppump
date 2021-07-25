@@ -86,6 +86,18 @@ void cIcmpPacket::compileRedirect (uint8_t code, const cIpAddress& gw, const uin
     cIPv4Packet::compile (PROTO_ICMP, (const uint8_t*)&header, sizeof (header), inetheader, len);
 }
 
+void cIcmpPacket::compilePing (bool reply, uint16_t id, uint16_t seq, const uint8_t* data, size_t len)
+{
+    icmp_ping_t header;
+    header.head.type = reply ? 0 : 8;
+    header.head.code = 0;
+    header.id        = htons(id);
+    header.seq       = htons(seq);
+    header.head.checksum = 0;
+    header.head.checksum = cInetChecksum::rfc1071((const uint16_t*)&header, sizeof(header), data, len);
+    cIPv4Packet::compile (PROTO_ICMP, (const uint8_t*)&header, sizeof (header), data, len);
+}
+
 const uint8_t* cIcmpPacket::compileGenericInetHeader (size_t& len)
 {
     const ipv4_header_t& ipHeader = cIPv4Packet::getHeader();

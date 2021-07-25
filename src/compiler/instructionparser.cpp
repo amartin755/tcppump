@@ -119,6 +119,10 @@ void cInstructionParser::parse (const char* instruction, cResult& result, bool i
             result.packets = compileICMPWithEmbedded (params, 11);
         else if (!strncmp ("icmp-redirect", keyword, keywordLen))
             result.packets = compileICMPRedirect (params);
+        else if (!strncmp ("icmp-ping", keyword, keywordLen))
+            result.packets = compileICMPPing (params, false);
+        else if (!strncmp ("icmp-ping-reply", keyword, keywordLen))
+            result.packets = compileICMPPing (params, true);
         else if (!strncmp ("tcp", keyword, keywordLen))
             result.packets = compileTCP (params);
         else if (!strncmp ("tcp-syn", keyword, keywordLen))
@@ -1147,6 +1151,40 @@ cLinkable* cInstructionParser::compileICMPRedirect  (cParameterList& params)
 
     return icmppacket;
 }
+
+cLinkable* cInstructionParser::compileICMPPing (cParameterList& params, bool reply)
+{
+    cIcmpPacket* icmppacket = new cIcmpPacket;
+    try
+    {
+        cEthernetPacket& eth = icmppacket->getFirstEthernetPacket();
+        bool destIsMulticast = parseIPv4Params (params, icmppacket);
+
+        // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+        compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
+        compileVLANTags   (params, &eth);
+
+        uint16_t id  = params.findParameter ("id",  (uint32_t)0)->asInt16 ();
+        uint16_t seq = params.findParameter ("seq", (uint32_t)0)->asInt16 ();
+
+        size_t len = 0;
+        const uint8_t* payload = nullptr;
+        cParameter* optionalPar = params.findParameter ("data", true);
+        if (optionalPar)
+            payload = compileEmbedded (optionalPar, true, len);
+
+        icmppacket->compilePing(reply, id, seq, payload, len);
+    }
+    catch (...)
+    {
+        delete icmppacket;
+        icmppacket = nullptr;
+        throw;
+    }
+
+    return icmppacket;
+}
+
 
 cLinkable* cInstructionParser::compileGRE (cParameterList& params)
 {
