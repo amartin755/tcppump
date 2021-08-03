@@ -30,12 +30,12 @@ jobs:
       # access regardless of the host operating system
       shell: bash
       working-directory: ${{runner.workspace}}/tcppump
-      run: cmake -S src -B build -DWITH_UNITTESTS=1 -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DTEST_NET_ADAPTER=eth0
+      run: cmake -B build -DWITH_UNITTESTS=1 -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DTEST_NET_ADAPTER=eth0
 
     - name: Build
       working-directory: ${{runner.workspace}}/tcppump
       shell: bash
-      run: cmake --build build
+      run: cmake --build build --target setcap
 
     - name: Execute Unit Tests
       working-directory: ${{runner.workspace}}/tcppump/bin
