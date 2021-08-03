@@ -35,7 +35,7 @@ jobs:
     - name: Build
       working-directory: ${{runner.workspace}}/tcppump
       shell: bash
-      run: cmake --build build --target setcap
+      run: cmake --build build --target tcppump setcap
 
     - name: Execute Unit Tests
       working-directory: ${{runner.workspace}}/tcppump/bin
