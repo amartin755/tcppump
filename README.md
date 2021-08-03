@@ -56,13 +56,14 @@ Windows
 * WinPcap Developer' Pack (see http://www.winpcap.org/devel.htm and http://www.winpcap.org/install/bin/WpdPack_4_1_2.zip)
 
 Linux
-* optional: libpcap-devel (for PCAP read and write)
+* libpcap
+* libpcap development files (libpcap-devel)
 
 ### How to build
 #### Setup
 
     cd tcpdump
-    cmake -S src -B build
+    cmake -B build
 
 If you use 'mingw' and 'make' add the following cmake parameter:
 
