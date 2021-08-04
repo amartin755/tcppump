@@ -29,6 +29,7 @@ Each protocol defines name and type of its parameters (see PROTOCOLS). Depending
 
 * MAC-Address: A EUI-48 MAC address (e.g. `12:23:34:45:56:67`)
 * IPv4 address: e.g. `1.2.3.4`
+* Embedded packet: a full specified packet can itself be embedded into another packet. Its definition is surrounded by '< >' (e.g. `<eth(dmac=11:22:33:44:55:66, smac=aa:bb:cc:dd:ee:ff, payload=*)>`)
 
 
 ### Examples
@@ -40,6 +41,8 @@ Each protocol defines name and type of its parameters (see PROTOCOLS). Depending
     donald(parZ = valueZ)
 
     doit()
+
+    +1234:   protoMickey(color = 10, index = 0x16, msg = <protoMouse(payload = *32)>)
 
 ## Script files
 Script files contain a list of packets as specified above. Each packet definition has to be terminated with semicolon. Comments start with '#'.
@@ -569,7 +572,7 @@ Optionally all vlan tag parameters and all optional ipv4 parameters (see above) 
 
 ### ICMP
 RFC792
-#### Protocol Specifier
+#### Protocol Specifier (raw ICMP packet)
 
     icmp
 
@@ -812,7 +815,7 @@ VXLAN Network Identifier (integer: range 0 - 0xffffff; default 0)
 
     vni (optional)
 
-Payload (bytestream)
+Payload (bytestream or embedded packet)
 
     payload (optional)
 
@@ -822,6 +825,8 @@ Optionally all vlan tag parameters and all optional ipv4 parameters (see above) 
 
     # VXLAN packet with source-mac and ip taken from network interface
     vxlan(dmac=12:23:34:34:44:44, dip=1.2.3.4, sport=1234, vni=42, payload=1234567812345678);
+    # same VXLAN packet with embedded Ethernet II packet
+    vxlan(dmac=12:23:34:34:44:44, dip=1.2.3.4, sport=1234, vni=42, payload=<eth(dmac=11:22:33:44:55:66, smac=aa:bb:cc:dd:ee:ff, ethertype=0x8123, payload=1234567890abcdef);>);
 
 ### Generic Routing Encapsulation (GRE)
 RFC2784, RFC2890
@@ -862,7 +867,7 @@ Checksum (integer: range 0 - 0xffff) If zero, checksum is calculated automatical
 
     chksum (optional)
 
-Payload (bytestream)
+Payload (bytestream or embedded packet)
 
     payload (optional)
 
@@ -872,7 +877,10 @@ Optionally all vlan tag parameters and all optional ipv4 parameters (see above) 
 
     # minimum GRE packet with source-mac and ip taken from network interface
     gre(dmac=12:23:34:34:44:44, dip=1.2.3.4, protocol=1234);
+    # same GRE packet with embedded udp packet
+    gre(dmac=12:23:34:34:44:44, dip=1.2.3.4, protocol=1234, payload=<udp(dmac=12:23:34:34:44:44, dip=1.2.3.4, sport=1234, dport=2345, payload=*)>);
     # full blown GRE packet with random payload and automatic calculated checksum
     gre(dmac=12:23:34:34:44:44, dip=1.2.3.4, protocol=1234, key=1, seq=10, chksum=0, payload=*);
     # full blown GRE packet with random payload and wrong checksum
     gre(dmac=12:23:34:34:44:44, dip=1.2.3.4, protocol=1234, key=1, seq=10, chksum=44444, payload=*);
+

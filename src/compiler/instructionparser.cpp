@@ -113,15 +113,15 @@ void cInstructionParser::parse (const char* instruction, cResult& result, bool i
             result.packets = compileICMP (params);
         else if (!strncmp ("icmp-unreachable", keyword, keywordLen))
             result.packets = compileICMPWithEmbedded (params, 3);
-        else if (!strncmp ("icmp-quench", keyword, keywordLen))
+        else if (!strncmp ("icmp-src-quench", keyword, keywordLen))
             result.packets = compileICMPWithEmbedded (params, 4);
-        else if (!strncmp ("icmp-exceeded", keyword, keywordLen))
+        else if (!strncmp ("icmp-time-exceeded", keyword, keywordLen))
             result.packets = compileICMPWithEmbedded (params, 11);
         else if (!strncmp ("icmp-redirect", keyword, keywordLen))
             result.packets = compileICMPRedirect (params);
-        else if (!strncmp ("icmp-ping", keyword, keywordLen))
+        else if (!strncmp ("icmp-echo", keyword, keywordLen))
             result.packets = compileICMPPing (params, false);
-        else if (!strncmp ("icmp-ping-reply", keyword, keywordLen))
+        else if (!strncmp ("icmp-echo-reply", keyword, keywordLen))
             result.packets = compileICMPPing (params, true);
         else if (!strncmp ("tcp", keyword, keywordLen))
             result.packets = compileTCP (params);
