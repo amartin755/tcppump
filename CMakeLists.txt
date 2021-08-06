@@ -250,7 +250,7 @@ if (HAVE_PCAP)
 endif ()
 
 
-# taget tcppump (main binary)
+# target tcppump (main binary)
 ###############################################################################
 add_executable (tcppump)
 enable_testing ()
@@ -260,7 +260,7 @@ target_sources (tcppump PRIVATE ${MAIN_SOURCES})
 target_include_directories (tcppump PRIVATE ${INCLUDES})
 
 
-# taget setcap (helper target to set raw capabilities)
+# target setcap (helper target to set raw capabilities)
 ###############################################################################
 if (UNIX)
     # add raw capablities in oder to be runable without root
@@ -271,7 +271,7 @@ if (UNIX)
 endif()
 
 
-# taget unittest (unit test code)
+# target unittest (unit test code)
 ###############################################################################
 if (WITH_UNITTESTS)
 

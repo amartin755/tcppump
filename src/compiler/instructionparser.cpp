@@ -319,8 +319,7 @@ const uint8_t* cInstructionParser::compileEmbedded (cParameter* emb, bool skipEt
         }
         else
         {
-            //TODO error
-            BUG ("unhandled compile error");
+            throwParseException ("unsupported embedded packet", (char*)payload, len);
         }
     }
     return payload;
