@@ -307,6 +307,11 @@ cInterface::~cInterface()
     close ();
 }
 
+bool cInterface::isReady (void) const
+{
+    return !!adapterInfo;
+}
+
 bool cInterface::open (bool txOnly)
 {
     // aleady open

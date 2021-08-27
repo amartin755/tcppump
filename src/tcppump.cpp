@@ -239,6 +239,9 @@ int cTcpPump::execute (const std::list<std::string>& args)
     }
 
     ifc = cNetInterface::create (options.ifc);
+    if (!ifc->isReady())
+        return -1;
+
     if (!cSettings::get().isMacSet())
     {
         cMacAddress ifMAC;

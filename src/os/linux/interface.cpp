@@ -54,11 +54,39 @@ cInterface::cInterface(const char* ifname)
     sendOnly    = true;
     pcapHandle  = nullptr;
 
+    ifIndex = if_nametoindex (name.c_str ());
+    if (!ifIndex)
+    {
+        Console::PrintError ("Unknown network interface '%s'\n", name.c_str());
+    }
+    else
+    {
+        // test access rights by opening a raw socket
+        int fd;
+        errno = 0;
+        if ((fd = socket (PF_PACKET, SOCK_RAW, 0)) < 0)
+        {
+            ifIndex = 0;
+            if (errno == EACCES || errno == EPERM)
+                Console::PrintError ("Insufficient access rights. You need to be root or tcppump needs raw capabilities.\n");
+            else
+                Console::PrintError ("Unable to open raw socket. %s.\n", strerror(errno));
+        }
+        else
+        {
+            ::close (fd);
+        }
+    }
 }
 
 cInterface::~cInterface()
 {
     close ();
+}
+
+bool cInterface::isReady (void) const
+{
+    return !!ifIndex;
 }
 
 bool cInterface::open (bool txOnly)
@@ -69,13 +97,6 @@ bool cInterface::open (bool txOnly)
 
     sendOnly = txOnly;
 
-    ifIndex = if_nametoindex (name.c_str ());
-    if (!ifIndex)
-    {
-        Console::PrintError ("Unknown interface %s\n", name.c_str());
-        close ();
-        return false;
-    }
     // open raw socket for tx only
     // thus we set proto = 0 and size of receive buffer to zero
     errno = 0;
@@ -95,7 +116,7 @@ bool cInterface::open (bool txOnly)
 
     std::string macAsString;
     myMac.get(macAsString);
-    Console::PrintDebug ("Successfully openend %s mac=%s\n", name.c_str(), macAsString.c_str());
+    Console::PrintDebug ("Successfully opened %s mac=%s\n", name.c_str(), macAsString.c_str());
 
     lastSentPacket.clear();
 

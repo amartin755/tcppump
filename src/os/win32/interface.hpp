@@ -51,6 +51,7 @@ public:
     bool isOpen () const;
     const char* getName (void) const;
     bool addReceiveFilter (const char* filter);
+    bool isReady (void) const;
 
 private:
     pcap_t* getCaptureInterface (void)

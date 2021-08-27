@@ -51,6 +51,7 @@ public:
     virtual bool isOpen () const = 0;
     virtual bool addReceiveFilter (const char* filter) = 0;
     virtual const char* getName (void) const = 0;
+    virtual bool isReady (void) const = 0;
     bool waitForPacket (void);
     const uint8_t* receivePacket (cTimeval* timestamp, int* len, const cPcapFilter* filter = nullptr, const cTimeval* dropBefore = nullptr);
 
