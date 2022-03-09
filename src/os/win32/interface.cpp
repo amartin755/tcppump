@@ -22,9 +22,7 @@
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
-#define HAVE_REMOTE 1
-#include <pcap.h>
-#include <Win32-Extensions.h>
+#include <winsock2.h>
 #include <iphlpapi.h>
 #include <winerror.h>
 

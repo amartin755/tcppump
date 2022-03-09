@@ -19,7 +19,7 @@
 
 #include <cstdio>
 
-#include <pcap.h>
+#include "libpcap.h"
 
 #include "bug.hpp"
 #include "pcapfileio.hpp"

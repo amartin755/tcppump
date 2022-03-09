@@ -23,7 +23,7 @@
 
 #include <cstdint>
 #include <list>
-#include <pcap.h>
+#include "libpcap.h"
 
 
 class cPcapFilter

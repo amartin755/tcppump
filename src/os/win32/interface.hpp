@@ -24,6 +24,7 @@
 #include <list>
 #include <cstdint>
 #include <cstddef>
+#include <winsock2.h>
 #include <iphlpapi.h>
 
 #include "netinterface.hpp"
