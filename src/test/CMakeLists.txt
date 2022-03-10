@@ -24,7 +24,7 @@
 enable_testing()
 
 if (WIN32)
-    set (OUT_IFC WiFi)
+    set (OUT_IFC WLAN)
 endif ()
 if (UNIX)
     set (OUT_IFC lo)
