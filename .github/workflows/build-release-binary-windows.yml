@@ -22,6 +22,9 @@ jobs:
       with:
         ref: ${{ github.ref }}
 
+    - name: ipconfig
+      run: ipconfig /all
+
     - name: Install Dependencies
       # install winpcap, we use an old version of nmap which offers an silent installer and includes winpcap
       run: Invoke-WebRequest -Uri "https://nmap.org/dist/nmap-7.12-setup.exe" -OutFile "nmap.exe"; Start-Process -Filepath "nmap.exe" -ArgumentList /S
