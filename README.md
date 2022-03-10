@@ -44,7 +44,7 @@ Supported protocols and packet formats
 **Note: This tool is in alpha state.**
 
 ## Build instructions
-tcppump has been successfully compiled on ubuntu linux (x64) with gcc and on windows 10 with mingw32 and MSVC.
+tcppump has been successfully compiled on ubuntu linux (x64) with gcc and on windows 10/11 with mingw32, mingw64(MSYS2) and MSVC.
 Theoretically it should also be compilable with other C++11 compilers, but this was never tested.
 
 ### Dependencies
@@ -65,9 +65,9 @@ Linux
     cd tcpdump
     cmake -B build
 
-If you use 'mingw' and 'make' add the following cmake parameter:
+If you use 'msys' and 'make' add the following cmake parameter:
 
-    -G "MinGW Makefiles"
+    -G "MSYS Makefiles"
 
 To enable unit test targets add the following cmake paramater:
 
