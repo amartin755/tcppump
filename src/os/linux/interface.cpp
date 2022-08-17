@@ -145,6 +145,11 @@ bool cInterface::open (bool txOnly)
                 Console::PrintError ("Could not active pcap interface for capturing. %s\n", pcap_geterr (pcapHandle));
             this->close();
         }
+        if (pcap_setdirection (pcapHandle, PCAP_D_IN))
+        {
+            Console::PrintError ("Could not set filter to receive only incoming packets. %s\n", pcap_geterr (pcapHandle));
+            Console::PrintError ("We might receive our own packets.\n");
+        }
     }
 
     return (isOpen());
