@@ -246,7 +246,7 @@ cLinkable* cInstructionParser::compileRAW (cParameterList& params)
 
     if (len < sizeof (mac_header_t))
     {
-        par->throwValueExcetion();
+        par->throwValueException();
     }
     cEthernetPacket* eth = new cEthernetPacket (len);
     eth->setRaw (value, len);
@@ -1261,7 +1261,7 @@ cLinkable* cInstructionParser::compileListen (cParameterList& params)
             const char* p = (const char*)optionalPar->asStream (len);
             std::string s (p, len);
             if (!event->compileBpfFilter (s.c_str()))
-                optionalPar->throwValueExcetion ();
+                optionalPar->throwValueException ();
         }
         optionalPar = params.findParameter ("pattern", true);
         if (optionalPar)

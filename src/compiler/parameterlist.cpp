@@ -292,7 +292,7 @@ cIpAddress cParameter::asIPv4 () const
 }
 
 
-void cParameter::throwValueExcetion (void) const
+void cParameter::throwValueException (void) const
 {
     throw FormatException (exParFormat, value, (int)valLen);
 }

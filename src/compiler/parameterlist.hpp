@@ -44,7 +44,7 @@ public:
     virtual const uint8_t* asEmbedded (bool &isEmbedded, size_t& len);
     virtual cIpAddress  asIPv4  () const;
 
-    void throwValueExcetion (void) const;
+    void throwValueException (void) const;
 
 private:
     void clear ();
