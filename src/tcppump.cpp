@@ -110,7 +110,6 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
             &options.arp);
     addCmdLineOption (true, 0, "listener", "MODE",
             "Enable responder mode (EXPERIMENTAL). Possible values for MODE are:\n\t"
-//            "watchdog     Monitoring of hosts (based on MAC or IP) \n\t"
             "mirror  Each received packet will be mirrored back to the sender.\n\t"
             "trigger Each received packet will trigger sending of specified packets.",
             &options.responderMode);
@@ -189,9 +188,7 @@ int cTcpPump::execute (const std::list<std::string>& args)
 
     if (options.responderMode)
     {
-/*        if (!std::strcmp ("watchdog", options.responderMode))
-            responder = WATCHDOG;
-        else */ if (!std::strcmp ("mirror", options.responderMode))
+        if (!std::strcmp ("mirror", options.responderMode))
             responder = MIRROR;
         else if (!std::strcmp ("trigger", options.responderMode))
             responder = TRIGGER;
@@ -282,7 +279,7 @@ int cTcpPump::execute (const std::list<std::string>& args)
     // Install a signal handler
     cSignal::sigintEnable ();
 
-    if (responder == MIRROR || responder == WATCHDOG)
+    if (responder == MIRROR)
     {
         if (!ifc->open (false))
             return -1;
