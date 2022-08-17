@@ -34,6 +34,8 @@
  */
 static HANDLE sigintEvent = INVALID_HANDLE_VALUE;
 static volatile int gSigIntStatus;
+static std::function<void(void)> callback = nullptr;
+
 static BOOL signalHandler(DWORD dwType)
 {
     switch (dwType)
@@ -43,6 +45,8 @@ static BOOL signalHandler(DWORD dwType)
         SetEvent (sigintEvent);
         if (gSigIntStatus == 1)
             Console::PrintError ("Waiting for packet transmission job to finish\n");
+        if (callback != nullptr)
+            callback();
         break;
     default:
         return FALSE;
@@ -68,4 +72,9 @@ HANDLE cSignal::sigintGetEventHandle (void)
     sigintEvent = CreateEvent (NULL, FALSE, FALSE, NULL);
     BUG_ON (!sigintEvent);
     return sigintEvent;
+}
+
+void cSignal::sigintSetCallback (std::function<void(void)> &func)
+{
+    callback = func;    
 }

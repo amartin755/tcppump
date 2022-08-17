@@ -22,11 +22,15 @@
 #include "signal.hpp"
 
 static volatile std::sig_atomic_t gSigIntStatus;
+static std::function<void(void)> callback = nullptr;
+
 static void sigintHandler (int signal)
 {
     if (signal == SIGINT)
     {
         gSigIntStatus++;
+        if (callback != nullptr)
+            callback();
     }
 }
 
@@ -40,3 +44,7 @@ bool cSignal::sigintSignalled (void)
     return !!gSigIntStatus;
 }
 
+void cSignal::sigintSetCallback (std::function<void(void)> &func)
+{
+    callback = func;    
+}

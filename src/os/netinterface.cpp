@@ -39,14 +39,20 @@ const uint8_t* cNetInterface::receivePacket (cTimeval* timestamp, int* len, cons
 {
     struct pcap_pkthdr *header;
     const u_char *pkt_data;
-    int res;
+    int res = 0;
     pcap_t *ifcHandle = this->getCaptureInterface();
 
+    std::function<void(void)> cb = [this]() { pcap_breakloop (this->getCaptureInterface ()); };
+    cSignal::sigintSetCallback (cb);
+    cb = nullptr;
 
     do
     {
         if (cSignal::sigintSignalled ())
-            return nullptr;
+        {
+            pkt_data = nullptr;
+            goto out;
+        }
 
         res = pcap_next_ex(ifcHandle, &header, &pkt_data);
         if (res > 0)
@@ -56,11 +62,12 @@ const uint8_t* cNetInterface::receivePacket (cTimeval* timestamp, int* len, cons
     }
     while (!res);
 
-
     if (res < 0)
     {
-        Console::PrintError ("Error while reading packets: %s\n", pcap_geterr (ifcHandle));
-        return nullptr;
+        if (res == PCAP_ERROR)
+           Console::PrintError ("Error while reading packets: %s\n", pcap_geterr (ifcHandle));
+        pkt_data = nullptr;
+        goto out;
     }
 
     if (timestamp)
@@ -68,6 +75,8 @@ const uint8_t* cNetInterface::receivePacket (cTimeval* timestamp, int* len, cons
     if (len)
         *len = (int)header->len;
 
+out:
+    cSignal::sigintSetCallback (cb);
     return (uint8_t*)pkt_data;
 }
 

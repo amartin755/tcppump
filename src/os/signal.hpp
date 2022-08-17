@@ -20,11 +20,14 @@
 #ifndef SIGNAL_HPP_
 #define SIGNAL_HPP_
 
+#include <functional>
+
 class cSignal
 {
 public:
     static void sigintEnable (void);
     static bool sigintSignalled (void);
+    static void sigintSetCallback (std::function<void(void)> &func);
 #if HAVE_WINDOWS
     static HANDLE sigintGetEventHandle (void);
 #endif
