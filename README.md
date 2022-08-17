@@ -142,7 +142,7 @@ For debugging add:
 
 Raw packet
 
-    tcppump -i eth0 "raw(payload=12345678abcdef12345678)"
+    tcppump -i eth0 "raw(payload=1122334455667788990011223344)"
 
 VLAN tagged packet (default tag values)
 

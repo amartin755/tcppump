@@ -64,7 +64,7 @@ Example:
     raw
 
 #### Parameters
-Payload (bytestream)
+Payload (bytestream). Must be at least 14 bytes
 
     payload
 

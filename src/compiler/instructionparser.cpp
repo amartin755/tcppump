@@ -241,7 +241,14 @@ const char* cInstructionParser::parseProtocollIdentifier (const char* p, const c
 cLinkable* cInstructionParser::compileRAW (cParameterList& params)
 {
     size_t len;
-    const uint8_t* value = params.findParameter ("payload")->asStream(len);
+    cParameter* par = params.findParameter ("payload"); 
+    const uint8_t* value = par->asStream(len);
+
+    if (len < sizeof (mac_header_t))
+    {
+        par->throwValueExcetion();
+//        throwParseException ("unsupported embedded packet");
+    }
     cEthernetPacket* eth = new cEthernetPacket (len);
     eth->setRaw (value, len);
 
