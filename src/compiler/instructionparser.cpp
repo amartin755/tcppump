@@ -247,12 +247,11 @@ cLinkable* cInstructionParser::compileRAW (cParameterList& params)
     if (len < sizeof (mac_header_t))
     {
         par->throwValueExcetion();
-//        throwParseException ("unsupported embedded packet");
     }
     cEthernetPacket* eth = new cEthernetPacket (len);
     eth->setRaw (value, len);
 
-    return eth; // one packet was added to the list
+    return eth;
 }
 
 
