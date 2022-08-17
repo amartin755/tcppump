@@ -288,12 +288,7 @@ int cTcpPump::execute (const std::list<std::string>& args)
             return -1;
 
         cResponder resp (*ifc);
-
-        if (responder == MIRROR)
-        {
-            resp.mirror();
-        }
-
+        resp.mirror();
     }
     else
     {
