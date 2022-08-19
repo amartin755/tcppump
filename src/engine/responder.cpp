@@ -36,8 +36,10 @@ void cResponder::mirror (void)
     int len;
     cEthernetPacket packet;
     const uint8_t* p;
-    cMacAddress srcMac, dstMac;
+    cMacAddress srcMac, dstMac, ourMac;
     cTimeval t;
+
+    netif.getMAC (ourMac);
 
     while (!cSignal::sigintSignalled() && (p = netif.receivePacket(nullptr, &len)))
     {
@@ -56,7 +58,7 @@ void cResponder::mirror (void)
             else
             {
                 // keep dest mac, use own mac as source
-                // TODO
+                packet.setSrcMac (ourMac);
             }
 
             if (packet.hasLlcHeader())
@@ -96,13 +98,13 @@ void cResponder::mirror (void)
                     }
                     else if (ipHeader->protocol == cIPv4Packet::protocols::PROTO_TCP)
                     {
-                        unsigned udpHeaderOffset = ipHeader->getHeaderLenght() * 4;
-                        const tcp_header_t *udpHeader = reinterpret_cast <const tcp_header_t *>(reinterpret_cast<const uint8_t*>(ipHeader) + udpHeaderOffset);
-                        uint16_t srcPort = udpHeader->srcPort;
-                        uint16_t dstPort = udpHeader->dstPort;
+                        unsigned tcpHeaderOffset = ipHeader->getHeaderLenght() * 4;
+                        const tcp_header_t *tcpHeader = reinterpret_cast <const tcp_header_t *>(reinterpret_cast<const uint8_t*>(ipHeader) + tcpHeaderOffset);
+                        uint16_t srcPort = tcpHeader->srcPort;
+                        uint16_t dstPort = tcpHeader->dstPort;
 
-                        packet.updatePayloadAt (udpHeaderOffset + offsetof (tcp_header_t, dstPort), &srcPort, sizeof (srcPort));
-                        packet.updatePayloadAt (udpHeaderOffset + offsetof (tcp_header_t, srcPort), &dstPort, sizeof (dstPort));
+                        packet.updatePayloadAt (tcpHeaderOffset + offsetof (tcp_header_t, dstPort), &srcPort, sizeof (srcPort));
+                        packet.updatePayloadAt (tcpHeaderOffset + offsetof (tcp_header_t, srcPort), &dstPort, sizeof (dstPort));
                     }
                 }
             }
