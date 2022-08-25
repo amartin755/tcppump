@@ -327,9 +327,9 @@ int cTcpPump::execute (const std::list<std::string>& args)
                 backend.prepare (*ifc, realtimeMode, options.repeat, responder == TRIGGER);
 
             Console::PrintMoreVerbose ("Will send %zu packets\n", packetData.getPacketCnt());
-            if (options.repeat)
+            if (options.repeat > 1)
                 Console::PrintMoreVerbose ("Repeating %d times\n", options.repeat);
-            else
+            else if (options.repeat == 0)
                 Console::PrintMoreVerbose ("Repeating infinitely\n");
             if (realtimeMode)
                 Console::PrintMoreVerbose ("Real-time mode with default delay between packets %" PRIu64 " usecs\n\n", activeDelay.us());
