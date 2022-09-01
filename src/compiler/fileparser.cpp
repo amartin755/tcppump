@@ -28,6 +28,7 @@
 #include "instructionparser.hpp"
 #include "ethernetpacket.hpp"
 #include "parsehelper.hpp"
+#include "controlflow.hpp"
 
 
 cFileParser::cFileParser (uint64_t defaultDelay, bool ipOptionalDestMAC)
@@ -133,6 +134,7 @@ int cFileParser::parse (cInstructionParser::cResult& result)
                     {
                         cInstructionParser (ipOptionalDestMAC)
                                 .parse (instructionBuffer, result);
+                        result.packets->setLineNumber (lineNbr);
                         return 0;
                     }
                     catch (ParseException &e)
@@ -148,8 +150,11 @@ int cFileParser::parse (cInstructionParser::cResult& result)
                     // TODO
                     // - parse timestamp
                     // - parse control key word and its parameters
+                    result.packets = new cLoop (5);
+                    result.packets->setLineNumber (lineNbr);
+                    loopstack.push ((cLoop*)result.packets);
 
-                    offset = 0;
+                    return 0;
                 }
                 // control blocks are terminated with '}'
                 else if (c == '}')
@@ -166,8 +171,12 @@ int cFileParser::parse (cInstructionParser::cResult& result)
 
                     // TODO
                     // generate jump label that points to start of the block
+                    result.packets = new cGoto (loopstack.top ());
+                    result.packets->setLineNumber (lineNbr);
+                    loopstack.top ()->setEnd (result.packets);
+                    loopstack.pop ();
 
-                    offset = 0;
+                    return 0;
                 }
                 else
                 {

@@ -27,6 +27,7 @@
 #include "console.hpp"
 #include "signal.hpp"
 #include "listener.hpp"
+#include "controlflow.hpp"
 
 
 cOutput::cOutput (const cPreprocessor &p)
@@ -69,30 +70,56 @@ cPacketData& cOutput::operator<< (cPacketData& input)
 
     while (!cSignal::sigintSignalled() && (endless || repeat--))
     {
-        for (cLinkable* p = input.getFirst(); !cSignal::sigintSignalled() && (p != nullptr); p = p->getNext())
+        for (cLinkable* p = input.getFirst(); !cSignal::sigintSignalled() && (p != nullptr); )
         {
-            if (responderMode && !netif->waitForPacket())
-                break;
+            Console::PrintDebug("## 1 %d\n", p->getLineNumber());
+            if (p->getLineNumber() == 6)
+                Console::PrintDebug("");
 
-            cListener* event = dynamic_cast<cListener*>(p);
-            if (event && !event->wait (*netif))
-                break;
-
-            sendTime.add (p->getTime());
-            cEthernetPacket* eth;
-            cIPv4Packet* ipv4;
-
-            if ((eth = dynamic_cast<cEthernetPacket*>(p)) != nullptr)
+            cLoop* loop = dynamic_cast<cLoop*>(p);
+            if (loop)
             {
-                processPacket (sendTime, *eth);
+                p = loop->getNext();
             }
-            else if ((ipv4 = dynamic_cast<cIPv4Packet*>(p)) != nullptr)
+            else
             {
-                std::list<cEthernetPacket>& packets = ipv4->getAllEthernetPackets();
-
-                for (auto & p : packets)
+                cGoto* go = dynamic_cast<cGoto*>(p);
+                if (go)
                 {
-                    processPacket (sendTime, p);
+                    p = go->getNext();
+                }
+                else
+                {
+                    if (responderMode && !netif->waitForPacket())
+                        break;
+
+                    cListener* event = dynamic_cast<cListener*>(p);
+                    if (event && !event->wait (*netif))
+                        break;
+
+                    sendTime.add (p->getTime());
+                    cEthernetPacket* eth;
+                    cIPv4Packet* ipv4;
+
+                    if ((eth = dynamic_cast<cEthernetPacket*>(p)) != nullptr)
+                    {
+                        processPacket (sendTime, *eth);
+                    }
+                    else if ((ipv4 = dynamic_cast<cIPv4Packet*>(p)) != nullptr)
+                    {
+                        std::list<cEthernetPacket>& packets = ipv4->getAllEthernetPackets();
+
+                        for (auto & p : packets)
+                        {
+                            processPacket (sendTime, p);
+                        }
+                    }
+                    else
+                    {
+                        BUG ("unexpected instruction type");
+                    }
+
+                    p = p->getNext();
                 }
             }
         }

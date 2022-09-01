@@ -28,6 +28,7 @@ public:
     cLinkable ()
     {
         next = nullptr;
+        lineNumber = 0;
     }
     virtual ~cLinkable ()
     {
@@ -48,10 +49,19 @@ public:
     {
         this->t = t;
     }
+    inline void setLineNumber (int line)
+    {
+        lineNumber = line;
+    }
+    inline int getLineNumber (void)
+    {
+        return lineNumber;
+    }
 
 private:
     cLinkable *next;
     cTimeval t;
+    int lineNumber;
 };
 
 #endif /* LINKABLE_HPP_ */

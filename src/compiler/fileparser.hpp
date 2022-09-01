@@ -23,6 +23,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <list>
+#include <stack>
 
 #include "ethernetpacket.hpp"
 #include "ipaddress.hpp"
@@ -32,6 +33,7 @@
 const int PARSE_ERROR = -100;
 
 class cParameterList;
+class cLoop;
 
 class cFileParser
 {
@@ -55,6 +57,7 @@ private:
 
     unsigned     lineNbr;
     int          openControlBlocks;
+    std::stack<cLoop*> loopstack;
 };
 
 class FileParseException : public ParseException
