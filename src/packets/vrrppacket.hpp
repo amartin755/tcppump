@@ -122,7 +122,7 @@ public:
     void setType (uint8_t type);
     void setInterval (uint16_t interval);
     void setChecksum (uint16_t checksum);
-    void addVirtualIP (const cIpAddress& vip);
+    void addVirtualIP (const cIPv4& vip);
     void compile (bool calcChecksum);
 
 

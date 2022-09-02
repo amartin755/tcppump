@@ -133,10 +133,10 @@ public:
     void setECN (int ecn);
     void setTimeToLive (uint8_t ttl);
     void setDontFragment (bool df);
-    void setSource (const cIpAddress& ip);
-    void setDestination (const cIpAddress& ip);
-    void getSource (cIpAddress& ip) const;
-    void getDestination (cIpAddress& ip) const;
+    void setSource (const cIPv4& ip);
+    void setDestination (const cIPv4& ip);
+    void getSource (cIPv4& ip) const;
+    void getDestination (cIPv4& ip) const;
     void setIdentification (uint16_t id);
     cEthernetPacket& getFirstEthernetPacket ();
     std::list<cEthernetPacket>& getAllEthernetPackets (void);

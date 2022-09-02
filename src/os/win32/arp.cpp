@@ -31,11 +31,11 @@ cArp::cArp (cNetInterface& i) : ifc(i)
 {
 }
 
-bool cArp::resolve (const cIpAddress& ip, cMacAddress& mac)
+bool cArp::resolve (const cIPv4& ip, cMacAddress& mac)
 {
     ULONG macAddr[2];    // SendARP expects at least two ULONGs
     ULONG macLen = 6;
-    cIpAddress ownIp;
+    cIPv4 ownIp;
 
     // We don't really need an "opened" interface here. This is a sanity check, to accept validated interfaces only.
     BUG_ON (!ifc.isOpen ());

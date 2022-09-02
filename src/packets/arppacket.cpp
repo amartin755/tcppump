@@ -30,27 +30,27 @@ cArpPacket::cArpPacket ()
 }
 
 
-void cArpPacket::whoHas (const cMacAddress& srcMac, const cIpAddress& srcIp, const cIpAddress& ip)
+void cArpPacket::whoHas (const cMacAddress& srcMac, const cIPv4& srcIp, const cIPv4& ip)
 {
     cMacAddress dstMac;
     setAll (1, srcMac, srcIp, dstMac, ip);
 }
 
-void cArpPacket::probe (const cMacAddress& srcMac, const cIpAddress& ip)
+void cArpPacket::probe (const cMacAddress& srcMac, const cIPv4& ip)
 {
     cMacAddress dstMac;
-    setAll (1, srcMac, cIpAddress(), dstMac, ip);
+    setAll (1, srcMac, cIPv4(), dstMac, ip);
 }
 
 
-void cArpPacket::announce (const cMacAddress& srcMac, const cIpAddress& ip)
+void cArpPacket::announce (const cMacAddress& srcMac, const cIPv4& ip)
 {
     cMacAddress dstMac;
     setAll (1, srcMac, ip, dstMac, ip);
 }
 
 
-void cArpPacket::setAll (uint16_t opcode, const cMacAddress& srcMac, const cIpAddress& srcIp, const cMacAddress& dstMac, const cIpAddress& dstIp)
+void cArpPacket::setAll (uint16_t opcode, const cMacAddress& srcMac, const cIPv4& srcIp, const cMacAddress& dstMac, const cIPv4& dstIp)
 {
     arp_t a;
     a.hwType       = htons (1);

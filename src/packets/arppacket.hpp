@@ -30,10 +30,10 @@ class cArpPacket : public cEthernetPacket
 {
 public:
     cArpPacket ();
-    void whoHas (const cMacAddress& srcMac, const cIpAddress& srcIp, const cIpAddress& ip);
-    void probe (const cMacAddress& srcMac, const cIpAddress& ip);
-    void announce (const cMacAddress& srcMac, const cIpAddress& ip);
-    void setAll (uint16_t opcode, const cMacAddress& srcMac, const cIpAddress& srcIp, const cMacAddress& dstMac, const cIpAddress& dstIp);
+    void whoHas (const cMacAddress& srcMac, const cIPv4& srcIp, const cIPv4& ip);
+    void probe (const cMacAddress& srcMac, const cIPv4& ip);
+    void announce (const cMacAddress& srcMac, const cIPv4& ip);
+    void setAll (uint16_t opcode, const cMacAddress& srcMac, const cIPv4& srcIp, const cMacAddress& dstMac, const cIPv4& dstIp);
 
 
 

@@ -64,7 +64,7 @@ public:
     void compileRaw (uint8_t type, uint8_t code, uint16_t checksum, const uint8_t* payload, size_t len);
     void compileRaw (uint8_t type, uint8_t code, const uint8_t* payload, size_t len);
     void compileWithEmbeddedInet (uint8_t type, uint8_t code, const uint8_t* inetheader, size_t len);
-    void compileRedirect (uint8_t code, const cIpAddress& gw, const uint8_t* inetheader, size_t len);
+    void compileRedirect (uint8_t code, const cIPv4& gw, const uint8_t* inetheader, size_t len);
     void compilePing (bool reply, uint16_t id, uint16_t seq, const uint8_t* data, size_t len);
 
 

@@ -213,17 +213,17 @@ class cIgmpPacket : public cIPv4Packet
 {
 public:
     cIgmpPacket();
-    void v12compile (uint8_t type, uint8_t time, const cIpAddress& group);
+    void v12compile (uint8_t type, uint8_t time, const cIPv4& group);
     void compileGeneralQuery (bool v3, double maxRespCode, bool s, unsigned qrv, double qqic);
-    void compileGroupQuery (bool v3, double maxRespCode, bool s, unsigned qrv, double qqic, const cIpAddress& group);
-    void compileReport (const cIpAddress& group);
-    void v2compileLeaveGroup (const cIpAddress& group);
+    void compileGroupQuery (bool v3, double maxRespCode, bool s, unsigned qrv, double qqic, const cIPv4& group);
+    void compileReport (const cIPv4& group);
+    void v2compileLeaveGroup (const cIPv4& group);
 
-    void v3addSource (const cIpAddress& source);
+    void v3addSource (const cIPv4& source);
 
 private:
     void v3compileGeneralQuery (double maxRespCode, bool s, unsigned qrv, double qqic);
-    void v3compileGroupQuery (double maxRespCode, bool s, unsigned qrv, double qqic, const cIpAddress& group);
+    void v3compileGroupQuery (double maxRespCode, bool s, unsigned qrv, double qqic, const cIPv4& group);
     void setIpHeaderOptions (void);
     uint8_t floatToTime (double d) const;
     std::vector<struct in_addr> v3sourceAddresses;

@@ -42,7 +42,7 @@ public:
     virtual cMacAddress asMac   () const;
     virtual const uint8_t* asStream (size_t& len);
     virtual const uint8_t* asEmbedded (bool &isEmbedded, size_t& len);
-    virtual cIpAddress  asIPv4  () const;
+    virtual cIPv4  asIPv4  () const;
 
     void throwValueException (void) const;
 
@@ -83,12 +83,12 @@ public:
         BUG ("no raw access for optional parameters");
         return NULL;
     }
-    virtual cIpAddress  asIPv4  () const {return ip;}
+    virtual cIPv4  asIPv4  () const {return ip;}
 
 private:
     uint32_t    int32;
     cMacAddress mac;
-    cIpAddress  ip;
+    cIPv4  ip;
     double      dbl;
 };
 
@@ -105,11 +105,11 @@ public:
     cParameter* findParameter (const char* parameter, uint32_t optionalValue);
     cParameter* findParameter (const char* parameter, double optionalValue);
     cParameter* findParameter (const char* parameter, const cMacAddress& optionalValue);
-    cParameter* findParameter (const char* parameter, const cIpAddress& optionalValue);
+    cParameter* findParameter (const char* parameter, const cIPv4& optionalValue);
     cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, uint32_t optionalValue);
     cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, double optionalValue);
     cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, const cMacAddress& optionalValue);
-    cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, const cIpAddress& optionalValue);
+    cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, const cIPv4& optionalValue);
 
 #ifdef WITH_UNITTESTS
     static void unitTest ();

@@ -29,7 +29,7 @@ class cArp
 {
 public:
     cArp (cNetInterface& ifc);
-    bool resolve (const cIpAddress& ip, cMacAddress& mac);
+    bool resolve (const cIPv4& ip, cMacAddress& mac);
 
 private:
     cNetInterface& ifc;

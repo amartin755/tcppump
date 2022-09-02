@@ -51,7 +51,7 @@ bool cSettings::setMyIPv4 (const char* ip)
     return hasIPv4;
 }
 
-void cSettings::setMyIPv4 (const cIpAddress& ip)
+void cSettings::setMyIPv4 (const cIPv4& ip)
 {
     hasIPv4 = true;
     myIP.set(ip);
@@ -71,7 +71,7 @@ const cMacAddress& cSettings::getMyMAC(void) const
     return myMAC;
 }
 
-const cIpAddress& cSettings::getMyIPv4(void) const
+const cIPv4& cSettings::getMyIPv4(void) const
 {
     if (!hasIPv4)
         throw std::runtime_error("Could not determine IPv4 address of interface.\n"

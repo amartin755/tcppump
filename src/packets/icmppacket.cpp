@@ -71,7 +71,7 @@ void cIcmpPacket::compileWithEmbeddedInet (uint8_t type, uint8_t code, const uin
     cIPv4Packet::compile (PROTO_ICMP, (const uint8_t*)&header, sizeof (header), inetheader, len);
 }
 
-void cIcmpPacket::compileRedirect (uint8_t code, const cIpAddress& gw, const uint8_t* inetheader, size_t len)
+void cIcmpPacket::compileRedirect (uint8_t code, const cIPv4& gw, const uint8_t* inetheader, size_t len)
 {
     icmp_empty_header_t header;
     header.head.type     = 5;

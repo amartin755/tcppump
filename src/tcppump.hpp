@@ -53,7 +53,7 @@ typedef struct
 
 class cInterface;
 class cTimeval;
-class cIpAddress;
+class cIPv4;
 class cMacAddress;
 class ParseException;
 class FileParseException;

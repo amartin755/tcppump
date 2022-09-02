@@ -71,11 +71,11 @@ void cResponder::mirror (void)
                 if (packet.getTypeLength() == ETHERTYPE_IPV4)
                 {
                     const ipv4_header_t* ipHeader = (ipv4_header_t*)packet.getPayload ();
-                    cIpAddress dstIP(ipHeader->dstIp);
+                    cIPv4 dstIP(ipHeader->dstIp);
                     if (!dstIP.isMulticast())
                     {
                         // exchange src and dest IP address
-                        cIpAddress srcIP(ipHeader->srcIp);
+                        cIPv4 srcIP(ipHeader->srcIp);
                         packet.updatePayloadAt (offsetof (ipv4_header_t, dstIp), srcIP.getAsArray(), 4);
                         packet.updatePayloadAt (offsetof (ipv4_header_t, srcIp), dstIP.getAsArray(), 4);
                     }

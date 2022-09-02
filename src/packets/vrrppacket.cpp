@@ -65,7 +65,7 @@ void cVrrpPacket::setChecksum (uint16_t checksum)
     header.chksum = htons (checksum);
 }
 
-void cVrrpPacket::addVirtualIP (const cIpAddress& vip)
+void cVrrpPacket::addVirtualIP (const cIPv4& vip)
 {
     vrIPs.push_back(vip.get());
 }
@@ -77,14 +77,14 @@ void cVrrpPacket::compile (bool calcChecksum)
 
     // set IPv4 Header
     setTimeToLive(255);
-    setDestination(cIpAddress("224.0.0.18"));
+    setDestination(cIPv4("224.0.0.18"));
 
     header.countIpAddr = (uint8_t)vrIPs.size();
 
     // fill up authentication data (obsolete)
     if (header.getVersion() == 2)
     {
-        cIpAddress nullAddr;
+        cIPv4 nullAddr;
         addVirtualIP (nullAddr);
         addVirtualIP (nullAddr);
     }

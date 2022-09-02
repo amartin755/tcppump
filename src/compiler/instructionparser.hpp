@@ -101,7 +101,7 @@ private:
     bool   parseIPv4Params  (cParameterList& params, cIPv4Packet* packet, bool noDestinationIP = false);
     const uint8_t* compileEmbedded  (cParameter* emb, bool skipEthHeader, size_t& len);
     cMacAddress getParameterOrOwnMac (cParameterList& params, const char* par) const;
-    cIpAddress  getParameterOrOwnIPv4 (cParameterList& params, const char* par) const;
+    cIPv4  getParameterOrOwnIPv4 (cParameterList& params, const char* par) const;
 
 
     void throwParseException (const char* msg, const char* val, size_t valLen = 0, const char* details = nullptr);

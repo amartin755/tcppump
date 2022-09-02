@@ -200,8 +200,8 @@ const void* cDissector::dissectIPv4 (const void * p) const
         throw "malformed packet";
 
     std::string src, dst;
-    cIpAddress(header->srcIp).get (src);
-    cIpAddress(header->dstIp).get (dst);
+    cIPv4(header->srcIp).get (src);
+    cIPv4(header->dstIp).get (dst);
 
     Console::Print ("%s > %s, ", src.c_str(), dst.c_str());
 

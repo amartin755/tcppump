@@ -46,7 +46,7 @@ public:
     virtual bool flushSendQueue (void) = 0;
     virtual void getSendStatistic (uint64_t& sentPackets, uint64_t& sentBytes, double& duration) const = 0;
     virtual bool getMAC (cMacAddress&) = 0;
-    virtual bool getIPv4 (cIpAddress&) = 0;
+    virtual bool getIPv4 (cIPv4&) = 0;
     virtual uint32_t getMTU (void) = 0;
     virtual bool isOpen () const = 0;
     virtual bool addReceiveFilter (const char* filter) = 0;

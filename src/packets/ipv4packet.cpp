@@ -88,22 +88,22 @@ void cIPv4Packet::setDontFragment (bool df)
     ipHeader.ip.setFlagDF (df);
 }
 
-void cIPv4Packet::setSource (const cIpAddress& ip)
+void cIPv4Packet::setSource (const cIPv4& ip)
 {
     ipHeader.ip.srcIp = ip.get();
 }
 
-void cIPv4Packet::getSource (cIpAddress& ip) const
+void cIPv4Packet::getSource (cIPv4& ip) const
 {
     ip.set(ipHeader.ip.srcIp);
 }
 
-void cIPv4Packet::setDestination (const cIpAddress& ip)
+void cIPv4Packet::setDestination (const cIPv4& ip)
 {
     ipHeader.ip.dstIp = ip.get();
 }
 
-void cIPv4Packet::getDestination (cIpAddress& ip) const
+void cIPv4Packet::getDestination (cIPv4& ip) const
 {
     ip.set(ipHeader.ip.dstIp);
 }
@@ -131,7 +131,7 @@ void cIPv4Packet::compile (uint8_t protocol, const uint8_t* l4header, size_t l4h
     // if there is no destination mac AND we have an ip multicast, translate to mac multicast
     if (!packet.hasDestMac())
     {
-        cIpAddress dstIp (ipHeader.ip.dstIp);
+        cIPv4 dstIp (ipHeader.ip.dstIp);
         if (dstIp.isMulticast ())
         {
             packet.setDestMac (cMacAddress (1, 0, 0x5e, dstIp.getAsArray()[1] & 0x7f, dstIp.getAsArray()[2], dstIp.getAsArray()[3]));

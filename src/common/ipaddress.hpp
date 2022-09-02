@@ -29,33 +29,33 @@
 #include "random.hpp"
 
 
-class cIpAddress
+class cIPv4
 {
 public:
 
-    void operator=(const cIpAddress&) = delete;       // no copy-assignment operator
+    void operator=(const cIPv4&) = delete;       // no copy-assignment operator
 
-    cIpAddress ()
+    cIPv4 ()
     {
         ipv4.s_addr = 0;
     }
-    cIpAddress (const cIpAddress& i)
+    cIPv4 (const cIPv4& i)
     {
         set (i);
     }
-    cIpAddress (const struct in_addr &addr)
+    cIPv4 (const struct in_addr &addr)
     {
         set (addr);
     }
-    cIpAddress (const char* ip)
+    cIPv4 (const char* ip)
     {
         set (ip);
     }
-    cIpAddress (bool randUnicast, bool randMulticast) // construct random IPv4 address
+    cIPv4 (bool randUnicast, bool randMulticast) // construct random IPv4 address
     {
         setRandom (randUnicast, randMulticast);
     }
-    void set (const cIpAddress& i)
+    void set (const cIPv4& i)
     {
         ipv4 = i.ipv4;
     }
@@ -137,19 +137,19 @@ public:
     {
         return (ntohl (ipv4.s_addr) & 0xF0000000) == 0xE0000000;
     }
-    bool operator ==(const cIpAddress &b) const
+    bool operator ==(const cIPv4 &b) const
     {
         return ipv4.s_addr == b.ipv4.s_addr;
     }
-    bool operator !=(const cIpAddress &b) const
+    bool operator !=(const cIPv4 &b) const
     {
         return ipv4.s_addr != b.ipv4.s_addr;
     }
-    bool operator< (const cIpAddress &val) const
+    bool operator< (const cIPv4 &val) const
     {
         return ntohl (ipv4.s_addr) < ntohl (val.ipv4.s_addr);
     }
-    bool operator> (const cIpAddress &val) const
+    bool operator> (const cIPv4 &val) const
     {
         return ntohl (ipv4.s_addr) > ntohl (val.ipv4.s_addr);
     }
@@ -157,26 +157,26 @@ public:
 #ifdef WITH_UNITTESTS
     static void unitTest ()
     {
-        assert (cIpAddress() == cIpAddress("0.0.0.0"));
-        assert (cIpAddress() != cIpAddress("0.0.0.1"));
+        assert (cIPv4() == cIPv4("0.0.0.0"));
+        assert (cIPv4() != cIPv4("0.0.0.1"));
         const char x[] = "1.2.3.4dfadfasd";
-        cIpAddress a; a.set(x, 7);
-        assert (cIpAddress("1.2.3.4") == a);
+        cIPv4 a; a.set(x, 7);
+        assert (cIPv4("1.2.3.4") == a);
         assert (!a.set("laskdfj"));
-        assert (!cIpAddress("223.255.255.255").isMulticast());
-        assert (cIpAddress("224.0.0.0").isMulticast());
-        assert (cIpAddress("239.255.255.255").isMulticast());
-        assert (!cIpAddress("240.0.0.0").isMulticast());
-        assert (cIpAddress("1.2.3.4") < cIpAddress("1.3.3.4"));
-        assert (cIpAddress("2.2.3.4") > cIpAddress("1.3.3.4"));
-        assert (cIpAddress("1.2.3.4").getAsArray()[0] == 1);
-        assert (cIpAddress("1.2.3.4").getAsArray()[1] == 2);
-        assert (cIpAddress("1.2.3.4").getAsArray()[2] == 3);
-        assert (cIpAddress("1.2.3.4").getAsArray()[3] == 4);
+        assert (!cIPv4("223.255.255.255").isMulticast());
+        assert (cIPv4("224.0.0.0").isMulticast());
+        assert (cIPv4("239.255.255.255").isMulticast());
+        assert (!cIPv4("240.0.0.0").isMulticast());
+        assert (cIPv4("1.2.3.4") < cIPv4("1.3.3.4"));
+        assert (cIPv4("2.2.3.4") > cIPv4("1.3.3.4"));
+        assert (cIPv4("1.2.3.4").getAsArray()[0] == 1);
+        assert (cIPv4("1.2.3.4").getAsArray()[1] == 2);
+        assert (cIPv4("1.2.3.4").getAsArray()[2] == 3);
+        assert (cIPv4("1.2.3.4").getAsArray()[3] == 4);
         for (int n = 0; n < 10000; n++)
         {
-            assert (!cIpAddress(true, false).isMulticast());
-            assert (cIpAddress(false, true).isMulticast());
+            assert (!cIPv4(true, false).isMulticast());
+            assert (cIPv4(false, true).isMulticast());
         }
     }
 #endif

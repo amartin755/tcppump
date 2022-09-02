@@ -39,13 +39,13 @@ cArp::cArp (cNetInterface& i) : ifc(i)
 {
 }
 
-bool cArp::resolve (const cIpAddress& ip, cMacAddress& mac)
+bool cArp::resolve (const cIPv4& ip, cMacAddress& mac)
 {
     bool resolved = false;
     struct sockaddr_ll device;
     int arpSock;
     cMacAddress myMac;
-    cIpAddress myIP;
+    cIPv4 myIP;
     // We don't really need an "opened" interface here. This is a sanity check, to accept validated interfaces only.
     BUG_ON (!ifc.isOpen ());
     BUG_ON (!ifc.getMAC(myMac));
@@ -101,7 +101,7 @@ bool cArp::resolve (const cIpAddress& ip, cMacAddress& mac)
 
                 if (mHeader->ethertypeLength == htons (ETH_P_ARP) &&
                     arp->isReply()                                &&
-                    cIpAddress (arp->srcIp) == ip)
+                    cIPv4 (arp->srcIp) == ip)
                 {
                     mac.set ((void*)&arp->srcMac, sizeof (arp->srcMac));
                     resolved = true;

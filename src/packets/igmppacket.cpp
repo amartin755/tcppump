@@ -34,14 +34,14 @@ cIgmpPacket::cIgmpPacket ()
 void cIgmpPacket::compileGeneralQuery (bool v3, double maxRespCode, bool s, unsigned qrv, double qqic)
 {
     maxRespCode *= 10;
-    setDestination (cIpAddress ("224.0.0.1"));
+    setDestination (cIPv4 ("224.0.0.1"));
     if (v3)
         v3compileGeneralQuery (maxRespCode, s, qrv, qqic);
     else
-        v12compile (0x11, uint8_t(maxRespCode), cIpAddress ());
+        v12compile (0x11, uint8_t(maxRespCode), cIPv4 ());
 }
 
-void cIgmpPacket::compileGroupQuery (bool v3, double maxRespCode, bool s, unsigned qrv, double qqic, const cIpAddress& group)
+void cIgmpPacket::compileGroupQuery (bool v3, double maxRespCode, bool s, unsigned qrv, double qqic, const cIPv4& group)
 {
     maxRespCode *= 10;
     setDestination (group);
@@ -51,19 +51,19 @@ void cIgmpPacket::compileGroupQuery (bool v3, double maxRespCode, bool s, unsign
         v12compile (0x11, uint8_t(maxRespCode), group);
 }
 
-void cIgmpPacket::compileReport (const cIpAddress& group)
+void cIgmpPacket::compileReport (const cIPv4& group)
 {
     setDestination (group);
     v12compile (0x16, 0, group);
 }
 
-void cIgmpPacket::v2compileLeaveGroup (const cIpAddress& group)
+void cIgmpPacket::v2compileLeaveGroup (const cIPv4& group)
 {
-    setDestination (cIpAddress ("224.0.0.2"));
+    setDestination (cIPv4 ("224.0.0.2"));
     v12compile (0x17, 0, group);
 }
 
-void cIgmpPacket::v12compile (uint8_t type, uint8_t time, const cIpAddress& group)
+void cIgmpPacket::v12compile (uint8_t type, uint8_t time, const cIPv4& group)
 {
     setIpHeaderOptions ();
 
@@ -82,10 +82,10 @@ void cIgmpPacket::v12compile (uint8_t type, uint8_t time, const cIpAddress& grou
 void cIgmpPacket::v3compileGeneralQuery (double maxRespCode, bool s, unsigned qrv, double qqic)
 {
     v3sourceAddresses.clear ();
-    v3compileGroupQuery (maxRespCode, s, qrv, qqic, cIpAddress());
+    v3compileGroupQuery (maxRespCode, s, qrv, qqic, cIPv4());
 }
 
-void cIgmpPacket::v3compileGroupQuery (double maxRespCode, bool s, unsigned qrv, double qqic, const cIpAddress& group)
+void cIgmpPacket::v3compileGroupQuery (double maxRespCode, bool s, unsigned qrv, double qqic, const cIPv4& group)
 {
     setIpHeaderOptions ();
 
@@ -114,7 +114,7 @@ void cIgmpPacket::v3compileGroupQuery (double maxRespCode, bool s, unsigned qrv,
     }
 }
 
-void cIgmpPacket::v3addSource (const cIpAddress& source)
+void cIgmpPacket::v3addSource (const cIPv4& source)
 {
     v3sourceAddresses.push_back(source.get());
 }

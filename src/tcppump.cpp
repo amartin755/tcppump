@@ -249,7 +249,7 @@ int cTcpPump::execute (const std::list<std::string>& args)
     }
     if (!cSettings::get().isIPSet())
     {
-        cIpAddress ifIPv4;
+        cIPv4 ifIPv4;
         if (ifc->getIPv4(ifIPv4))
             cSettings::get().setMyIPv4(ifIPv4);
         else

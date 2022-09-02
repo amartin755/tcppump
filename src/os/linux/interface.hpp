@@ -47,7 +47,7 @@ public:
     bool flushSendQueue (void);
     void getSendStatistic (uint64_t& sentPackets, uint64_t& sentBytes, double& duration) const;
     bool getMAC (cMacAddress&);
-    bool getIPv4 (cIpAddress&);
+    bool getIPv4 (cIPv4&);
     uint32_t getMTU (void);
     uint64_t getLinkSpeed (void);
     bool isOpen () const;
@@ -67,7 +67,7 @@ private:
     pcap_t *pcapHandle;
     int ifIndex;
     cMacAddress myMac;
-    cIpAddress myIP;
+    cIPv4 myIP;
     uint32_t mtu;
     uint64_t linkSpeed;
     cTimeval lastSentPacket;

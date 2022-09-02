@@ -36,7 +36,7 @@ public:
 
 private:
     cArp arper;
-    std::map <cIpAddress, cMacAddress> cache;
+    std::map <cIPv4, cMacAddress> cache;
 };
 
 #endif /* RESOLVER_HPP_ */

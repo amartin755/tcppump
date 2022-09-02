@@ -282,7 +282,7 @@ cMacAddress cInstructionParser::getParameterOrOwnMac (cParameterList& params, co
 }
 
 
-cIpAddress cInstructionParser::getParameterOrOwnIPv4 (cParameterList& params, const char* par) const
+cIPv4 cInstructionParser::getParameterOrOwnIPv4 (cParameterList& params, const char* par) const
 {
     const cParameter* optionalPar = params.findParameter (par, true);
 
@@ -457,7 +457,7 @@ bool cInstructionParser::parseIPv4Params (cParameterList& params, cIPv4Packet* p
     packet->setDontFragment (params.findParameter ("df", (uint32_t)0)->asInt8(0, 1));
     if (!noDestinationIP)
     {
-        const cIpAddress destIP = params.findParameter ("dip")->asIPv4();
+        const cIPv4 destIP = params.findParameter ("dip")->asIPv4();
         packet->setDestination (destIP);
         isMulticast = destIP.isMulticast();
     }
@@ -1027,7 +1027,7 @@ cLinkable* cInstructionParser::compileIGMP  (cParameterList& params, bool v3, bo
         }
         else
         {
-            cIpAddress group = params.findParameter ("group")->asIPv4 ();
+            cIPv4 group = params.findParameter ("group")->asIPv4 ();
             if (report)
             {
                 igmp->compileReport (group);
@@ -1137,7 +1137,7 @@ cLinkable* cInstructionParser::compileICMPRedirect  (cParameterList& params)
         compileVLANTags   (params, &eth);
 
         uint8_t code = params.findParameter ("code", (uint32_t)0)->asInt8();
-        const cIpAddress gw = params.findParameter ("gw")->asIPv4();
+        const cIPv4 gw = params.findParameter ("gw")->asIPv4();
 
         size_t len = 0;
         const uint8_t* payload = nullptr;
@@ -1469,7 +1469,7 @@ void cInstructionParser::unitTest ()
 
     bool hasTimestamp;
     cMacAddress ownMac("ba:ba:ba:ba:ba:ba");
-    cIpAddress ownIPv4;
+    cIPv4 ownIPv4;
     ownIPv4.set("10.10.10.10");
     cSettings::get().setMyMAC(ownMac);
     cSettings::get().setMyIPv4(ownIPv4);

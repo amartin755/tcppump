@@ -270,9 +270,9 @@ const uint8_t* cParameter::asStream (bool allowEmbPacket, bool &isEmbedded, size
 }
 
 
-cIpAddress cParameter::asIPv4 () const
+cIPv4 cParameter::asIPv4 () const
 {
-    cIpAddress ip;
+    cIPv4 ip;
     if (isRandom(false) == 0)
     {
         ip.setRandom (true, false);
@@ -410,7 +410,7 @@ cParameter* cParameterList::findParameter (const cParameter* startAfter, const c
 }
 
 
-cParameter* cParameterList::findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, const cIpAddress& optionalValue)
+cParameter* cParameterList::findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, const cIPv4& optionalValue)
 {
     cParameter* p = findParameter (startAfter, stopAt, parameter, true);
     if (p)
@@ -443,7 +443,7 @@ cParameter* cParameterList::findParameter (const char* parameter, const cMacAddr
 }
 
 
-cParameter* cParameterList::findParameter (const char* parameter, const cIpAddress& optionalValue)
+cParameter* cParameterList::findParameter (const char* parameter, const cIPv4& optionalValue)
 {
     return findParameter (nullptr, nullptr, parameter, optionalValue);
 }
@@ -712,7 +712,7 @@ void cParameterList::unitTest ()
         {
             assert (obj.isValid ());
             assert (obj.findParameter("long")->asInt32()  == (uint32_t)100);
-            assert (obj.findParameter("ipv4")->asIPv4()  == cIpAddress("1.2.3.4"));
+            assert (obj.findParameter("ipv4")->asIPv4()  == cIPv4("1.2.3.4"));
             cMacAddress mac2("12:34:56:78:9a:bc");
             cMacAddress mac = obj.findParameter("mac")->asMac();
             assert (!memcmp (&mac, &mac2, sizeof (mac2)));
@@ -730,7 +730,7 @@ void cParameterList::unitTest ()
         try
         {
             assert (obj.isValid ());
-            assert (obj.findParameter("ipv4")->asIPv4()  == cIpAddress("1.2.3.4"));
+            assert (obj.findParameter("ipv4")->asIPv4()  == cIPv4("1.2.3.4"));
             cMacAddress mac1("12:34:56:78:9a:bc");
             cMacAddress mac2("11:22:33:44:55:66");
             cMacAddress _mac2 = obj.findParameter("mac2", mac2)->asMac();

@@ -47,7 +47,7 @@ public:
     bool flushSendQueue (void);
     void getSendStatistic (uint64_t& sentPackets, uint64_t& sentBytes, double& duration) const;
     bool getMAC (cMacAddress&);
-    bool getIPv4 (cIpAddress&);
+    bool getIPv4 (cIPv4&);
     uint32_t getMTU (void);
     bool isOpen () const;
     const char* getName (void) const;

@@ -35,10 +35,10 @@ public:
     bool setMyMAC (const char* mac);
     void setMyMAC (const cMacAddress& mac);
     bool setMyIPv4 (const char* ip);
-    void setMyIPv4 (const cIpAddress& ip);
+    void setMyIPv4 (const cIPv4& ip);
     void setMyMTU (unsigned mtu);
     const cMacAddress& getMyMAC (void) const;
-    const cIpAddress& getMyIPv4(void) const;
+    const cIPv4& getMyIPv4(void) const;
     unsigned getMyMTU (void) const;
     bool isMacSet (void) const {return hasMAC;}
     bool isIPSet (void) const {return hasIPv4;}
@@ -47,7 +47,7 @@ private:
     bool hasMAC;
     bool hasIPv4;
     cMacAddress myMAC;
-    cIpAddress myIP;
+    cIPv4 myIP;
     unsigned mtu;
 };
 

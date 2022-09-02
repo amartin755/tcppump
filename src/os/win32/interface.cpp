@@ -424,7 +424,7 @@ bool cInterface::getMAC (cMacAddress& mac)
     return true;
 }
 
-bool cInterface::getIPv4 (cIpAddress& ip)
+bool cInterface::getIPv4 (cIPv4& ip)
 {
     if (!adapterInfo)
         return false;
