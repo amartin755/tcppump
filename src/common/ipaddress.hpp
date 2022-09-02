@@ -68,7 +68,7 @@ public:
         char ipAsString[INET_ADDRSTRLEN];
         if ((len+1) > sizeof(ipAsString))
             return false;
-        ::strncpy (ipAsString, ip, len);
+        std::strncpy (ipAsString, ip, len);
         ipAsString[len] = '\0';
         return set (ipAsString);
     }
@@ -186,6 +186,202 @@ private:
     struct in_addr ipv4;
 };
 
+class cIPv6
+{
+public:
+
+    void operator=(const cIPv6&) = delete;       // no copy-assignment operator
+
+    cIPv6 ()
+    {
+        clear ();
+    }
+    cIPv6 (const cIPv6& i)
+    {
+        set (i);
+    }
+    cIPv6 (const struct in6_addr &addr)
+    {
+        set (addr);
+    }
+    cIPv6 (const char* ip)
+    {
+        set (ip);
+    }
+    cIPv6 (bool randUnicast, bool randMulticast) // construct random IPv4 address
+    {
+        setRandom (randUnicast, randMulticast);
+    }
+    void set (const cIPv6& i)
+    {
+        ipv6 = i.ipv6;
+    }
+    void set (const struct in6_addr &addr)
+    {
+        ipv6 = addr;
+    }
+    bool set (const char* ip, size_t len)
+    {
+        char ipAsString[INET6_ADDRSTRLEN];
+        if ((len+1) > sizeof(ipAsString))
+            return false;
+        std::strncpy (ipAsString, ip, len);
+        ipAsString[len] = '\0';
+        return set (ipAsString);
+    }
+    bool set (const char* ip)
+    {
+#if HAVE_PTON
+        return !!inet_pton(AF_INET6, ip, &ipv6);
+#else
+        return (ipv6.s_addr = inet_addr (ip)) != INADDR_NONE;
+#endif
+    }
+    void setRandom (bool unicast = true, bool multicast = false)
+    {
+        BUG_ON (!unicast && !multicast);
+
+        uint32_t r = cRandom::rand32 ();
+        ipv6.s6_addr[0]  = (uint8_t)r;
+        ipv6.s6_addr[1]  = (uint8_t)(r >> 8);
+        ipv6.s6_addr[2]  = (uint8_t)(r >> 16);
+        ipv6.s6_addr[3]  = (uint8_t)(r >> 24);
+        r = cRandom::rand32 ();
+        ipv6.s6_addr[4]  = (uint8_t)r;
+        ipv6.s6_addr[5]  = (uint8_t)(r >> 8);
+        ipv6.s6_addr[6]  = (uint8_t)(r >> 16);
+        ipv6.s6_addr[7]  = (uint8_t)(r >> 24);
+        r = cRandom::rand32 ();
+        ipv6.s6_addr[8]  = (uint8_t)r;
+        ipv6.s6_addr[9]  = (uint8_t)(r >> 8);
+        ipv6.s6_addr[10] = (uint8_t)(r >> 16);
+        ipv6.s6_addr[11] = (uint8_t)(r >> 24);
+        r = cRandom::rand32 ();
+        ipv6.s6_addr[12] = (uint8_t)r;
+        ipv6.s6_addr[13] = (uint8_t)(r >> 8);
+        ipv6.s6_addr[14] = (uint8_t)(r >> 16);
+        ipv6.s6_addr[15] = (uint8_t)(r >> 24);
+
+        if (unicast && !multicast) // unicast only
+        {
+            BUG("implement me");
+        }
+        else if (!unicast && multicast) // multicast only
+        {
+            BUG("implement me");
+        }
+    }
+    void clear ()
+    {
+        memset (&ipv6, 0, sizeof(ipv6));
+    }
+    struct in6_addr get () const
+    {
+        return ipv6;
+    }
+    bool get (char* s, size_t len) const
+    {
+#if HAVE_NTOP
+        return !!inet_ntop(AF_INET6, &ipv6, s, len);
+#else
+        std::strncpy (s, inet_ntoa(ipv6), len);
+        return true;
+#endif
+    }
+    bool get (std::string &s) const
+    {
+        char ipAsString[INET_ADDRSTRLEN];
+        bool ret = get (ipAsString, sizeof (ipAsString));
+        s = ipAsString;
+        return ret;
+    }
+    const uint8_t* getAsArray () const
+    {
+        return (const uint8_t*)&ipv6.s6_addr[0];
+    }
+
+    bool isNull (void) const
+    {
+        return !ipv6.s6_addr[0] &&
+               !ipv6.s6_addr[1] &&
+               !ipv6.s6_addr[2] &&
+               !ipv6.s6_addr[3] &&
+               !ipv6.s6_addr[4] &&
+               !ipv6.s6_addr[5] &&
+               !ipv6.s6_addr[6] &&
+               !ipv6.s6_addr[7] &&
+               !ipv6.s6_addr[8] &&
+               !ipv6.s6_addr[9] &&
+               !ipv6.s6_addr[10] &&
+               !ipv6.s6_addr[11] &&
+               !ipv6.s6_addr[12] &&
+               !ipv6.s6_addr[13] &&
+               !ipv6.s6_addr[14] &&
+               !ipv6.s6_addr[15];
+    }
+    bool isMulticast (void) const
+    {
+        return ipv6.s6_addr[0] == 0xff;
+    }
+    bool operator ==(const cIPv6 &b) const
+    {
+        return !std::memcmp (&ipv6, &b.ipv6, sizeof (ipv6));
+    }
+    bool operator !=(const cIPv6 &b) const
+    {
+        return std::memcmp (&ipv6, &b.ipv6, sizeof (ipv6));
+    }
+    bool operator< (const cIPv6 &val) const
+    {
+        return std::memcmp (&ipv6, &val.ipv6, sizeof (ipv6)) < 0;
+    }
+    bool operator> (const cIPv6 &val) const
+    {
+        return std::memcmp (&ipv6, &val.ipv6, sizeof (ipv6)) > 0;
+    }
+
+#ifdef WITH_UNITTESTS
+    static void unitTest ()
+    {
+        assert (cIPv6() == cIPv6("::"));
+        assert (cIPv6() != cIPv6("::1"));
+        const char x[] = "fe80::1ff:fe23:4567:890adfadfasd";
+        cIPv6 a; a.set(x, 24);
+        assert (cIPv6("fe80::1ff:fe23:4567:890a") == a);
+        assert (!a.set("laskdfj"));
+        assert (!cIPv6("fe80::1ff:fe23:4567:890a").isMulticast());
+        assert (cIPv6("ff02::6").isMulticast());
+        assert (cIPv6("fe80::1ff:fe23:4567:890a") < cIPv6("fe80::1ff:fe23:4577:890a"));
+        assert (cIPv6("fe80::1ff:fe33:4567:890a") > cIPv6("fe80::1ff:fe23:4577:890a"));
+        assert (cIPv6("fe80::1ff:fe33:4567:890a") != cIPv6("fe80::1ff:fe23:4577:890a"));
+        assert (a.getAsArray()[0] == 0xfe);
+        assert (a.getAsArray()[1] == 0x80);
+        assert (a.getAsArray()[2] == 0);
+        assert (a.getAsArray()[3] == 0);
+        assert (a.getAsArray()[4] == 0);
+        assert (a.getAsArray()[5] == 0);
+        assert (a.getAsArray()[6] == 0);
+        assert (a.getAsArray()[7] == 0);
+        assert (a.getAsArray()[8] == 0x01);
+        assert (a.getAsArray()[9] == 0xff);
+        assert (a.getAsArray()[10] == 0xfe);
+        assert (a.getAsArray()[11] == 0x23);
+        assert (a.getAsArray()[12] == 0x45);
+        assert (a.getAsArray()[13] == 0x67);
+        assert (a.getAsArray()[14] == 0x89);
+        assert (a.getAsArray()[15] == 0x0a);
+        for (int n = 0; n < 10000; n++)
+        {
+//            assert (!cIPv6(true, false).isMulticast());
+//            assert (cIPv6(false, true).isMulticast());
+        }
+    }
+#endif
+
+
+private:
+    struct in6_addr ipv6;
+};
 
 
 

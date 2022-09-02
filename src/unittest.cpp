@@ -59,6 +59,7 @@ int main (void)
         tcppump::SleepInit ();
         tcppump::SleepUnitTest ();
         cIPv4::unitTest ();
+        cIPv6::unitTest ();
         cMacAddress::unitTest ();
         cTimeval::unitTest ();
         cCmdline::unitTest ();
