@@ -21,7 +21,9 @@
 #define CONSOLE_HPP_
 
 #include <cstdarg>
-
+#ifdef MT_CONSOLE
+#include <mutex>
+#endif
 
 class Console
 {
@@ -41,6 +43,9 @@ private:
 
 private:
     static out_level level;
+#ifdef MT_CONSOLE
+    static std::mutex mtx;
+#endif
 };
 
 #endif /* CONSOLE_HPP_ */

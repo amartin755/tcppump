@@ -24,6 +24,10 @@
 #include "bug.hpp"
 
 Console::out_level Console::level = Normal;
+#ifdef MT_CONSOLE
+    std::mutex Console::mtx;
+#endif
+
 
 void Console::SetPrintLevel (out_level lvl)
 {
@@ -47,8 +51,13 @@ bool Console::Print (const char* format, ...)
     bool ret;
     va_list args;
     va_start (args, format);
-
+#ifdef MT_CONSOLE
+    mtx.lock();
+#endif
     ret = Console::print (Console::Normal, format, args);
+#ifdef MT_CONSOLE
+    mtx.unlock();
+#endif
 
     va_end (args);
     return ret;
