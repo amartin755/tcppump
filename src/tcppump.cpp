@@ -114,10 +114,8 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
             "trigger Each received packet will trigger sending of specified packets.",
             &options.responderMode);
     addCmdLineOption (true, 0, "bpf-filter", "FILTER", "Receive bpf filter for responder mode.", &options.bpf);
-#ifndef NDEBUG
-    addCmdLineOption (true, 0, "test-norandom",
-            "For testing only! Don't use random numbers, use simple sequence instead.", &options.testPredictableRandom);
-#endif
+    addCmdLineOption (true, 0, "predictable-random",
+            "Don't use random numbers, use simple sequence instead.", &options.testPredictableRandom);
 }
 
 cTcpPump::~cTcpPump()
