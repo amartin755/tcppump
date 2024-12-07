@@ -76,6 +76,7 @@ private:
     cLinkable* compileARP  (cParameterList& params, bool isProbe = false, bool isGratuitous = false);
     cLinkable* compileSNAP (cParameterList& params);
     cLinkable* compileIPv4 (cParameterList& params);
+    cLinkable* compileIPv6 (cParameterList& params);
     cLinkable* compileUDP  (cParameterList& params);
     cLinkable* compileVXLAN (cParameterList& params);
     cLinkable* compileVRRP (cParameterList& params, int version);

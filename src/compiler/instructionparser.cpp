@@ -496,6 +496,11 @@ cLinkable* cInstructionParser::compileIPv4 (cParameterList& params)
 }
 
 
+cLinkable* cInstructionParser::compileIPv6 (cParameterList& params)
+{
+}
+
+
 cLinkable* cInstructionParser::compileUDP (cParameterList& params)
 {
     cUdpPacket* udppacket = new cUdpPacket;
