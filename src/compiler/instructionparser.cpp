@@ -241,7 +241,7 @@ const char* cInstructionParser::parseProtocollIdentifier (const char* p, const c
 cLinkable* cInstructionParser::compileRAW (cParameterList& params)
 {
     size_t len;
-    cParameter* par = params.findParameter ("payload"); 
+    cParameter* par = params.findParameter ("payload");
     const uint8_t* value = par->asStream(len);
 
     if (len < sizeof (mac_header_t))
@@ -496,8 +496,10 @@ cLinkable* cInstructionParser::compileIPv4 (cParameterList& params)
 }
 
 
-cLinkable* cInstructionParser::compileIPv6 (cParameterList& params)
+cLinkable* cInstructionParser::compileIPv6 (cParameterList& )
 {
+    BUG ("IPv6: not implemented");
+    return nullptr;
 }
 
 
