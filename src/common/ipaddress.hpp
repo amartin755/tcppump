@@ -51,10 +51,6 @@ public:
     {
         set (ip);
     }
-    cIPv4 (bool randUnicast, bool randMulticast) // construct random IPv4 address
-    {
-        setRandom (randUnicast, randMulticast);
-    }
     void set (const cIPv4& i)
     {
         ipv4 = i.ipv4;
@@ -80,25 +76,16 @@ public:
         return (ipv4.s_addr = inet_addr (ip)) != INADDR_NONE;
 #endif
     }
-    void setRandom (bool unicast = true, bool multicast = false)
+    const cIPv4& setRandom ()
     {
-        BUG_ON (!unicast && !multicast);
-
         uint32_t ip = cRandom::rand32 ();
 
-        if (unicast && !multicast) // unicast only
-        {
-            // if random value is multicast, convert it to unicast by clearing the MSB
-            if ((ip & 0xF0000000) == 0xE0000000)
-                ip &= 0x7FFFFFFF;
-        }
-        else if (!unicast && multicast) // multicast only
-        {
-            ip &= 0xEFFFFFFF;
-            ip |= 0xE0000000;
-        }
+        // if random value is multicast, convert it to unicast by clearing the MSB
+        if ((ip & 0xF0000000) == 0xE0000000)
+            ip &= 0x7FFFFFFF;
 
         ipv4.s_addr = htonl(ip);
+        return *this;
     }
     void clear ()
     {
@@ -175,8 +162,7 @@ public:
         assert (cIPv4("1.2.3.4").getAsArray()[3] == 4);
         for (int n = 0; n < 10000; n++)
         {
-            assert (!cIPv4(true, false).isMulticast());
-            assert (cIPv4(false, true).isMulticast());
+            assert (cIPv4().setRandom() != cIPv4().setRandom());
         }
     }
 #endif
@@ -208,10 +194,6 @@ public:
     {
         set (ip);
     }
-    cIPv6 (bool randUnicast, bool randMulticast) // construct random IPv4 address
-    {
-        setRandom (randUnicast, randMulticast);
-    }
     void set (const cIPv6& i)
     {
         ipv6 = i.ipv6;
@@ -237,10 +219,8 @@ public:
         return (ipv6.s_addr = inet_addr (ip)) != INADDR_NONE;
 #endif
     }
-    void setRandom (bool unicast = true, bool multicast = false)
+    const cIPv6& setRandom ()
     {
-        BUG_ON (!unicast && !multicast);
-
         uint32_t r = cRandom::rand32 ();
         ipv6.s6_addr[0]  = (uint8_t)r;
         ipv6.s6_addr[1]  = (uint8_t)(r >> 8);
@@ -262,14 +242,11 @@ public:
         ipv6.s6_addr[14] = (uint8_t)(r >> 16);
         ipv6.s6_addr[15] = (uint8_t)(r >> 24);
 
-        if (unicast && !multicast) // unicast only
-        {
-            BUG("implement me");
-        }
-        else if (!unicast && multicast) // multicast only
-        {
-            BUG("implement me");
-        }
+        // if random value is multicast, convert it to unicast
+        if (ipv6.s6_addr[0] == 0xff)
+            ipv6.s6_addr[0] &= 0x3f;
+
+        return *this;
     }
     void clear ()
     {
@@ -372,8 +349,7 @@ public:
         assert (a.getAsArray()[15] == 0x0a);
         for (int n = 0; n < 10000; n++)
         {
-//            assert (!cIPv6(true, false).isMulticast());
-//            assert (cIPv6(false, true).isMulticast());
+            assert (cIPv6().setRandom() != cIPv6().setRandom());
         }
     }
 #endif

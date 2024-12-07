@@ -275,7 +275,7 @@ cIPv4 cParameter::asIPv4 () const
     cIPv4 ip;
     if (isRandom(false) == 0)
     {
-        ip.setRandom (true, false);
+        ip.setRandom ();
         return ip;
     }
     else
