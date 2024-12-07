@@ -109,7 +109,7 @@ const uint8_t* cIcmpPacket::compileGenericInetHeader (size_t& len)
     genInetHeader.ip.dstIp = ipHeader.srcIp;
     genInetHeader.ip.protocol = PROTO_UDP;
     genInetHeader.ip.ttl = 64;
-    genInetHeader.ip.totalLength = htons(genInetHeader.ip.getHeaderLenght() * 4 + sizeof (udp_header_t));
+    genInetHeader.ip.totalLength = (uint16_t)(htons(genInetHeader.ip.getHeaderLenght() * 4 + sizeof (udp_header_t)));
     genInetHeader.ip.chksum = cInetChecksum::rfc1071((const uint16_t*)&genInetHeader.ip, sizeof(genInetHeader.ip));
 
     genInetHeader.udp.srcPort = htons(42);

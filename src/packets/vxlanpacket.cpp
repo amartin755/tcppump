@@ -28,7 +28,7 @@
 cVxlanPacket::cVxlanPacket ()
 {
     std::memset (&header, 0, sizeof(header));
-    header.flags = htons(0x0800);
+    header.flags = 0x08;
 }
 
 void cVxlanPacket::compile (const uint8_t* payload, size_t len)

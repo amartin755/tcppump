@@ -41,7 +41,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if (MSVC)
     add_compile_options (/W3 /wd5208)
 else()
-    add_compile_options (-Wall -Wextra)
+    add_compile_options (-Wall -Wextra -Wpedantic)
 endif()
 
 # on mingw we link the std library statically

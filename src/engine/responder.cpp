@@ -112,7 +112,7 @@ void cResponder::mirror (void)
             if (!netif.sendPacket(packet.get(), packet.getLength(), t))
                 Console::PrintError ("Error while sending packet\n");
         }
-        catch(FormatException &e)
+        catch(FormatException &)
         {
             // ignore malformed packets
             Console::PrintDebug ("Ignoring malformed packet\n");

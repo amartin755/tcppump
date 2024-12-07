@@ -40,7 +40,7 @@ void cTcpPacket::compile (const uint8_t* payload, size_t len, bool calcChksum)
     if (calcChksum)
         header.checksum = calcChecksum();
     cIPv4Packet::updateL4Header ((const uint8_t*)&header, sizeof (header));
-    sequence += len + (uint32_t)header.isSyn();
+    sequence += (uint32_t)len + (uint32_t)header.isSyn();
 }
 
 void cTcpPacket::setSourcePort (uint16_t port)
