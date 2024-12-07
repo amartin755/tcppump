@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         ref: ${{ github.ref }}
 
@@ -40,22 +40,22 @@ jobs:
     - name: Execute Unit Tests
       working-directory: ${{runner.workspace}}/tcppump/bin
       shell: bash
-      # Execute unittest binary  
+      # Execute unittest binary
       run: ./unittest
 
     - name: Test
       working-directory: ${{runner.workspace}}/tcppump/build
       shell: bash
       run: ctest
-      
-    - uses: actions/upload-artifact@v2
+
+    - uses: actions/upload-artifact@v4
       with:
         name: generated binaries
         path: ${{runner.workspace}}/tcppump/bin/
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v4
       if: always()
-      with: 
+      with:
         name: logfiles
         path: |
           ${{runner.workspace}}/tcppump/build/CMakeFiles/CMakeError.log

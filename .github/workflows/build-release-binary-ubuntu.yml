@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         ref: ${{ github.ref }}
 
@@ -32,13 +32,13 @@ jobs:
       working-directory: ${{runner.workspace}}/tcppump
       shell: bash
       run: cmake --build build --config $BUILD_TYPE
-      
+
     - name: Package
       working-directory: ${{runner.workspace}}/tcppump/build
       shell: bash
       run: cpack
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v4
       with:
         name: release-ubuntu-x64
         path: |

@@ -18,7 +18,7 @@ jobs:
     timeout-minutes: 15
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         ref: ${{ github.ref }}
 
@@ -45,24 +45,24 @@ jobs:
     - name: Execute Unit Tests
       working-directory: ${{runner.workspace}}/tcppump/bin
       shell: bash
-      # Execute unittest binary  
+      # Execute unittest binary
       run: ./unittest
 
     - name: Test
       working-directory: ${{runner.workspace}}/tcppump/build
       shell: bash
-      # Execute tests defined by the CMake configuration.  
+      # Execute tests defined by the CMake configuration.
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ctest -C $BUILD_TYPE
-      
-    - uses: actions/upload-artifact@v2
-      with: 
+
+    - uses: actions/upload-artifact@v4
+      with:
         name: generated binaries
         path: ${{runner.workspace}}/tcppump/bin/
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v4
       if: always()
-      with: 
+      with:
         name: logfiles
         path: |
           ${{runner.workspace}}/tcppump/build/CMakeFiles/CMakeError.log

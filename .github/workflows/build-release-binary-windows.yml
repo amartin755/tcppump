@@ -18,7 +18,7 @@ jobs:
     timeout-minutes: 15
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         ref: ${{ github.ref }}
 
@@ -42,7 +42,7 @@ jobs:
       # Execute the build.  You can specify a specific target with "--target <NAME>"
       run: cmake --build build --config $BUILD_TYPE
 
-    - uses: actions/upload-artifact@v2
-      with: 
+    - uses: actions/upload-artifact@v4
+      with:
         name: release-windows-x64
         path: ${{runner.workspace}}/tcppump/bin/
