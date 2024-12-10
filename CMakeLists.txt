@@ -24,6 +24,9 @@ project (tcppump VERSION 0.3.1
                  LANGUAGES CXX)
 ###############################################################################
 
+option(WITH_UNITTESTS "enable/disable generation of unittest binary (default ON)" ON)
+option(WITH_ASAN      "enable/disable address sanitizer (default OFF)" OFF)
+option(WITH_UBSAN     "enable/disable undefined behavior sanitizer (default OFF)" OFF)
 
 # set output directories to "bin"
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
@@ -47,6 +50,16 @@ endif()
 # on mingw we link the std library statically
 if (MINGW)
     add_link_options (-static-libgcc -static-libstdc++)
+endif ()
+
+if (WITH_UBSAN)
+    add_compile_options (-fsanitize=undefined)
+    add_link_options (-fsanitize=undefined)
+endif ()
+
+if (WITH_ASAN)
+    add_compile_options (-fsanitize=address)
+    add_link_options (-fsanitize=address)
 endif ()
 
 # download dependencies
