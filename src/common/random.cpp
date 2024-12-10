@@ -20,6 +20,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <cassert>
+#include "bug.hpp"
 #include "random.hpp"
 
 cRandom* cRandom::instance = nullptr;
@@ -44,7 +45,7 @@ void cRandom::destroy (void)
 
 void cRandom::setCounterMode (unsigned startValue)
 {
-    assert (instance);
+    BUG_ON (!instance);
     instance->countOnly = true;
     instance->seq       = startValue;
 }
@@ -72,7 +73,7 @@ uint8_t cRandom::rand8 (void)
 
 uint32_t cRandom::rand (void)
 {
-    assert (instance);
+    BUG_ON (!instance);
     return instance->countOnly ? instance->sequence() : instance->pseudoRandom();
 }
 

@@ -379,73 +379,73 @@ void cEthernetPacket::unitTest ()
         obj.clear();
 
         obj.setMacHeader(src, dst);
-        assert (!memcmp (obj.packet, "\x11\x22\x33\x44\x55\x66\x12\x34\x56\x78\x9a\xbc\x00\x00\xcc\xcc", 16));
-        assert (obj.getLength() == 14);
+        BUG_IF_NOT (!memcmp (obj.packet, "\x11\x22\x33\x44\x55\x66\x12\x34\x56\x78\x9a\xbc\x00\x00\xcc\xcc", 16));
+        BUG_IF_NOT (obj.getLength() == 14);
         obj.setLength ();
-        assert (obj.getLength() == 14);
-        assert (!memcmp (obj.packet, "\x11\x22\x33\x44\x55\x66\x12\x34\x56\x78\x9a\xbc\x00\x00\xcc\xcc", 16));
+        BUG_IF_NOT (obj.getLength() == 14);
+        BUG_IF_NOT (!memcmp (obj.packet, "\x11\x22\x33\x44\x55\x66\x12\x34\x56\x78\x9a\xbc\x00\x00\xcc\xcc", 16));
         obj.setTypeLength (0x1234);
-        assert (!memcmp (obj.packet, "\x11\x22\x33\x44\x55\x66\x12\x34\x56\x78\x9a\xbc\x12\x34\xcc\xcc", 16));
-        assert (obj.getLength() == 14);
+        BUG_IF_NOT (!memcmp (obj.packet, "\x11\x22\x33\x44\x55\x66\x12\x34\x56\x78\x9a\xbc\x12\x34\xcc\xcc", 16));
+        BUG_IF_NOT (obj.getLength() == 14);
         obj.addVlanTag(false, 12, 7, 0);
-        assert (!memcmp (obj.packet, "\x11\x22\x33\x44\x55\x66\x12\x34\x56\x78\x9a\xbc\x88\xa8\xe0\x0c\x12\x34\xcc\xcc", 20));
-        assert (obj.getLength() == 18);
+        BUG_IF_NOT (!memcmp (obj.packet, "\x11\x22\x33\x44\x55\x66\x12\x34\x56\x78\x9a\xbc\x88\xa8\xe0\x0c\x12\x34\xcc\xcc", 20));
+        BUG_IF_NOT (obj.getLength() == 18);
         obj.setPayload ((uint8_t*)"\xaa\xbb\xcc\xdd\xee\xff\x0a\x0b\x0c\x0d\x0e\x0f", 12);
-        assert (obj.getLength() == 30);
-        assert (!memcmp (obj.packet, "\x11\x22\x33\x44\x55\x66\x12\x34\x56\x78\x9a\xbc\x88\xa8\xe0\x0c\x12\x34\xaa\xbb\xcc\xdd\xee\xff\x0a\x0b\x0c\x0d\x0e\x0f\xcc\xcc", 32));
+        BUG_IF_NOT (obj.getLength() == 30);
+        BUG_IF_NOT (!memcmp (obj.packet, "\x11\x22\x33\x44\x55\x66\x12\x34\x56\x78\x9a\xbc\x88\xa8\xe0\x0c\x12\x34\xaa\xbb\xcc\xdd\xee\xff\x0a\x0b\x0c\x0d\x0e\x0f\xcc\xcc", 32));
         obj.addVlanTag(true, 12, 7, 0);
-        assert (!memcmp (obj.packet, "\x11\x22\x33\x44\x55\x66\x12\x34\x56\x78\x9a\xbc\x88\xa8\xe0\x0c\x81\x00\xe0\x0c\x12\x34\xaa\xbb\xcc\xdd\xee\xff\x0a\x0b\x0c\x0d\x0e\x0f\xcc\xcc", 36));
-        assert (obj.getLength() == 34);
+        BUG_IF_NOT (!memcmp (obj.packet, "\x11\x22\x33\x44\x55\x66\x12\x34\x56\x78\x9a\xbc\x88\xa8\xe0\x0c\x81\x00\xe0\x0c\x12\x34\xaa\xbb\xcc\xdd\xee\xff\x0a\x0b\x0c\x0d\x0e\x0f\xcc\xcc", 36));
+        BUG_IF_NOT (obj.getLength() == 34);
         obj.setLength();
-        assert (!memcmp (obj.packet, "\x11\x22\x33\x44\x55\x66\x12\x34\x56\x78\x9a\xbc\x88\xa8\xe0\x0c\x81\x00\xe0\x0c\x00\x0c\xaa\xbb\xcc\xdd\xee\xff\x0a\x0b\x0c\x0d\x0e\x0f\xcc\xcc", 36));
+        BUG_IF_NOT (!memcmp (obj.packet, "\x11\x22\x33\x44\x55\x66\x12\x34\x56\x78\x9a\xbc\x88\xa8\xe0\x0c\x81\x00\xe0\x0c\x00\x0c\xaa\xbb\xcc\xdd\xee\xff\x0a\x0b\x0c\x0d\x0e\x0f\xcc\xcc", 36));
         obj.addLlcHeader(0x10, 0x20, 3);
-        assert (obj.getLength() == 37);
+        BUG_IF_NOT (obj.getLength() == 37);
 
         {
             // test copy constructor
             cEthernetPacket cpy(obj);
-            assert (obj.data != cpy.data);
-            assert (obj.packet != cpy.packet);
-            assert (obj.pPayload != cpy.pPayload);
-            assert (obj.pEthertypeLength != cpy.pEthertypeLength);
-            assert (obj.packetMaxLength == cpy.packetMaxLength);
-            assert (obj.payloadLength == cpy.payloadLength);
-            assert (obj.llcHeaderLength == cpy.llcHeaderLength);
-            assert (obj.vlanTags == cpy.vlanTags);
-            assert (*obj.data == *cpy.data);
-            assert (*obj.packet == *cpy.packet);
-            assert (*obj.pPayload == *cpy.pPayload);
-            assert (*obj.pEthertypeLength == *cpy.pEthertypeLength);
-            assert (!memcmp (obj.packet, cpy.packet, (obj.pPayload + obj.payloadLength) - obj.packet));
+            BUG_IF_NOT (obj.data != cpy.data);
+            BUG_IF_NOT (obj.packet != cpy.packet);
+            BUG_IF_NOT (obj.pPayload != cpy.pPayload);
+            BUG_IF_NOT (obj.pEthertypeLength != cpy.pEthertypeLength);
+            BUG_IF_NOT (obj.packetMaxLength == cpy.packetMaxLength);
+            BUG_IF_NOT (obj.payloadLength == cpy.payloadLength);
+            BUG_IF_NOT (obj.llcHeaderLength == cpy.llcHeaderLength);
+            BUG_IF_NOT (obj.vlanTags == cpy.vlanTags);
+            BUG_IF_NOT (*obj.data == *cpy.data);
+            BUG_IF_NOT (*obj.packet == *cpy.packet);
+            BUG_IF_NOT (*obj.pPayload == *cpy.pPayload);
+            BUG_IF_NOT (*obj.pEthertypeLength == *cpy.pEthertypeLength);
+            BUG_IF_NOT (!memcmp (obj.packet, cpy.packet, (obj.pPayload + obj.payloadLength) - obj.packet));
         }
 
         memset (obj.packet, 0xcc, MAX_DOUBLE_TAGGED_PACKET + 1);
         obj.reset();
         obj.setMacHeader(src, dst);
         obj.addSnapHeader(0x00808182, 0x9876);
-        assert (!memcmp (obj.packet, "\x11\x22\x33\x44\x55\x66\x12\x34\x56\x78\x9a\xbc\x00\x08\xaa\xaa\x03\x80\x81\x82\x98\x76\xcc\xcc", 24));
-        assert (obj.getLength() == 22);
+        BUG_IF_NOT (!memcmp (obj.packet, "\x11\x22\x33\x44\x55\x66\x12\x34\x56\x78\x9a\xbc\x00\x08\xaa\xaa\x03\x80\x81\x82\x98\x76\xcc\xcc", 24));
+        BUG_IF_NOT (obj.getLength() == 22);
 
         {
             // test copy constructor
             cEthernetPacket cpy(obj);
-            assert (obj.data != cpy.data);
-            assert (obj.packet != cpy.packet);
-            assert (obj.pPayload != cpy.pPayload);
-            assert (obj.pEthertypeLength != cpy.pEthertypeLength);
-            assert (obj.packetMaxLength == cpy.packetMaxLength);
-            assert (obj.payloadLength == cpy.payloadLength);
-            assert (obj.llcHeaderLength == cpy.llcHeaderLength);
-            assert (obj.vlanTags == cpy.vlanTags);
-            assert (*obj.data == *cpy.data);
-            assert (*obj.packet == *cpy.packet);
-            assert (*obj.pEthertypeLength == *cpy.pEthertypeLength);
-            assert (!memcmp (obj.packet, cpy.packet, obj.getLength()));
+            BUG_IF_NOT (obj.data != cpy.data);
+            BUG_IF_NOT (obj.packet != cpy.packet);
+            BUG_IF_NOT (obj.pPayload != cpy.pPayload);
+            BUG_IF_NOT (obj.pEthertypeLength != cpy.pEthertypeLength);
+            BUG_IF_NOT (obj.packetMaxLength == cpy.packetMaxLength);
+            BUG_IF_NOT (obj.payloadLength == cpy.payloadLength);
+            BUG_IF_NOT (obj.llcHeaderLength == cpy.llcHeaderLength);
+            BUG_IF_NOT (obj.vlanTags == cpy.vlanTags);
+            BUG_IF_NOT (*obj.data == *cpy.data);
+            BUG_IF_NOT (*obj.packet == *cpy.packet);
+            BUG_IF_NOT (*obj.pEthertypeLength == *cpy.pEthertypeLength);
+            BUG_IF_NOT (!memcmp (obj.packet, cpy.packet, obj.getLength()));
         }
     }
     catch (FormatException& )
     {
-        assert (0);
+        BUG_IF_NOT (0);
     }
 
     bool catched = false;
@@ -456,7 +456,7 @@ void cEthernetPacket::unitTest ()
     }
     catch (FormatException& )
     {
-        assert (0);
+        BUG_IF_NOT (0);
     }
     try
     {
@@ -468,7 +468,7 @@ void cEthernetPacket::unitTest ()
     {
         catched = true;
     }
-    assert (catched);
+    BUG_IF_NOT (catched);
 
     try
     {
@@ -478,7 +478,7 @@ void cEthernetPacket::unitTest ()
     }
     catch (FormatException& )
     {
-        assert (0);
+        BUG_IF_NOT (0);
     }
     try
     {
@@ -491,7 +491,7 @@ void cEthernetPacket::unitTest ()
     {
         catched = true;
     }
-    assert (catched);
+    BUG_IF_NOT (catched);
 
     try
     {
@@ -500,7 +500,7 @@ void cEthernetPacket::unitTest ()
     }
     catch (FormatException& )
     {
-        assert (0);
+        BUG_IF_NOT (0);
     }
     try
     {
@@ -512,7 +512,7 @@ void cEthernetPacket::unitTest ()
     {
         catched = true;
     }
-    assert (catched);
+    BUG_IF_NOT (catched);
 
     try
     {
@@ -521,7 +521,7 @@ void cEthernetPacket::unitTest ()
     }
     catch (FormatException& )
     {
-        assert (0);
+        BUG_IF_NOT (0);
     }
     try
     {
@@ -533,7 +533,7 @@ void cEthernetPacket::unitTest ()
     {
         catched = true;
     }
-    assert (catched);
+    BUG_IF_NOT (catched);
 
     try
     {
@@ -542,7 +542,7 @@ void cEthernetPacket::unitTest ()
     }
     catch (FormatException& )
     {
-        assert (0);
+        BUG_IF_NOT (0);
     }
     try
     {
@@ -554,7 +554,7 @@ void cEthernetPacket::unitTest ()
     {
         catched = true;
     }
-    assert (catched);
+    BUG_IF_NOT (catched);
 
     try
     {
@@ -563,7 +563,7 @@ void cEthernetPacket::unitTest ()
     }
     catch (FormatException& )
     {
-        assert (0);
+        BUG_IF_NOT (0);
     }
     try
     {
@@ -575,7 +575,7 @@ void cEthernetPacket::unitTest ()
     {
         catched = true;
     }
-    assert (catched);
+    BUG_IF_NOT (catched);
 
     try
     {
@@ -584,7 +584,7 @@ void cEthernetPacket::unitTest ()
     }
     catch (FormatException& )
     {
-        assert (0);
+        BUG_IF_NOT (0);
     }
     try
     {
@@ -596,7 +596,7 @@ void cEthernetPacket::unitTest ()
     {
         catched = true;
     }
-    assert (catched);
+    BUG_IF_NOT (catched);
 
     try
     {
@@ -606,19 +606,19 @@ void cEthernetPacket::unitTest ()
         memset (obj.packet, 0xcc, MAX_DOUBLE_TAGGED_PACKET+1);
         obj.reset();
         obj.addVlanTag(false, 12, 7, 0);
-        assert (obj.packet[18] == 0xcc);
+        BUG_IF_NOT (obj.packet[18] == 0xcc);
         obj.addVlanTag(true, 12, 7, 0);
-        assert (obj.packet[22] == 0xcc);
+        BUG_IF_NOT (obj.packet[22] == 0xcc);
         obj.addSnapHeader(0x123456, 1234);
-        assert (obj.packet[30] == 0xcc);
+        BUG_IF_NOT (obj.packet[30] == 0xcc);
         obj.setPayload (payload, sizeof (payload));
-        assert (obj.packet[30] == 0);
-        assert (obj.packet[MAX_DOUBLE_TAGGED_PACKET-1] == 0);
-        assert (obj.packet[MAX_DOUBLE_TAGGED_PACKET] == 0xcc);
+        BUG_IF_NOT (obj.packet[30] == 0);
+        BUG_IF_NOT (obj.packet[MAX_DOUBLE_TAGGED_PACKET-1] == 0);
+        BUG_IF_NOT (obj.packet[MAX_DOUBLE_TAGGED_PACKET] == 0xcc);
     }
     catch (FormatException& )
     {
-        assert (0);
+        BUG_IF_NOT (0);
     }
     try
     {
@@ -629,20 +629,20 @@ void cEthernetPacket::unitTest ()
         memset (obj.packet, 0xcc, MAX_DOUBLE_TAGGED_PACKET);
         obj.reset();
         obj.addVlanTag(false, 12, 7, 0);
-        assert (obj.packet[18] == 0xcc);
+        BUG_IF_NOT (obj.packet[18] == 0xcc);
         obj.addVlanTag(true, 12, 7, 0);
-        assert (obj.packet[22] == 0xcc);
+        BUG_IF_NOT (obj.packet[22] == 0xcc);
         obj.addSnapHeader(0x123456, 1234);
-        assert (obj.packet[30] == 0xcc);
+        BUG_IF_NOT (obj.packet[30] == 0xcc);
         obj.setPayload (payload, sizeof (payload));
-        assert (obj.packet[30] == 0);
-        assert (obj.packet[MAX_DOUBLE_TAGGED_PACKET-1] == 0);
+        BUG_IF_NOT (obj.packet[30] == 0);
+        BUG_IF_NOT (obj.packet[MAX_DOUBLE_TAGGED_PACKET-1] == 0);
     }
     catch (FormatException& )
     {
         catched = true;
     }
-    assert (catched);
+    BUG_IF_NOT (catched);
     try
     {
         catched = false;
@@ -655,10 +655,10 @@ void cEthernetPacket::unitTest ()
 
         cEthernetPacket obj2;
         obj2.setRaw(obj.packet, obj.getLength());
-        assert (obj2.vlanTags == 2);
-        assert (*obj2.pEthertypeLength == *obj.pEthertypeLength);
-        assert (*obj2.pPayload == *obj.pPayload);
-        assert (obj2.getLength() == obj.getLength());
+        BUG_IF_NOT (obj2.vlanTags == 2);
+        BUG_IF_NOT (*obj2.pEthertypeLength == *obj.pEthertypeLength);
+        BUG_IF_NOT (*obj2.pPayload == *obj.pPayload);
+        BUG_IF_NOT (obj2.getLength() == obj.getLength());
 
     }
     catch (FormatException& )
@@ -678,11 +678,11 @@ void cEthernetPacket::unitTest ()
 
         cEthernetPacket obj2;
         obj2.setRaw(obj.packet, obj.getLength());
-        assert (obj2.vlanTags == 2);
-        assert (*obj2.pEthertypeLength == *obj.pEthertypeLength);
-        assert (*obj2.pPayload == *obj.pPayload);
-        assert (obj2.getLength() == obj.getLength());
-        assert (obj2.llcHeaderLength == obj.llcHeaderLength);
+        BUG_IF_NOT (obj2.vlanTags == 2);
+        BUG_IF_NOT (*obj2.pEthertypeLength == *obj.pEthertypeLength);
+        BUG_IF_NOT (*obj2.pPayload == *obj.pPayload);
+        BUG_IF_NOT (obj2.getLength() == obj.getLength());
+        BUG_IF_NOT (obj2.llcHeaderLength == obj.llcHeaderLength);
 
     }
     catch (FormatException& )

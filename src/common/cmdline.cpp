@@ -284,20 +284,20 @@ void cCmdline::unitTest ()
 
         cCmdline obj(argc, (char**)argv);
 
-        assert (obj.addOption (false, 'a', "arga", "mandatory option with args", &isset1, "ARG", ARG_STRING, &stringarg1));
-        assert (obj.addOption (false, 'b', "argb", "mandatory option without args (makes no sense)", &isset2));
-        assert (obj.addOption (true, 'c', "argc", "optional option with args", &isset3, "ARG", ARG_STRING, &stringarg2));
-        assert (obj.addOption (true, 'd', "argd", "optional option without args", &isset4));
+        BUG_IF_NOT (obj.addOption (false, 'a', "arga", "mandatory option with args", &isset1, "ARG", ARG_STRING, &stringarg1));
+        BUG_IF_NOT (obj.addOption (false, 'b', "argb", "mandatory option without args (makes no sense)", &isset2));
+        BUG_IF_NOT (obj.addOption (true, 'c', "argc", "optional option with args", &isset3, "ARG", ARG_STRING, &stringarg2));
+        BUG_IF_NOT (obj.addOption (true, 'd', "argd", "optional option without args", &isset4));
 
-        assert (obj.parse ());
-        assert (isset1 == 1);
-        assert (stringarg1);
-        assert (!strcmp ("AAA", stringarg1));
-        assert (isset2 == 1);
-        assert (isset3 == 1);
-        assert (stringarg2);
-        assert (!strcmp ("CCC", stringarg2));
-        assert (isset4 == 1);
+        BUG_IF_NOT (obj.parse ());
+        BUG_IF_NOT (isset1 == 1);
+        BUG_IF_NOT (stringarg1);
+        BUG_IF_NOT (!strcmp ("AAA", stringarg1));
+        BUG_IF_NOT (isset2 == 1);
+        BUG_IF_NOT (isset3 == 1);
+        BUG_IF_NOT (stringarg2);
+        BUG_IF_NOT (!strcmp ("CCC", stringarg2));
+        BUG_IF_NOT (isset4 == 1);
     }
     {
         char* argv[] = {"unittest2", "-a", "AAA", "-b", "-c", "CCC", "-d"};
@@ -307,20 +307,20 @@ void cCmdline::unitTest ()
 
         cCmdline obj(argc, (char**)argv);
 
-        assert (obj.addOption (false, 'a', "arga", "mandatory option with args", &isset1, "ARG", ARG_STRING, &stringarg1));
-        assert (obj.addOption (false, 'b', "argb", "mandatory option without args (makes no sense)", &isset2));
-        assert (obj.addOption (true, 'c', "argc", "optional option with args", &isset3, "ARG", ARG_STRING, &stringarg2));
-        assert (obj.addOption (true, 'd', "argd", "optional option without args", &isset4));
+        BUG_IF_NOT (obj.addOption (false, 'a', "arga", "mandatory option with args", &isset1, "ARG", ARG_STRING, &stringarg1));
+        BUG_IF_NOT (obj.addOption (false, 'b', "argb", "mandatory option without args (makes no sense)", &isset2));
+        BUG_IF_NOT (obj.addOption (true, 'c', "argc", "optional option with args", &isset3, "ARG", ARG_STRING, &stringarg2));
+        BUG_IF_NOT (obj.addOption (true, 'd', "argd", "optional option without args", &isset4));
 
-        assert (obj.parse ());
-        assert (isset1 == 1);
-        assert (stringarg1);
-        assert (!strcmp ("AAA", stringarg1));
-        assert (isset2 == 1);
-        assert (isset3 == 1);
-        assert (stringarg2);
-        assert (!strcmp ("CCC", stringarg2));
-        assert (isset4 == 1);
+        BUG_IF_NOT (obj.parse ());
+        BUG_IF_NOT (isset1 == 1);
+        BUG_IF_NOT (stringarg1);
+        BUG_IF_NOT (!strcmp ("AAA", stringarg1));
+        BUG_IF_NOT (isset2 == 1);
+        BUG_IF_NOT (isset3 == 1);
+        BUG_IF_NOT (stringarg2);
+        BUG_IF_NOT (!strcmp ("CCC", stringarg2));
+        BUG_IF_NOT (isset4 == 1);
     }
     {
         char* argv[] = {"unittest3", "--arga=AAA", "--argb", "--argc=CCC", "--argd"};
@@ -330,20 +330,20 @@ void cCmdline::unitTest ()
 
         cCmdline obj(argc, (char**)argv);
 
-        assert (obj.addOption (false, 'a', "arga", "mandatory option with args", &isset1, "ARG", ARG_STRING, &stringarg1));
-        assert (obj.addOption (false, 'b', "argb", "mandatory option without args (makes no sense)", &isset2));
-        assert (obj.addOption (true, 'c', "argc", "optional option with args", &isset3, "ARG", ARG_STRING, &stringarg2));
-        assert (obj.addOption (true, 'd', "argd", "optional option without args", &isset4));
+        BUG_IF_NOT (obj.addOption (false, 'a', "arga", "mandatory option with args", &isset1, "ARG", ARG_STRING, &stringarg1));
+        BUG_IF_NOT (obj.addOption (false, 'b', "argb", "mandatory option without args (makes no sense)", &isset2));
+        BUG_IF_NOT (obj.addOption (true, 'c', "argc", "optional option with args", &isset3, "ARG", ARG_STRING, &stringarg2));
+        BUG_IF_NOT (obj.addOption (true, 'd', "argd", "optional option without args", &isset4));
 
-        assert (obj.parse ());
-        assert (isset1 == 1);
-        assert (stringarg1);
-        assert (!strcmp ("AAA", stringarg1));
-        assert (isset2 == 1);
-        assert (isset3 == 1);
-        assert (stringarg2);
-        assert (!strcmp ("CCC", stringarg2));
-        assert (isset4 == 1);
+        BUG_IF_NOT (obj.parse ());
+        BUG_IF_NOT (isset1 == 1);
+        BUG_IF_NOT (stringarg1);
+        BUG_IF_NOT (!strcmp ("AAA", stringarg1));
+        BUG_IF_NOT (isset2 == 1);
+        BUG_IF_NOT (isset3 == 1);
+        BUG_IF_NOT (stringarg2);
+        BUG_IF_NOT (!strcmp ("CCC", stringarg2));
+        BUG_IF_NOT (isset4 == 1);
     }
     {
         char* argv[] = {"unittest4", "--arga", "AAA", "--argb", "--argc", "CCC", "--argd"};
@@ -353,20 +353,20 @@ void cCmdline::unitTest ()
 
         cCmdline obj(argc, (char**)argv);
 
-        assert (obj.addOption (false, 'a', "arga", "mandatory option with args", &isset1, "ARG", ARG_STRING, &stringarg1));
-        assert (obj.addOption (false, 'b', "argb", "mandatory option without args (makes no sense)", &isset2));
-        assert (obj.addOption (true, 'c', "argc", "optional option with args", &isset3, "ARG", ARG_STRING, &stringarg2));
-        assert (obj.addOption (true, 'd', "argd", "optional option without args", &isset4));
+        BUG_IF_NOT (obj.addOption (false, 'a', "arga", "mandatory option with args", &isset1, "ARG", ARG_STRING, &stringarg1));
+        BUG_IF_NOT (obj.addOption (false, 'b', "argb", "mandatory option without args (makes no sense)", &isset2));
+        BUG_IF_NOT (obj.addOption (true, 'c', "argc", "optional option with args", &isset3, "ARG", ARG_STRING, &stringarg2));
+        BUG_IF_NOT (obj.addOption (true, 'd', "argd", "optional option without args", &isset4));
 
-        assert (obj.parse ());
-        assert (isset1 == 1);
-        assert (stringarg1);
-        assert (!strcmp ("AAA", stringarg1));
-        assert (isset2 == 1);
-        assert (isset3 == 1);
-        assert (stringarg2);
-        assert (!strcmp ("CCC", stringarg2));
-        assert (isset4 == 1);
+        BUG_IF_NOT (obj.parse ());
+        BUG_IF_NOT (isset1 == 1);
+        BUG_IF_NOT (stringarg1);
+        BUG_IF_NOT (!strcmp ("AAA", stringarg1));
+        BUG_IF_NOT (isset2 == 1);
+        BUG_IF_NOT (isset3 == 1);
+        BUG_IF_NOT (stringarg2);
+        BUG_IF_NOT (!strcmp ("CCC", stringarg2));
+        BUG_IF_NOT (isset4 == 1);
     }
     {
         char* argv[] = {"unittest5", "-a", "-b", "-cCCC", "-d"};
@@ -376,20 +376,20 @@ void cCmdline::unitTest ()
 
         cCmdline obj(argc, (char**)argv);
 
-        assert (obj.addOption (false, 'a', "arga", "mandatory option with args", &isset1, "ARG", ARG_STRING, &stringarg1));
-        assert (obj.addOption (false, 'b', "argb", "mandatory option without args (makes no sense)", &isset2));
-        assert (obj.addOption (true, 'c', "argc", "optional option with args", &isset3, "ARG", ARG_STRING, &stringarg2));
-        assert (obj.addOption (true, 'd', "argd", "optional option without args", &isset4));
+        BUG_IF_NOT (obj.addOption (false, 'a', "arga", "mandatory option with args", &isset1, "ARG", ARG_STRING, &stringarg1));
+        BUG_IF_NOT (obj.addOption (false, 'b', "argb", "mandatory option without args (makes no sense)", &isset2));
+        BUG_IF_NOT (obj.addOption (true, 'c', "argc", "optional option with args", &isset3, "ARG", ARG_STRING, &stringarg2));
+        BUG_IF_NOT (obj.addOption (true, 'd', "argd", "optional option without args", &isset4));
 
-        assert (!obj.parse ());
-        assert (isset1 == 1);
-        assert (stringarg1);
-        assert (!strcmp ("-b", stringarg1));
-        assert (isset2 == 0);
-        assert (isset3 == 1);
-        assert (stringarg2);
-        assert (!strcmp ("CCC", stringarg2));
-        assert (isset4 == 1);
+        BUG_IF_NOT (!obj.parse ());
+        BUG_IF_NOT (isset1 == 1);
+        BUG_IF_NOT (stringarg1);
+        BUG_IF_NOT (!strcmp ("-b", stringarg1));
+        BUG_IF_NOT (isset2 == 0);
+        BUG_IF_NOT (isset3 == 1);
+        BUG_IF_NOT (stringarg2);
+        BUG_IF_NOT (!strcmp ("CCC", stringarg2));
+        BUG_IF_NOT (isset4 == 1);
     }
     {
         char* argv[] = {"unittest6", "-b", "-cCCC"};
@@ -399,19 +399,19 @@ void cCmdline::unitTest ()
 
         cCmdline obj(argc, (char**)argv);
 
-        assert (obj.addOption (false, 'a', "arga", "mandatory option with args", &isset1, "ARG", ARG_STRING, &stringarg1));
-        assert (obj.addOption (false, 'b', "argb", "mandatory option without args (makes no sense)", &isset2));
-        assert (obj.addOption (true, 'c', "argc", "optional option with args", &isset3, "ARG", ARG_STRING, &stringarg2));
-        assert (obj.addOption (true, 'd', "argd", "optional option without args", &isset4));
+        BUG_IF_NOT (obj.addOption (false, 'a', "arga", "mandatory option with args", &isset1, "ARG", ARG_STRING, &stringarg1));
+        BUG_IF_NOT (obj.addOption (false, 'b', "argb", "mandatory option without args (makes no sense)", &isset2));
+        BUG_IF_NOT (obj.addOption (true, 'c', "argc", "optional option with args", &isset3, "ARG", ARG_STRING, &stringarg2));
+        BUG_IF_NOT (obj.addOption (true, 'd', "argd", "optional option without args", &isset4));
 
-        assert (!obj.parse ());
-        assert (isset1 == 0);
-        assert (isset2 == 1);
-        assert (isset3 == 1);
-        assert (isset4 == 0);
-        assert (!stringarg1);
-        assert (stringarg2);
-        assert (!strcmp ("CCC", stringarg2));
+        BUG_IF_NOT (!obj.parse ());
+        BUG_IF_NOT (isset1 == 0);
+        BUG_IF_NOT (isset2 == 1);
+        BUG_IF_NOT (isset3 == 1);
+        BUG_IF_NOT (isset4 == 0);
+        BUG_IF_NOT (!stringarg1);
+        BUG_IF_NOT (stringarg2);
+        BUG_IF_NOT (!strcmp ("CCC", stringarg2));
     }
     {
         char* argv[] = {"unittest7", "-a", "-b"};
@@ -422,12 +422,12 @@ void cCmdline::unitTest ()
 
         cCmdline obj(argc, (char**)argv);
 
-        assert (obj.addOption (true, 'a', "arga", "optional option without args", &isset1));
-        assert (obj.addOption (true, 'b', "argb", "optional option without args", &isset2));
+        BUG_IF_NOT (obj.addOption (true, 'a', "arga", "optional option without args", &isset1));
+        BUG_IF_NOT (obj.addOption (true, 'b', "argb", "optional option without args", &isset2));
 
-        assert (obj.parse ());
-        assert (isset1 == 1);
-        assert (isset2 == 1);
+        BUG_IF_NOT (obj.parse ());
+        BUG_IF_NOT (isset1 == 1);
+        BUG_IF_NOT (isset2 == 1);
     }
     {
         char* argv[] = {"unittest8", "-b"};
@@ -438,12 +438,12 @@ void cCmdline::unitTest ()
 
         cCmdline obj(argc, (char**)argv);
 
-        assert (obj.addOption (true, 'a', "arga", "optional option without args", &isset1));
-        assert (obj.addOption (true, 'b', "argb", "optional option without args", &isset2));
+        BUG_IF_NOT (obj.addOption (true, 'a', "arga", "optional option without args", &isset1));
+        BUG_IF_NOT (obj.addOption (true, 'b', "argb", "optional option without args", &isset2));
 
-        assert (obj.parse ());
-        assert (isset1 == 0);
-        assert (isset2 == 1);
+        BUG_IF_NOT (obj.parse ());
+        BUG_IF_NOT (isset1 == 0);
+        BUG_IF_NOT (isset2 == 1);
     }
     {
         char* argv[] = {"unittest9", "-a0xa", "-b10"};
@@ -454,14 +454,14 @@ void cCmdline::unitTest ()
 
         cCmdline obj(argc, (char**)argv);
 
-        assert (obj.addOption (true, 'a', "arga", "optional option with args", &isset1, "ARG", ARG_INT, &intarg1));
-        assert (obj.addOption (true, 'b', "argb", "optional option with args", &isset2, "ARG", ARG_INT, &intarg2));
+        BUG_IF_NOT (obj.addOption (true, 'a', "arga", "optional option with args", &isset1, "ARG", ARG_INT, &intarg1));
+        BUG_IF_NOT (obj.addOption (true, 'b', "argb", "optional option with args", &isset2, "ARG", ARG_INT, &intarg2));
 
-        assert (obj.parse ());
-        assert (isset1 == 1);
-        assert (isset2 == 1);
-        assert (intarg1 == 10);
-        assert (intarg2 == 10);
+        BUG_IF_NOT (obj.parse ());
+        BUG_IF_NOT (isset1 == 1);
+        BUG_IF_NOT (isset2 == 1);
+        BUG_IF_NOT (intarg1 == 10);
+        BUG_IF_NOT (intarg2 == 10);
     }
     {
         char* argv[] = {"unittest10", "-a", "0xa", "-b", "10"};
@@ -472,14 +472,14 @@ void cCmdline::unitTest ()
 
         cCmdline obj(argc, (char**)argv);
 
-        assert (obj.addOption (true, 'a', "arga", "optional option with args", &isset1, "ARG", ARG_INT, &intarg1));
-        assert (obj.addOption (true, 'b', "argb", "optional option with args", &isset2, "ARG", ARG_INT, &intarg2));
+        BUG_IF_NOT (obj.addOption (true, 'a', "arga", "optional option with args", &isset1, "ARG", ARG_INT, &intarg1));
+        BUG_IF_NOT (obj.addOption (true, 'b', "argb", "optional option with args", &isset2, "ARG", ARG_INT, &intarg2));
 
-        assert (obj.parse ());
-        assert (isset1 == 1);
-        assert (isset2 == 1);
-        assert (intarg1 == 10);
-        assert (intarg2 == 10);
+        BUG_IF_NOT (obj.parse ());
+        BUG_IF_NOT (isset1 == 1);
+        BUG_IF_NOT (isset2 == 1);
+        BUG_IF_NOT (intarg1 == 10);
+        BUG_IF_NOT (intarg2 == 10);
     }
     {
         char* argv[] = {"unittest11", "--arga=0xa", "--argb=10"};
@@ -490,14 +490,14 @@ void cCmdline::unitTest ()
 
         cCmdline obj(argc, (char**)argv);
 
-        assert (obj.addOption (true, 'a', "arga", "optional option with args", &isset1, "ARG", ARG_INT, &intarg1));
-        assert (obj.addOption (true, 'b', "argb", "optional option with args", &isset2, "ARG", ARG_INT, &intarg2));
+        BUG_IF_NOT (obj.addOption (true, 'a', "arga", "optional option with args", &isset1, "ARG", ARG_INT, &intarg1));
+        BUG_IF_NOT (obj.addOption (true, 'b', "argb", "optional option with args", &isset2, "ARG", ARG_INT, &intarg2));
 
-        assert (obj.parse ());
-        assert (isset1 == 1);
-        assert (isset2 == 1);
-        assert (intarg1 == 10);
-        assert (intarg2 == 10);
+        BUG_IF_NOT (obj.parse ());
+        BUG_IF_NOT (isset1 == 1);
+        BUG_IF_NOT (isset2 == 1);
+        BUG_IF_NOT (intarg1 == 10);
+        BUG_IF_NOT (intarg2 == 10);
     }
     {
         char* argv[] = {"unittest12", "--arga", "0xa", "--argb", "10"};
@@ -508,14 +508,14 @@ void cCmdline::unitTest ()
 
         cCmdline obj(argc, (char**)argv);
 
-        assert (obj.addOption (true, 'a', "arga", "optional option with args", &isset1, "ARG", ARG_INT, &intarg1));
-        assert (obj.addOption (true, 'b', "argb", "optional option with args", &isset2, "ARG", ARG_INT, &intarg2));
+        BUG_IF_NOT (obj.addOption (true, 'a', "arga", "optional option with args", &isset1, "ARG", ARG_INT, &intarg1));
+        BUG_IF_NOT (obj.addOption (true, 'b', "argb", "optional option with args", &isset2, "ARG", ARG_INT, &intarg2));
 
-        assert (obj.parse ());
-        assert (isset1 == 1);
-        assert (isset2 == 1);
-        assert (intarg1 == 10);
-        assert (intarg2 == 10);
+        BUG_IF_NOT (obj.parse ());
+        BUG_IF_NOT (isset1 == 1);
+        BUG_IF_NOT (isset2 == 1);
+        BUG_IF_NOT (intarg1 == 10);
+        BUG_IF_NOT (intarg2 == 10);
     }
     {
         char* argv[] = {"unittest13", "--arga=0xa", "--argb", "10", "--argc=CCC", "--argd", "DDD", "ABCD", "EFGH"};
@@ -527,23 +527,23 @@ void cCmdline::unitTest ()
 
         cCmdline obj(argc, (char**)argv);
 
-        assert (obj.addOption (true, 'a', "arga", "optional option with args", &isset1, "ARG", ARG_INT, &intarg1));
-        assert (obj.addOption (true, 'b', "argb", "optional option with args", &isset2, "ARG", ARG_INT, &intarg2));
-        assert (obj.addOption (true, 'c', "argc", "optional option with args", &isset3, "ARG", ARG_STRING, &stringarg1));
-        assert (obj.addOption (true, 'd', "argd", "optional option with args", &isset4, "ARG", ARG_STRING, &stringarg2));
+        BUG_IF_NOT (obj.addOption (true, 'a', "arga", "optional option with args", &isset1, "ARG", ARG_INT, &intarg1));
+        BUG_IF_NOT (obj.addOption (true, 'b', "argb", "optional option with args", &isset2, "ARG", ARG_INT, &intarg2));
+        BUG_IF_NOT (obj.addOption (true, 'c', "argc", "optional option with args", &isset3, "ARG", ARG_STRING, &stringarg1));
+        BUG_IF_NOT (obj.addOption (true, 'd', "argd", "optional option with args", &isset4, "ARG", ARG_STRING, &stringarg2));
 
-        assert (obj.parse (&index));
-        assert (isset1 == 1);
-        assert (isset2 == 1);
-        assert (isset3 == 1);
-        assert (isset4 == 1);
-        assert (intarg1 == 10);
-        assert (intarg2 == 10);
-        assert (stringarg1);
-        assert (!strcmp ("CCC", stringarg1));
-        assert (stringarg2);
-        assert (!strcmp ("DDD", stringarg2));
-        assert (index == 7);
+        BUG_IF_NOT (obj.parse (&index));
+        BUG_IF_NOT (isset1 == 1);
+        BUG_IF_NOT (isset2 == 1);
+        BUG_IF_NOT (isset3 == 1);
+        BUG_IF_NOT (isset4 == 1);
+        BUG_IF_NOT (intarg1 == 10);
+        BUG_IF_NOT (intarg2 == 10);
+        BUG_IF_NOT (stringarg1);
+        BUG_IF_NOT (!strcmp ("CCC", stringarg1));
+        BUG_IF_NOT (stringarg2);
+        BUG_IF_NOT (!strcmp ("DDD", stringarg2));
+        BUG_IF_NOT (index == 7);
     }
     {
         char* argv[] = {"unittest14", "--arga=0xa", "--argb", "10", "--argc=CCC", "--argd", "DDD", "ABCD", "EFGH"};
@@ -555,23 +555,23 @@ void cCmdline::unitTest ()
 
         cCmdline obj(argc, (char**)argv);
 
-        assert (obj.addOption (true, 'a', "arga", "optional option with args", &isset1, "ARG", ARG_INT, &intarg1));
-        assert (obj.addOption (true, 'b', "argb", "optional option with args", &isset2, "ARG", ARG_INT, &intarg2));
-        assert (obj.addOption (true, 0, "argc", "optional option with args", &isset3, "ARG", ARG_STRING, &stringarg1));
-        assert (obj.addOption (true, 'd', "argd", "optional option with args", &isset4, "ARG", ARG_STRING, &stringarg2));
+        BUG_IF_NOT (obj.addOption (true, 'a', "arga", "optional option with args", &isset1, "ARG", ARG_INT, &intarg1));
+        BUG_IF_NOT (obj.addOption (true, 'b', "argb", "optional option with args", &isset2, "ARG", ARG_INT, &intarg2));
+        BUG_IF_NOT (obj.addOption (true, 0, "argc", "optional option with args", &isset3, "ARG", ARG_STRING, &stringarg1));
+        BUG_IF_NOT (obj.addOption (true, 'd', "argd", "optional option with args", &isset4, "ARG", ARG_STRING, &stringarg2));
 
-        assert (obj.parse (&index));
-        assert (isset1 == 1);
-        assert (isset2 == 1);
-        assert (isset3 == 1);
-        assert (isset4 == 1);
-        assert (intarg1 == 10);
-        assert (intarg2 == 10);
-        assert (stringarg1);
-        assert (!strcmp ("CCC", stringarg1));
-        assert (stringarg2);
-        assert (!strcmp ("DDD", stringarg2));
-        assert (index == 7);
+        BUG_IF_NOT (obj.parse (&index));
+        BUG_IF_NOT (isset1 == 1);
+        BUG_IF_NOT (isset2 == 1);
+        BUG_IF_NOT (isset3 == 1);
+        BUG_IF_NOT (isset4 == 1);
+        BUG_IF_NOT (intarg1 == 10);
+        BUG_IF_NOT (intarg2 == 10);
+        BUG_IF_NOT (stringarg1);
+        BUG_IF_NOT (!strcmp ("CCC", stringarg1));
+        BUG_IF_NOT (stringarg2);
+        BUG_IF_NOT (!strcmp ("DDD", stringarg2));
+        BUG_IF_NOT (index == 7);
     }
     {
         char* argv[] = {"unittest15", "-vvv"};
@@ -581,10 +581,10 @@ void cCmdline::unitTest ()
 
         cCmdline obj(argc, (char**)argv);
 
-        assert (obj.addOption (true, 'v', "argd", "optional option without args", &isset1));
+        BUG_IF_NOT (obj.addOption (true, 'v', "argd", "optional option without args", &isset1));
 
-        assert (obj.parse (&index));
-        assert (isset1 == 3);
+        BUG_IF_NOT (obj.parse (&index));
+        BUG_IF_NOT (isset1 == 3);
     }
     {
         char* argv[] = {"unittest16", "-vv", "--arga"};
@@ -594,12 +594,12 @@ void cCmdline::unitTest ()
 
         cCmdline obj(argc, (char**)argv);
 
-        assert (obj.addOption (true, 'v', nullptr, "optional short-only option without args", &isset1));
-        assert (obj.addOption (true, 0, "arga", "optional long-only option without args", &isset2));
+        BUG_IF_NOT (obj.addOption (true, 'v', nullptr, "optional short-only option without args", &isset1));
+        BUG_IF_NOT (obj.addOption (true, 0, "arga", "optional long-only option without args", &isset2));
 
-        assert (obj.parse (&index));
-        assert (isset1 == 2);
-        assert (isset2 == 1);
+        BUG_IF_NOT (obj.parse (&index));
+        BUG_IF_NOT (isset1 == 2);
+        BUG_IF_NOT (isset2 == 1);
     }
     {
         char* argv[] = {"unittest17", "-a"};
@@ -610,11 +610,11 @@ void cCmdline::unitTest ()
 
         cCmdline obj(argc, (char**)argv);
 
-        assert (obj.addOption (true, 'a', "arga", "optional option with args", &isset1, "ARG", ARG_INT, &intarg1));
+        BUG_IF_NOT (obj.addOption (true, 'a', "arga", "optional option with args", &isset1, "ARG", ARG_INT, &intarg1));
 
-        assert (!obj.parse (&index));
-        assert (isset1 == 0);
-        assert (intarg1 == -2);
+        BUG_IF_NOT (!obj.parse (&index));
+        BUG_IF_NOT (isset1 == 0);
+        BUG_IF_NOT (intarg1 == -2);
     }
     {
         char* argv[] = {"unittest18", "-a"};
@@ -625,11 +625,11 @@ void cCmdline::unitTest ()
 
         cCmdline obj(argc, (char**)argv);
 
-        assert (obj.addOption (true, 'a', nullptr, "optional short-only option with args", &isset1, "ARG", ARG_INT, &intarg1));
+        BUG_IF_NOT (obj.addOption (true, 'a', nullptr, "optional short-only option with args", &isset1, "ARG", ARG_INT, &intarg1));
 
-        assert (!obj.parse (&index));
-        assert (isset1 == 0);
-        assert (intarg1 == -2);
+        BUG_IF_NOT (!obj.parse (&index));
+        BUG_IF_NOT (isset1 == 0);
+        BUG_IF_NOT (intarg1 == -2);
     }
     {
         char* argv[] = {"unittest19", "--arga"};
@@ -640,11 +640,11 @@ void cCmdline::unitTest ()
 
         cCmdline obj(argc, (char**)argv);
 
-        assert (obj.addOption (true, 0, "arga", "optional long-only option with args", &isset1, "ARG", ARG_INT, &intarg1));
+        BUG_IF_NOT (obj.addOption (true, 0, "arga", "optional long-only option with args", &isset1, "ARG", ARG_INT, &intarg1));
 
-        assert (!obj.parse (&index));
-        assert (isset1 == 0);
-        assert (intarg1 == -2);
+        BUG_IF_NOT (!obj.parse (&index));
+        BUG_IF_NOT (isset1 == 0);
+        BUG_IF_NOT (intarg1 == -2);
     }
     {
         char* argv[] = {"unittest20", "-a", "-b"};
@@ -655,10 +655,10 @@ void cCmdline::unitTest ()
 
         cCmdline obj(argc, (char**)argv);
 
-        assert (obj.addOption (true, 'a', "arga", "optional option without args", &isset1));
+        BUG_IF_NOT (obj.addOption (true, 'a', "arga", "optional option without args", &isset1));
 
-        assert (!obj.parse (&index));
-        assert (isset1 == 1);
+        BUG_IF_NOT (!obj.parse (&index));
+        BUG_IF_NOT (isset1 == 1);
     }
     {
         char* argv[] = {"unittest21", "-a", "--berta"};
@@ -669,10 +669,10 @@ void cCmdline::unitTest ()
 
         cCmdline obj(argc, (char**)argv);
 
-        assert (obj.addOption (true, 'a', "arga", "optional option without args", &isset1));
+        BUG_IF_NOT (obj.addOption (true, 'a', "arga", "optional option without args", &isset1));
 
-        assert (!obj.parse (&index));
-        assert (isset1 == 1);
+        BUG_IF_NOT (!obj.parse (&index));
+        BUG_IF_NOT (isset1 == 1);
     }
     {
         char* argv[] = {"unittest23", "--arga", "2"};
@@ -683,11 +683,11 @@ void cCmdline::unitTest ()
 
         cCmdline obj(argc, (char**)argv);
 
-        assert (obj.addOption (true, 0, "arga", "optional long-only option optional with args", &isset1, "ARG", ARG_INT, &intarg1, true));
+        BUG_IF_NOT (obj.addOption (true, 0, "arga", "optional long-only option optional with args", &isset1, "ARG", ARG_INT, &intarg1, true));
 
-        assert (obj.parse (&index));
-        assert (isset1 == 1);
-        assert (intarg1 == -2);
+        BUG_IF_NOT (obj.parse (&index));
+        BUG_IF_NOT (isset1 == 1);
+        BUG_IF_NOT (intarg1 == -2);
     }
     {
         char* argv[] = {"unittest23", "--arga=2"};
@@ -698,11 +698,11 @@ void cCmdline::unitTest ()
 
         cCmdline obj(argc, (char**)argv);
 
-        assert (obj.addOption (true, 0, "arga", "optional long-only option optional with args", &isset1, "ARG", ARG_INT, &intarg1, true));
+        BUG_IF_NOT (obj.addOption (true, 0, "arga", "optional long-only option optional with args", &isset1, "ARG", ARG_INT, &intarg1, true));
 
-        assert (obj.parse (&index));
-        assert (isset1 == 1);
-        assert (intarg1 == 2);
+        BUG_IF_NOT (obj.parse (&index));
+        BUG_IF_NOT (isset1 == 1);
+        BUG_IF_NOT (intarg1 == 2);
     }
 }
 #endif

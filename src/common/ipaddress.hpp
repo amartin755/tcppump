@@ -144,25 +144,25 @@ public:
 #ifdef WITH_UNITTESTS
     static void unitTest ()
     {
-        assert (cIPv4() == cIPv4("0.0.0.0"));
-        assert (cIPv4() != cIPv4("0.0.0.1"));
+        BUG_IF_NOT (cIPv4() == cIPv4("0.0.0.0"));
+        BUG_IF_NOT (cIPv4() != cIPv4("0.0.0.1"));
         const char x[] = "1.2.3.4dfadfasd";
         cIPv4 a; a.set(x, 7);
-        assert (cIPv4("1.2.3.4") == a);
-        assert (!a.set("laskdfj"));
-        assert (!cIPv4("223.255.255.255").isMulticast());
-        assert (cIPv4("224.0.0.0").isMulticast());
-        assert (cIPv4("239.255.255.255").isMulticast());
-        assert (!cIPv4("240.0.0.0").isMulticast());
-        assert (cIPv4("1.2.3.4") < cIPv4("1.3.3.4"));
-        assert (cIPv4("2.2.3.4") > cIPv4("1.3.3.4"));
-        assert (cIPv4("1.2.3.4").getAsArray()[0] == 1);
-        assert (cIPv4("1.2.3.4").getAsArray()[1] == 2);
-        assert (cIPv4("1.2.3.4").getAsArray()[2] == 3);
-        assert (cIPv4("1.2.3.4").getAsArray()[3] == 4);
+        BUG_IF_NOT (cIPv4("1.2.3.4") == a);
+        BUG_IF_NOT (!a.set("laskdfj"));
+        BUG_IF_NOT (!cIPv4("223.255.255.255").isMulticast());
+        BUG_IF_NOT (cIPv4("224.0.0.0").isMulticast());
+        BUG_IF_NOT (cIPv4("239.255.255.255").isMulticast());
+        BUG_IF_NOT (!cIPv4("240.0.0.0").isMulticast());
+        BUG_IF_NOT (cIPv4("1.2.3.4") < cIPv4("1.3.3.4"));
+        BUG_IF_NOT (cIPv4("2.2.3.4") > cIPv4("1.3.3.4"));
+        BUG_IF_NOT (cIPv4("1.2.3.4").getAsArray()[0] == 1);
+        BUG_IF_NOT (cIPv4("1.2.3.4").getAsArray()[1] == 2);
+        BUG_IF_NOT (cIPv4("1.2.3.4").getAsArray()[2] == 3);
+        BUG_IF_NOT (cIPv4("1.2.3.4").getAsArray()[3] == 4);
         for (int n = 0; n < 10000; n++)
         {
-            assert (cIPv4().setRandom() != cIPv4().setRandom());
+            BUG_IF_NOT (cIPv4().setRandom() != cIPv4().setRandom());
         }
     }
 #endif
@@ -320,36 +320,36 @@ public:
 #ifdef WITH_UNITTESTS
     static void unitTest ()
     {
-        assert (cIPv6() == cIPv6("::"));
-        assert (cIPv6() != cIPv6("::1"));
+        BUG_IF_NOT (cIPv6() == cIPv6("::"));
+        BUG_IF_NOT (cIPv6() != cIPv6("::1"));
         const char x[] = "fe80::1ff:fe23:4567:890adfadfasd";
         cIPv6 a; a.set(x, 24);
-        assert (cIPv6("fe80::1ff:fe23:4567:890a") == a);
-        assert (!a.set("laskdfj"));
-        assert (!cIPv6("fe80::1ff:fe23:4567:890a").isMulticast());
-        assert (cIPv6("ff02::6").isMulticast());
-        assert (cIPv6("fe80::1ff:fe23:4567:890a") < cIPv6("fe80::1ff:fe23:4577:890a"));
-        assert (cIPv6("fe80::1ff:fe33:4567:890a") > cIPv6("fe80::1ff:fe23:4577:890a"));
-        assert (cIPv6("fe80::1ff:fe33:4567:890a") != cIPv6("fe80::1ff:fe23:4577:890a"));
-        assert (a.getAsArray()[0] == 0xfe);
-        assert (a.getAsArray()[1] == 0x80);
-        assert (a.getAsArray()[2] == 0);
-        assert (a.getAsArray()[3] == 0);
-        assert (a.getAsArray()[4] == 0);
-        assert (a.getAsArray()[5] == 0);
-        assert (a.getAsArray()[6] == 0);
-        assert (a.getAsArray()[7] == 0);
-        assert (a.getAsArray()[8] == 0x01);
-        assert (a.getAsArray()[9] == 0xff);
-        assert (a.getAsArray()[10] == 0xfe);
-        assert (a.getAsArray()[11] == 0x23);
-        assert (a.getAsArray()[12] == 0x45);
-        assert (a.getAsArray()[13] == 0x67);
-        assert (a.getAsArray()[14] == 0x89);
-        assert (a.getAsArray()[15] == 0x0a);
+        BUG_IF_NOT (cIPv6("fe80::1ff:fe23:4567:890a") == a);
+        BUG_IF_NOT (!a.set("laskdfj"));
+        BUG_IF_NOT (!cIPv6("fe80::1ff:fe23:4567:890a").isMulticast());
+        BUG_IF_NOT (cIPv6("ff02::6").isMulticast());
+        BUG_IF_NOT (cIPv6("fe80::1ff:fe23:4567:890a") < cIPv6("fe80::1ff:fe23:4577:890a"));
+        BUG_IF_NOT (cIPv6("fe80::1ff:fe33:4567:890a") > cIPv6("fe80::1ff:fe23:4577:890a"));
+        BUG_IF_NOT (cIPv6("fe80::1ff:fe33:4567:890a") != cIPv6("fe80::1ff:fe23:4577:890a"));
+        BUG_IF_NOT (a.getAsArray()[0] == 0xfe);
+        BUG_IF_NOT (a.getAsArray()[1] == 0x80);
+        BUG_IF_NOT (a.getAsArray()[2] == 0);
+        BUG_IF_NOT (a.getAsArray()[3] == 0);
+        BUG_IF_NOT (a.getAsArray()[4] == 0);
+        BUG_IF_NOT (a.getAsArray()[5] == 0);
+        BUG_IF_NOT (a.getAsArray()[6] == 0);
+        BUG_IF_NOT (a.getAsArray()[7] == 0);
+        BUG_IF_NOT (a.getAsArray()[8] == 0x01);
+        BUG_IF_NOT (a.getAsArray()[9] == 0xff);
+        BUG_IF_NOT (a.getAsArray()[10] == 0xfe);
+        BUG_IF_NOT (a.getAsArray()[11] == 0x23);
+        BUG_IF_NOT (a.getAsArray()[12] == 0x45);
+        BUG_IF_NOT (a.getAsArray()[13] == 0x67);
+        BUG_IF_NOT (a.getAsArray()[14] == 0x89);
+        BUG_IF_NOT (a.getAsArray()[15] == 0x0a);
         for (int n = 0; n < 10000; n++)
         {
-            assert (cIPv6().setRandom() != cIPv6().setRandom());
+            BUG_IF_NOT (cIPv6().setRandom() != cIPv6().setRandom());
         }
     }
 #endif

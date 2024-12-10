@@ -80,7 +80,7 @@ int main (void)
     {
         BUG ("unhandled exception");
     }
-    // every failure will lead to assert, thus if we see this output, all tests have passed
+    // every failure will lead to abort, thus if we see this output, all tests have passed
     fprintf (stderr, "\n --- unit tests finished successfully !!! --- \n");
 
     cRandom::destroy();

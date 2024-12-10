@@ -170,24 +170,24 @@ public:
 #ifdef WITH_UNITTESTS
     static void unitTest ()
     {
-        assert (!isValidString(""));
-        assert (!isValidString("11:22:33:44:55:66:77"));
-        assert (isValidString("11:22:33:44:55:66"));
-        assert (isValidString("11-22-33-44-55-66"));
-        assert (isValidString("11:a2:33:44:55:66"));
-        assert (!isValidString("11:a2:3g:44:55:66"));
-        assert (!isValidString("11:a2:g3:44:55:66"));
+        BUG_IF_NOT (!isValidString(""));
+        BUG_IF_NOT (!isValidString("11:22:33:44:55:66:77"));
+        BUG_IF_NOT (isValidString("11:22:33:44:55:66"));
+        BUG_IF_NOT (isValidString("11-22-33-44-55-66"));
+        BUG_IF_NOT (isValidString("11:a2:33:44:55:66"));
+        BUG_IF_NOT (!isValidString("11:a2:3g:44:55:66"));
+        BUG_IF_NOT (!isValidString("11:a2:g3:44:55:66"));
 
         uint8_t a[] = {1,2,3,4,5,6};
         cMacAddress b("01:02:03:04:05:06");
-        assert (b.size() == 6);
-        assert (!std::memcmp(a, b.mac, sizeof(a)));
+        BUG_IF_NOT (b.size() == 6);
+        BUG_IF_NOT (!std::memcmp(a, b.mac, sizeof(a)));
 
-        assert (cMacAddress().isNull());
-        assert (cMacAddress("ff:ff:ff:ff:ff:ff").isBroadcast());
-        assert (!cMacAddress("ff:ff:ff:ff:ff:ff").isMulticast());
-        assert (cMacAddress("01:ff:ff:ff:ff:ff").isMulticast());
-        assert (!cMacAddress("80:ff:ff:ff:ff:ff").isMulticast());
+        BUG_IF_NOT (cMacAddress().isNull());
+        BUG_IF_NOT (cMacAddress("ff:ff:ff:ff:ff:ff").isBroadcast());
+        BUG_IF_NOT (!cMacAddress("ff:ff:ff:ff:ff:ff").isMulticast());
+        BUG_IF_NOT (cMacAddress("01:ff:ff:ff:ff:ff").isMulticast());
+        BUG_IF_NOT (!cMacAddress("80:ff:ff:ff:ff:ff").isMulticast());
     }
 #endif
 

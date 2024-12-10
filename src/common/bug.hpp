@@ -46,5 +46,6 @@ static inline void __game_over (const char* expr, const char* file, int line)
       : void (0))
 
 #define BUG(msg) __game_over (#msg, __FILE__, __LINE__)
+#define BUG_IF_NOT(expr) BUG_ON (!(expr))
 
 #endif /* BUGON_HPP */

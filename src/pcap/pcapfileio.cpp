@@ -193,28 +193,28 @@ void cPcapFileIO::unitTest (const char* file)
 
     cPcapFileIO obj;
 
-    assert (!obj.modeWrite);
-    assert (!obj.fileHandle);
-    assert (!obj.dumper);
-    assert (!obj.path);
-    assert (!obj.fileError);
-    assert (!obj.eof);
+    BUG_IF_NOT (!obj.modeWrite);
+    BUG_IF_NOT (!obj.fileHandle);
+    BUG_IF_NOT (!obj.dumper);
+    BUG_IF_NOT (!obj.path);
+    BUG_IF_NOT (!obj.fileError);
+    BUG_IF_NOT (!obj.eof);
 
-    assert (!obj.open("nofile"));
-    assert (!obj.modeWrite);
-    assert (!obj.fileHandle);
-    assert (!obj.dumper);
-    assert (!obj.path);
-    assert (!obj.fileError);
-    assert (!obj.eof);
+    BUG_IF_NOT (!obj.open("nofile"));
+    BUG_IF_NOT (!obj.modeWrite);
+    BUG_IF_NOT (!obj.fileHandle);
+    BUG_IF_NOT (!obj.dumper);
+    BUG_IF_NOT (!obj.path);
+    BUG_IF_NOT (!obj.fileError);
+    BUG_IF_NOT (!obj.eof);
 
-    assert (!obj.open("nofile", false));
-    assert (!obj.modeWrite);
-    assert (!obj.fileHandle);
-    assert (!obj.dumper);
-    assert (!obj.path);
-    assert (!obj.fileError);
-    assert (!obj.eof);
+    BUG_IF_NOT (!obj.open("nofile", false));
+    BUG_IF_NOT (!obj.modeWrite);
+    BUG_IF_NOT (!obj.fileHandle);
+    BUG_IF_NOT (!obj.dumper);
+    BUG_IF_NOT (!obj.path);
+    BUG_IF_NOT (!obj.fileError);
+    BUG_IF_NOT (!obj.eof);
 
     typedef struct
     {
@@ -235,7 +235,7 @@ void cPcapFileIO::unitTest (const char* file)
     for (unsigned n = 0; n < sizeof (indata) / sizeof (indata[0]); n++)
     {
         indata[n].bin = cParseHelper::hexStringToBin (indata[n].txt, 0, indata[n].binlen);
-        assert (indata[n].bin);
+        BUG_IF_NOT (indata[n].bin);
     }
 
     uint8_t* f;
@@ -243,34 +243,34 @@ void cPcapFileIO::unitTest (const char* file)
     cTimeval t;
     int n = 0;
 
-    assert (obj.open(file, false));
-    assert (!obj.modeWrite);
-    assert (obj.fileHandle);
-    assert (!obj.dumper);
-    assert (obj.path);
-    assert (!obj.fileError);
-    assert (!obj.eof);
-    assert (obj.offset.isNull());
+    BUG_IF_NOT (obj.open(file, false));
+    BUG_IF_NOT (!obj.modeWrite);
+    BUG_IF_NOT (obj.fileHandle);
+    BUG_IF_NOT (!obj.dumper);
+    BUG_IF_NOT (obj.path);
+    BUG_IF_NOT (!obj.fileError);
+    BUG_IF_NOT (!obj.eof);
+    BUG_IF_NOT (obj.offset.isNull());
 
     while ((f = obj.read (&t, &len)) != NULL)
     {
-        assert (t.us() == indata[n].t);
-        assert ((size_t)len == indata[n].binlen);
-        assert (!memcmp (f, indata[n].bin, indata[n].binlen));
+        BUG_IF_NOT (t.us() == indata[n].t);
+        BUG_IF_NOT ((size_t)len == indata[n].binlen);
+        BUG_IF_NOT (!memcmp (f, indata[n].bin, indata[n].binlen));
         n++;
     }
 
-    assert (!obj.fileError);
-    assert (obj.eof);
-    assert (n == (sizeof (indata) / sizeof (indata[0])));
+    BUG_IF_NOT (!obj.fileError);
+    BUG_IF_NOT (obj.eof);
+    BUG_IF_NOT (n == (sizeof (indata) / sizeof (indata[0])));
 
     obj.close ();
-    assert (!obj.modeWrite);
-    assert (!obj.fileHandle);
-    assert (!obj.dumper);
-    assert (!obj.path);
-    assert (!obj.fileError);
-    assert (!obj.eof);
+    BUG_IF_NOT (!obj.modeWrite);
+    BUG_IF_NOT (!obj.fileHandle);
+    BUG_IF_NOT (!obj.dumper);
+    BUG_IF_NOT (!obj.path);
+    BUG_IF_NOT (!obj.fileError);
+    BUG_IF_NOT (!obj.eof);
 
     for (unsigned n = 0; n < sizeof (indata) / sizeof (indata[0]); n++)
     {
