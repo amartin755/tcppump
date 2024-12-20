@@ -233,7 +233,7 @@ int cTcpPump::execute (const std::list<std::string>& args)
         return -1;
     }
 
-    ifc = cNetInterface::create (options.ifc);
+    ifc = cNetInterface::create (options.ifc, !options.outpcap);
     if (!ifc->isReady())
         return -1;
 
@@ -302,7 +302,7 @@ int cTcpPump::execute (const std::list<std::string>& args)
             // Each step may alter the content of packetData
             cPacketData& packetData = compiler  << args;
 
-            if (!ifc->open (!packetData.hasTriggerPoints ()))
+            if (!options.outpcap && !ifc->open (!packetData.hasTriggerPoints ()))
                 return -1;
             if (options.bpf && !ifc->addReceiveFilter (options.bpf))
                 return -1;
