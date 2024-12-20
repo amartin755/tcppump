@@ -28,7 +28,6 @@
 #include "ipaddress.hpp"
 #include "linkable.hpp"
 
-#pragma pack(1)
 // RFC2113
 typedef struct
 {
@@ -37,6 +36,7 @@ typedef struct
     uint16_t value;  // 0 -> Router shall examine packet
 
 }ipv4_option_router_alert_t;
+static_assert (sizeof (ipv4_option_router_alert_t) == 4, "ipv4_option_router_alert_t is not packed");
 
 typedef struct
 {
@@ -97,6 +97,7 @@ typedef struct
     }
 
 }ipv4_header_t;
+static_assert (sizeof (ipv4_header_t) == 20, "ipv4_header_t is not packed");
 
 typedef struct
 {
@@ -111,6 +112,7 @@ typedef struct
         routerAlert.value  = 0;
     }
 }ipv4_header_with_router_alert_t;
+static_assert (sizeof (ipv4_header_with_router_alert_t) == 24, "ipv4_header_with_router_alert_t is not packed");
 
 typedef struct
 {
@@ -120,8 +122,7 @@ typedef struct
     uint8_t        protocol;
     uint16_t       len;
 }ipv4_pseudo_header_t;
-
-#pragma pack()
+static_assert (sizeof (ipv4_pseudo_header_t) == 12, "ipv4_pseudo_header_t is not packed");
 
 
 class cIPv4Packet : public cLinkable

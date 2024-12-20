@@ -24,7 +24,6 @@
 
 #include "ipv4packet.hpp"
 
-#pragma pack(1)
 typedef struct
 {
     uint16_t srcPort;
@@ -33,7 +32,8 @@ typedef struct
     uint16_t checksum;
 
 }udp_header_t;
-#pragma pack()
+// ensure packet struct without using compiler specific packing attributes/pragmas
+static_assert (sizeof (udp_header_t) == 8, "udp_header_t is not natural aligned");
 
 
 class cUdpPacket : public cIPv4Packet

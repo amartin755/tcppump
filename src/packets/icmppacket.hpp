@@ -25,7 +25,7 @@
 #include "ipv4packet.hpp"
 #include "udppacket.hpp"
 
-#pragma pack(1)
+
 typedef struct
 {
     uint8_t type;
@@ -33,18 +33,21 @@ typedef struct
     uint16_t checksum;
 
 }icmp_header_t;
+static_assert (sizeof (icmp_header_t) == 4, "icmp_header_t is not packed");
 
 typedef struct
 {
     icmp_header_t head;
     uint32_t      unused;
 }icmp_empty_header_t;
+static_assert (sizeof (icmp_empty_header_t) == 8, "icmp_empty_header_t is not packed");
 
 typedef struct
 {
     ipv4_header_t ip;
     udp_header_t udp;
 }generic_inet_header;
+static_assert (sizeof (generic_inet_header) == 28, "generic_inet_header is not packed");
 
 typedef struct
 {
@@ -52,8 +55,7 @@ typedef struct
     uint16_t      id;
     uint16_t      seq;
 }icmp_ping_t;
-
-#pragma pack()
+static_assert (sizeof (icmp_ping_t) == 8, "icmp_ping_t is not packed");
 
 
 class cIcmpPacket : public cIPv4Packet

@@ -68,7 +68,6 @@
 
 */
 
-#pragma pack(1)
 typedef struct
 {
     uint8_t vers_type; // version (bit 0 - 3) | type (bit 4 - 7)
@@ -110,7 +109,8 @@ typedef struct
     }
 
 }vrrp_header_t;
-#pragma pack()
+static_assert (sizeof (vrrp_header_t) == 8, "vrrp_header_t is not packed");
+
 
 class cVrrpPacket : public cIPv4Packet
 {

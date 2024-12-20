@@ -24,7 +24,7 @@
 #include <vector>
 #include "ipv4packet.hpp"
 
-#pragma pack(1)
+
 typedef struct
 {
     uint8_t  flags;
@@ -55,7 +55,7 @@ typedef struct
         flags |= 0x10;
     }
 }gre_basic_header_t;
-#pragma pack()
+static_assert (sizeof (gre_basic_header_t) == 4, "gre_basic_header_t is not packed");
 
 
 class cGrePacket : public cIPv4Packet

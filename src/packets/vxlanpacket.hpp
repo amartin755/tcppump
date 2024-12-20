@@ -32,7 +32,6 @@ VXLAN Header:
    |                VXLAN Network Identifier (VNI) |   Reserved    |
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 */
-#pragma pack(1)
 typedef struct
 {
     uint8_t  flags;
@@ -40,7 +39,7 @@ typedef struct
     uint32_t vni; // 24 bits only
 
 }vxlan_header_t;
-#pragma pack()
+static_assert (sizeof (vxlan_header_t) == 8, "vxlan_header_t is not packed");
 
 
 class cVxlanPacket : public cUdpPacket
