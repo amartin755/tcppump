@@ -37,7 +37,7 @@ class cNetInterface
 {
 
 public:
-    static cNetInterface* create(const char* ifname);
+    static cNetInterface* create(const char* ifname, bool needPriviledges);
     virtual ~cNetInterface () {};
     virtual bool open (bool sendOnly) = 0;
     virtual bool close () = 0;

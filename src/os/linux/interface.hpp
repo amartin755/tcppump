@@ -38,7 +38,7 @@ typedef struct pcap pcap_t;
 class cInterface : public cNetInterface
 {
 public:
-    cInterface(const char* ifname);
+    cInterface(const char* ifname, bool needPriviledges);
     virtual ~cInterface();
     bool open (bool sendOnly);
     bool close ();

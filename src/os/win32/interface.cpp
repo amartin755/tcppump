@@ -280,7 +280,7 @@ public:
  * Examples: FriendlyName "WiFi" or "Local Area Connection 1."
  *           AdapterName "{3F4A136A-2ED5-4226-9CB2-7A511E93CD48}"
  */
-cInterface::cInterface(const char* ifname)
+cInterface::cInterface(const char* ifname, bool)
 : name (ifname)
 {
     ifcHandle  = nullptr;

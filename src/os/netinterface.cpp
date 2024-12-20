@@ -30,9 +30,9 @@
 #include "netinterface.hpp"
 #include "interface.hpp"
 
-cNetInterface* cNetInterface::create(const char* ifname)
+cNetInterface* cNetInterface::create(const char* ifname, bool needPriviledges)
 {
-    return new cInterface (ifname);
+    return new cInterface (ifname, needPriviledges);
 }
 
 const uint8_t* cNetInterface::receivePacket (cTimeval* timestamp, int* len, const cPcapFilter* filter, const cTimeval* dropBefore)

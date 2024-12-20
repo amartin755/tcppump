@@ -41,7 +41,7 @@
 #include "signal.hpp"
 
 
-cInterface::cInterface(const char* ifname)
+cInterface::cInterface(const char* ifname, bool needPriviledges)
 : name (ifname)
 {
     ifcHandle   = -1;
@@ -61,20 +61,23 @@ cInterface::cInterface(const char* ifname)
     }
     else
     {
-        // test access rights by opening a raw socket
-        int fd;
-        errno = 0;
-        if ((fd = socket (PF_PACKET, SOCK_RAW, 0)) < 0)
+        if (needPriviledges)
         {
-            ifIndex = 0;
-            if (errno == EACCES || errno == EPERM)
-                Console::PrintError ("Insufficient access rights. You need to be root or tcppump needs raw capabilities.\n");
+            // test access rights by opening a raw socket
+            int fd;
+            errno = 0;
+            if ((fd = socket (PF_PACKET, SOCK_RAW, 0)) < 0)
+            {
+                ifIndex = 0;
+                if (errno == EACCES || errno == EPERM)
+                    Console::PrintError ("Insufficient access rights. You need to be root or tcppump needs raw capabilities.\n");
+                else
+                    Console::PrintError ("Unable to open raw socket. %s.\n", strerror(errno));
+            }
             else
-                Console::PrintError ("Unable to open raw socket. %s.\n", strerror(errno));
-        }
-        else
-        {
-            ::close (fd);
+            {
+                ::close (fd);
+            }
         }
     }
 }
