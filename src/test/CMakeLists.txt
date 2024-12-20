@@ -284,6 +284,8 @@ add_test(NAME udp-23--ok COMMAND tcppump ${DEFAULT_PARAMS} "udp(dip=10.20.30.40,
 add_test(NAME udp-23--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/udp-23.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 add_test(NAME udp-24--nok COMMAND tcppump ${DEFAULT_PARAMS} "udp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=1, dport=2, id=1,  payload = *65508)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 set_tests_properties(udp-24--nok PROPERTIES WILL_FAIL TRUE)
+add_test(NAME udp-25--ok COMMAND tcppump ${DEFAULT_PARAMS} "udp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=1, dport=2, payload = FE)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME udp-25--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/udp-25.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 add_test(NAME tcp-1--nok COMMAND tcppump ${DEFAULT_PARAMS} "tcp()" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 set_tests_properties(tcp-1--nok PROPERTIES WILL_FAIL TRUE)
