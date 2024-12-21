@@ -2,7 +2,7 @@ name: Test-on-ubuntu-gcc-64bit
 
 # Note: currently only linux is address. Later on this will be changed to a matrix build
 
-on: [push, workflow_dispatch]
+on: [workflow_dispatch]
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)

@@ -1,0 +1,64 @@
+# This starter workflow is for a CMake project running on a single platform. There is a different starter workflow if you need cross-platform coverage.
+# See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-multi-platform.yml
+name: build-checks
+
+on: [push, workflow_dispatch]
+
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        build: [Debug, Release]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Dependencies (linux)
+      if: matrix.os == 'ubuntu-latest'
+      # install libpcap and its development files
+      run: sudo apt-get --assume-yes install libpcap-dev
+
+    - name: Install Dependencies (windows)
+      if: matrix.os == 'windows-latest'
+      # install winpcap, we use an old version of nmap which offers an silent installer and includes winpcap
+      run: Invoke-WebRequest -Uri "https://nmap.org/dist/nmap-7.12-setup.exe" -OutFile "nmap.exe"; Start-Process -Filepath "nmap.exe" -ArgumentList /S
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{ matrix.build }}
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --target tcppump unittest --config ${{ matrix.build }}
+
+    - name: Execute Unit Tests
+      working-directory: ${{github.workspace}}/bin
+      shell: bash
+      # Execute unittest binary
+      run: ./unittest
+
+    - name: Assign priviledges (linux)
+      if: matrix.os == 'ubuntu-latest'
+      working-directory: ${{github.workspace}}/bin
+      shell: bash
+      # give raw capabilities to tcppump
+      run: sudo setcap cap_net_raw+eip ./tcppump
+
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      shell: bash
+      run: ctest
+
+    - uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: logfiles
+        path: |
+          ${{github.workspace}}/build/CMakeFiles/CMakeError.log
+          ${{github.workspace}}/build/CMakeFiles/CMakeOutput.log
+          ${{github.workspace}}/build/Testing/Temporary/LastTest.log

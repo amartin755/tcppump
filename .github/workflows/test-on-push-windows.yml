@@ -2,7 +2,7 @@ name: Test-on-windows-MSVC-64bit
 
 # TODO: should be merged with linux workflow as matrix build
 
-on: [push, workflow_dispatch]
+on: [workflow_dispatch]
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
