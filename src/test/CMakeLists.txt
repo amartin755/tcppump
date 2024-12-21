@@ -24,7 +24,7 @@
 enable_testing()
 
 if (WIN32)
-    set (OUT_IFC "Ethernet 2") #FIXME we need a reliable way to find a suitable test interface in windows
+    set (OUT_IFC "Ethernet") #FIXME we need a reliable way to find a suitable test interface in windows
 endif ()
 if (UNIX)
     set (OUT_IFC lo)
