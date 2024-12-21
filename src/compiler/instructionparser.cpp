@@ -1806,9 +1806,9 @@ void cInstructionParser::unitTest ()
 
             for (size_t n = 0; n < packets->getLength(); n++)
             {
-                printf ("0x%02x, ", (int)*p++);
+                Console::PrintDebug ("0x%02x, ", (int)*p++);
             }
-            printf ("\n");
+            Console::PrintDebug ("\n");
         }
         BUG_ON (notEqual);
         Console::PrintDebug("\r");
