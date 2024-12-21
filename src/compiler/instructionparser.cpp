@@ -1780,7 +1780,7 @@ void cInstructionParser::unitTest ()
     {
         cInstructionParser::cResult result;
 
-        Console::PrintDebug("packet %d", n);
+        Console::PrintDebug("packet %d: ", n);
         cInstructionParser obj (false);
         try
         {
@@ -1799,7 +1799,8 @@ void cInstructionParser::unitTest ()
         }
         BUG_IF_NOT (packets);
         BUG_IF_NOT (tests[n].packetSize == packets->getLength());
-        if (memcmp (packets->get(), tests[n].packet, tests[n].packetSize))
+        int notEqual = memcmp (packets->get(), tests[n].packet, tests[n].packetSize);
+        if (notEqual)
         {
             const uint8_t* p = packets->get();
 
@@ -1809,7 +1810,7 @@ void cInstructionParser::unitTest ()
             }
             printf ("\n");
         }
-        BUG_IF_NOT (!memcmp (packets->get(), tests[n].packet, tests[n].packetSize));
+        BUG_ON (notEqual);
         Console::PrintDebug("\r");
 
         delete result.packets;
