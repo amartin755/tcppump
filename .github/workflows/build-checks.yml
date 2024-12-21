@@ -1,12 +1,26 @@
-# This starter workflow is for a CMake project running on a single platform. There is a different starter workflow if you need cross-platform coverage.
-# See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-multi-platform.yml
+# SPDX-License-Identifier: GPL-3.0-only
+###############################################################################
+#
+# TCPPUMP <https://github.com/amartin755/tcppump>
+# Copyright (C) 2012-2024 Andreas Martin (netnag@mailbox.org)
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 3.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+
 name: build-checks
 
 on: [push, workflow_dispatch]
-
-env:
-  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
-  BUILD_TYPE: Release
 
 jobs:
   build:
@@ -52,7 +66,7 @@ jobs:
     - name: Test
       working-directory: ${{github.workspace}}/build
       shell: bash
-      run: ctest
+      run: ctest -C ${{ matrix.build }}
 
     - uses: actions/upload-artifact@v4
       if: always()
