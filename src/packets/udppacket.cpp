@@ -58,16 +58,16 @@ void cUdpPacket::setChecksum (uint16_t checksum)
 
 uint16_t cUdpPacket::calcChecksum (const uint8_t* payload, size_t len) const
 {
-    ipv4_pseudo_header_t ipPseudoHeader;
     const ipv4_header_t& ipHeader = cIPv4Packet::getHeader();
+    const ipv4_pseudo_header_t ipPseudoHeader = {
+        ipHeader.srcIp,
+        ipHeader.dstIp,
+        0,
+        ipHeader.protocol,
+        htons((uint16_t)cIPv4Packet::getPayloadLength())
+    };
 
-    ipPseudoHeader.srcIp    = ipHeader.srcIp;
-    ipPseudoHeader.dstIp    = ipHeader.dstIp;
-    ipPseudoHeader.nix      = 0;
-    ipPseudoHeader.protocol = ipHeader.protocol;
-    ipPseudoHeader.len      = htons((uint16_t)cIPv4Packet::getPayloadLength());
-
-    uint16_t ret = cInetChecksum::rfc1071 ((const uint16_t*)&ipPseudoHeader, sizeof (ipPseudoHeader), &header, sizeof(header), payload, len);
+    uint16_t ret = cInetChecksum::rfc1071 ((const void*)&ipPseudoHeader, sizeof (ipPseudoHeader), &header, sizeof(header), payload, len);
     return ret ? ret : 0xffff;
 }
 

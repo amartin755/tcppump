@@ -19,9 +19,10 @@
 
 #include <cstring>
 
+#include "bug.hpp"
 #include "inet.h"
 #include "tcppacket.hpp"
-#include "bug.hpp"
+#include "inetchecksum.hpp"
 
 
 uint32_t cTcpPacket::sequence = 42;
@@ -38,7 +39,7 @@ void cTcpPacket::compile (const uint8_t* payload, size_t len, bool calcChksum)
 
     cIPv4Packet::compile (PROTO_TCP, (const uint8_t*)&header, sizeof (header), payload, len);
     if (calcChksum)
-        header.checksum = calcChecksum();
+        header.checksum = calcChecksum(payload, len);
     cIPv4Packet::updateL4Header ((const uint8_t*)&header, sizeof (header));
     sequence += (uint32_t)len + (uint32_t)header.isSyn();
 }
@@ -126,7 +127,7 @@ void cTcpPacket::setFlagNON (bool flag)
 
 
 // FIXME use cInetChecksum instead
-uint16_t cTcpPacket::calcChecksum () const
+uint16_t cTcpPacket::calcChecksum (const uint8_t* payload, size_t len) const
 {
     ipv4_pseudo_header_t ipPseudoHeader;
     const ipv4_header_t& ipHeader = cIPv4Packet::getHeader();
@@ -136,7 +137,9 @@ uint16_t cTcpPacket::calcChecksum () const
     ipPseudoHeader.nix      = 0;
     ipPseudoHeader.protocol = ipHeader.protocol;
     ipPseudoHeader.len      = htons((uint16_t)cIPv4Packet::getPayloadLength());
-
+    uint16_t ret = cInetChecksum::rfc1071 ((const void*)&ipPseudoHeader, sizeof (ipPseudoHeader), &header, sizeof(header), payload, len);
+    return ret ? ret : 0xffff;
+#if 0
     uint32_t sum;
 
     sum  = csum ((const uint16_t*)&ipPseudoHeader, sizeof (ipPseudoHeader));
@@ -147,6 +150,7 @@ uint16_t cTcpPacket::calcChecksum () const
 
     uint16_t ret = (uint16_t)~sum;
     return ret ? ret : 0xffff;
+#endif
 }
 
 uint32_t cTcpPacket::csum (const uint16_t* p, unsigned len) const

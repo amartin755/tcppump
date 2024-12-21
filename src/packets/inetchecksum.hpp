@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
  * TCPPUMP <https://github.com/amartin755/tcppump>
- * Copyright (C) 2012-2021 Andreas Martin (netnag@mailbox.org)
+ * Copyright (C) 2012-2024 Andreas Martin (netnag@mailbox.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 
 #include "bug.hpp"
 
+
 class cInetChecksum
 {
 public:
@@ -35,58 +36,69 @@ public:
     }
     static uint16_t rfc1071 (const void* p, size_t len, const void* p2, size_t len2)
     {
+        BUG_ON (len & 1);
         return rfc1071 (p, len, p2, len2, nullptr, 0);
     }
-    static inline uint16_t rfc1071 (const void* p, size_t len, const void* p2, size_t len2, const void* p3, size_t len3)
+
+    static uint16_t rfc1071 (const void* p, size_t len, const void* p2, size_t len2, const void* p3, size_t len3);
+
+
+    static uint32_t rfc1071_calc (const void* p, size_t len, uint32_t sum = 0)
     {
-        uint32_t sum = 0;
+        if (len == 0)
+            return sum;
 
-
-        if (p)
-            sum  = rfc1071_calc ((uint16_t*)p, len);
-        if (p2)
-            sum += rfc1071_calc ((uint16_t*)p2, len2);
-        if (p3)
-            sum += rfc1071_calc ((uint16_t*)p3, len3);
-
-        return rfc1071_finalize (sum);
-    }
-
-    static uint32_t rfc1071_calc (const uint16_t* p, size_t len)
-    {
-        uint32_t sum = 0;
-
-        while (len > 1)
+        if ((intptr_t)p & 1)
         {
-            sum += *p++;
-            len -= 2;
-        }
-        if (len)
-            sum += *(uint8_t*)p;
+            const uint8_t *p8 = (uint8_t*)p;
 
+            while (len > 1)
+            {
+                uint16_t val;
+#ifndef HAVE_BIG_ENDIAN
+                val  = *p8++;
+                val |= *p8++ << 8;
+#else
+                val  = *p8++ << 8;
+                val |= *p8++;
+#endif
+                sum += val;
+                len -= 2;
+            }
+            if (len)
+                sum += *(uint8_t*)p8;
+        }
+        else
+        {
+            const uint16_t *p16 = (uint16_t*)p;
+
+            while (len > 1)
+            {
+                sum += *p16++;
+                len -= 2;
+            }
+            if (len)
+#ifndef HAVE_BIG_ENDIAN
+                sum += *(uint8_t*)p16;
+#else
+                sum += *(uint8_t*)p16 << 8;
+#endif
+        }
         return sum;
     }
 
 private:
     static inline uint16_t rfc1071_finalize (uint32_t sum)
     {
-        uint16_t chksum;
-        while (sum >> 16)
-            sum = (sum & 0xffff) + (sum >> 16);
+        sum = (sum & 0xffff) + (sum >> 16);
+        sum = (sum & 0xffff) + (sum >> 16);
 
-        chksum = (uint16_t)~sum;
-        return chksum;
+        return (uint16_t)~sum;
     }
 
 #ifdef WITH_UNITTESTS
 public:
-    static void unitTest ()
-    {
-        uint8_t hd[] = {0x45,0x00,0x02,0x03,0x16,0xd1,0x00,0x00,0x01,0x11,0,0,0xc0,0xa8,0x00,0x88,0xef,0xff,0xff,0xfa};
-        BUG_IF_NOT (cInetChecksum::rfc1071 ((uint16_t*)hd, sizeof (hd), nullptr, 0) == 0xeeef);
-        uint8_t hd1[] = {0x45,0x00,0x02,0x03,0x16,0xd1,0x00,0x00,0x01,0x11,0xef,0xee,0xc0,0xa8,0x00,0x88,0xef,0xff,0xff,0xfa};
-        BUG_IF_NOT (cInetChecksum::rfc1071 ((uint16_t*)hd1, sizeof (hd1), nullptr, 0) == 0);
-    }
+    static void unitTest ();
 #endif
 };
 

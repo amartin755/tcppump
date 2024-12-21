@@ -24,6 +24,7 @@ set (SOURCES
      ${CMAKE_CURRENT_SOURCE_DIR}/ethernetpacket.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/icmppacket.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/igmppacket.cpp
+     ${CMAKE_CURRENT_SOURCE_DIR}/inetchecksum.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/ipv4packet.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/grepacket.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/stppacket.cpp

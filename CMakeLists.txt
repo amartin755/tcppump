@@ -83,6 +83,7 @@ include (CheckLibraryExists)
 include (CheckSymbolExists)
 include (CheckFunctionExists)
 include (CheckIncludeFiles)
+include (TestBigEndian)
 
 # try to find pcap library; can be set via PCAP_INCLUDE_DIR and PCAP_LIBRARY
 if (NOT PCAP_INCLUDE_DIR)
@@ -144,6 +145,8 @@ check_include_files("arpa/inet.h" HAVE_ARPAINET_H)
 set (CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE=1)
 check_symbol_exists (memmem "string.h" HAVE_MEMMEM)
 set (CMAKE_REQUIRED_DEFINITIONS "")
+# check endianess
+test_big_endian (HAVE_BIG_ENDIAN)
 
 
 # preprocessor definitions
@@ -170,6 +173,9 @@ if (HAVE_NTOP)
 endif ()
 if (HAVE_MEMMEM)
     add_compile_definitions (HAVE_MEMMEM)
+endif ()
+if (HAVE_BIG_ENDIAN)
+    add_compile_definitions (HAVE_BIG_ENDIAN)
 endif ()
 
 if (WIN32)

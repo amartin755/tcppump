@@ -240,7 +240,7 @@ void cIPv4Packet::updateL4Header (const uint8_t* l4header, size_t l4headerLen)
 void cIPv4Packet::updateHeaderChecksum ()
 {
     ipHeader.ip.chksum = 0;
-    ipHeader.ip.chksum = cInetChecksum::rfc1071((const uint16_t*)&ipHeader, getHeaderLength(), nullptr, 0);
+    ipHeader.ip.chksum = cInetChecksum::rfc1071((const uint16_t*)&ipHeader, getHeaderLength());
 }
 
 void cIPv4Packet::addRouterAlertOption (void)
