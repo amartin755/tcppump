@@ -30,7 +30,12 @@ public:
     static uint32_t rand32 (void);
     static uint16_t rand16 (void);
     static uint8_t  rand8 (void);
+    static void rand (void* p, size_t len);
     static void setCounterMode (unsigned startValue);
+
+#ifdef WITH_UNITTESTS
+    static void unitTest ();
+#endif
 
 private:
     cRandom ();

@@ -229,25 +229,10 @@ const uint8_t* cParameter::asStream (bool allowEmbPacket, bool &isEmbedded, size
         {
             if (!randLen) randLen = 32; // set to default if no length is defined
 
-            data = new uint8_t[randLen];
+            data = (uint8_t*) new uint32_t[randLen / 4 + 1]; // ensure 32bit alignment
             dataLen = randLen;
 
-            for (int n = 0; n < randLen; n++)
-#ifdef NDEBUG
-                data[n] = cRandom::rand8();
-#else
-                /*
-                 * Just setting commandline option --test-norandom is not enough
-                 * to keep all ctest cases working, because there is still different
-                 * behavior between script mode and commandline mode. Most commandline
-                 * tests only compile one packet per tcppump-run and therefore the byte
-                 * sequence is identical for all packets (every run starts with 0).
-                 * In script mode many packets are compiled in ONE tcppump-run which
-                 * results in continuous sequence over all packets.
-                 * --> in debug mode every "random" byte stream starts with 0
-                 */
-                data[n] = (uint8_t)n; // we need this hack to keep ctest cases reliable
-#endif
+            cRandom::rand (data, dataLen);
         }
         else if ( (allowEmbPacket && (*value == '"' || *value == '<')) ||
                  (!allowEmbPacket && *value == '"'))

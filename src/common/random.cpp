@@ -20,6 +20,8 @@
 #include <cstdlib>
 #include <ctime>
 #include <cassert>
+#include <cstring>
+
 #include "bug.hpp"
 #include "random.hpp"
 
@@ -73,17 +75,132 @@ uint8_t cRandom::rand8 (void)
 
 uint32_t cRandom::rand (void)
 {
-    BUG_ON (!instance);
+    assert (instance);
     return instance->countOnly ? instance->sequence() : instance->pseudoRandom();
+}
+
+void cRandom::rand (void* p, size_t len /*number of bytes*/)
+{
+    assert (instance);
+
+    uint8_t *data = (uint8_t*)p;
+
+    if (instance->countOnly)
+    {
+        for (size_t n = 0; n < len; n++)
+        {
+            data[n] = (uint8_t)n;
+        }
+    }
+    else
+    {
+        uint8_t* p8 = (uint8_t*)p;
+
+        if ((intptr_t)p8 & 1)
+        {
+            *p8++ = (uint8_t)instance->pseudoRandom ();
+            len--;
+        }
+        if (len >= 2)
+        {
+            if ((intptr_t)p8 & 2)
+            {
+                *(uint16_t*)p8 = (uint16_t)instance->pseudoRandom ();
+                p8 += 2;
+                len -= 2;
+            }
+            while (len >= 4)
+            {
+                *(uint32_t*)p8 = instance->pseudoRandom ();
+                p8 += 4;
+                len -= 4;
+            }
+            if (len & 2)
+            {
+                *(uint16_t*)p8 = (uint16_t)instance->pseudoRandom ();
+                p8 += 2;
+                len -= 2;
+            }
+        }
+        if (len & 1)
+        {
+            *p8++ = (uint8_t)instance->pseudoRandom ();
+            len--;
+        }
+    }
 }
 
 uint32_t cRandom::pseudoRandom (void)
 {
     // TODO use lockless replacement for rand
-    return ((uint32_t)std::rand() << 30) | ((uint32_t)std::rand() << 15) | (uint32_t)std::rand();
+    // see https://en.wikipedia.org/wiki/Xorshift#xoroshiro
+    // and https://prng.di.unimi.it/xoroshiro128plus.c
+    #if RAND_MAX < 65535
+        return ((uint8_t)std::rand() << 24 | (uint8_t)std::rand() << 16 | ((uint8_t)std::rand() << 8) | (uint8_t)std::rand());
+    #elif RAND_MAX < 4294967295
+        return ((uint16_t)std::rand() << 16) | (uint16_t)std::rand();
+    #else
+        return (uint32_t)std::rand();
+    #endif
 }
 
 uint32_t cRandom::sequence (void)
 {
     return seq++;
 }
+
+#ifdef WITH_UNITTESTS
+#include "console.hpp"
+void cRandom::unitTest ()
+{
+    Console::PrintDebug("-- " __FILE__ " --\n");
+
+    uint32_t data[32];
+    uint8_t* a = (uint8_t*)&data[1];
+    for (int n = 0; n < 3; n++, a++)
+    {
+        {
+            std::memset (data, 0, sizeof (data));
+            rand (a, 1);
+            BUG_IF_NOT (data[0] == 0);
+            BUG_IF_NOT (a[1] == 0);
+        }
+        {
+            std::memset (data, 0, sizeof (data));
+            rand (a, 2);
+            BUG_IF_NOT (data[0] == 0);
+            BUG_IF_NOT (a[2] == 0);
+        }
+        {
+            std::memset (data, 0, sizeof (data));
+            rand (a, 3);
+            BUG_IF_NOT (data[0] == 0);
+            BUG_IF_NOT (a[3] == 0);
+        }
+        {
+            std::memset (data, 0, sizeof (data));
+            rand (a, 4);
+            BUG_IF_NOT (data[0] == 0);
+            BUG_IF_NOT (a[4] == 0);
+        }
+        {
+            std::memset (data, 0, sizeof (data));
+            rand (a, 5);
+            BUG_IF_NOT (data[0] == 0);
+            BUG_IF_NOT (a[5] == 0);
+        }
+        {
+            std::memset (data, 0, sizeof (data));
+            rand (a, 6);
+            BUG_IF_NOT (data[0] == 0);
+            BUG_IF_NOT (a[6] == 0);
+        }
+        {
+            std::memset (data, 0, sizeof (data));
+            rand (a, 10);
+            BUG_IF_NOT (data[0] == 0);
+            BUG_IF_NOT (a[10] == 0);
+        }
+    }
+}
+#endif
