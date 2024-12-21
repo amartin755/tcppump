@@ -1,9 +1,7 @@
-![Test-on-ubuntu-gcc-64bit](https://github.com/amartin755/tcppump/workflows/Test-on-ubuntu-gcc-64bit/badge.svg)
-![Test-on-windows-MSVC-64bit](https://github.com/amartin755/tcppump/workflows/Test-on-windows-MSVC-64bit/badge.svg)
+![Build and test pipeline](https://github.com/amartin755/tcppump/workflows/build-checks/badge.svg$branch=master)
 (Master Branch)
 
-![Test-on-ubuntu-gcc-64bit](https://github.com/amartin755/tcppump/workflows/Test-on-ubuntu-gcc-64bit/badge.svg?branch=devel)
-![Test-on-windows-MSVC-64bit](https://github.com/amartin755/tcppump/workflows/Test-on-windows-MSVC-64bit/badge.svg?branch=devel)
+![Build and test pipeline](https://github.com/amartin755/tcppump/workflows/build-checks/badge.svg?branch=devel)
 (Development Branch)
 
 # tcppump
