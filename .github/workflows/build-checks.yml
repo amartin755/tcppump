@@ -57,7 +57,7 @@ jobs:
     - uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: logfiles
+        name: logfiles-${{ matrix.build }}-${{ matrix.os }}
         path: |
           ${{github.workspace}}/build/CMakeFiles/CMakeError.log
           ${{github.workspace}}/build/CMakeFiles/CMakeOutput.log
