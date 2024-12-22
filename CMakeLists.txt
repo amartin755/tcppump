@@ -27,6 +27,7 @@ project (tcppump VERSION 0.3.1
 option(WITH_UNITTESTS "enable/disable generation of unittest binary (default ON)" ON)
 option(WITH_ASAN      "enable/disable address sanitizer (default OFF)" OFF)
 option(WITH_UBSAN     "enable/disable undefined behavior sanitizer (default OFF)" OFF)
+option(WITH_GCOV      "enable/disable code coverage profiling (default OFF)" OFF)
 
 # set output directories to "bin"
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
@@ -60,6 +61,11 @@ endif ()
 if (WITH_ASAN)
     add_compile_options (-fsanitize=address)
     add_link_options (-fsanitize=address)
+endif ()
+
+if (WITH_GCOV)
+    add_compile_options (--coverage)
+    add_link_options (--coverage)
 endif ()
 
 # download dependencies
@@ -278,17 +284,11 @@ endif()
 # target unittest (unit test code)
 ###############################################################################
 if (WITH_UNITTESTS)
-
     add_executable (unittest)
+
     target_link_libraries (unittest PRIVATE ${LIBS})
-
     target_compile_definitions (unittest PRIVATE WITH_UNITTESTS)
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        target_compile_options (unittest PRIVATE -Wno-write-strings --coverage)
-        target_link_libraries (unittest PRIVATE gcov)
-    endif()
-
-    target_sources(unittest PRIVATE ${UTEST_SOURCES})
+    target_sources (unittest PRIVATE ${UTEST_SOURCES})
     target_include_directories (unittest PRIVATE ${INCLUDES})
 endif ()
 
