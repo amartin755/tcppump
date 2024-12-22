@@ -277,7 +277,7 @@ void cCmdline::unitTest ()
     int  isset4 = -1;
 
     {
-        char* argv[] = {"unittest1", "-aAAA", "-b", "-cCCC", "-d"};
+        const char* argv[] = {"unittest1", "-aAAA", "-b", "-cCCC", "-d"};
         int argc = 5;
         stringarg1 = stringarg2 = NULL;
         isset1 = isset2 = isset3 = isset4 = -1;
@@ -300,7 +300,7 @@ void cCmdline::unitTest ()
         BUG_IF_NOT (isset4 == 1);
     }
     {
-        char* argv[] = {"unittest2", "-a", "AAA", "-b", "-c", "CCC", "-d"};
+        const char* argv[] = {"unittest2", "-a", "AAA", "-b", "-c", "CCC", "-d"};
         int argc = 7;
         isset1 = isset2 = isset3 = isset4 = -1;
         stringarg1 = stringarg2 = NULL;
@@ -323,7 +323,7 @@ void cCmdline::unitTest ()
         BUG_IF_NOT (isset4 == 1);
     }
     {
-        char* argv[] = {"unittest3", "--arga=AAA", "--argb", "--argc=CCC", "--argd"};
+        const char* argv[] = {"unittest3", "--arga=AAA", "--argb", "--argc=CCC", "--argd"};
         int argc = 5;
         isset1 = isset2 = isset3 = isset4 = -1;
         stringarg1 = stringarg2 = NULL;
@@ -346,7 +346,7 @@ void cCmdline::unitTest ()
         BUG_IF_NOT (isset4 == 1);
     }
     {
-        char* argv[] = {"unittest4", "--arga", "AAA", "--argb", "--argc", "CCC", "--argd"};
+        const char* argv[] = {"unittest4", "--arga", "AAA", "--argb", "--argc", "CCC", "--argd"};
         int argc = 7;
         isset1 = isset2 = isset3 = isset4 = -1;
         stringarg1 = stringarg2 = NULL;
@@ -369,7 +369,7 @@ void cCmdline::unitTest ()
         BUG_IF_NOT (isset4 == 1);
     }
     {
-        char* argv[] = {"unittest5", "-a", "-b", "-cCCC", "-d"};
+        const char* argv[] = {"unittest5", "-a", "-b", "-cCCC", "-d"};
         int argc = 5;
         isset1 = isset2 = isset3 = isset4 = -1;
         stringarg1 = stringarg2 = NULL;
@@ -392,7 +392,7 @@ void cCmdline::unitTest ()
         BUG_IF_NOT (isset4 == 1);
     }
     {
-        char* argv[] = {"unittest6", "-b", "-cCCC"};
+        const char* argv[] = {"unittest6", "-b", "-cCCC"};
         int argc = 3;
         isset1 = isset2 = isset3 = isset4 = -1;
         stringarg1 = stringarg2 = NULL;
@@ -414,7 +414,7 @@ void cCmdline::unitTest ()
         BUG_IF_NOT (!strcmp ("CCC", stringarg2));
     }
     {
-        char* argv[] = {"unittest7", "-a", "-b"};
+        const char* argv[] = {"unittest7", "-a", "-b"};
         int argc = 3;
         isset1 = isset2 = isset3 = isset4 = -1;
         stringarg1 = stringarg2 = NULL;
@@ -430,7 +430,7 @@ void cCmdline::unitTest ()
         BUG_IF_NOT (isset2 == 1);
     }
     {
-        char* argv[] = {"unittest8", "-b"};
+        const char* argv[] = {"unittest8", "-b"};
         int argc = 2;
         isset1 = isset2 = isset3 = isset4 = -1;
         stringarg1 = stringarg2 = NULL;
@@ -446,7 +446,7 @@ void cCmdline::unitTest ()
         BUG_IF_NOT (isset2 == 1);
     }
     {
-        char* argv[] = {"unittest9", "-a0xa", "-b10"};
+        const char* argv[] = {"unittest9", "-a0xa", "-b10"};
         int argc = 3;
         isset1 = isset2 = isset3 = isset4 = -1;
         stringarg1 = stringarg2 = NULL;
@@ -464,7 +464,7 @@ void cCmdline::unitTest ()
         BUG_IF_NOT (intarg2 == 10);
     }
     {
-        char* argv[] = {"unittest10", "-a", "0xa", "-b", "10"};
+        const char* argv[] = {"unittest10", "-a", "0xa", "-b", "10"};
         int argc = 5;
         isset1 = isset2 = isset3 = isset4 = -1;
         stringarg1 = stringarg2 = NULL;
@@ -482,7 +482,7 @@ void cCmdline::unitTest ()
         BUG_IF_NOT (intarg2 == 10);
     }
     {
-        char* argv[] = {"unittest11", "--arga=0xa", "--argb=10"};
+        const char* argv[] = {"unittest11", "--arga=0xa", "--argb=10"};
         int argc = 3;
         isset1 = isset2 = isset3 = isset4 = -1;
         stringarg1 = stringarg2 = NULL;
@@ -500,7 +500,7 @@ void cCmdline::unitTest ()
         BUG_IF_NOT (intarg2 == 10);
     }
     {
-        char* argv[] = {"unittest12", "--arga", "0xa", "--argb", "10"};
+        const char* argv[] = {"unittest12", "--arga", "0xa", "--argb", "10"};
         int argc = 5;
         isset1 = isset2 = isset3 = isset4 = -1;
         stringarg1 = stringarg2 = NULL;
@@ -518,7 +518,7 @@ void cCmdline::unitTest ()
         BUG_IF_NOT (intarg2 == 10);
     }
     {
-        char* argv[] = {"unittest13", "--arga=0xa", "--argb", "10", "--argc=CCC", "--argd", "DDD", "ABCD", "EFGH"};
+        const char* argv[] = {"unittest13", "--arga=0xa", "--argb", "10", "--argc=CCC", "--argd", "DDD", "ABCD", "EFGH"};
         int argc = 9;
         isset1 = isset2 = isset3 = isset4 = -1;
         stringarg1 = stringarg2 = NULL;
@@ -546,7 +546,7 @@ void cCmdline::unitTest ()
         BUG_IF_NOT (index == 7);
     }
     {
-        char* argv[] = {"unittest14", "--arga=0xa", "--argb", "10", "--argc=CCC", "--argd", "DDD", "ABCD", "EFGH"};
+        const char* argv[] = {"unittest14", "--arga=0xa", "--argb", "10", "--argc=CCC", "--argd", "DDD", "ABCD", "EFGH"};
         int argc = 9;
         isset1 = isset2 = isset3 = isset4 = -1;
         stringarg1 = stringarg2 = NULL;
@@ -574,7 +574,7 @@ void cCmdline::unitTest ()
         BUG_IF_NOT (index == 7);
     }
     {
-        char* argv[] = {"unittest15", "-vvv"};
+        const char* argv[] = {"unittest15", "-vvv"};
         int argc = 2;
         isset1 = isset2 = isset3 = isset4 = -1;
         int index = 0;
@@ -587,7 +587,7 @@ void cCmdline::unitTest ()
         BUG_IF_NOT (isset1 == 3);
     }
     {
-        char* argv[] = {"unittest16", "-vv", "--arga"};
+        const char* argv[] = {"unittest16", "-vv", "--arga"};
         int argc = 3;
         isset1 = isset2 = isset3 = isset4 = -1;
         int index = 0;
@@ -602,7 +602,7 @@ void cCmdline::unitTest ()
         BUG_IF_NOT (isset2 == 1);
     }
     {
-        char* argv[] = {"unittest17", "-a"};
+        const char* argv[] = {"unittest17", "-a"};
         int argc = 2;
         intarg1 = intarg2 = -2;
         isset1 = isset2 = isset3 = isset4 = -1;
@@ -617,7 +617,7 @@ void cCmdline::unitTest ()
         BUG_IF_NOT (intarg1 == -2);
     }
     {
-        char* argv[] = {"unittest18", "-a"};
+        const char* argv[] = {"unittest18", "-a"};
         int argc = 2;
         intarg1 = intarg2 = -2;
         isset1 = isset2 = isset3 = isset4 = -1;
@@ -632,7 +632,7 @@ void cCmdline::unitTest ()
         BUG_IF_NOT (intarg1 == -2);
     }
     {
-        char* argv[] = {"unittest19", "--arga"};
+        const char* argv[] = {"unittest19", "--arga"};
         int argc = 2;
         intarg1 = intarg2 = -2;
         isset1 = isset2 = isset3 = isset4 = -1;
@@ -647,7 +647,7 @@ void cCmdline::unitTest ()
         BUG_IF_NOT (intarg1 == -2);
     }
     {
-        char* argv[] = {"unittest20", "-a", "-b"};
+        const char* argv[] = {"unittest20", "-a", "-b"};
         int argc = 3;
         intarg1 = intarg2 = 0;
         isset1 = isset2 = isset3 = isset4 = -1;
@@ -661,7 +661,7 @@ void cCmdline::unitTest ()
         BUG_IF_NOT (isset1 == 1);
     }
     {
-        char* argv[] = {"unittest21", "-a", "--berta"};
+        const char* argv[] = {"unittest21", "-a", "--berta"};
         int argc = 3;
         intarg1 = intarg2 = 0;
         isset1 = isset2 = isset3 = isset4 = -1;
@@ -675,7 +675,7 @@ void cCmdline::unitTest ()
         BUG_IF_NOT (isset1 == 1);
     }
     {
-        char* argv[] = {"unittest23", "--arga", "2"};
+        const char* argv[] = {"unittest23", "--arga", "2"};
         int argc = 3;
         intarg1 = intarg2 = -2;
         isset1 = isset2 = isset3 = isset4 = -1;
@@ -690,7 +690,7 @@ void cCmdline::unitTest ()
         BUG_IF_NOT (intarg1 == -2);
     }
     {
-        char* argv[] = {"unittest23", "--arga=2"};
+        const char* argv[] = {"unittest23", "--arga=2"};
         int argc = 2;
         intarg1 = intarg2 = -2;
         isset1 = isset2 = isset3 = isset4 = -1;
