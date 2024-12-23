@@ -318,7 +318,8 @@ int cTcpPump::execute (const std::list<std::string>& args)
                 realtimeMode = packetData.hasUserTimestamps;
 
             // prepare backend for packet output
-            cOutput backend (cPreprocessor (options.randSrcMac, options.randDstMac));
+            cPreprocessor preprop(options.randSrcMac, options.randDstMac);
+            cOutput backend (preprop);
             if (options.outpcap)    // write output to pcap file?
                 backend.prepare (options.outpcap, options.repeat);
             else
