@@ -34,6 +34,16 @@ set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/../bin)
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/../bin)
 
+# cmake includes
+###############################################################################
+list (APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/src/cmake)
+include (CheckLibraryExists)
+include (CheckSymbolExists)
+include (CheckFunctionExists)
+include (CheckIncludeFiles)
+include (TestBigEndian)
+include (gitinfo)
+include (download)
 
 # compiler settings
 ###############################################################################
@@ -72,7 +82,6 @@ endif ()
 ###############################################################################
 if (WIN32)
     if(NOT EXISTS ${PROJECT_SOURCE_DIR}/libpcap)
-        include (src/cmake/download.cmake)
         download_file(https://www.winpcap.org/install/bin/WpdPack_4_1_2.zip ./winpcap.zip
            SHA1 f5c80885bd48f07f41833d0f65bf85da1ef1727a)
         execute_process (COMMAND ${CMAKE_COMMAND} -E tar xzf ./winpcap.zip WORKING_DIRECTORY .)
@@ -85,11 +94,6 @@ endif ()
 
 # check dependencies
 ###############################################################################
-include (CheckLibraryExists)
-include (CheckSymbolExists)
-include (CheckFunctionExists)
-include (CheckIncludeFiles)
-include (TestBigEndian)
 
 # try to find pcap library; can be set via PCAP_INCLUDE_DIR and PCAP_LIBRARY
 if (NOT PCAP_INCLUDE_DIR)
@@ -201,35 +205,13 @@ endif ()
 
 # generate build numbers
 ###############################################################################
-execute_process (COMMAND git rev-parse --short HEAD    OUTPUT_VARIABLE GIT_COMMIT_SHORT ERROR_QUIET)
-
-if (NOT "${GIT_COMMIT_SHORT}" STREQUAL "")
-    execute_process (COMMAND git describe --exact-match --tags OUTPUT_VARIABLE GIT_TAG ERROR_QUIET)
-    execute_process (COMMAND git rev-parse --abbrev-ref HEAD OUTPUT_VARIABLE GIT_BRANCH)
-    execute_process (COMMAND git rev-parse HEAD OUTPUT_VARIABLE GIT_COMMIT)
-    execute_process(
-        COMMAND git diff --quiet --exit-code
-        RESULT_VARIABLE GIT_HAS_LOCAL_CHANGES
-        )
-
-    if (${GIT_HAS_LOCAL_CHANGES} EQUAL 1)
-        set (GIT_HAS_LOCAL_CHANGES "+")
-    endif ()
-
-    string (STRIP "${GIT_COMMIT_SHORT}" GIT_COMMIT_SHORT)
-    string (STRIP "${GIT_COMMIT}" GIT_COMMIT)
-    string (STRIP "${GIT_TAG}" GIT_TAG)
-    string (STRIP "${GIT_BRANCH}" GIT_BRANCH)
-
-    set (GIT_COMMIT_SHORT ${GIT_COMMIT_SHORT}${GIT_HAS_LOCAL_CHANGES})
-    set (GIT_COMMIT ${GIT_COMMIT}${GIT_HAS_LOCAL_CHANGES})
-
+git_info ()
+if (GIT_BRANCH)
     add_compile_definitions (GIT_COMMIT_SHORT="${GIT_COMMIT_SHORT}")
     add_compile_definitions (GIT_TAG="${GIT_TAG}")
     add_compile_definitions (GIT_BRANCH="${GIT_BRANCH}")
     add_compile_definitions (GIT_COMMIT="${GIT_COMMIT}")
-endif()
-
+endif ()
 string(TIMESTAMP BUILD_TIME "%Y-%m-%d %H:%M" UTC)
 add_compile_definitions(BUILD_TIME="${BUILD_TIME}")
 add_compile_definitions (BUILD_TYPE="${CMAKE_BUILD_TYPE}")
