@@ -1,8 +1,5 @@
-![Build and test pipeline](https://github.com/amartin755/tcppump/workflows/build-checks/badge.svg$branch=master)
-(Master Branch)
-
-![Build and test pipeline](https://github.com/amartin755/tcppump/workflows/build-checks/badge.svg?branch=devel)
-(Development Branch)
+[![master: build-and-test](https://github.com/amartin755/tcppump/actions/workflows/build-checks.yml/badge.svg?branch=master)](https://github.com/amartin755/tcppump/actions/workflows/build-checks.yml)
+[![devel: build-and-test](https://github.com/amartin755/tcppump/actions/workflows/build-checks.yml/badge.svg?branch=devel)](https://github.com/amartin755/tcppump/actions/workflows/build-checks.yml)
 
 # tcppump
 Simple Ethernet network packet generator
@@ -67,10 +64,6 @@ If you use 'msys' and 'make' add the following cmake parameter:
 
     -G "MSYS Makefiles"
 
-To enable unit test targets add the following cmake paramater:
-
-    -DWITH_UNITTESTS=1
-
 For debugging add:
 
     -DCMAKE_BUILD_TYPE=Debug
@@ -82,7 +75,7 @@ For debugging add:
 
 ## How to use
 ### Command-line interface
-    tcppump -i IFC [OPTIONS] packets/infiles
+    Usage: tcppump -i IFC [OPTIONS] packets/infiles
 
     Options:
     -h --help
@@ -91,13 +84,12 @@ For debugging add:
             Show detailed version infos
     -i IFC --interface=IFC
             Name of the network interface via which the packets are sent.
-            It can either be the AdapterName (GUID) like "{3F4A136A-2ED5-4226-9CB2-7A511E93CD48}",
-            or the so-called FriendlyName, which is changeable by the user.
-            For example "WiFi" or "Local Area Connection 1".
     --myip4=IPV4
             Use IPV4 as source IPv4 address instead of the network adapters ip address
     --mymac=MAC
             Use MAC as source MAC address instead of the network adapters MAC address
+    --mtu=MTU
+            Use MTU instead of the network adapters mtu
     --rand-smac
             Use random source MAC address. Overwrites --mymac as well as explicitly defined addresses in packets.
     --rand-dmac
@@ -129,12 +121,14 @@ For debugging add:
             Resolve destination MAC address for IPv4 packets.
             If dmac parameter of IPv4 based packets is omitted, the destination MAC will be automatically
             determined via ARP.
-    --responder=MODE
+    --listener=MODE
             Enable responder mode (EXPERIMENTAL). Possible values for MODE are:
             mirror  Each received packet will be mirrored back to the sender.
             trigger Each received packet will trigger sending of specified packets.
     --bpf-filter=FILTER
             Receive bpf filter for responder mode.
+    --predictable-random
+            Don't use random numbers, use simple sequence instead.
 
 ### Examples
 
