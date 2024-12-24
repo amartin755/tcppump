@@ -28,6 +28,7 @@ option(WITH_UNITTESTS "enable/disable generation of unittest binary (default ON)
 option(WITH_ASAN      "enable/disable address sanitizer (default OFF)" OFF)
 option(WITH_UBSAN     "enable/disable undefined behavior sanitizer (default OFF)" OFF)
 option(WITH_GCOV      "enable/disable code coverage profiling (default OFF)" OFF)
+option(WITH_WERROR    "enable/disable compilation warnings as errors (default OFF)" OFF)
 
 # set output directories to "bin"
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
@@ -42,6 +43,7 @@ include (CheckSymbolExists)
 include (CheckFunctionExists)
 include (CheckIncludeFiles)
 include (TestBigEndian)
+include (CTest)
 include (gitinfo)
 include (download)
 
@@ -54,8 +56,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # warning level
 if (MSVC)
     add_compile_options (/W3 /wd5208)
+    if (WITH_WERROR)
+        add_compile_options (/WX)
+    endif ()
 else()
     add_compile_options (-Wall -Wextra -Wpedantic)
+    if (WITH_WERROR)
+        add_compile_options (-Werror)
+    endif ()
 endif()
 
 # on mingw we link the std library statically
