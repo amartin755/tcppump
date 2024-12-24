@@ -1,7 +1,7 @@
 #/usr/bin/bash
 
-device1="veth0"
-device2="veth1"
+device1="pump0"
+device2="pump1"
 
 if [ ! -e "/sys/class/net/${device1}" ] && [ ! -e "/sys/class/net/${device2}" ]
 then
