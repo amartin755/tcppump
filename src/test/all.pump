@@ -76,6 +76,7 @@ udp(dip=224.20.30.40, sport=0, dport=0, payload="There's no place like 127.0.0.1
 udp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=1, dport=2, id=1,  payload = *1472);
 udp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=1, dport=2, id=1,  payload = *1473);
 udp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=1, dport=2, id=1,  payload = *65507);
+udp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=1, dport=2, payload = FE);
 tcp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=0, dport=0, seq=0, ack=0);
 tcp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=0xffff, dport=0, seq=0, ack=0);
 tcp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=0, dport=0xffff, seq=0, ack=0);

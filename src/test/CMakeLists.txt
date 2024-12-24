@@ -522,7 +522,7 @@ add_test(NAME igmp-10--nok COMMAND tcppump ${DEFAULT_PARAMS} "igmp(dip=225.0.0.1
 set_tests_properties(igmp-10--nok PROPERTIES WILL_FAIL TRUE)
 
 add_test(NAME script-01--ok COMMAND tcppump ${DEFAULT_PARAMS} -vvv -s ${TEST_FILE_PREFIX}/all.pump WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-set_tests_properties(script-01--ok PROPERTIES PASS_REGULAR_EXPRESSION "Will send 243 packets.*Successfully wrote 243 packets")
+set_tests_properties(script-01--ok PROPERTIES PASS_REGULAR_EXPRESSION "Will send 244 packets.*Successfully wrote 244 packets")
 add_test(NAME script-01--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/all.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 ### AFL findings
