@@ -150,3 +150,10 @@ vrrp3(sip=11.22.33.44, smac=90:91:92:93:94:95, aint=4095, vrprio=255, vrid=1, vr
 vrrp3(ecn=2, df=1, sip=11.22.33.44, smac=90:91:92:93:94:95, aint=4095, vrprio=255, vrid=1, vrip=1.2.3.5);
 vrrp3(vid=42, vtype=2, dei=1, prio=4, vid=43, prio=5, dscp=42, ecn=2, df=1, sip=11.22.33.44, smac=90:91:92:93:94:95, aint=4095, vrprio=255, vrid=1, vrip=1.2.3.5);
 vrrp3(aint=0, vrprio=255, vrid=1, vrip=1.2.3.5);
+stp();
+rstp();
+igmp(dmac=11:22:33:44:55:66, dip=10.20.30.40, group=224.0.0.1, type=0);
+igmp(dmac=11:22:33:44:55:66, dip=10.20.30.40, group=224.0.0.1, type=255);
+igmp(dip=225.0.0.1, group=224.0.0.1, type=0x11);
+igmp(dip=225.0.0.1, group=224.0.0.1, type=0x11, time=0);
+igmp(dip=225.0.0.1, group=224.0.0.1, type=0x11, time=255);

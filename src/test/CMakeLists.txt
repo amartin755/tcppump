@@ -515,14 +515,14 @@ set_tests_properties(igmp-6--nok PROPERTIES WILL_FAIL TRUE)
 add_test(NAME igmp-7--ok COMMAND tcppump ${DEFAULT_PARAMS} "igmp(dip=225.0.0.1, group=224.0.0.1, type=0x11)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 add_test(NAME igmp-7--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/igmp-07.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 add_test(NAME igmp-8--ok COMMAND tcppump ${DEFAULT_PARAMS} "igmp(dip=225.0.0.1, group=224.0.0.1, type=0x11, time=0)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-add_test(NAME igmp-8--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/igmp-07.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+add_test(NAME igmp-8--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/igmp-08.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 add_test(NAME igmp-9--ok COMMAND tcppump ${DEFAULT_PARAMS} "igmp(dip=225.0.0.1, group=224.0.0.1, type=0x11, time=255)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 add_test(NAME igmp-9--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/igmp-09.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 add_test(NAME igmp-10--nok COMMAND tcppump ${DEFAULT_PARAMS} "igmp(dip=225.0.0.1, group=224.0.0.1, type=0x11, time=256)" WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 set_tests_properties(igmp-10--nok PROPERTIES WILL_FAIL TRUE)
 
 add_test(NAME script-01--ok COMMAND tcppump ${DEFAULT_PARAMS} -vvv -s ${TEST_FILE_PREFIX}/all.pump WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-set_tests_properties(script-01--ok PROPERTIES PASS_REGULAR_EXPRESSION "Will send 244 packets.*Successfully wrote 244 packets")
+set_tests_properties(script-01--ok PROPERTIES PASS_REGULAR_EXPRESSION "Will send 251 packets.*Successfully wrote 251 packets")
 add_test(NAME script-01--diff COMMAND cmake -E compare_files ${TEST_OUTPUT} ${TEST_FILE_PREFIX}/all.pcap WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 ### AFL findings
