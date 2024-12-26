@@ -41,6 +41,10 @@ set (DEFAULT_PARAMS ${DEFAULT_PARAMS_NO_MTU} --mtu 1500)
 set (TEST_FILE_PREFIX ${CMAKE_BINARY_DIR}/../src/test)
 
 
+if (WITH_UNITTESTS)
+add_test(NAME unittests COMMAND unittest WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+endif()
+
 add_test(NAME no-params--nok COMMAND tcppump WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 set_tests_properties(no-params--nok PROPERTIES WILL_FAIL TRUE)
 

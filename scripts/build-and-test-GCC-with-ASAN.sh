@@ -19,13 +19,8 @@ sudo true
 ###############################################################################
 rm -rf $PROJROOT/$BUILDDIRNAME
 cd $PROJROOT
-cmake -B $BUILDDIRNAME -DCMAKE_BUILD_TYPE:STRING=RelWithDebInfo -DWITH_ASAN=ON
+cmake -B $BUILDDIRNAME  -DWITH_UNITTESTS=ON -DCMAKE_BUILD_TYPE:STRING=RelWithDebInfo -DWITH_ASAN=ON
 cmake --build build -j16
-
-
-# run unit tests (working dir should be "bin" because of created tmp files)
-###############################################################################
-cd $PROJROOT/bin && ./unittest
 
 
 # run all ctest cases

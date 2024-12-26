@@ -11,16 +11,11 @@ PROJROOT=$(realpath $SCRIPTPATH/..)
 ###############################################################################
 rm -rf $PROJROOT/$BUILDDIRNAME
 cd $PROJROOT
-cmake -B $BUILDDIRNAME -DCMAKE_BUILD_TYPE:STRING=RelWithDebInfo
+cmake -B $BUILDDIRNAME -DWITH_UNITTESTS=ON -DCMAKE_BUILD_TYPE:STRING=RelWithDebInfo
 cmake --build build -j
 
 
-# run unit tests (working dir should be "bin" because of created tmp files)
-###############################################################################
-cd $PROJROOT/bin && valgrind --leak-check=yes ./unittest
-
-
-# execute all ctest test cases that need raw privileges
+# execute all ctest test cases that don't need raw privileges
 ###############################################################################
 cd $PROJROOT/$BUILDDIRNAME
 ctest -T memcheck -E "online-*"

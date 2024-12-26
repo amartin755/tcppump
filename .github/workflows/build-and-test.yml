@@ -54,12 +54,6 @@ jobs:
     - name: Build
       run: cmake --build ${{github.workspace}}/build --target tcppump unittest --config ${{ matrix.build }}
 
-    - name: Execute Unit Tests
-      working-directory: ${{github.workspace}}/bin
-      shell: bash
-      # Execute unittest binary
-      run: ./unittest
-
     - name: Assign priviledges (linux)
       if: matrix.os == 'ubuntu-latest'
       working-directory: ${{github.workspace}}/bin
