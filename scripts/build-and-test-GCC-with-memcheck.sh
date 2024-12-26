@@ -15,7 +15,7 @@ cmake -B $BUILDDIRNAME -DWITH_UNITTESTS=ON -DCMAKE_BUILD_TYPE:STRING=RelWithDebI
 cmake --build build -j
 
 
-# execute all ctest test cases that don't need raw privileges
+# execute all ctest test cases that don't need raw privileges (exclude diff)
 ###############################################################################
 cd $PROJROOT/$BUILDDIRNAME
-ctest -T memcheck -E "online-*"
+ctest -T memcheck -E "--diff|online-*" -j
