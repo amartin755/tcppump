@@ -1,5 +1,5 @@
-[![master: build-and-test](https://github.com/amartin755/tcppump/actions/workflows/build-checks.yml/badge.svg?branch=master)](https://github.com/amartin755/tcppump/actions/workflows/build-checks.yml)
-[![devel: build-and-test](https://github.com/amartin755/tcppump/actions/workflows/build-checks.yml/badge.svg?branch=devel)](https://github.com/amartin755/tcppump/actions/workflows/build-checks.yml)
+[![master: build-and-test](https://github.com/amartin755/tcppump/actions/workflows/build-and-test.yml/badge.svg?branch=master)](https://github.com/amartin755/tcppump/actions/workflows/build-and-test.yml)
+[![devel: build-and-test](https://github.com/amartin755/tcppump/actions/workflows/build-and-test.yml/badge.svg?branch=devel)](https://github.com/amartin755/tcppump/actions/workflows/build-and-test.yml)
 
 # tcppump
 Simple Ethernet network packet generator

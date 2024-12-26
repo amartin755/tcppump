@@ -18,7 +18,7 @@
 #
 ###############################################################################
 
-name: build-checks
+name: build-and-test
 
 on: [push, workflow_dispatch]
 
