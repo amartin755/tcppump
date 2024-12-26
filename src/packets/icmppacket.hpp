@@ -26,35 +26,35 @@
 #include "udppacket.hpp"
 
 
-typedef struct
+struct icmp_header_t
 {
     uint8_t type;
     uint8_t code;
     uint16_t checksum;
 
-}icmp_header_t;
+};
 static_assert (sizeof (icmp_header_t) == 4, "icmp_header_t is not packed");
 
-typedef struct
+struct icmp_empty_header_t
 {
     icmp_header_t head;
     uint32_t      unused;
-}icmp_empty_header_t;
+};
 static_assert (sizeof (icmp_empty_header_t) == 8, "icmp_empty_header_t is not packed");
 
-typedef struct
+struct generic_inet_header
 {
     ipv4_header_t ip;
     udp_header_t udp;
-}generic_inet_header;
+};
 static_assert (sizeof (generic_inet_header) == 28, "generic_inet_header is not packed");
 
-typedef struct
+struct icmp_ping_t
 {
     icmp_header_t head;
     uint16_t      id;
     uint16_t      seq;
-}icmp_ping_t;
+};
 static_assert (sizeof (icmp_ping_t) == 8, "icmp_ping_t is not packed");
 
 

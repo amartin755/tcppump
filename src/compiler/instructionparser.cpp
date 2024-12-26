@@ -1302,12 +1302,12 @@ void cInstructionParser::throwParseException (const char* msg, const char* val, 
 
 #include "console.hpp"
 
-typedef struct
+struct testcase_t
 {
     const char* tokens;
     uint8_t packet[cEthernetPacket::MAX_DOUBLE_TAGGED_PACKET];
     size_t packetSize;
-}testcase_t;
+};
 
 static const testcase_t tests[] = {
     {

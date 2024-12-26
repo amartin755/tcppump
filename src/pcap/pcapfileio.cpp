@@ -216,13 +216,13 @@ void cPcapFileIO::unitTest (const char* file)
     BUG_IF_NOT (!obj.fileError);
     BUG_IF_NOT (!obj.eof);
 
-    typedef struct
+    struct frame
     {
         uint64_t t;
         uint8_t* bin;
         size_t binlen;
         const char* txt;
-    }frame;
+    };
 
     frame indata[] = {
         {0, NULL, 0, "5c353beac27f58946bd31d5c0800450000412db8000080118b1ac0a80088c0a80001ca040035002d238b7f9901000001000000000000037777770b736f75726365666f726765036e65740000010001"},

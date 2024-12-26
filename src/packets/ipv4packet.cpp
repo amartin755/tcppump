@@ -143,7 +143,7 @@ void cIPv4Packet::compile (uint8_t protocol, const uint8_t* l4header, size_t l4h
         ipHeader.ip.ident = htons(identification++);
 
     for (unsigned n = 1; n < fragCnt; n++)
-        packets.push_back(std::move(cEthernetPacket(packet)));
+        packets.push_back (cEthernetPacket(packet));
 
     packetsAsArray = new const cEthernetPacket*[fragCnt];
 

@@ -25,7 +25,7 @@
 #include "ipv4packet.hpp"
 
 
-typedef struct
+struct gre_basic_header_t
 {
     uint8_t  flags;
     uint8_t  version;
@@ -54,7 +54,7 @@ typedef struct
     {
         flags |= 0x10;
     }
-}gre_basic_header_t;
+};
 static_assert (sizeof (gre_basic_header_t) == 4, "gre_basic_header_t is not packed");
 
 

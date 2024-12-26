@@ -31,7 +31,7 @@
 class cMacAddress
 {
 public:
-    typedef struct {uint8_t mac[6];} mac_t;
+    struct mac_t{uint8_t mac[6];};
 
     cMacAddress ()
     {

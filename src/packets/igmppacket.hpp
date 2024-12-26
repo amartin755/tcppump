@@ -142,25 +142,25 @@
 
 #pragma pack(1)
 
-typedef struct
+struct igmpv1_packet_t
 {
     uint8_t  version_type;
     uint8_t  unused;
     uint16_t checksum;
     struct in_addr groupAddress;
 
-}igmpv1_packet_t;
+};
 
-typedef struct
+struct igmpv2_packet_t
 {
     uint8_t  type;
     uint8_t  maxRespTime;
     uint16_t checksum;
     struct in_addr groupAddress;
 
-}igmpv2_packet_t;
+};
 
-typedef struct
+struct igmpv3_query_t
 {
     uint8_t  type;
     uint8_t  maxRespCode;
@@ -183,9 +183,9 @@ typedef struct
         flags &= 0xf8;
         flags |= (qrv & 7);
     }
-}igmpv3_query_t;
+};
 
-typedef struct
+struct igmpv3_report_t
 {
     uint8_t  type;
     uint8_t  reserved1;
@@ -195,9 +195,9 @@ typedef struct
 
     //    struct igmpv3_group_record_t groupRecords [numbOfGroupRecords];
 
-}igmpv3_report_t;
+};
 
-typedef struct
+struct igmpv3_group_record_t
 {
     uint8_t  type;
     uint8_t  auxDataLen;
@@ -205,7 +205,7 @@ typedef struct
     struct in_addr groupAddress;
     //    struct in_addr sources [numberOfSources];
 
-}igmpv3_group_record_t;
+};
 
 #pragma pack()
 

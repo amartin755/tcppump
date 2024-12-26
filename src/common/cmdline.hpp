@@ -24,7 +24,7 @@
 
 typedef enum {ARG_NO, ARG_STRING, ARG_INT}arg_type;
 
-typedef struct
+struct argument
 {
     int         isSet;
     int         shortname;
@@ -39,7 +39,7 @@ typedef struct
     void* arg;
     int*        pOptSet;
     bool        dontFailIfSet;
-}argument;
+};
 
 class cCmdline
 {

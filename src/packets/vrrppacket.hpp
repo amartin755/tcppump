@@ -68,7 +68,7 @@
 
 */
 
-typedef struct
+struct vrrp_header_t
 {
     uint8_t vers_type; // version (bit 0 - 3) | type (bit 4 - 7)
     uint8_t vrid;
@@ -86,7 +86,7 @@ typedef struct
             uint16_t maxAdverInt; // only 12 bits
         } v3;
 
-    };
+    }v2v3;
     uint16_t chksum;
 //    struct in_addr ipAddresses[countIpAddr];
 
@@ -108,7 +108,7 @@ typedef struct
         return (int)(vers_type & 0x0F);
     }
 
-}vrrp_header_t;
+};
 static_assert (sizeof (vrrp_header_t) == 8, "vrrp_header_t is not packed");
 
 

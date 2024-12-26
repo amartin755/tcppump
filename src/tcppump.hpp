@@ -28,7 +28,7 @@
 #include "pcapfileio.hpp"
 #include "netinterface.hpp"
 
-typedef struct
+struct appOptions
 {
     const char*  ifc;
     int          repeat;
@@ -49,7 +49,7 @@ typedef struct
     const char*  responderMode;
     const char*  bpf;
     unsigned     mtu;
-}appOptions;
+};
 
 class cInterface;
 class cTimeval;

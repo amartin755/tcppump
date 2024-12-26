@@ -47,7 +47,7 @@ private:
 
 #pragma pack(1)
 
-typedef struct
+struct arp_t
 {
     uint16_t hwType;
     uint16_t protType;
@@ -68,7 +68,7 @@ typedef struct
         return opcode == htons(2);
     }
 
-}arp_t;
+};
 
 #pragma pack()
 

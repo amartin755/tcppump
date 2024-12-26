@@ -25,7 +25,7 @@
 #include "ipv4packet.hpp"
 
 #pragma pack(1)
-typedef struct
+struct tcp_header_t
 {
     uint16_t srcPort;
     uint16_t dstPort;
@@ -90,7 +90,7 @@ typedef struct
         return !!(flags & 2);
     }
 
-}tcp_header_t;
+};
 #pragma pack()
 
 

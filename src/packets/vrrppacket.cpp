@@ -55,9 +55,9 @@ void cVrrpPacket::setType (uint8_t type)
 void cVrrpPacket::setInterval (uint16_t interval)
 {
     if (header.getVersion() == 2)
-        header.v2.adverInt = (uint8_t)interval;
+        header.v2v3.v2.adverInt = (uint8_t)interval;
     else
-        header.v3.maxAdverInt = htons(interval);
+        header.v2v3.v3.maxAdverInt = htons(interval);
 }
 
 void cVrrpPacket::setChecksum (uint16_t checksum)

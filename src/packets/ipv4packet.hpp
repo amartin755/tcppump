@@ -29,16 +29,16 @@
 #include "linkable.hpp"
 
 // RFC2113
-typedef struct
+struct ipv4_option_router_alert_t
 {
     uint8_t  type;   // 0x94
     uint8_t  length; // 4
     uint16_t value;  // 0 -> Router shall examine packet
 
-}ipv4_option_router_alert_t;
+};
 static_assert (sizeof (ipv4_option_router_alert_t) == 4, "ipv4_option_router_alert_t is not packed");
 
-typedef struct
+struct ipv4_header_t
 {
     uint8_t  vers_ihl; // version (bit 0 - 3) | ip header length (bit 4 - 7)
     uint8_t  tos;
@@ -96,10 +96,10 @@ typedef struct
         flags_offset = htons ((offset & ~0xe000) | fo);
     }
 
-}ipv4_header_t;
+};
 static_assert (sizeof (ipv4_header_t) == 20, "ipv4_header_t is not packed");
 
-typedef struct
+struct ipv4_header_with_router_alert_t
 {
     ipv4_header_t ip;
     ipv4_option_router_alert_t routerAlert;
@@ -111,17 +111,17 @@ typedef struct
         routerAlert.length = 4;
         routerAlert.value  = 0;
     }
-}ipv4_header_with_router_alert_t;
+};
 static_assert (sizeof (ipv4_header_with_router_alert_t) == 24, "ipv4_header_with_router_alert_t is not packed");
 
-typedef struct
+struct ipv4_pseudo_header_t
 {
     struct in_addr srcIp;
     struct in_addr dstIp;
     uint8_t        nix;         // 0
     uint8_t        protocol;
     uint16_t       len;
-}ipv4_pseudo_header_t;
+};
 static_assert (sizeof (ipv4_pseudo_header_t) == 12, "ipv4_pseudo_header_t is not packed");
 
 

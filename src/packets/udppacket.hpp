@@ -24,14 +24,14 @@
 
 #include "ipv4packet.hpp"
 
-typedef struct
+struct udp_header_t
 {
     uint16_t srcPort;
     uint16_t dstPort;
     uint16_t length;
     uint16_t checksum;
 
-}udp_header_t;
+};
 // ensure packet struct without using compiler specific packing attributes/pragmas
 static_assert (sizeof (udp_header_t) == 8, "udp_header_t is not natural aligned");
 

@@ -71,7 +71,7 @@
 
 
 #pragma pack(1)
-typedef struct
+struct bridge_id_t
 {
     uint16_t  prio_ext;
     cMacAddress::mac_t systemId;
@@ -81,10 +81,10 @@ typedef struct
         prio_ext = htons (((prio & 0x0f) << 12) | (ext & 0x0fff));
         mac.get (&systemId);
     }
-}bridge_id_t;
+};
 
 // STP config BPDU
-typedef struct
+struct stp_bpdu_t
 {
     uint16_t    protocol;
     uint8_t     version;
@@ -118,22 +118,22 @@ typedef struct
                    (((int)proposal)   << 1) );
     }
 
-}stp_bpdu_t;
+};
 
 // RSTP config BPDU
-typedef struct
+struct rstp_bpdu_t
 {
     stp_bpdu_t stp;
     uint8_t    version1Len;
-}rstp_bpdu_t;
+};
 
 // only for STP
-typedef struct
+struct tcnpdu_t
 {
     uint16_t    protocol;
     uint8_t     version;
     uint8_t     type;
-}tcnpdu_t;
+};
 #pragma pack()
 
 class cStpPacket : public cEthernetPacket
