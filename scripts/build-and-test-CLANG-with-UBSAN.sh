@@ -16,7 +16,7 @@ sudo true
 
 # clean configure and build
 ###############################################################################
-$SCRIPTPATH/clean-build.sh -t -u -C RelWithDebInfo -T GCC -B $BUILDDIRNAME
+$SCRIPTPATH/clean-build.sh -t -u -C RelWithDebInfo -T CLANG -B $BUILDDIRNAME
 
 
 # run all ctest cases

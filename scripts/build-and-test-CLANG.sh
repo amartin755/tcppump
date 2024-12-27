@@ -16,12 +16,7 @@ sudo true
 
 # clean configure and build
 ###############################################################################
-rm -rf $PROJROOT/$BUILDDIRNAME
-cd $PROJROOT
-export CC=/usr/bin/clang
-export CXX=/usr/bin/clang++
-cmake -B $BUILDDIRNAME  -DWITH_UNITTESTS=ON -DCMAKE_BUILD_TYPE:STRING=RelWithDebInfo
-cmake --build build -j
+$SCRIPTPATH/clean-build.sh -t -C RelWithDebInfo -T CLANG -B $BUILDDIRNAME
 
 
 # run all ctest cases

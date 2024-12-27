@@ -17,10 +17,7 @@ sudo true
 
 # clean configure and build
 ###############################################################################
-rm -rf $PROJROOT/$BUILDDIRNAME
-cd $PROJROOT
-cmake -B $BUILDDIRNAME  -DWITH_UNITTESTS=ON -DCMAKE_BUILD_TYPE:STRING=RelWithDebInfo -DWITH_ASAN=ON
-cmake --build build -j16
+$SCRIPTPATH/clean-build.sh -t -a -C RelWithDebInfo -T GCC -B $BUILDDIRNAME
 
 
 # run all ctest cases
