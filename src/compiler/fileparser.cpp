@@ -155,7 +155,7 @@ int cFileParser::parse (cInstructionParser::cResult& result)
                 else if (c == '}')
                 {
                     openControlBlocks--;
-                    instructionBuffer[offset++] = c;
+                    instructionBuffer[offset++] = (char)c;
                     Console::PrintDebug("## block end %d\n", lineNbr);
                     const char* p = cParseHelper::skipWhitespaces (instructionBuffer);
                     if (*p != '}')
@@ -171,7 +171,7 @@ int cFileParser::parse (cInstructionParser::cResult& result)
                 }
                 else
                 {
-                    instructionBuffer[offset++] = c;
+                    instructionBuffer[offset++] = (char)c;
                 }
             }
         }

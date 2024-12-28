@@ -93,7 +93,7 @@ struct ipv4_header_t
         BUG_ON (offset % 8);
         offset /= 8;
         uint16_t fo  = ntohs (flags_offset) & 0xe000;
-        flags_offset = htons ((offset & ~0xe000) | fo);
+        flags_offset = htons (uint16_t(offset & ~0xe000) | fo);
     }
 
 };

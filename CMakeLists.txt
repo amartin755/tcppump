@@ -137,8 +137,6 @@ endif ()
 if (WIN32)
     # winsock, winpcap, conio and iphlpapi are needed on windows
     check_include_files("winsock2.h;iphlpapi.h;winerror.h" HAVE_WS2)
-    # getch() is needed for unbuffered stdin on Windows
-    check_symbol_exists (getch "conio.h" HAVE_GETCH)
     # check for inet_pton() inet_ntop(), they do not exist on older mingw
     set (CMAKE_REQUIRED_LIBRARIES "ws2_32")
     set (CMAKE_REQUIRED_DEFINITIONS -D_WIN32_WINNT=0x0600)
@@ -147,9 +145,6 @@ if (WIN32)
     set (CMAKE_REQUIRED_LIBRARIES "")
     set (CMAKE_REQUIRED_DEFINITIONS "")
 
-    if (NOT HAVE_GETCH)
-        message (FATAL_ERROR "Function getch() not found!")
-    endif ()
     if (NOT HAVE_WS2)
         message (FATAL_ERROR "Winsock and ip helper headers not found!")
     endif ()

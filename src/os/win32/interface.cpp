@@ -219,7 +219,7 @@ public:
                 return 0;
             default:
                 BUG ("???");
-                return -1;
+                return (DWORD)-1;
             }
         }
     }
@@ -241,7 +241,7 @@ public:
         if (cSignal::sigintSignalled() && WaitForSingleObject (workerThread, 6000) == WAIT_TIMEOUT)
         {
             Console::PrintDebug ("Timeout! Killing worker thread\n");
-            TerminateThread (workerThread, -2);
+            TerminateThread (workerThread, (DWORD)-2);
             WaitForSingleObject (workerThread, INFINITE); // wait for thread
         }
         else
@@ -252,7 +252,7 @@ public:
             if (ret == WAIT_OBJECT_0)
             {
                 Console::PrintError ("SIGINT, killing worker thread\n");
-                TerminateThread (workerThread, -2);
+                TerminateThread (workerThread, (DWORD)-2);
                 WaitForSingleObject (workerThread, INFINITE); // wait for thread
             } else if (ret == WAIT_OBJECT_0 + 1)
                 Console::PrintDebug ("Worker thread finished\n");
