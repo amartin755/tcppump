@@ -251,7 +251,7 @@ void cEthernetPacket::addSnapHeader (uint32_t oui, uint16_t protocol)
 }
 
 
-void cEthernetPacket::addVlanTag (bool isCTag, int id, int prio, int dei)
+void cEthernetPacket::addVlanTag (bool isCTag, unsigned id, unsigned prio, unsigned dei)
 {
     checkPacketLength (sizeof (vlan_t));
 

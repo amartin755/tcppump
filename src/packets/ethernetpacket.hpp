@@ -56,7 +56,7 @@ public:
     void setMacHeader (const cMacAddress& src, const cMacAddress& dest);
     void addLlcHeader (uint8_t dsap, uint8_t ssap, uint16_t control);
     void addSnapHeader (uint32_t oui, uint16_t protocol);
-    void addVlanTag (bool isCTag, int id, int prio, int dei);
+    void addVlanTag (bool isCTag, unsigned id, unsigned prio, unsigned dei);
     void setTypeLength (uint16_t ethertypeLenth);
     void setLength ();
     void setPayload (const uint8_t* payload, size_t len);
@@ -145,12 +145,12 @@ struct vlan_t
     uint16_t tci;  // tag control information | prio (3 bit) | CFI/DEI (1 bit) | vlan id (12 bit)
 
 public:
-    void setCTag (int id, int prio = 0, int dei = 0)
+    void setCTag (uint16_t id, uint16_t prio = 0, uint16_t dei = 0)
     {
         tpid = htons (ETHERTYPE_CVLAN);
         setTci (id, prio, dei);
     }
-    void setSTag (int id, int prio = 0, int dei = 0)
+    void setSTag (uint16_t id, uint16_t prio = 0, uint16_t dei = 0)
     {
         tpid = htons (ETHERTYPE_SVLAN);
         setTci (id, prio, dei);
@@ -183,9 +183,9 @@ public:
 
 
 private:
-    void setTci (int id, int prio, int dei)
+    void setTci (uint16_t vid, uint16_t prio, uint16_t dei)
     {
-        tci = htons (short (id | (dei << 12) | (prio << 13)));
+        tci = htons ((vid & 0x0FFF)| ((dei & 1) << 12) | ((prio & 7) << 13));
     }
 
 };

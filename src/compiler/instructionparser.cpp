@@ -398,10 +398,10 @@ size_t cInstructionParser::compileVLANTags (cParameterList& params, cEthernetPac
     // VLAN tags
     while ((optionalPar = params.findParameter(optionalPar, nullptr, "vid", true)) != nullptr)
     {
-        packet->addVlanTag ((int)params.findParameter (optionalPar, "vid", "vtype", (uint32_t)1)->asInt8 (1, 2) == 1 ? true : false,
-                           (int)optionalPar->asInt16 (0, 0x0fff), // VID
-                           (int)params.findParameter (optionalPar, "vid", "prio",  (uint32_t)0)->asInt8 (0, 7),
-                           (int)params.findParameter (optionalPar, "vid", "dei",   (uint32_t)0)->asInt8 (0, 1));
+        packet->addVlanTag (params.findParameter (optionalPar, "vid", "vtype", (uint32_t)1)->asInt8 (1, 2) == 1 ? true : false,
+                           (unsigned)optionalPar->asInt16 (0, 0x0fff), // VID
+                           (unsigned)params.findParameter (optionalPar, "vid", "prio",  (uint32_t)0)->asInt8 (0, 7),
+                           (unsigned)params.findParameter (optionalPar, "vid", "dei",   (uint32_t)0)->asInt8 (0, 1));
     }
     return packet->getLength();
 }
