@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
  * TCPPUMP <https://github.com/amartin755/tcppump>
- * Copyright (C) 2012-2021 Andreas Martin (netnag@mailbox.org)
+ * Copyright (C) 2012-2024 Andreas Martin (netnag@mailbox.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,6 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <chrono>
 
 #include "bug.hpp"
 #include "console.hpp"
@@ -156,6 +157,7 @@ void cCompiler::processScriptFiles (const std::list<std::string>& input)
         }
 
         scriptStartTime = currtime;
+        auto t1 = std::chrono::high_resolution_clock::now();
 
         while ((count = fileParser.parse (result)) >= 0)
         {
@@ -186,6 +188,9 @@ void cCompiler::processScriptFiles (const std::list<std::string>& input)
                 }
             }
         }
+        auto t2 = std::chrono::high_resolution_clock::now();
+        auto elapsedUs = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
+        Console::PrintDebug ("parsed %zu packets in %.2f usec\n", data.getPacketCnt(), (double)elapsedUs.count());
 
         fileParser.close ();
 
