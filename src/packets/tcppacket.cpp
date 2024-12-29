@@ -126,7 +126,6 @@ void cTcpPacket::setFlagNON (bool flag)
 }
 
 
-// FIXME use cInetChecksum instead
 uint16_t cTcpPacket::calcChecksum (const uint8_t* payload, size_t len) const
 {
     ipv4_pseudo_header_t ipPseudoHeader;
@@ -139,51 +138,6 @@ uint16_t cTcpPacket::calcChecksum (const uint8_t* payload, size_t len) const
     ipPseudoHeader.len      = htons((uint16_t)cIPv4Packet::getPayloadLength());
     uint16_t ret = cInetChecksum::rfc1071 ((const void*)&ipPseudoHeader, sizeof (ipPseudoHeader), &header, sizeof(header), payload, len);
     return ret ? ret : 0xffff;
-#if 0
-    uint32_t sum;
-
-    sum  = csum ((const uint16_t*)&ipPseudoHeader, sizeof (ipPseudoHeader));
-    sum += csum ();
-
-    while (sum >> 16)
-        sum = (sum & 0xffff) + (sum >> 16);
-
-    uint16_t ret = (uint16_t)~sum;
-    return ret ? ret : 0xffff;
-#endif
-}
-
-uint32_t cTcpPacket::csum (const uint16_t* p, unsigned len) const
-{
-    uint32_t sum = 0;
-
-    while (len > 1)
-    {
-        sum += *p++;
-        len -= 2;
-    }
-    if (len)
-        sum += *(uint8_t*)p;
-
-    return sum;
-}
-
-uint32_t cTcpPacket::csum () const
-{
-    uint32_t sum = 0;
-    unsigned offset = 0;
-    unsigned len = (unsigned)cIPv4Packet::getPayloadLength ();
-
-    while (len > 1)
-    {
-        sum += cIPv4Packet::getPayloadAt16(offset);
-        len -= 2;
-        offset += 2;
-    }
-    if (len)
-        sum += cIPv4Packet::getPayloadAt8(offset);
-
-    return sum;
 }
 
 #ifdef WITH_UNITTESTS

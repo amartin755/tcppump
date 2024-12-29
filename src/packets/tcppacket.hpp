@@ -124,8 +124,6 @@ public:
 
 private:
     uint16_t calcChecksum (const uint8_t* payload, size_t len) const;
-    uint32_t csum (const uint16_t* p, unsigned len) const;
-    uint32_t csum () const;
 
     tcp_header_t header;
     static uint32_t sequence;

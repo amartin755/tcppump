@@ -163,8 +163,6 @@ protected:
     {
         return ipHeader.ip;
     }
-    uint8_t  getPayloadAt8 (unsigned offset) const;
-    uint16_t getPayloadAt16 (unsigned offset) const; // note: offset is a byte offset!!!
     size_t   getPayloadLength () const;
     void     updateL4Header (const uint8_t* l4header, size_t l4headerLen);
     void     addRouterAlertOption (void);

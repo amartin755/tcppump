@@ -193,27 +193,6 @@ void cIPv4Packet::compile (uint8_t protocol, const uint8_t* l4header, size_t l4h
     }
 }
 
-uint8_t cIPv4Packet::getPayloadAt8 (unsigned offset) const
-{
-    size_t ipHeaderLen  = getHeaderLength();
-    unsigned fragment   = static_cast<unsigned>(offset / (mtu - ipHeaderLen));
-    unsigned packOffset = static_cast<unsigned>(offset % (mtu - ipHeaderLen));
-
-    const cEthernetPacket *packet = packetsAsArray[fragment];
-    return packet->getPayloadAt8 (packOffset + (unsigned)ipHeaderLen);
-}
-
-// note: offset is a byte offset!!!
-uint16_t cIPv4Packet::getPayloadAt16 (unsigned offset) const
-{
-    size_t ipHeaderLen  = getHeaderLength();
-    unsigned fragment   = static_cast<unsigned>(offset / (mtu - ipHeaderLen));
-    unsigned packOffset = static_cast<unsigned>(offset % (mtu - ipHeaderLen));
-
-    const cEthernetPacket *packet = packetsAsArray[fragment];
-    return packet->getPayloadAt16 (packOffset + (unsigned)ipHeaderLen);
-}
-
 size_t cIPv4Packet::getPayloadLength () const
 {
     size_t ipHeaderLen = getHeaderLength();
