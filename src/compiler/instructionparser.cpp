@@ -154,6 +154,13 @@ void cInstructionParser::parse (const char* instruction, cResult& result, bool i
     }
     catch (FormatException& e)
     {
+        // in case of errors possibly created packets are freed again
+        if (result.packets)
+        {
+            delete result.packets;
+            result.packets = nullptr;
+        }
+
         switch (e.what ())
         {
         case exParUnknown:
