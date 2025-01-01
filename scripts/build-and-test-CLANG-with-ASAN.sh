@@ -8,12 +8,6 @@ PROJROOT=$(realpath $SCRIPTPATH/..)
 DUMPABLE=$(sysctl -n fs.suid_dumpable)
 
 
-# before we start, enforce successful sudo
-###############################################################################
-sudo -k
-echo "NOTE: need sudo for setting of raw-capabilities for tcppump binary and ASAN suid_dumpable tweaks"
-sudo true
-
 
 # clean configure and build
 ###############################################################################
@@ -24,11 +18,13 @@ $SCRIPTPATH/clean-build.sh -t -a -C RelWithDebInfo -T CLANG -B $BUILDDIRNAME
 ###############################################################################
 
 # set raw capabilities
+echo "NOTE: need sudo for setting of raw-capabilities for tcppump binary"
 sudo setcap cap_net_raw+eip $PROJROOT/bin/tcppump
 
 # disable coredumps for priviledged processes (otherwise ASAN will refuse to run)
 if [ $DUMPABLE -gt 1 ]
 then
+    echo "NOTE: need sudo because ASAN expects /proc/sys/fs/suid_dumpable != 2"
     sudo sysctl -w fs.suid_dumpable\=0
 fi
 
@@ -42,5 +38,6 @@ ctest
 # restore suid coredump settings
 if [ $DUMPABLE -gt 1 ]
 then
+    echo "NOTE: need sudo for restoring of /proc/sys/fs/suid_dumpable"
     sudo sysctl -q -w fs.suid_dumpable\=$DUMPABLE
 fi
