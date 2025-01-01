@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
  * TCPPUMP <https://github.com/amartin755/tcppump>
- * Copyright (C) 2012-2021 Andreas Martin (netnag@mailbox.org)
+ * Copyright (C) 2012-2025 Andreas Martin (netnag@mailbox.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -126,6 +126,7 @@ enum ethertypes_t
     ETHERTYPE_IPV4  = 0x0800,
     ETHERTYPE_ARP   = 0x0806,
     ETHERTYPE_CVLAN = 0x8100,
+    ETHERTYPE_IPV6  = 0x86DD,
     ETHERTYPE_SVLAN = 0x88a8,
     ETHERTYPE_PN    = 0x8892,
 };

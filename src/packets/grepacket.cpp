@@ -59,12 +59,12 @@ void cGrePacket::compile (const uint8_t* payload, size_t len, bool calcChecksum)
         headerLen += 4;
     }
 
-    cIPv4Packet::compile (PROTO_GRE, (const uint8_t*)&header, headerLen, payload, len);
+    cIPPacket::compile (PROTO_GRE, (const uint8_t*)&header, headerLen, payload, len);
     if (calcChecksum)
     {
         p = header + 1;
         *p = cInetChecksum::rfc1071 (&header, headerLen, payload, len);
-        cIPv4Packet::updateL4Header ((const uint8_t*)&header, headerLen);
+        cIPPacket::updateL4Header ((const uint8_t*)&header, headerLen);
     }
 }
 

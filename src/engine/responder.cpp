@@ -21,7 +21,7 @@
 
 #include "responder.hpp"
 #include "ethernetpacket.hpp"
-#include "ipv4packet.hpp"
+#include "ippacket.hpp"
 #include "udppacket.hpp"
 #include "tcppacket.hpp"
 #include "signal.hpp"
@@ -86,7 +86,7 @@ void cResponder::mirror (void)
                     }
 
                     // if UDP or TCP --> swap sport and dport
-                    if (ipHeader->protocol == cIPv4Packet::protocols::PROTO_UDP)
+                    if (ipHeader->protocol == cIPPacket::protocols::PROTO_UDP)
                     {
                         unsigned udpHeaderOffset = ipHeader->getHeaderLenght() * 4;
                         const udp_header_t *udpHeader = reinterpret_cast <const udp_header_t *>(reinterpret_cast<const uint8_t*>(ipHeader) + udpHeaderOffset);
@@ -96,7 +96,7 @@ void cResponder::mirror (void)
                         packet.updatePayloadAt (udpHeaderOffset + offsetof (udp_header_t, dstPort), &srcPort, sizeof (srcPort));
                         packet.updatePayloadAt (udpHeaderOffset + offsetof (udp_header_t, srcPort), &dstPort, sizeof (dstPort));
                     }
-                    else if (ipHeader->protocol == cIPv4Packet::protocols::PROTO_TCP)
+                    else if (ipHeader->protocol == cIPPacket::protocols::PROTO_TCP)
                     {
                         unsigned tcpHeaderOffset = ipHeader->getHeaderLenght() * 4;
                         const tcp_header_t *tcpHeader = reinterpret_cast <const tcp_header_t *>(reinterpret_cast<const uint8_t*>(ipHeader) + tcpHeaderOffset);

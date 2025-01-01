@@ -23,7 +23,7 @@
 
 static cSettings globalSettings;
 
-cSettings::cSettings () : hasMAC(false), hasIPv4(false), mtu(cEthernetPacket::MAX_ETHERNET_PAYLOAD)
+cSettings::cSettings () : hasMAC(false), hasIPv4(false), hasIPv6(false), mtu(cEthernetPacket::MAX_ETHERNET_PAYLOAD)
 {
 
 }
@@ -55,6 +55,18 @@ void cSettings::setMyIPv4 (const cIPv4& ip)
 {
     hasIPv4 = true;
     myIP.set(ip);
+}
+
+bool cSettings::setMyIPv6 (const char* ip)
+{
+    hasIPv6 = myIPv6.set(ip);
+    return hasIPv4;
+}
+
+void cSettings::setMyIPv6 (const cIPv6& ip)
+{
+    hasIPv6 = true;
+    myIPv6.set(ip);
 }
 
 void cSettings::setMyMTU (unsigned mtu)

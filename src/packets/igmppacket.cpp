@@ -76,7 +76,7 @@ void cIgmpPacket::v12compile (uint8_t type, uint8_t time, const cIPv4& group)
 
     igmp.checksum = cInetChecksum::rfc1071 (&igmp, sizeof (igmp));
 
-    cIPv4Packet::compile (PROTO_IGMP, (const uint8_t*)&igmp, sizeof (igmp), nullptr, 0);
+    cIPPacket::compile (PROTO_IGMP, (const uint8_t*)&igmp, sizeof (igmp), nullptr, 0);
 }
 
 void cIgmpPacket::v3compileGeneralQuery (double maxRespCode, bool s, unsigned qrv, double qqic)
@@ -104,13 +104,13 @@ void cIgmpPacket::v3compileGroupQuery (double maxRespCode, bool s, unsigned qrv,
     {
         igmp.checksum = cInetChecksum::rfc1071(&igmp, sizeof (igmp),
                 (const uint8_t*)v3sourceAddresses.data(), v3sourceAddresses.size() * sizeof(struct in_addr));
-        cIPv4Packet::compile (PROTO_IGMP, (const uint8_t*)&igmp, sizeof (igmp),
+        cIPPacket::compile (PROTO_IGMP, (const uint8_t*)&igmp, sizeof (igmp),
                 (const uint8_t*)v3sourceAddresses.data(), v3sourceAddresses.size() * sizeof(struct in_addr));
     }
     else
     {
         igmp.checksum = cInetChecksum::rfc1071 (&igmp, sizeof (igmp));
-        cIPv4Packet::compile (PROTO_IGMP, (const uint8_t*)&igmp, sizeof (igmp), nullptr, 0);
+        cIPPacket::compile (PROTO_IGMP, (const uint8_t*)&igmp, sizeof (igmp), nullptr, 0);
     }
 }
 

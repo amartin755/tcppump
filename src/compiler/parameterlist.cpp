@@ -277,6 +277,28 @@ cIPv4 cParameter::asIPv4 () const
 }
 
 
+cIPv6 cParameter::asIPv6 () const
+{
+    cIPv6 ip;
+    if (isRandom(false) == 0)
+    {
+        ip.setRandom ();
+        return ip;
+    }
+    else
+    {
+        if (ip.set(value, valLen))
+        {
+            return ip;
+        }
+        else
+        {
+            throw FormatException (exParFormat, value, (int)valLen);
+        }
+    }
+}
+
+
 void cParameter::throwValueException (void) const
 {
     throw FormatException (exParFormat, value, (int)valLen);

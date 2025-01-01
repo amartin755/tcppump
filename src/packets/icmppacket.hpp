@@ -22,7 +22,7 @@
 
 #include <cstdint>
 
-#include "ipv4packet.hpp"
+#include "ippacket.hpp"
 #include "udppacket.hpp"
 
 
@@ -58,7 +58,7 @@ struct icmp_ping_t
 static_assert (sizeof (icmp_ping_t) == 8, "icmp_ping_t is not packed");
 
 
-class cIcmpPacket : public cIPv4Packet
+class cIcmpPacket : public cIPPacket
 {
 public:
     cIcmpPacket ();

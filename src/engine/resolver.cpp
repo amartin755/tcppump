@@ -22,7 +22,7 @@
 #include "resolver.hpp"
 #include "console.hpp"
 #include "macaddress.hpp"
-#include "ipv4packet.hpp"
+#include "ippacket.hpp"
 
 
 cResolver::cResolver (cNetInterface &netif) : arper (netif)
@@ -35,7 +35,7 @@ cPacketData& cResolver::operator<< (cPacketData& input)
 
     for (cLinkable* p = input.getFirst(); p != nullptr; p = p->getNext())
     {
-        cIPv4Packet* ipv4 = dynamic_cast<cIPv4Packet*>(p);
+        cIPPacket* ipv4 = dynamic_cast<cIPPacket*>(p);
 
         if (ipv4 && !ipv4->getFirstEthernetPacket().hasDestMac())
         {

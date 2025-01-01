@@ -447,6 +447,25 @@ bool cInterface::getIPv4 (cIPv4& ip)
     return false;
 }
 
+bool cInterface::getIPv6 (cIPv6& ip)
+{
+    if (!adapterInfo)
+        return false;
+
+    PIP_ADAPTER_UNICAST_ADDRESS pUnicast = adapterInfo->FirstUnicastAddress;
+    while (pUnicast)
+    {
+         if (pUnicast->Address.lpSockaddr && pUnicast->Address.lpSockaddr->sa_family == AF_INET6)
+         {
+            struct sockaddr_in6* addr = (struct sockaddr_in6*)pUnicast->Address.lpSockaddr;
+            ip.set (addr->sin_addr);
+            return true;
+         }
+         pUnicast = pUnicast->Next;
+    }
+    return false;
+}
+
 uint32_t cInterface::getMTU (void)
 {
     if (!adapterInfo)

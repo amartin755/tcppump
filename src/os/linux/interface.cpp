@@ -31,6 +31,7 @@
 #include <net/if.h>           // struct ifreq
 #include <netinet/in.h>
 #include <net/if_arp.h>       // ARPHRD_ETHER
+#include <ifaddrs.h>
 
 #include "interface.hpp"
 
@@ -114,6 +115,7 @@ bool cInterface::open (bool txOnly)
 
     getMAC (myMac);
     getIPv4 (myIP);
+    getIPv6 (myIPv6);
     mtu       = getMTU ();
     linkSpeed = getLinkSpeed ();
 
@@ -320,6 +322,56 @@ bool cInterface::getIPv4 (cIPv4 &ip)
     return true;
 }
 
+bool cInterface::getIPv6 (cIPv6 &ip)
+{
+    if (myIPv6.isNull())
+    {
+        bool success = false;
+
+        struct ifaddrs *ifaddr;
+        int family, s;
+        char host[NI_MAXHOST];
+
+        if (getifaddrs(&ifaddr) == -1)
+        {
+            Console::PrintDebug("getifaddrs: %s\n", strerror(errno));
+            return false;
+        }
+
+        // walk through linked list
+        for (struct ifaddrs *ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next)
+        {
+            if (ifa->ifa_addr == NULL)
+                continue;
+            family = ifa->ifa_addr->sa_family;
+            if (family != AF_INET6)
+                continue;
+            if (name.compare(ifa->ifa_name))
+                continue;
+
+            s = getnameinfo(ifa->ifa_addr,
+                            (family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6),
+                            host, NI_MAXHOST,
+                            NULL, 0, NI_NUMERICHOST);
+            if (s != 0)
+            {
+                Console::PrintDebug("getnameinfo: %s\n", strerror(errno));
+                return false;
+            }
+            ip.set(host);
+            success = true;
+            break;
+        }
+
+        freeifaddrs(ifaddr);
+        return success;
+    }
+    else
+    {
+        ip.set(myIPv6);
+    }
+    return true;
+}
 
 uint32_t cInterface::getMTU (void)
 {

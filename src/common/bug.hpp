@@ -34,11 +34,7 @@
 static inline void __game_over (const char* expr, const char* file, int line)
 {
     std::fprintf (stderr, "Oops, you may found a bug!!!\n %s %d: '%s'\n", file, line, expr);
-#ifndef NDEBUG // this ensures triggering SEGFAULT in ctest
-    *((volatile char*)0) = 1;
-#else
     std::abort ();
-#endif
 }
 #define BUG_ON(expr)                             \
      (unlikely(static_cast <bool> (expr))        \

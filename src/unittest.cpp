@@ -28,7 +28,7 @@
 #include "ethernetpacket.hpp"
 #include "arppacket.hpp"
 #include "common/bug.hpp"
-#include "ipv4packet.hpp"
+#include "ippacket.hpp"
 #include "parameterlist.hpp"
 #include "instructionparser.hpp"
 #include "sleep.hpp"
@@ -67,7 +67,7 @@ int main (void)
         cInetChecksum::unitTest();
         cEthernetPacket::unitTest ();
         cArpPacket::unitTest ();
-        cIPv4Packet::unitTest ();
+        cIPPacket::unitTest ();
         cParseHelper::unitTest ();
         cParameterList::unitTest ();
         cInstructionParser::unitTest ();

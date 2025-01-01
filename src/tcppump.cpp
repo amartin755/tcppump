@@ -72,6 +72,8 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
             , &options.ifc);
     addCmdLineOption (true, 0, "myip4", "IPV4",
             "Use IPV4 as source IPv4 address instead of the network adapters ip address", &options.myIP);
+    addCmdLineOption (true, 0, "myip6", "IPV6",
+            "Use IPV6 as source IPv6 address instead of the network adapters ip address", &options.myIPv6);
     addCmdLineOption (true, 0, "mymac", "MAC",
             "Use MAC as source MAC address instead of the network adapters MAC address", &options.myMAC);
     addCmdLineOption (true, 0, "mtu", "MTU",
@@ -211,6 +213,14 @@ int cTcpPump::execute (const std::list<std::string>& args)
             return -1;
         }
     }
+    if (options.myIPv6)
+    {
+        if (!cSettings::get().setMyIPv6 (options.myIP))
+        {
+            Console::PrintError ("Wrong IPv6 address format %s\n", options.myIP);
+            return -1;
+        }
+    }
     if (options.myMAC)
     {
         if (!cSettings::get().setMyMAC  (options.myMAC))
@@ -252,6 +262,14 @@ int cTcpPump::execute (const std::list<std::string>& args)
             cSettings::get().setMyIPv4(ifIPv4);
         else
             Console::PrintVerbose ("Warning: Could not determine IPv4 address of interface.\n");
+    }
+    if (!cSettings::get().isIPv6Set())
+    {
+        cIPv6 ifIPv6;
+        if (ifc->getIPv6(ifIPv6))
+            cSettings::get().setMyIPv6(ifIPv6);
+        else
+            Console::PrintVerbose ("Warning: Could not determine IPv6 address of interface.\n");
     }
     if (options.mtu)
     {

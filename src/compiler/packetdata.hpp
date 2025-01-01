@@ -21,7 +21,7 @@
 #define PACKETDATA_HPP_
 
 #include "ethernetpacket.hpp"
-#include "ipv4packet.hpp"
+#include "ippacket.hpp"
 #include "listener.hpp"
 #include "timeval.hpp"
 #include "linkable.hpp"
@@ -112,7 +112,7 @@ private:
         }
         else
         {
-            cIPv4Packet* ipv4 = dynamic_cast<cIPv4Packet*>(packet);
+            cIPPacket* ipv4 = dynamic_cast<cIPPacket*>(packet);
             if (ipv4)
             {
                 ipv4Packets++;

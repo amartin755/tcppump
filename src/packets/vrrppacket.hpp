@@ -20,7 +20,7 @@
 #define VRRP_PACKET_H_
 
 #include <vector>
-#include "ipv4packet.hpp"
+#include "ippacket.hpp"
 
 /*
    V2 (RFC3768)
@@ -112,7 +112,7 @@ struct vrrp_header_t
 static_assert (sizeof (vrrp_header_t) == 8, "vrrp_header_t is not packed");
 
 
-class cVrrpPacket : public cIPv4Packet
+class cVrrpPacket : public cIPPacket
 {
 public:
     cVrrpPacket();

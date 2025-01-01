@@ -40,6 +40,7 @@ struct appOptions
     const char*  pcapScaling;
     const char*  outpcap;
     const char*  myIP;
+    const char*  myIPv6;
     const char*  myMAC;
     int          randSrcMac;
     int          randDstMac;

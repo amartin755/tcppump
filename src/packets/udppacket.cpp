@@ -35,9 +35,9 @@ void cUdpPacket::compile (const uint8_t* payload, size_t len)
     // TODO check max udp length
 
     header.length = htons(uint16_t(sizeof (header) + len));
-    cIPv4Packet::compile (PROTO_UDP, (const uint8_t*)&header, sizeof (header), payload, len);
+    cIPPacket::compile (PROTO_UDP, (const uint8_t*)&header, sizeof (header), payload, len);
     header.checksum = calcChecksum(payload, len);
-    cIPv4Packet::updateL4Header ((const uint8_t*)&header, sizeof (header));
+    cIPPacket::updateL4Header ((const uint8_t*)&header, sizeof (header));
 }
 
 void cUdpPacket::setSourcePort (uint16_t port)
@@ -53,18 +53,20 @@ void cUdpPacket::setDestinationPort (uint16_t port)
 void cUdpPacket::setChecksum (uint16_t checksum)
 {
     header.checksum = htons(checksum);
-    cIPv4Packet::updateL4Header ((const uint8_t*)&header, sizeof (header));
+    cIPPacket::updateL4Header ((const uint8_t*)&header, sizeof (header));
 }
 
 uint16_t cUdpPacket::calcChecksum (const uint8_t* payload, size_t len) const
 {
-    const ipv4_header_t& ipHeader = cIPv4Packet::getHeader();
+    cIPv4 src, dst;
+    getSource (src);
+    getDestination (dst);
     const ipv4_pseudo_header_t ipPseudoHeader = {
-        ipHeader.srcIp,
-        ipHeader.dstIp,
+        src.get(),
+        dst.get(),
         0,
-        ipHeader.protocol,
-        htons((uint16_t)cIPv4Packet::getPayloadLength())
+        PROTO_UDP,
+        htons((uint16_t)cIPPacket::getPayloadLength())
     };
 
     uint16_t ret = cInetChecksum::rfc1071 ((const void*)&ipPseudoHeader, sizeof (ipPseudoHeader), &header, sizeof(header), payload, len);

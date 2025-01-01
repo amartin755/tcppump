@@ -24,7 +24,7 @@
 #include "bug.hpp"
 #include "inet.h"
 #include "console.hpp"
-#include "ipv4packet.hpp"
+#include "ippacket.hpp"
 
 
 cDissector::cDissector (const cEthernetPacket& p)

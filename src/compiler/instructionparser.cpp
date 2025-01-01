@@ -28,7 +28,7 @@
 #include "parameterlist.hpp"
 #include "ethernetpacket.hpp"
 #include "arppacket.hpp"
-#include "ipv4packet.hpp"
+#include "ippacket.hpp"
 #include "udppacket.hpp"
 #include "vxlanpacket.hpp"
 #include "tcppacket.hpp"
@@ -87,6 +87,8 @@ void cInstructionParser::parse (const char* instruction, cResult& result, bool i
             result.packets = compileARP (params, false, true);
         else if (!strncmp ("ipv4", keyword, keywordLen))
             result.packets = compileIPv4 (params);
+        else if (!strncmp ("ipv6", keyword, keywordLen))
+            result.packets = compileIPv6 (params);
         else if (!strncmp ("udp", keyword, keywordLen))
             result.packets = compileUDP (params);
         else if (!strncmp ("vrrp", keyword, keywordLen))
@@ -310,7 +312,7 @@ const uint8_t* cInstructionParser::compileEmbedded (cParameter* emb, bool skipEt
         cEthernetPacket* eth = dynamic_cast<cEthernetPacket*>(res.packets);
         if (!eth)
         {
-            cIPv4Packet* ipv4 = dynamic_cast<cIPv4Packet*>(res.packets);
+            cIPPacket* ipv4 = dynamic_cast<cIPPacket*>(res.packets);
             if (ipv4)
             {
                 eth = &ipv4->getFirstEthernetPacket();
@@ -455,7 +457,7 @@ cLinkable* cInstructionParser::compileARP (cParameterList& params, bool isProbe,
 }
 
 // returns true, if destination IP address is a multicast address
-bool cInstructionParser::parseIPv4Params (cParameterList& params, cIPv4Packet* packet, bool noDestinationIP)
+bool cInstructionParser::parseIPv4Params (cParameterList& params, cIPPacket* packet, bool noDestinationIP)
 {
     bool isMulticast = false;
 
@@ -480,7 +482,7 @@ bool cInstructionParser::parseIPv4Params (cParameterList& params, cIPv4Packet* p
 
 cLinkable* cInstructionParser::compileIPv4 (cParameterList& params)
 {
-    cIPv4Packet* ippacket = new cIPv4Packet;
+    cIPPacket* ippacket = new cIPPacket;
     try
     {
         cEthernetPacket& eth = ippacket->getFirstEthernetPacket();
@@ -1801,7 +1803,7 @@ void cInstructionParser::unitTest ()
         cEthernetPacket* packets = dynamic_cast<cEthernetPacket*>(result.packets);
         if (!packets)
         {
-            cIPv4Packet* ipv4 = dynamic_cast<cIPv4Packet*>(result.packets);
+            cIPPacket* ipv4 = dynamic_cast<cIPPacket*>(result.packets);
             BUG_IF_NOT (ipv4);
             packets = &ipv4->getFirstEthernetPacket();
         }

@@ -99,8 +99,11 @@ void cVrrpPacket::compile (bool calcChecksum)
         else
         {
             ipv4_pseudo_header_t psHeader;
-            psHeader.srcIp = getHeader().srcIp;
-            psHeader.dstIp = getHeader().dstIp;
+            cIPv4 src, dst;
+            getSource (src);
+            getDestination (dst);
+            psHeader.srcIp = src.get();
+            psHeader.dstIp = dst.get();
             psHeader.nix   = 0;
             psHeader.protocol = PROTO_VRRP;
             psHeader.len = htons(uint16_t(sizeof(header) + vrIPs.size() * sizeof(struct in_addr)));
@@ -111,7 +114,7 @@ void cVrrpPacket::compile (bool calcChecksum)
     }
 
 
-    cIPv4Packet::compile (PROTO_VRRP, (const uint8_t*)&header, sizeof(header), (const uint8_t*)vrIPs.data(), vrIPs.size() * sizeof(struct in_addr));
+    cIPPacket::compile (PROTO_VRRP, (const uint8_t*)&header, sizeof(header), (const uint8_t*)vrIPs.data(), vrIPs.size() * sizeof(struct in_addr));
 }
 
 

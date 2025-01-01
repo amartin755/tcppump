@@ -21,7 +21,7 @@
 #define IGMP_PACKET_H_
 
 #include <vector>
-#include "ipv4packet.hpp"
+#include "ippacket.hpp"
 
 /*
    V0 (RFC988)
@@ -209,7 +209,7 @@ struct igmpv3_group_record_t
 
 #pragma pack()
 
-class cIgmpPacket : public cIPv4Packet
+class cIgmpPacket : public cIPPacket
 {
 public:
     cIgmpPacket();

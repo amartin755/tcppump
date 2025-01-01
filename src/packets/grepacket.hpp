@@ -22,7 +22,7 @@
 
 #include <cstdint>
 #include <vector>
-#include "ipv4packet.hpp"
+#include "ippacket.hpp"
 
 
 struct gre_basic_header_t
@@ -58,7 +58,7 @@ struct gre_basic_header_t
 static_assert (sizeof (gre_basic_header_t) == 4, "gre_basic_header_t is not packed");
 
 
-class cGrePacket : public cIPv4Packet
+class cGrePacket : public cIPPacket
 {
 public:
     cGrePacket ();

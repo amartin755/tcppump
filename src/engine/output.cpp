@@ -80,13 +80,13 @@ cPacketData& cOutput::operator<< (cPacketData& input)
 
             sendTime.add (p->getTime());
             cEthernetPacket* eth;
-            cIPv4Packet* ipv4;
+            cIPPacket* ipv4;
 
             if ((eth = dynamic_cast<cEthernetPacket*>(p)) != nullptr)
             {
                 processPacket (sendTime, *eth);
             }
-            else if ((ipv4 = dynamic_cast<cIPv4Packet*>(p)) != nullptr)
+            else if ((ipv4 = dynamic_cast<cIPPacket*>(p)) != nullptr)
             {
                 std::list<cEthernetPacket>& packets = ipv4->getAllEthernetPackets();
 

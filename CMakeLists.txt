@@ -19,7 +19,7 @@
 ###############################################################################
 cmake_minimum_required (VERSION 3.13)
 
-project (tcppump VERSION 0.3.1
+project (tcppump VERSION 0.4.0
                  DESCRIPTION "Ethernet packet generator"
                  LANGUAGES CXX)
 ###############################################################################

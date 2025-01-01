@@ -22,7 +22,7 @@
 
 #include <cstdint>
 
-#include "ipv4packet.hpp"
+#include "ippacket.hpp"
 
 #pragma pack(1)
 struct tcp_header_t
@@ -94,7 +94,7 @@ struct tcp_header_t
 #pragma pack()
 
 
-class cTcpPacket : public cIPv4Packet
+class cTcpPacket : public cIPPacket
 {
 public:
     cTcpPacket ();

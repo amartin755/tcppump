@@ -32,7 +32,7 @@
 
 class cParameterList;
 class cParameter;
-class cIPv4Packet;
+class cIPPacket;
 
 
 class cInstructionParser
@@ -99,7 +99,7 @@ private:
 
     bool   compileMacHeader (cParameterList& params, cEthernetPacket* packet, bool noDestination, bool destIsOptional = false);
     size_t compileVLANTags  (cParameterList& params, cEthernetPacket* packet);
-    bool   parseIPv4Params  (cParameterList& params, cIPv4Packet* packet, bool noDestinationIP = false);
+    bool   parseIPv4Params  (cParameterList& params, cIPPacket* packet, bool noDestinationIP = false);
     const uint8_t* compileEmbedded  (cParameter* emb, bool skipEthHeader, size_t& len);
     cMacAddress getParameterOrOwnMac (cParameterList& params, const char* par) const;
     cIPv4  getParameterOrOwnIPv4 (cParameterList& params, const char* par) const;

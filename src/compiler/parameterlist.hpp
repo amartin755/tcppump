@@ -43,6 +43,7 @@ public:
     virtual const uint8_t* asStream (size_t& len);
     virtual const uint8_t* asEmbedded (bool &isEmbedded, size_t& len);
     virtual cIPv4  asIPv4  () const;
+    virtual cIPv6  asIPv6  () const;
 
     void throwValueException (void) const;
 

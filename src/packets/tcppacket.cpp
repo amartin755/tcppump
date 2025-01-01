@@ -37,10 +37,10 @@ void cTcpPacket::compile (const uint8_t* payload, size_t len, bool calcChksum)
 {
     // TODO check max tcp length
 
-    cIPv4Packet::compile (PROTO_TCP, (const uint8_t*)&header, sizeof (header), payload, len);
+    cIPPacket::compile (PROTO_TCP, (const uint8_t*)&header, sizeof (header), payload, len);
     if (calcChksum)
         header.checksum = calcChecksum(payload, len);
-    cIPv4Packet::updateL4Header ((const uint8_t*)&header, sizeof (header));
+    cIPPacket::updateL4Header ((const uint8_t*)&header, sizeof (header));
     sequence += (uint32_t)len + (uint32_t)header.isSyn();
 }
 
@@ -129,13 +129,15 @@ void cTcpPacket::setFlagNON (bool flag)
 uint16_t cTcpPacket::calcChecksum (const uint8_t* payload, size_t len) const
 {
     ipv4_pseudo_header_t ipPseudoHeader;
-    const ipv4_header_t& ipHeader = cIPv4Packet::getHeader();
+    cIPv4 src, dst;
+    getSource (src);
+    getDestination (dst);
 
-    ipPseudoHeader.srcIp    = ipHeader.srcIp;
-    ipPseudoHeader.dstIp    = ipHeader.dstIp;
+    ipPseudoHeader.srcIp    = src.get();
+    ipPseudoHeader.dstIp    = dst.get();
     ipPseudoHeader.nix      = 0;
-    ipPseudoHeader.protocol = ipHeader.protocol;
-    ipPseudoHeader.len      = htons((uint16_t)cIPv4Packet::getPayloadLength());
+    ipPseudoHeader.protocol = PROTO_TCP;
+    ipPseudoHeader.len      = htons((uint16_t)cIPPacket::getPayloadLength());
     uint16_t ret = cInetChecksum::rfc1071 ((const void*)&ipPseudoHeader, sizeof (ipPseudoHeader), &header, sizeof(header), payload, len);
     return ret ? ret : 0xffff;
 }

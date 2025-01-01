@@ -41,7 +41,7 @@ void cIcmpPacket::compileRaw (uint8_t type, uint8_t code, const uint8_t* payload
     header.checksum = 0;
 
     header.checksum = cInetChecksum::rfc1071((const uint16_t*)&header, sizeof(header), payload, len);
-    cIPv4Packet::compile (PROTO_ICMP, (const uint8_t*)&header, sizeof (header), payload, len);
+    cIPPacket::compile (PROTO_ICMP, (const uint8_t*)&header, sizeof (header), payload, len);
 }
 
 void cIcmpPacket::compileRaw (uint8_t type, uint8_t code, uint16_t checksum, const uint8_t* payload, size_t len)
@@ -53,7 +53,7 @@ void cIcmpPacket::compileRaw (uint8_t type, uint8_t code, uint16_t checksum, con
     header.code = code;
     header.checksum = checksum;
 
-    cIPv4Packet::updateL4Header((const uint8_t*)&header, sizeof (header));
+    cIPPacket::updateL4Header((const uint8_t*)&header, sizeof (header));
 }
 
 void cIcmpPacket::compileWithEmbeddedInet (uint8_t type, uint8_t code, const uint8_t* inetheader, size_t len)
@@ -68,7 +68,7 @@ void cIcmpPacket::compileWithEmbeddedInet (uint8_t type, uint8_t code, const uin
         inetheader = compileGenericInetHeader (len);
     }
     header.head.checksum = cInetChecksum::rfc1071((const uint16_t*)&header, sizeof(header), inetheader, len);
-    cIPv4Packet::compile (PROTO_ICMP, (const uint8_t*)&header, sizeof (header), inetheader, len);
+    cIPPacket::compile (PROTO_ICMP, (const uint8_t*)&header, sizeof (header), inetheader, len);
 }
 
 void cIcmpPacket::compileRedirect (uint8_t code, const cIPv4& gw, const uint8_t* inetheader, size_t len)
@@ -83,7 +83,7 @@ void cIcmpPacket::compileRedirect (uint8_t code, const cIPv4& gw, const uint8_t*
         inetheader = compileGenericInetHeader (len);
     }
     header.head.checksum = cInetChecksum::rfc1071((const uint16_t*)&header, sizeof(header), inetheader, len);
-    cIPv4Packet::compile (PROTO_ICMP, (const uint8_t*)&header, sizeof (header), inetheader, len);
+    cIPPacket::compile (PROTO_ICMP, (const uint8_t*)&header, sizeof (header), inetheader, len);
 }
 
 void cIcmpPacket::compilePing (bool reply, uint16_t id, uint16_t seq, const uint8_t* data, size_t len)
@@ -95,18 +95,20 @@ void cIcmpPacket::compilePing (bool reply, uint16_t id, uint16_t seq, const uint
     header.seq       = htons(seq);
     header.head.checksum = 0;
     header.head.checksum = cInetChecksum::rfc1071((const uint16_t*)&header, sizeof(header), data, len);
-    cIPv4Packet::compile (PROTO_ICMP, (const uint8_t*)&header, sizeof (header), data, len);
+    cIPPacket::compile (PROTO_ICMP, (const uint8_t*)&header, sizeof (header), data, len);
 }
 
 const uint8_t* cIcmpPacket::compileGenericInetHeader (size_t& len)
 {
-    const ipv4_header_t& ipHeader = cIPv4Packet::getHeader();
+    cIPv4 src, dst;
+    getSource (src);
+    getDestination (dst);
 
     std::memset (&genInetHeader, 0, sizeof (genInetHeader));
     genInetHeader.ip.init ();
 
-    genInetHeader.ip.srcIp = ipHeader.dstIp;
-    genInetHeader.ip.dstIp = ipHeader.srcIp;
+    genInetHeader.ip.srcIp = src.get();
+    genInetHeader.ip.dstIp = dst.get();
     genInetHeader.ip.protocol = PROTO_UDP;
     genInetHeader.ip.ttl = 64;
     genInetHeader.ip.totalLength = htons ((uint16_t)(genInetHeader.ip.getHeaderLenght() * 4 + sizeof (udp_header_t)));

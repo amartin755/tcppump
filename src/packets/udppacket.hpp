@@ -22,7 +22,7 @@
 
 #include <cstdint>
 
-#include "ipv4packet.hpp"
+#include "ippacket.hpp"
 
 struct udp_header_t
 {
@@ -36,7 +36,7 @@ struct udp_header_t
 static_assert (sizeof (udp_header_t) == 8, "udp_header_t is not natural aligned");
 
 
-class cUdpPacket : public cIPv4Packet
+class cUdpPacket : public cIPPacket
 {
 public:
     cUdpPacket ();
