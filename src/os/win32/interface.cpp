@@ -458,7 +458,7 @@ bool cInterface::getIPv6 (cIPv6& ip)
          if (pUnicast->Address.lpSockaddr && pUnicast->Address.lpSockaddr->sa_family == AF_INET6)
          {
             struct sockaddr_in6* addr = (struct sockaddr_in6*)pUnicast->Address.lpSockaddr;
-            ip.set (addr->sin_addr);
+            ip.set (addr->sin6_addr);
             return true;
          }
          pUnicast = pUnicast->Next;

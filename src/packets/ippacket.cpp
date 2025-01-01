@@ -189,8 +189,8 @@ void cIPPacket::v4compile (uint8_t protocol, const uint8_t* l4header, size_t l4h
             m_ecn,
             m_v4.dontFragment,
             n + 1 != fragCnt,
-            offset,
-            ipHeaderLen,
+            (unsigned)offset,
+            (unsigned)ipHeaderLen,
             uint16_t(ipHeaderLen + fragLen),
             id,
             m_v4.hasRouterAlertOption);
