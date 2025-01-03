@@ -125,6 +125,36 @@ void cIPPacket::setIdentification (uint16_t id)
     m_v4.hasId = true;
 }
 
+void cIPPacket::setSource (const cIPv6& ip)
+{
+    BUG_ON (!m_isIPv6);
+    m_v6.srcIP = ip.get();
+}
+
+void cIPPacket::getSource (cIPv6& ip) const
+{
+    BUG_ON (!m_isIPv6);
+    ip.set (m_v6.srcIP);
+}
+
+void cIPPacket::setDestination (const cIPv6& ip)
+{
+    BUG_ON (!m_isIPv6);
+    m_v6.dstIP = ip.get();
+}
+
+void cIPPacket::getDestination (cIPv6& ip) const
+{
+    BUG_ON (!m_isIPv6);
+    ip.set (m_v6.dstIP);
+}
+
+void cIPPacket::setFlowLabel (unsigned fl)
+{
+    BUG_ON (!m_isIPv6);
+    m_v6.flowlabel = fl;
+}
+
 void cIPPacket::v4compile (uint8_t protocol, const uint8_t* l4header, size_t l4headerLen, const uint8_t* payload, size_t payloadLen)
 {
     if (l4headerLen + payloadLen + getHeaderLength() > 65535)
@@ -221,7 +251,88 @@ void cIPPacket::v4compile (uint8_t protocol, const uint8_t* l4header, size_t l4h
 
 void cIPPacket::v6compile (uint8_t protocol, const uint8_t* l4header, size_t l4headerLen, const uint8_t* payload, size_t payloadLen)
 {
-    BUG ("IPv6 not yet implemented");
+    if (l4headerLen + payloadLen + getHeaderLength() > 65535)
+        throw FormatException (exParRange, nullptr);
+
+    size_t ipHeaderLen = getHeaderLength();
+
+    unsigned fragCnt = unsigned((l4headerLen + payloadLen - 1) / (m_mtu - ipHeaderLen)) + 1;
+    //FIXME IPv6 fragmentation not yet implemented
+    BUG_ON (fragCnt > 1);
+    size_t offset = 0;
+
+    // we rely on L4 header fitting into first ip fragment
+    BUG_ON (l4headerLen > m_mtu - ipHeaderLen);
+
+    cEthernetPacket &packet = m_packets.front();
+
+    // if there is no destination mac AND we have an ip multicast, translate to mac multicast
+/*    if (!packet.hasDestMac())
+    {
+        cIPv4 dstIp (m_v4.dstIP);
+        if (dstIp.isMulticast ())
+        {
+            packet.setDestMac (cMacAddress (1, 0, 0x5e, dstIp.getAsArray()[1] & 0x7f, dstIp.getAsArray()[2], dstIp.getAsArray()[3]));
+        }
+    }
+*/
+
+    for (unsigned n = 1; n < fragCnt; n++)
+        m_packets.push_back (cEthernetPacket(packet));
+
+    m_packetsAsArray = new const cEthernetPacket*[fragCnt];
+
+    unsigned n = 0;
+    for (auto & p : m_packets)
+    {
+        m_packetsAsArray[n] = &p;
+
+        size_t fragLen = 0;
+        if (n == 0)
+            fragLen = l4headerLen + payloadLen + ipHeaderLen > m_mtu ? m_mtu - ipHeaderLen : l4headerLen + payloadLen;
+        else
+            fragLen = payloadLen + ipHeaderLen > m_mtu ? m_mtu - ipHeaderLen : payloadLen;
+
+        if ((n + 1) != m_packets.size())
+        {
+            fragLen /= 8;
+            fragLen *= 8;
+        }
+
+        // write IP header
+        ipv6_header_t header;
+        header.compile (
+            m_v6.srcIP,
+            m_v6.dstIP,
+            m_ttl,
+            protocol,
+            m_dscp,
+            m_ecn,
+            m_v6.flowlabel,
+            uint16_t(fragLen));
+        p.setPayload ((uint8_t*)&header, ipHeaderLen);
+
+        if (n == 0)
+        {
+            fragLen -= l4headerLen;
+            if (l4headerLen && l4header)
+                p.appendPayload(l4header, l4headerLen);  // copy L4 header (e.g. udp header)
+            if (payloadLen && payload)
+                p.appendPayload (payload, fragLen);      // copy payload
+
+            payloadLen -= fragLen;
+            offset  += fragLen + l4headerLen;
+        }
+        else
+        {
+            p.appendPayload (payload, fragLen);          // copy payload
+            payloadLen -= fragLen;
+            offset  += fragLen;
+        }
+
+        payload += fragLen;
+        n++;
+    }
 }
 
 size_t cIPPacket::getPayloadLength () const
@@ -330,6 +441,46 @@ void cIPPacket::unitTest ()
             const uint8_t bytes[] = {0x6f, 0xd1, 0x23, 0x45, 0x0, 0x40, 0x3a, 0x40, 0x12, 0x34, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0, 0, 0, 0, 0, 0, 0, 1, 0x56, 0x78, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0, 0, 0, 0, 0, 0, 0, 1};
             BUG_ON (std::memcmp (&h, bytes, sizeof (bytes)));
         }
+    }
+    {
+        const uint8_t ipheader[] = {0x6f, 0xd1, 0x23, 0x45, 0x0, 0x40, 0x3a, 0x40, 0x12, 0x34, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0, 0, 0, 0, 0, 0, 0, 1, 0x56, 0x78, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0, 0, 0, 0, 0, 0, 0, 1};
+        const uint8_t ippayload[] = {0x80, 0x0, 0x44, 0x12, 0x0, 0x2, 0x0, 0x1, 0x37, 0xb9, 0x77, 0x67, 0x0, 0x0, 0x0, 0x0, 0x99, 0x7a, 0x6, 0x0, 0x0, 0x0, 0x0, 0x0, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37};
+        uint8_t payload[sizeof (ipheader) + sizeof (ippayload)];
+        std::memcpy (payload, ipheader, sizeof (ipheader));
+        std::memcpy (payload + sizeof(ipheader), ippayload, sizeof (ippayload));
+
+        cIPPacket obj (true);
+        obj.setSource (cIPv6 ("1234::1").get ());
+        obj.setDestination (cIPv6 ("5678::1").get());
+        obj.setDSCP (63);
+        obj.setECN (1);
+        obj.setTimeToLive (64);
+        obj.setFlowLabel (0x12345);
+        obj.compile (PROTO_ICMPv6, nullptr, 0, ippayload, sizeof (ippayload));
+
+        BUG_ON (obj.m_packetsAsArray[0]->getPayloadLength() != sizeof (payload));
+        BUG_ON (std::memcmp (obj.m_packetsAsArray[0]->getPayload(), payload, sizeof (payload)));
+    }
+    {
+        const uint8_t ipheader[]  = {0x6f, 0xd1, 0x23, 0x45, 0x0, 0x40, 0x3a, 0x40, 0x12, 0x34, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0, 0, 0, 0, 0, 0, 0, 1, 0x56, 0x78, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0, 0, 0, 0, 0, 0, 0, 1};
+        const uint8_t l4header[]  = {0x80, 0x0, 0x44, 0x12, 0x0, 0x2, 0x0, 0x1, 0x37, 0xb9, 0x77, 0x67, 0x0, 0x0, 0x0, 0x0, 0x99, 0x7a, 0x6, 0x0, 0x0, 0x0, 0x0, 0x0};
+        const uint8_t l4payload[] = {0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37};
+        uint8_t payload[sizeof (ipheader) + sizeof (l4header) + sizeof (l4payload)];
+        std::memcpy (payload, ipheader, sizeof (ipheader));
+        std::memcpy (payload + sizeof(ipheader), l4header, sizeof (l4header));
+        std::memcpy (payload + sizeof(ipheader) + sizeof (l4header), l4payload, sizeof (l4payload));
+
+        cIPPacket obj (true);
+        obj.setSource (cIPv6 ("1234::1").get ());
+        obj.setDestination (cIPv6 ("5678::1").get());
+        obj.setDSCP (63);
+        obj.setECN (1);
+        obj.setTimeToLive (64);
+        obj.setFlowLabel (0x12345);
+        obj.compile (PROTO_ICMPv6, l4header, sizeof(l4header), l4payload, sizeof (l4payload));
+
+        BUG_ON (obj.m_packetsAsArray[0]->getPayloadLength() != sizeof (payload));
+        BUG_ON (std::memcmp (obj.m_packetsAsArray[0]->getPayload(), payload, sizeof (payload)));
     }
 }
 #endif

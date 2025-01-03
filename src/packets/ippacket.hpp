@@ -234,6 +234,7 @@ public:
     void setDestination (const cIPv6& ip);
     void getSource (cIPv6& ip) const;
     void getDestination (cIPv6& ip) const;
+    void setFlowLabel (unsigned fl);
 
     enum protocols
     {
