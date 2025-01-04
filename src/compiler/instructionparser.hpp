@@ -75,8 +75,7 @@ private:
     cLinkable* compileETH  (cParameterList& params);
     cLinkable* compileARP  (cParameterList& params, bool isProbe = false, bool isGratuitous = false);
     cLinkable* compileSNAP (cParameterList& params);
-    cLinkable* compileIPv4 (cParameterList& params);
-    cLinkable* compileIPv6 (cParameterList& params);
+    cLinkable* compileIP   (cParameterList& params, bool isIPv6);
     cLinkable* compileUDP  (cParameterList& params);
     cLinkable* compileVXLAN (cParameterList& params);
     cLinkable* compileVRRP (cParameterList& params, int version);
@@ -100,9 +99,11 @@ private:
     bool   compileMacHeader (cParameterList& params, cEthernetPacket* packet, bool noDestination, bool destIsOptional = false);
     size_t compileVLANTags  (cParameterList& params, cEthernetPacket* packet);
     bool   parseIPv4Params  (cParameterList& params, cIPPacket* packet, bool noDestinationIP = false);
+    bool   parseIPv6Params  (cParameterList& params, cIPPacket* packet, bool noDestinationIP = false);
     const uint8_t* compileEmbedded  (cParameter* emb, bool skipEthHeader, size_t& len);
     cMacAddress getParameterOrOwnMac (cParameterList& params, const char* par) const;
     cIPv4  getParameterOrOwnIPv4 (cParameterList& params, const char* par) const;
+    cIPv6  getParameterOrOwnIPv6 (cParameterList& params, const char* par) const;
 
 
     void throwParseException (const char* msg, const char* val, size_t valLen = 0, const char* details = nullptr);

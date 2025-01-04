@@ -215,9 +215,9 @@ int cTcpPump::execute (const std::list<std::string>& args)
     }
     if (options.myIPv6)
     {
-        if (!cSettings::get().setMyIPv6 (options.myIP))
+        if (!cSettings::get().setMyIPv6 (options.myIPv6))
         {
-            Console::PrintError ("Wrong IPv6 address format %s\n", options.myIP);
+            Console::PrintError ("Wrong IPv6 address format %s\n", options.myIPv6);
             return -1;
         }
     }

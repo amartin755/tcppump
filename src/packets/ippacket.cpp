@@ -259,7 +259,7 @@ void cIPPacket::v6compile (uint8_t protocol, const uint8_t* l4header, size_t l4h
     unsigned fragCnt = unsigned((l4headerLen + payloadLen - 1) / (m_mtu - ipHeaderLen)) + 1;
     //FIXME IPv6 fragmentation not yet implemented
     BUG_ON (fragCnt > 1);
-    size_t offset = 0;
+//    size_t offset = 0;
 
     // we rely on L4 header fitting into first ip fragment
     BUG_ON (l4headerLen > m_mtu - ipHeaderLen);
@@ -321,13 +321,13 @@ void cIPPacket::v6compile (uint8_t protocol, const uint8_t* l4header, size_t l4h
                 p.appendPayload (payload, fragLen);      // copy payload
 
             payloadLen -= fragLen;
-            offset  += fragLen + l4headerLen;
+//            offset  += fragLen + l4headerLen;
         }
         else
         {
             p.appendPayload (payload, fragLen);          // copy payload
             payloadLen -= fragLen;
-            offset  += fragLen;
+//            offset  += fragLen;
         }
 
         payload += fragLen;

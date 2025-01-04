@@ -92,6 +92,15 @@ const cIPv4& cSettings::getMyIPv4(void) const
     return myIP;
 }
 
+const cIPv6& cSettings::getMyIPv6(void) const
+{
+    if (!hasIPv6)
+        throw std::runtime_error("Could not determine IPv4 address of interface.\n"
+                "Please assign an IP address to the network interface or use the parameter --myip6.");
+
+    return myIPv6;
+}
+
 unsigned cSettings::getMyMTU (void) const
 {
     return mtu;

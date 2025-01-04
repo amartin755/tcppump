@@ -27,6 +27,7 @@ Supported protocols and packet formats
 * VLAN tagging; including multiple tagging
 * ARP
 * Raw IPv4
+* Raw IPv6 (fragmentation not yet supported)
 * UDP
 * TCP
 * VRRP

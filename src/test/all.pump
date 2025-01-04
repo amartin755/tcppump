@@ -60,6 +60,21 @@ ipv4(dip=10.20.30.40, dmac=11:22:33:44:55:66, protocol=255, id=1, payload = *148
 ipv4(dip=10.20.30.40, dmac=11:22:33:44:55:66, protocol=255, id=1, payload = *1481);
 ipv4(dip=10.20.30.40, dmac=11:22:33:44:55:66, protocol=255, id=1, payload = *2961);
 ipv4(dip=10.20.30.40, dmac=11:22:33:44:55:66, protocol=255, id=1, payload = *65515);
+
+ipv6(dip=10:20:30:40::1, dmac=11:22:33:44:55:66, protocol=255, payload = 0123456789abcdef0123456789abcdef);
+ipv6(dip=10:20:30:40::1, dmac=11:22:33:44:55:66, protocol=0, payload = 0123456789abcdef0123456789abcdef);
+ipv6(dip=10:20:30:40::1, dmac=11:22:33:44:55:66, protocol=254, dscp=0, payload = 0123456789abcdef0123456789abcdef);
+ipv6(dip=10:20:30:40::1, dmac=11:22:33:44:55:66, protocol=254, dscp=0x3f, payload = 0123456789abcdef0123456789abcdef);
+ipv6(dip=10:20:30:40::1, dmac=11:22:33:44:55:66, protocol=254, dscp=0x12, ecn=0, payload = 0123456789abcdef0123456789abcdef);
+ipv6(dip=10:20:30:40::1, dmac=11:22:33:44:55:66, protocol=254, dscp=0x12, ecn=3, payload = 0123456789abcdef0123456789abcdef);
+ipv6(dip=10:20:30:40::1, dmac=11:22:33:44:55:66, protocol=254, ttl=0, dscp=0x12, ecn=1, payload = 0123456789abcdef0123456789abcdef);
+ipv6(dip=10:20:30:40::1, dmac=11:22:33:44:55:66, protocol=254, ttl=255, dscp=0x12, ecn=1, payload = 0123456789abcdef0123456789abcdef);
+ipv6(dip=10:20:30:40::1, dmac=11:22:33:44:55:66, protocol=254, ttl=64, dscp=0x12, ecn=1, payload = 0123456789abcdef0123456789abcdef);
+ipv6(dip=10:20:30:40::1, dmac=11:22:33:44:55:66, protocol=254, fl=0, ttl=64, dscp=0x12, ecn=1, payload = 0123456789abcdef0123456789abcdef);
+ipv6(dip=10:20:30:40::1, dmac=11:22:33:44:55:66, protocol=254, fl=0xfffff, ttl=64, dscp=0x12, ecn=1, payload = 0123456789abcdef0123456789abcdef);
+ipv6(dip=10:20:30:40::1, dmac=11:22:33:44:55:66, protocol=254, fl=0x12345, ttl=64, dscp=0x12, ecn=1, payload = 0123456789abcdef0123456789abcdef);
+ipv6(dip=10:20:30:40::1, dmac=11:22:33:44:55:66, protocol=254, fl=0x12345, ttl=64, dscp=0x12, ecn=1, payload = *1460);
+
 udp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=0, dport=0);
 udp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=0xffff, dport=0);
 udp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=0, dport=0xffff);

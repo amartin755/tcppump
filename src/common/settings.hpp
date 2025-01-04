@@ -41,6 +41,7 @@ public:
     void setMyMTU (unsigned mtu);
     const cMacAddress& getMyMAC (void) const;
     const cIPv4& getMyIPv4(void) const;
+    const cIPv6& getMyIPv6(void) const;
     unsigned getMyMTU (void) const;
     bool isMacSet (void) const {return hasMAC;}
     bool isIPSet (void) const {return hasIPv4;}

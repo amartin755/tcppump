@@ -86,9 +86,9 @@ void cInstructionParser::parse (const char* instruction, cResult& result, bool i
         else if (!strncmp ("arp-announce", keyword, keywordLen))
             result.packets = compileARP (params, false, true);
         else if (!strncmp ("ipv4", keyword, keywordLen))
-            result.packets = compileIPv4 (params);
+            result.packets = compileIP (params, false);
         else if (!strncmp ("ipv6", keyword, keywordLen))
-            result.packets = compileIPv6 (params);
+            result.packets = compileIP (params, true);
         else if (!strncmp ("udp", keyword, keywordLen))
             result.packets = compileUDP (params);
         else if (!strncmp ("vrrp", keyword, keywordLen))
@@ -299,6 +299,14 @@ cIPv4 cInstructionParser::getParameterOrOwnIPv4 (cParameterList& params, const c
 }
 
 
+cIPv6 cInstructionParser::getParameterOrOwnIPv6 (cParameterList& params, const char* par) const
+{
+    const cParameter* optionalPar = params.findParameter (par, true);
+
+    return optionalPar ? optionalPar->asIPv6() : cSettings::get().getMyIPv6();
+}
+
+
 const uint8_t* cInstructionParser::compileEmbedded (cParameter* emb, bool skipEthHeader, size_t& len)
 {
     bool isEmbedded = false;
@@ -456,6 +464,7 @@ cLinkable* cInstructionParser::compileARP (cParameterList& params, bool isProbe,
     return arp;
 }
 
+
 // returns true, if destination IP address is a multicast address
 bool cInstructionParser::parseIPv4Params (cParameterList& params, cIPPacket* packet, bool noDestinationIP)
 {
@@ -480,13 +489,37 @@ bool cInstructionParser::parseIPv4Params (cParameterList& params, cIPPacket* pac
 }
 
 
-cLinkable* cInstructionParser::compileIPv4 (cParameterList& params)
+// returns true, if destination IP address is a multicast address
+bool cInstructionParser::parseIPv6Params (cParameterList& params, cIPPacket* packet, bool noDestinationIP)
 {
-    cIPPacket* ippacket = new cIPPacket;
+    bool isMulticast = false;
+
+    packet->setDSCP       (params.findParameter ("dscp", (uint32_t)0)->asInt8(0, 0x3f));
+    packet->setECN        (params.findParameter ("ecn",  (uint32_t)0)->asInt8(0, 3));
+    packet->setTimeToLive (params.findParameter ("ttl", (uint32_t)64)->asInt8());
+
+    if (!noDestinationIP)
+    {
+        const cIPv6 destIP = params.findParameter ("dip")->asIPv6();
+        packet->setDestination (destIP);
+        isMulticast = destIP.isMulticast();
+    }
+    packet->setSource (getParameterOrOwnIPv6 (params, "sip"));
+    cParameter* optionalPar = params.findParameter ("fl", true);
+    if (optionalPar)
+        packet->setFlowLabel (optionalPar->asInt32(0, 0xfffff));
+
+    return isMulticast;
+}
+
+
+cLinkable* cInstructionParser::compileIP (cParameterList& params, bool isIPv6)
+{
+    cIPPacket* ippacket = new cIPPacket(isIPv6);
     try
     {
         cEthernetPacket& eth = ippacket->getFirstEthernetPacket();
-        bool destIsMulticast = parseIPv4Params (params, ippacket);
+        bool destIsMulticast = isIPv6 ? parseIPv6Params (params, ippacket) : parseIPv4Params (params, ippacket);
 
         // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
         compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
@@ -503,13 +536,6 @@ cLinkable* cInstructionParser::compileIPv4 (cParameterList& params)
         throw;
     }
     return ippacket;
-}
-
-
-cLinkable* cInstructionParser::compileIPv6 (cParameterList& )
-{
-    BUG ("IPv6: not implemented");
-    return nullptr;
 }
 
 
