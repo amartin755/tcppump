@@ -17,51 +17,25 @@
  */
 
 
-#ifndef FILEIOEXCEPTION_HPP_
-#define FILEIOEXCEPTION_HPP_
+#ifndef PCAPBACKEND_HPP_
+#define PCAPBACKEND_HPP_
 
+#include "filebackend.hpp"
+#include "pcapfileio.hpp"
 
-class FileIOException
+class cPcapBackend : public cFileBackend
 {
 public:
-    enum errorType
-    {
-        OPEN, READ, WRITE, FORMAT
-    };
-
-    FileIOException (errorType cause, const char* val)
-    {
-        this->cause  = cause;
-        this->val    = val;
-    }
-
-    const char* what ()
-    {
-        switch (cause)
-        {
-        case OPEN:
-            return "Could not open file";
-        case READ:
-            return "Could not read file";
-        case WRITE:
-            return "Could not write file";
-        case FORMAT:
-            return "Unupported file format";
-        }
-        return "";
-    }
-
-    const char* value ()
-    {
-        return val;
-    }
+    cPcapBackend (const char* file);
+    void write (const cTimeval& sendTime, cEthernetPacket& p);
+    void statistic (uint64_t& sentPackets, uint64_t& sentBytes, double& duration) const;
+    ~cPcapBackend ();
 
 
 private:
-    errorType cause;
-    const char* val;
+    cPcapFileIO m_outfile;
+    uint64_t    m_pcapWrittenPackets;
+    uint64_t    m_pcapWrittenBytes;
 };
 
-
-
-#endif /* FILEIOEXCEPTION_HPP_ */
+#endif /* PCAPBACKEND_HPP_ */

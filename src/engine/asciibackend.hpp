@@ -17,37 +17,38 @@
  */
 
 
-#ifndef OUTPUT_HPP_
-#define OUTPUT_HPP_
+#ifndef ASCIIBACKEND_HPP_
+#define ASCIIBACKEND_HPP_
 
-#include <cstdint>
+#include <cstdio>
+#include <string>
 
-#include "packetdata.hpp"
-#include "netinterface.hpp"
-#include "preprocessor.hpp"
+#include "filebackend.hpp"
 
 
-class cFileBackend;
-
-class cOutput
+class cAsciiBackend : public cFileBackend
 {
 public:
-    cOutput (const cPreprocessor &preproc);
-    ~cOutput ();
-    void prepare (cNetInterface &netif, bool realtime, int repeat, bool responderMode);
-    void prepare (const char* outfile, const char* format, int repeat);
-    cPacketData& operator<< (cPacketData& input);
+    cAsciiBackend (const char* file, bool printPacketNumber, bool printPacketTime, bool hexdump, const char* colSeparator, const char* byteSeparator);
+    void write (const cTimeval& sendTime, cEthernetPacket& p);
     void statistic (uint64_t& sentPackets, uint64_t& sentBytes, double& duration) const;
+    ~cAsciiBackend ();
 
 
 private:
-    cFileBackend* m_outfile;
-    inline void processPacket (const cTimeval& sendTime, cEthernetPacket& p);
-    const cPreprocessor &preproc;
-    cNetInterface *netif;
-    bool realtimeMode;
-    int repeat;
-    bool responderMode;
+    void dump (const void* p, size_t length);
+    void write (const char* format, ...);
+
+    FILE*             m_outfile;
+    const std::string m_filename;
+    const bool        m_printPacketNumber;
+    const bool        m_printPacketTime;
+    const bool        m_hexdump;
+    const std::string m_colSeparator;
+    const std::string m_byteSeparator;
+
+    uint64_t    m_writtenPackets;
+    uint64_t    m_writtenBytes;
 };
 
-#endif /* OUTPUT_HPP_ */
+#endif /* ASCIIBACKEND_HPP_ */

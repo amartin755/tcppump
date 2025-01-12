@@ -2,7 +2,7 @@
 ###############################################################################
 #
 # TCPPUMP <https://github.com/amartin755/tcppump>
-# Copyright (C) 2012-2021 Andreas Martin (netnag@mailbox.org)
+# Copyright (C) 2012-2025 Andreas Martin (netnag@mailbox.org)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,6 +27,8 @@ set (SOURCES
      ${CMAKE_CURRENT_SOURCE_DIR}/preprocessor.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/responder.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/listener.cpp
+     ${CMAKE_CURRENT_SOURCE_DIR}/pcapbackend.cpp
+     ${CMAKE_CURRENT_SOURCE_DIR}/asciibackend.cpp
      PARENT_SCOPE
 )
 set (INCLUDES

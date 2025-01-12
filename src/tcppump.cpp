@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
  * TCPPUMP <https://github.com/amartin755/tcppump>
- * Copyright (C) 2012-2021 Andreas Martin (netnag@mailbox.org)
+ * Copyright (C) 2012-2025 Andreas Martin (netnag@mailbox.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,8 +53,9 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
     cRandom::create();
 
     memset (&options, 0, sizeof(options));
-    options.repeat  = 1;
-    options.timeRes = "m";
+    options.repeat    = 1;
+    options.timeRes   = "m";
+    options.outFormat = "pcap";
 
     timeScale       = 0;
     realtimeMode    = false;
@@ -88,7 +89,8 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
             "When parsing and printing, produce verbose output. This option can be supplied multiple times\n\t"
             "(max. 4 times, i.e. -vvvv) for even more debug output. "
             , &options.verbosity);
-    addCmdLineOption (true, 's', "script", "Packets are defined in script files, that contain token based packets.", &options.script);
+    addCmdLineOption (true, 's', "script",
+            "Packets are defined in script files, that contain token based packets.", &options.script);
     addCmdLineOption (true, "pcap", "SCALE",
             "pcap file of captured packets (e.g via wireshark or tcpdump) will be replayed.\n\t"
             "The transmission time can be scaled via the optional parameter SCALE. \n\t"
@@ -104,7 +106,11 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
     addCmdLineOption (true, 't', "resolution", "RESOLUTION",
             "Resolution of transmission time. This affects -d parameter as well as all timestamps in script files.\n\t"
             "Possible values are 'u'= microseconds, 'm'= milliseconds(default), 'c'= centiseconds and 's'= seconds" , &options.timeRes);
-    addCmdLineOption (true, 'o', "write-to-file", "OUTFILE", "Write generated packets to pcap file OUTFILE instead of sending them to the network.", &options.outpcap);
+    addCmdLineOption (true, 'w', nullptr, "OUTFILE",
+            "Write raw packet data to OUTFILE or to the standard output if OUTFILE is '-'.", &options.outfile);
+    addCmdLineOption (true, 'F', nullptr, "FORMAT",
+            "Set the file format of the output capture file written using the -w option.\n\t"
+            "Supported formats are: 'pcap' (default), 'text', 'hexstream', 'hexdump'", &options.outFormat);
     addCmdLineOption (true, 'a', "arp",
             "Resolve destination MAC address for IPv4 packets.\n\t"
             "If dmac parameter of IPv4 based packets is omitted, the destination MAC will be automatically\n\t"
@@ -170,19 +176,16 @@ int cTcpPump::execute (const std::list<std::string>& args)
         return -2;
     }
 
-    if (options.pcap)
+    if (options.pcap && options.pcapScaling)
     {
-        if (options.pcapScaling)
+        try
         {
-            try
-            {
-                pcapScale = std::stod (options.pcapScaling);
-            }
-            catch (...)
-            {
-                Console::PrintError ("Unsupported pcap scaling value '%s'\n", options.pcapScaling);
-                return -2;
-            }
+            pcapScale = std::stod (options.pcapScaling);
+        }
+        catch (...)
+        {
+            Console::PrintError ("Unsupported pcap scaling value '%s'\n", options.pcapScaling);
+            return -2;
         }
     }
 
@@ -243,7 +246,7 @@ int cTcpPump::execute (const std::list<std::string>& args)
         return -1;
     }
 
-    ifc = cNetInterface::create (options.ifc, !options.outpcap);
+    ifc = cNetInterface::create (options.ifc, !options.outfile);
     if (!ifc->isReady())
         return -1;
 
@@ -320,7 +323,7 @@ int cTcpPump::execute (const std::list<std::string>& args)
             // Each step may alter the content of packetData
             cPacketData& packetData = compiler  << args;
 
-            if (!options.outpcap && !ifc->open (!packetData.hasTriggerPoints ()))
+            if (!options.outfile && !ifc->open (!packetData.hasTriggerPoints ()))
                 return -1;
             if (options.bpf && !ifc->addReceiveFilter (options.bpf))
                 return -1;
@@ -338,8 +341,8 @@ int cTcpPump::execute (const std::list<std::string>& args)
             // prepare backend for packet output
             cPreprocessor preprop(options.randSrcMac, options.randDstMac);
             cOutput backend (preprop);
-            if (options.outpcap)    // write output to pcap file?
-                backend.prepare (options.outpcap, options.repeat);
+            if (options.outfile)    // write output to file?
+                backend.prepare (options.outfile, options.outFormat, options.repeat);
             else
                 backend.prepare (*ifc, realtimeMode, options.repeat, responder == TRIGGER);
 
@@ -360,7 +363,7 @@ int cTcpPump::execute (const std::list<std::string>& args)
             uint64_t sentPackets, sentBytes; double duration;
             backend.statistic (sentPackets, sentBytes, duration);
 
-            Console::PrintVerbose ("Successfully %s %" PRIu64 " %s. ", options.outpcap ? "wrote" : "sent" ,sentPackets, sentPackets == 1 ? "packet" : "packets");
+            Console::PrintVerbose ("Successfully %s %" PRIu64 " %s. ", options.outfile ? "wrote" : "sent" ,sentPackets, sentPackets == 1 ? "packet" : "packets");
             if (duration > 0.0)
                 Console::PrintVerbose ("%" PRIu64 " bytes in %f seconds (= %f Mbit/s)", sentBytes, duration, ((sentBytes*8)/duration)/1000000.0);
             Console::PrintVerbose ("\n");

@@ -197,9 +197,8 @@ void cCmdline::printOptions ()
                 else
                     Console::Print ("=%s ", options.at (n).argname);
             }
-
-            Console::Print ("\n\t");
         }
+        Console::Print ("\n\t");
         if (options.at (n).description)
             Console::Print ("%s", options.at (n).description);
         Console::Print ("\n");

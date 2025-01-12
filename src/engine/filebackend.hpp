@@ -17,37 +17,21 @@
  */
 
 
-#ifndef OUTPUT_HPP_
-#define OUTPUT_HPP_
+#ifndef FILEBACKEND_HPP_
+#define FILEBACKEND_HPP_
 
 #include <cstdint>
 
-#include "packetdata.hpp"
-#include "netinterface.hpp"
-#include "preprocessor.hpp"
+class cTimeval;
+class cEthernetPacket;
 
-
-class cFileBackend;
-
-class cOutput
+class cFileBackend
 {
 public:
-    cOutput (const cPreprocessor &preproc);
-    ~cOutput ();
-    void prepare (cNetInterface &netif, bool realtime, int repeat, bool responderMode);
-    void prepare (const char* outfile, const char* format, int repeat);
-    cPacketData& operator<< (cPacketData& input);
-    void statistic (uint64_t& sentPackets, uint64_t& sentBytes, double& duration) const;
+    virtual void write (const cTimeval& sendTime, cEthernetPacket& p) = 0;
+    virtual void statistic (uint64_t& sentPackets, uint64_t& sentBytes, double& duration) const = 0;
 
-
-private:
-    cFileBackend* m_outfile;
-    inline void processPacket (const cTimeval& sendTime, cEthernetPacket& p);
-    const cPreprocessor &preproc;
-    cNetInterface *netif;
-    bool realtimeMode;
-    int repeat;
-    bool responderMode;
+    virtual ~cFileBackend() {};
 };
 
-#endif /* OUTPUT_HPP_ */
+#endif /* FILEBACKEND_HPP_ */

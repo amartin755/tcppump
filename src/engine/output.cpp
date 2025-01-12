@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
  * TCPPUMP <https://github.com/amartin755/tcppump>
- * Copyright (C) 2012-2021 Andreas Martin (netnag@mailbox.org)
+ * Copyright (C) 2012-2025 Andreas Martin (netnag@mailbox.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,11 +27,21 @@
 #include "console.hpp"
 #include "signal.hpp"
 #include "listener.hpp"
+#include "pcapbackend.hpp"
+#include "asciibackend.hpp"
 
 
 cOutput::cOutput (const cPreprocessor &p)
-: preproc (p), netif (nullptr), realtimeMode (false), repeat (1), responderMode(false), pcapWrittenPackets(0), pcapWrittenBytes(0)
+: m_outfile (nullptr), preproc (p), netif (nullptr), realtimeMode (false), repeat (1), responderMode(false)
 {
+}
+
+cOutput::~cOutput ()
+{
+    if (m_outfile)
+        delete m_outfile;
+
+    m_outfile = nullptr;
 }
 
 void cOutput::prepare(cNetInterface &netif, bool realtime, int repeat, bool responderMode)
@@ -42,15 +52,32 @@ void cOutput::prepare(cNetInterface &netif, bool realtime, int repeat, bool resp
     this->responderMode = responderMode;
 }
 
-void cOutput::prepare (const char* pcapOutFile, int repeat)
+void cOutput::prepare (const char* file, const char* format, int repeat)
 {
+    std::string fileFormat(format);
     realtimeMode = false;
     this->repeat = repeat;
-    pcapWrittenPackets = 0;
-    pcapWrittenBytes = 0;
 
-    if (!outfile.open (pcapOutFile, true))
-        throw FileIOException (FileIOException::OPEN, pcapOutFile);
+    if (fileFormat == "pcap")
+    {
+        m_outfile = new cPcapBackend (file);
+    }
+    else if (fileFormat == "text")
+    {
+        m_outfile = new cAsciiBackend (file, true, true, false, "\t", " ");
+    }
+    else if (fileFormat == "hexstream")
+    {
+        m_outfile = new cAsciiBackend (file, false, false, false, "", "");
+    }
+    else if (fileFormat == "hexdump")
+    {
+        m_outfile = new cAsciiBackend (file, false, false, true, "\t", "");
+    }
+    else
+    {
+        throw FileIOException (FileIOException::FORMAT, format);
+    }
 }
 
 cPacketData& cOutput::operator<< (cPacketData& input)
@@ -119,10 +146,7 @@ void cOutput::processPacket (const cTimeval& sendTime, cEthernetPacket& p)
     }
     else
     {
-        if (!outfile.write (sendTime, p.get(), (int)p.getLength(), true))
-            throw FileIOException (FileIOException::WRITE, outfile.name());
-        pcapWrittenPackets++;
-        pcapWrittenBytes += (uint64_t)p.getLength ();
+        m_outfile->write (sendTime, p);
     }
 }
 
@@ -134,8 +158,6 @@ void cOutput::statistic (uint64_t& sentPackets, uint64_t& sentBytes, double& dur
     }
     else
     {
-        sentPackets = pcapWrittenPackets;
-        sentBytes   = pcapWrittenBytes;
-        duration    = 0;
+        m_outfile->statistic (sentPackets, sentBytes, duration);
     }
 }
