@@ -107,8 +107,6 @@ private:
         if ((getLength () + addedBytes) > packetMaxLength)
             throw FormatException (exParRange, NULL);
     }
-    void parseVlanTags (void);
-    void parseLlcHeader(void);
 
     const uint32_t* data;       // holds the packet data; do never access directly; use packet instead!
     uint8_t*  packet;            // always points to packet begin
@@ -117,7 +115,6 @@ private:
     uint16_t* pEthertypeLength; // points at ethertype/length field (will be moved in case of tagging)
     size_t    payloadLength;
     size_t    llcHeaderLength;
-    int       vlanTags;
     bool      hasDMAC;
 };
 

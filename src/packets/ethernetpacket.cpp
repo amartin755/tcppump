@@ -56,7 +56,6 @@ cEthernetPacket::cEthernetPacket (cEthernetPacket&& other)
     pEthertypeLength = other.pEthertypeLength;
     payloadLength    = other.payloadLength;
     llcHeaderLength  = other.llcHeaderLength;
-    vlanTags         = other.vlanTags;
     hasDMAC          = other.hasDMAC;
 
     other.data             = nullptr;
@@ -75,7 +74,6 @@ cEthernetPacket::cEthernetPacket (const cEthernetPacket& obj) : cEthernetPacket 
 
     payloadLength    = obj.payloadLength;
     llcHeaderLength  = obj.llcHeaderLength;
-    vlanTags         = obj.vlanTags;
     hasDMAC          = obj.hasDMAC;
 
     // copy packet data
@@ -106,7 +104,6 @@ cEthernetPacket& cEthernetPacket::operator=(cEthernetPacket&& other)
         pEthertypeLength = other.pEthertypeLength;
         payloadLength    = other.payloadLength;
         llcHeaderLength  = other.llcHeaderLength;
-        vlanTags         = other.vlanTags;
         hasDMAC          = other.hasDMAC;
 
         other.data             = nullptr;
@@ -129,7 +126,6 @@ void cEthernetPacket::reset ()
     pEthertypeLength  = (uint16_t*)(&((mac_header_t*)packet)->ethertypeLength);
     payloadLength     = 0;
     llcHeaderLength   = 0;
-    vlanTags          = 0;
     hasDMAC           = false;
     *pEthertypeLength = 0;
 }
@@ -260,7 +256,6 @@ void cEthernetPacket::addVlanTag (bool isCTag, unsigned id, unsigned prio, unsig
     std::memmove ((uint8_t*)pEthertypeLength + sizeof (vlan_t), pEthertypeLength, 2 + payloadLength);
     isCTag ? tag->setCTag (id, prio, dei) : tag->setSTag (id, prio, dei);
     updatePosition (sizeof (vlan_t));
-    vlanTags++;
 }
 
 
@@ -290,8 +285,6 @@ void cEthernetPacket::setRaw (const uint8_t* payload, size_t len)
     std::memcpy (packet, payload, len);
     payloadLength = len - sizeof (mac_header_t);
     hasDMAC       = true;
-    parseVlanTags ();
-    parseLlcHeader ();
 }
 
 
@@ -307,57 +300,6 @@ void cEthernetPacket::updatePayloadAt (unsigned offset, const void* payload, siz
         throw FormatException (exParRange, NULL);
 
     std::memcpy (&(pPayload[offset]), payload, len);
-}
-
-
-void cEthernetPacket::parseVlanTags (void)
-{
-    const vlan_t* tag = (const vlan_t*)pEthertypeLength;
-
-    while (tag->isVlan() && (payloadLength > sizeof (vlan_t)))
-    {
-        updatePosition (sizeof (vlan_t));
-        payloadLength -= sizeof (vlan_t);
-
-        vlanTags++;
-        tag++;
-    }
-}
-
-
-void cEthernetPacket::parseLlcHeader (void)
-{
-    if (getTypeLength () > cEthernetPacket::MAX_ETHERNET_PAYLOAD)
-        return; // no LLC header --> Ethernet II
-
-    if (payloadLength >= (sizeof (llc_t) - 1))
-    {
-        llc_t* llc = (llc_t*)pPayload;
-        if ((llc->control.c8 & 0x03) == 3)
-        {
-            llcHeaderLength = sizeof (llc_t) - 1;
-        }
-        else
-        {
-            llcHeaderLength = sizeof (llc_t);
-            if (payloadLength < llcHeaderLength)
-                return; // malformed
-        }
-
-        pPayload      += llcHeaderLength;
-        payloadLength -= llcHeaderLength;
-
-        // SNAP extention header
-        if (llc->dsap == 0xaa && llc->ssap == 0xaa)
-        {
-            if (payloadLength < sizeof(snap_t))
-                return; // malformed
-
-            pPayload        += sizeof(snap_t);
-            payloadLength   -= sizeof(snap_t);
-            llcHeaderLength += sizeof (snap_t);
-        }
-    }
 }
 
 
@@ -411,7 +353,6 @@ void cEthernetPacket::unitTest ()
             BUG_IF_NOT (obj.packetMaxLength == cpy.packetMaxLength);
             BUG_IF_NOT (obj.payloadLength == cpy.payloadLength);
             BUG_IF_NOT (obj.llcHeaderLength == cpy.llcHeaderLength);
-            BUG_IF_NOT (obj.vlanTags == cpy.vlanTags);
             BUG_IF_NOT (*obj.data == *cpy.data);
             BUG_IF_NOT (*obj.packet == *cpy.packet);
             BUG_IF_NOT (*obj.pPayload == *cpy.pPayload);
@@ -436,7 +377,6 @@ void cEthernetPacket::unitTest ()
             BUG_IF_NOT (obj.packetMaxLength == cpy.packetMaxLength);
             BUG_IF_NOT (obj.payloadLength == cpy.payloadLength);
             BUG_IF_NOT (obj.llcHeaderLength == cpy.llcHeaderLength);
-            BUG_IF_NOT (obj.vlanTags == cpy.vlanTags);
             BUG_IF_NOT (*obj.data == *cpy.data);
             BUG_IF_NOT (*obj.packet == *cpy.packet);
             BUG_IF_NOT (*obj.pEthertypeLength == *cpy.pEthertypeLength);
@@ -643,51 +583,5 @@ void cEthernetPacket::unitTest ()
         catched = true;
     }
     BUG_IF_NOT (catched);
-    try
-    {
-        catched = false;
-        uint8_t payload[20];
-        memset (payload, 0, sizeof (payload));
-        cEthernetPacket obj;
-        obj.addVlanTag(false, 12, 7, 0);
-        obj.addVlanTag(true, 12, 7, 0);
-        obj.setPayload (payload, sizeof (payload));
-
-        cEthernetPacket obj2;
-        obj2.setRaw(obj.packet, obj.getLength());
-        BUG_IF_NOT (obj2.vlanTags == 2);
-        BUG_IF_NOT (*obj2.pEthertypeLength == *obj.pEthertypeLength);
-        BUG_IF_NOT (*obj2.pPayload == *obj.pPayload);
-        BUG_IF_NOT (obj2.getLength() == obj.getLength());
-
-    }
-    catch (FormatException& )
-    {
-        BUG("unexpected exception");
-    }
-    try
-    {
-        catched = false;
-        uint8_t payload[20];
-        memset (payload, 0, sizeof (payload));
-        cEthernetPacket obj;
-        obj.addVlanTag(false, 12, 7, 0);
-        obj.addVlanTag(true, 12, 7, 0);
-        obj.addSnapHeader(0x123456, 1234);
-        obj.setPayload (payload, sizeof (payload));
-
-        cEthernetPacket obj2;
-        obj2.setRaw(obj.packet, obj.getLength());
-        BUG_IF_NOT (obj2.vlanTags == 2);
-        BUG_IF_NOT (*obj2.pEthertypeLength == *obj.pEthertypeLength);
-        BUG_IF_NOT (*obj2.pPayload == *obj.pPayload);
-        BUG_IF_NOT (obj2.getLength() == obj.getLength());
-        BUG_IF_NOT (obj2.llcHeaderLength == obj.llcHeaderLength);
-
-    }
-    catch (FormatException& )
-    {
-        BUG("unexpected exception");
-    }
 }
 #endif
