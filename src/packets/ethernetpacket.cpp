@@ -20,11 +20,12 @@
 #include <cstring>
 
 #include "ethernetpacket.hpp"
+#include "settings.hpp"
 #include "bug.hpp"
 
 
 
-cEthernetPacket::cEthernetPacket () : cEthernetPacket (MAX_DOUBLE_TAGGED_PACKET)
+cEthernetPacket::cEthernetPacket () : cEthernetPacket (cSettings::get().getMyMTU() + sizeof (mac_header_t) + 4)
 {
 }
 
