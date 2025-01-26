@@ -39,12 +39,13 @@
 #include "grepacket.hpp"
 #include "listener.hpp"
 #include "settings.hpp"
+#include "endian.h"
+#include "bytearray.hpp"
 
 
 cInstructionParser::cInstructionParser (bool optDestMAC)
+: m_currentInstruction (nullptr), m_ipOptionalDestMAC (optDestMAC),  m_recursionDepth (0)
 {
-    currentInstruction = nullptr;
-    ipOptionalDestMAC = optDestMAC;
 }
 
 
@@ -52,9 +53,10 @@ cInstructionParser::~cInstructionParser ()
 {
 }
 
-void cInstructionParser::parse (const char* instruction, cResult& result, bool ignoreTrailingGarbage)
+void cInstructionParser::parse (const char* instruction, cResult& result, bool ignoreTrailingGarbage, bool noEthHeader)
 {
-    currentInstruction = instruction;
+    const char* prevInstruction = m_currentInstruction; // save in case of recursion
+    m_currentInstruction = instruction;
 
     const char* p = instruction;
     const char* keyword;
@@ -74,9 +76,13 @@ void cInstructionParser::parse (const char* instruction, cResult& result, bool i
     // compile frames
     try
     {
+        // avoid unnecessary recursion (real usecases do not exceed a depth of 2-3)
+        if (++m_recursionDepth > 8)
+            throwParseException ("Maximum depth of embedded instructions reached", keyword, keywordLen);
+
         //TODO find better way for protocol selection (e.g. hash table)
         if (!strncmp ("raw", keyword, keywordLen))
-            result.packets = compileRAW (params);
+            result.packets = compileRAW (noEthHeader, params);
         else if (!strncmp ("eth", keyword, keywordLen))
             result.packets = compileETH (params);
         else if (!strncmp ("arp", keyword, keywordLen))
@@ -86,76 +92,79 @@ void cInstructionParser::parse (const char* instruction, cResult& result, bool i
         else if (!strncmp ("arp-announce", keyword, keywordLen))
             result.packets = compileARP (params, false, true);
         else if (!strncmp ("ipv4", keyword, keywordLen))
-            result.packets = compileIP (params, false);
+            result.packets = compileIP (noEthHeader, params, false);
         else if (!strncmp ("ipv6", keyword, keywordLen))
-            result.packets = compileIP (params, true);
+            result.packets = compileIP (noEthHeader, params, true);
         else if (!strncmp ("udp", keyword, keywordLen))
-            result.packets = compileUDP (params);
+            result.packets = compileUDP (noEthHeader, params);
         else if (!strncmp ("vrrp", keyword, keywordLen))
-            result.packets = compileVRRP (params, 2);
+            result.packets = compileVRRP (noEthHeader, params, 2);
         else if (!strncmp ("vrrp3", keyword, keywordLen))
-            result.packets = compileVRRP (params, 3);
+            result.packets = compileVRRP (noEthHeader, params, 3);
         else if (!strncmp ("stp", keyword, keywordLen))
-            result.packets = compileSTP (params);
+            result.packets = compileSTP (noEthHeader, params);
         else if (!strncmp ("stp-tcn", keyword, keywordLen))
-            result.packets = compileSTP (params, false, true);
+            result.packets = compileSTP (noEthHeader, params, false, true);
         else if (!strncmp ("rstp", keyword, keywordLen))
-            result.packets = compileSTP (params, true);
+            result.packets = compileSTP (noEthHeader, params, true);
         else if (!strncmp ("igmp", keyword, keywordLen))
-            result.packets = compileIGMP (params, false, false, false, false);
+            result.packets = compileIGMP (noEthHeader, params, false, false, false, false);
         else if (!strncmp ("igmp-query", keyword, keywordLen))
-            result.packets = compileIGMP (params, false, true, false, false);
+            result.packets = compileIGMP (noEthHeader, params, false, true, false, false);
         else if (!strncmp ("igmp3-query", keyword, keywordLen))
-            result.packets = compileIGMP (params, true, true, false, false);
+            result.packets = compileIGMP (noEthHeader, params, true, true, false, false);
         else if (!strncmp ("igmp-report", keyword, keywordLen))
-            result.packets = compileIGMP (params, false, false, true, false);
+            result.packets = compileIGMP (noEthHeader, params, false, false, true, false);
         else if (!strncmp ("igmp-leave", keyword, keywordLen))
-            result.packets = compileIGMP (params, false, false, false, true);
+            result.packets = compileIGMP (noEthHeader, params, false, false, false, true);
         else if (!strncmp ("icmp", keyword, keywordLen))
-            result.packets = compileICMP (params);
+            result.packets = compileICMP (noEthHeader, params);
         else if (!strncmp ("icmp-unreachable", keyword, keywordLen))
-            result.packets = compileICMPWithEmbedded (params, 3);
+            result.packets = compileICMPWithEmbedded (noEthHeader, params, 3);
         else if (!strncmp ("icmp-src-quench", keyword, keywordLen))
-            result.packets = compileICMPWithEmbedded (params, 4);
+            result.packets = compileICMPWithEmbedded (noEthHeader, params, 4);
         else if (!strncmp ("icmp-time-exceeded", keyword, keywordLen))
-            result.packets = compileICMPWithEmbedded (params, 11);
+            result.packets = compileICMPWithEmbedded (noEthHeader, params, 11);
         else if (!strncmp ("icmp-redirect", keyword, keywordLen))
-            result.packets = compileICMPRedirect (params);
+            result.packets = compileICMPRedirect (noEthHeader, params);
         else if (!strncmp ("icmp-echo", keyword, keywordLen))
-            result.packets = compileICMPPing (params, false);
+            result.packets = compileICMPPing (noEthHeader, params, false);
         else if (!strncmp ("icmp-echo-reply", keyword, keywordLen))
-            result.packets = compileICMPPing (params, true);
+            result.packets = compileICMPPing (noEthHeader, params, true);
         else if (!strncmp ("tcp", keyword, keywordLen))
-            result.packets = compileTCP (params);
+            result.packets = compileTCP (noEthHeader, params);
         else if (!strncmp ("tcp-syn", keyword, keywordLen))
-            result.packets = compileTCPSYN (params);
+            result.packets = compileTCPSYN (noEthHeader, params);
         else if (!strncmp ("tcp-syn-ack", keyword, keywordLen))
-            result.packets = compileTCPSYNACK (params);
+            result.packets = compileTCPSYNACK (noEthHeader, params);
         else if (!strncmp ("tcp-syn-ack2", keyword, keywordLen))
-            result.packets = compileTCPSYNACK2 (params);
+            result.packets = compileTCPSYNACK2 (noEthHeader, params);
         else if (!strncmp ("tcp-fin", keyword, keywordLen))
-            result.packets = compileTCPFIN (params);
+            result.packets = compileTCPFIN (noEthHeader, params);
         else if (!strncmp ("tcp-fin-ack", keyword, keywordLen))
-            result.packets = compileTCPFINACK (params);
+            result.packets = compileTCPFINACK (noEthHeader, params);
         else if (!strncmp ("tcp-fin-ack2", keyword, keywordLen))
-            result.packets = compileTCPFINACK2 (params);
+            result.packets = compileTCPFINACK2 (noEthHeader, params);
         else if (!strncmp ("tcp-reset", keyword, keywordLen))
-            result.packets = compileTCPRST (params);
+            result.packets = compileTCPRST (noEthHeader, params);
         else if (!strncmp ("vxlan", keyword, keywordLen))
-            result.packets = compileVXLAN (params);
+            result.packets = compileVXLAN (noEthHeader, params);
         else if (!strncmp ("gre", keyword, keywordLen))
-            result.packets = compileGRE (params);
+            result.packets = compileGRE (noEthHeader, params);
         else if (!strncmp ("LISTEN", keyword, keywordLen))
             result.packets = compileListen (params);
         else
             throwParseException ("Unknown protocol type", keyword, keywordLen);
 
         params.checkForUnusedParameters ();
-
+        m_currentInstruction = prevInstruction;
+        m_recursionDepth--;
         return;
     }
     catch (FormatException& e)
     {
+        m_recursionDepth--;
+
         // in case of errors possibly created packets are freed again
         if (result.packets)
         {
@@ -247,18 +256,86 @@ const char* cInstructionParser::parseProtocollIdentifier (const char* p, const c
 }
 
 
-cLinkable* cInstructionParser::compileRAW (cParameterList& params)
+cLinkable* cInstructionParser::compileRAW (bool noEthHeader, cParameterList& params)
 {
-    size_t len;
-    cParameter* par = params.findParameter ("payload");
-    const uint8_t* value = par->asStream(len);
+    cByteArray payload;
 
-    if (len < sizeof (mac_header_t))
+    for (auto &par : params)
     {
-        par->throwValueException();
+        auto name = par.name();
+        params.setParameterUsed (&par, true);
+        if (!strncmp ("byte", name.first, name.second))
+        {
+            payload << par.asInt8 ();
+        }
+        else if (!strncmp ("be16", name.first, name.second))
+        {
+            payload << toBE16 (par.asInt16 ());
+        }
+        else if (!strncmp ("be32", name.first, name.second))
+        {
+            payload << toBE32 (par.asInt32 ());
+        }
+        else if (!strncmp ("be64", name.first, name.second))
+        {
+            payload << toBE64 (par.asInt64 ());
+        }
+        else if (!strncmp ("le16", name.first, name.second))
+        {
+            payload << toLE16 (par.asInt16 ());
+        }
+        else if (!strncmp ("le32", name.first, name.second))
+        {
+            payload << toLE32 (par.asInt32 ());
+        }
+        else if (!strncmp ("le64", name.first, name.second))
+        {
+            payload << toLE64 (par.asInt64 ());
+        }
+        else if (!strncmp ("ip4", name.first, name.second))
+        {
+            cIPv4 ip4 = par.asIPv4 ();
+            payload.append (ip4.getAsArray(), 4);
+        }
+        else if (!strncmp ("ip6", name.first, name.second))
+        {
+            cIPv6 ip6 = par.asIPv6 ();
+            payload.append (ip6.getAsArray(), 16);
+        }
+        else if (!strncmp ("mac", name.first, name.second))
+        {
+            cMacAddress mac = par.asMac ();
+            payload.append (mac.get (), mac.size ());
+        }
+        // TODO do we want to allow embedded packets? If yes with or without Ethernet header?
+        else if (!strncmp ("stream", name.first, name.second))
+        {
+            size_t len;
+            const uint8_t* value = par.asStream(len);
+//            payload = compileEmbedded (optionalPar, true, len);
+            payload.append (value, len);
+        }
+        else
+        {
+            params.setParameterUsed (&par, false);
+        }
     }
-    cEthernetPacket* eth = new cEthernetPacket (len);
-    eth->setRaw (value, len);
+
+    cEthernetPacket* eth = nullptr;
+    try
+    {
+        eth = new cEthernetPacket (payload.size() + sizeof (mac_header_t));
+        if (noEthHeader)
+            eth->setPayload (payload.data(), payload.size());
+        else
+            eth->setRaw (payload.data(), payload.size());
+    }
+    catch (...)
+    {
+        delete eth;
+        eth = nullptr;
+        throw;
+    }
 
     return eth;
 }
@@ -307,7 +384,7 @@ cIPv6 cInstructionParser::getParameterOrOwnIPv6 (cParameterList& params, const c
 }
 
 
-const uint8_t* cInstructionParser::compileEmbedded (cParameter* emb, bool skipEthHeader, size_t& len)
+const uint8_t* cInstructionParser::compileEmbedded (cParameter* emb, bool noEthHeader, size_t& len)
 {
     bool isEmbedded = false;
     const uint8_t* payload = emb->asEmbedded (isEmbedded, len);
@@ -315,7 +392,26 @@ const uint8_t* cInstructionParser::compileEmbedded (cParameter* emb, bool skipEt
     if (isEmbedded)
     {
         cResult res;
-        parse ((char*)payload, res, true);
+
+        // save current mtu and increase it as we don't want to limit the size of embedded packets.
+        // 32K is a arbitrary limit, just to avoid generation of pakets that are impossible to send
+        unsigned mtu = cSettings::get().getMyMTU();
+        cSettings::get().setMyMTU (32*1024);
+
+        try
+        {
+            parse ((char*)payload, res, true, noEthHeader);
+
+            // restore changed mtu
+            cSettings::get().setMyMTU (mtu);
+        }
+        catch (...)
+        {
+            // restore changed mtu
+            cSettings::get().setMyMTU (mtu);
+            throw;
+        }
+
 
         cEthernetPacket* eth = dynamic_cast<cEthernetPacket*>(res.packets);
         if (!eth)
@@ -329,7 +425,7 @@ const uint8_t* cInstructionParser::compileEmbedded (cParameter* emb, bool skipEt
 
         if (eth)
         {
-            if (!skipEthHeader)
+            if (!noEthHeader)
             {
                 payload = eth->get ();
                 len     = eth->getLength ();
@@ -513,7 +609,7 @@ bool cInstructionParser::parseIPv6Params (cParameterList& params, cIPPacket* pac
 }
 
 
-cLinkable* cInstructionParser::compileIP (cParameterList& params, bool isIPv6)
+cLinkable* cInstructionParser::compileIP (bool noEthHeader, cParameterList& params, bool isIPv6)
 {
     cIPPacket* ippacket = new cIPPacket(isIPv6);
     try
@@ -521,10 +617,12 @@ cLinkable* cInstructionParser::compileIP (cParameterList& params, bool isIPv6)
         cEthernetPacket& eth = ippacket->getFirstEthernetPacket();
         bool destIsMulticast = isIPv6 ? parseIPv6Params (params, ippacket) : parseIPv4Params (params, ippacket);
 
-        // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
-        compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
-        compileVLANTags   (params, &eth);
-
+        if (!noEthHeader)
+        {
+            // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+            compileMacHeader  (params, &eth, false, m_ipOptionalDestMAC || destIsMulticast);
+            compileVLANTags   (params, &eth);
+        }
         size_t len;
         const uint8_t* payload = params.findParameter ("payload")->asStream(len);
         ippacket->compile (params.findParameter ("protocol")->asInt8(), nullptr, 0, payload, len);
@@ -539,7 +637,7 @@ cLinkable* cInstructionParser::compileIP (cParameterList& params, bool isIPv6)
 }
 
 
-cLinkable* cInstructionParser::compileUDP (cParameterList& params)
+cLinkable* cInstructionParser::compileUDP (bool noEthHeader, cParameterList& params)
 {
     cUdpPacket* udppacket = new cUdpPacket;
     try
@@ -547,10 +645,12 @@ cLinkable* cInstructionParser::compileUDP (cParameterList& params)
         cEthernetPacket& eth = udppacket->getFirstEthernetPacket();
         bool destIsMulticast = parseIPv4Params (params, udppacket);
 
-        // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
-        compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
-        compileVLANTags   (params, &eth);
-
+        if (!noEthHeader)
+        {
+            // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+            compileMacHeader  (params, &eth, false, m_ipOptionalDestMAC || destIsMulticast);
+            compileVLANTags   (params, &eth);
+        }
         udppacket->setSourcePort(params.findParameter ("sport")->asInt16());
         udppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
 
@@ -576,7 +676,7 @@ cLinkable* cInstructionParser::compileUDP (cParameterList& params)
 }
 
 
-cLinkable* cInstructionParser::compileVXLAN (cParameterList& params)
+cLinkable* cInstructionParser::compileVXLAN (bool noEthHeader, cParameterList& params)
 {
     cVxlanPacket* vxlanpacket = new cVxlanPacket;
     try
@@ -584,10 +684,12 @@ cLinkable* cInstructionParser::compileVXLAN (cParameterList& params)
         cEthernetPacket& eth = vxlanpacket->getFirstEthernetPacket();
         bool destIsMulticast = parseIPv4Params (params, vxlanpacket);
 
-        // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
-        compileMacHeader (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
-        compileVLANTags  (params, &eth);
-
+        if (!noEthHeader)
+        {
+            // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+            compileMacHeader (params, &eth, false, m_ipOptionalDestMAC || destIsMulticast);
+            compileVLANTags  (params, &eth);
+        }
         vxlanpacket->setSourcePort (params.findParameter ("sport")->asInt16());
         vxlanpacket->setDestinationPort (params.findParameter ("dport", (uint32_t)4789)->asInt16());
         vxlanpacket->setVni (params.findParameter ("vni", (uint32_t)0)->asInt32(0, 0x00ffffff));
@@ -613,7 +715,7 @@ cLinkable* cInstructionParser::compileVXLAN (cParameterList& params)
 }
 
 
-cLinkable* cInstructionParser::compileTCP (cParameterList& params)
+cLinkable* cInstructionParser::compileTCP (bool noEthHeader, cParameterList& params)
 {
     cTcpPacket* tcppacket = new cTcpPacket;
     try
@@ -623,10 +725,12 @@ cLinkable* cInstructionParser::compileTCP (cParameterList& params)
         bool userDefinedChecksum = false;
         cParameter* optionalPar;
 
-        // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
-        compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
-        compileVLANTags   (params, &eth);
-
+        if (!noEthHeader)
+        {
+            // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+            compileMacHeader  (params, &eth, false, m_ipOptionalDestMAC || destIsMulticast);
+            compileVLANTags   (params, &eth);
+        }
         tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
         tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
 
@@ -673,7 +777,7 @@ cLinkable* cInstructionParser::compileTCP (cParameterList& params)
 }
 
 
-cLinkable* cInstructionParser::compileTCPSYN (cParameterList& params)
+cLinkable* cInstructionParser::compileTCPSYN (bool noEthHeader, cParameterList& params)
 {
     cTcpPacket* tcppacket = new cTcpPacket;
     try
@@ -681,10 +785,12 @@ cLinkable* cInstructionParser::compileTCPSYN (cParameterList& params)
         cEthernetPacket& eth = tcppacket->getFirstEthernetPacket();
         bool destIsMulticast = parseIPv4Params (params, tcppacket);
 
-        // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
-        compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
-        compileVLANTags   (params, &eth);
-
+        if (!noEthHeader)
+        {
+            // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+            compileMacHeader  (params, &eth, false, m_ipOptionalDestMAC || destIsMulticast);
+            compileVLANTags   (params, &eth);
+        }
         tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
         tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
 
@@ -706,7 +812,7 @@ cLinkable* cInstructionParser::compileTCPSYN (cParameterList& params)
 }
 
 
-cLinkable* cInstructionParser::compileTCPSYNACK (cParameterList& params)
+cLinkable* cInstructionParser::compileTCPSYNACK (bool noEthHeader, cParameterList& params)
 {
     cTcpPacket* tcppacket = new cTcpPacket;
     try
@@ -714,10 +820,12 @@ cLinkable* cInstructionParser::compileTCPSYNACK (cParameterList& params)
         cEthernetPacket& eth = tcppacket->getFirstEthernetPacket();
         bool destIsMulticast = parseIPv4Params (params, tcppacket);
 
-        // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
-        compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
-        compileVLANTags   (params, &eth);
-
+        if (!noEthHeader)
+        {
+            // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+            compileMacHeader  (params, &eth, false, m_ipOptionalDestMAC || destIsMulticast);
+            compileVLANTags   (params, &eth);
+        }
         tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
         tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
 
@@ -740,7 +848,7 @@ cLinkable* cInstructionParser::compileTCPSYNACK (cParameterList& params)
 }
 
 
-cLinkable* cInstructionParser::compileTCPSYNACK2 (cParameterList& params)
+cLinkable* cInstructionParser::compileTCPSYNACK2 (bool noEthHeader, cParameterList& params)
 {
     cTcpPacket* tcppacket = new cTcpPacket;
     try
@@ -748,10 +856,12 @@ cLinkable* cInstructionParser::compileTCPSYNACK2 (cParameterList& params)
         cEthernetPacket& eth = tcppacket->getFirstEthernetPacket();
         bool destIsMulticast = parseIPv4Params (params, tcppacket);
 
-        // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
-        compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
-        compileVLANTags   (params, &eth);
-
+        if (!noEthHeader)
+        {
+            // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+            compileMacHeader  (params, &eth, false, m_ipOptionalDestMAC || destIsMulticast);
+            compileVLANTags   (params, &eth);
+        }
         tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
         tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
 
@@ -773,7 +883,7 @@ cLinkable* cInstructionParser::compileTCPSYNACK2 (cParameterList& params)
 }
 
 
-cLinkable* cInstructionParser::compileTCPFIN (cParameterList& params)
+cLinkable* cInstructionParser::compileTCPFIN (bool noEthHeader, cParameterList& params)
 {
     cTcpPacket* tcppacket = new cTcpPacket;
     try
@@ -781,10 +891,12 @@ cLinkable* cInstructionParser::compileTCPFIN (cParameterList& params)
         cEthernetPacket& eth = tcppacket->getFirstEthernetPacket();
         bool destIsMulticast = parseIPv4Params (params, tcppacket);
 
-        // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
-        compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
-        compileVLANTags   (params, &eth);
-
+        if (!noEthHeader)
+        {
+            // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+            compileMacHeader  (params, &eth, false, m_ipOptionalDestMAC || destIsMulticast);
+            compileVLANTags   (params, &eth);
+        }
         tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
         tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
 
@@ -807,7 +919,7 @@ cLinkable* cInstructionParser::compileTCPFIN (cParameterList& params)
 }
 
 
-cLinkable* cInstructionParser::compileTCPFINACK (cParameterList& params)
+cLinkable* cInstructionParser::compileTCPFINACK (bool noEthHeader, cParameterList& params)
 {
     cTcpPacket* tcppacket = new cTcpPacket;
     try
@@ -815,10 +927,12 @@ cLinkable* cInstructionParser::compileTCPFINACK (cParameterList& params)
         cEthernetPacket& eth = tcppacket->getFirstEthernetPacket();
         bool destIsMulticast = parseIPv4Params (params, tcppacket);
 
-        // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
-        compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
-        compileVLANTags   (params, &eth);
-
+        if (!noEthHeader)
+        {
+            // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+            compileMacHeader  (params, &eth, false, m_ipOptionalDestMAC || destIsMulticast);
+            compileVLANTags   (params, &eth);
+        }
         tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
         tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
 
@@ -841,7 +955,7 @@ cLinkable* cInstructionParser::compileTCPFINACK (cParameterList& params)
 }
 
 
-cLinkable* cInstructionParser::compileTCPFINACK2 (cParameterList& params)
+cLinkable* cInstructionParser::compileTCPFINACK2 (bool noEthHeader, cParameterList& params)
 {
     cTcpPacket* tcppacket = new cTcpPacket;
     try
@@ -849,10 +963,12 @@ cLinkable* cInstructionParser::compileTCPFINACK2 (cParameterList& params)
         cEthernetPacket& eth = tcppacket->getFirstEthernetPacket();
         bool destIsMulticast = parseIPv4Params (params, tcppacket);
 
-        // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
-        compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
-        compileVLANTags   (params, &eth);
-
+        if (!noEthHeader)
+        {
+            // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+            compileMacHeader  (params, &eth, false, m_ipOptionalDestMAC || destIsMulticast);
+            compileVLANTags   (params, &eth);
+        }
         tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
         tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
 
@@ -874,7 +990,7 @@ cLinkable* cInstructionParser::compileTCPFINACK2 (cParameterList& params)
 }
 
 
-cLinkable* cInstructionParser::compileTCPRST (cParameterList& params)
+cLinkable* cInstructionParser::compileTCPRST (bool noEthHeader, cParameterList& params)
 {
     cTcpPacket* tcppacket = new cTcpPacket;
     try
@@ -882,10 +998,12 @@ cLinkable* cInstructionParser::compileTCPRST (cParameterList& params)
         cEthernetPacket& eth = tcppacket->getFirstEthernetPacket();
         bool destIsMulticast = parseIPv4Params (params, tcppacket);
 
-        // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
-        compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
-        compileVLANTags   (params, &eth);
-
+        if (!noEthHeader)
+        {
+            // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+            compileMacHeader  (params, &eth, false, m_ipOptionalDestMAC || destIsMulticast);
+            compileVLANTags   (params, &eth);
+        }
         tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
         tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
 
@@ -907,7 +1025,7 @@ cLinkable* cInstructionParser::compileTCPRST (cParameterList& params)
 }
 
 
-cLinkable* cInstructionParser::compileVRRP (cParameterList& params, int version)
+cLinkable* cInstructionParser::compileVRRP (bool noEthHeader, cParameterList& params, int version)
 {
     cVrrpPacket* vrrp = new cVrrpPacket;
     try
@@ -916,9 +1034,11 @@ cLinkable* cInstructionParser::compileVRRP (cParameterList& params, int version)
         cEthernetPacket& eth = vrrp->getFirstEthernetPacket();
 
         parseIPv4Params   (params, vrrp, true);
-        compileMacHeader  (params, &eth, true);
-        compileVLANTags   (params, &eth);
-
+        if (!noEthHeader)
+        {
+            compileMacHeader  (params, &eth, true);
+            compileVLANTags   (params, &eth);
+        }
         const cParameter* firstVRIP = params.findParameter ("vrip");
 
         vrrp->setVersion(version);
@@ -959,15 +1079,17 @@ cLinkable* cInstructionParser::compileVRRP (cParameterList& params, int version)
 }
 
 
-cLinkable* cInstructionParser::compileSTP (cParameterList& params, bool isRSTP, bool isTCN)
+cLinkable* cInstructionParser::compileSTP (bool noEthHeader, cParameterList& params, bool isRSTP, bool isTCN)
 {
     cStpPacket*  stp = new cStpPacket;
 
     try
     {
-        compileMacHeader (params, stp, true);
-        compileVLANTags  (params, stp);
-
+        if (!noEthHeader)
+        {
+            compileMacHeader (params, stp, true);
+            compileVLANTags  (params, stp);
+        }
         if (!isTCN)
         {
             int flags = 0;
@@ -1025,7 +1147,7 @@ cLinkable* cInstructionParser::compileSTP (cParameterList& params, bool isRSTP, 
 }
 
 
-cLinkable* cInstructionParser::compileIGMP  (cParameterList& params, bool v3, bool query, bool report, bool leave)
+cLinkable* cInstructionParser::compileIGMP  (bool noEthHeader, cParameterList& params, bool v3, bool query, bool report, bool leave)
 {
     cIgmpPacket* igmp = new cIgmpPacket;
     try
@@ -1033,9 +1155,11 @@ cLinkable* cInstructionParser::compileIGMP  (cParameterList& params, bool v3, bo
         cEthernetPacket& eth = igmp->getFirstEthernetPacket ();
 
         bool destIsMulticast = parseIPv4Params (params, igmp, query || report || leave);
-        compileMacHeader  (params, &eth, destIsMulticast || ipOptionalDestMAC || query || report || leave);
-        compileVLANTags   (params, &eth);
-
+        if (!noEthHeader)
+        {
+            compileMacHeader  (params, &eth, destIsMulticast || m_ipOptionalDestMAC || query || report || leave);
+            compileVLANTags   (params, &eth);
+        }
         if (query)
         {
             bool s        = false;
@@ -1098,7 +1222,7 @@ cLinkable* cInstructionParser::compileIGMP  (cParameterList& params, bool v3, bo
 }
 
 
-cLinkable* cInstructionParser::compileICMP  (cParameterList& params)
+cLinkable* cInstructionParser::compileICMP  (bool noEthHeader, cParameterList& params)
 {
     cIcmpPacket* icmppacket = new cIcmpPacket;
     try
@@ -1106,10 +1230,12 @@ cLinkable* cInstructionParser::compileICMP  (cParameterList& params)
         cEthernetPacket& eth = icmppacket->getFirstEthernetPacket();
         bool destIsMulticast = parseIPv4Params (params, icmppacket);
 
-        // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
-        compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
-        compileVLANTags   (params, &eth);
-
+        if (!noEthHeader)
+        {
+            // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+            compileMacHeader  (params, &eth, false, m_ipOptionalDestMAC || destIsMulticast);
+            compileVLANTags   (params, &eth);
+        }
         uint8_t type = params.findParameter ("type")->asInt8();
         uint8_t code = params.findParameter ("code")->asInt8();
 
@@ -1135,7 +1261,7 @@ cLinkable* cInstructionParser::compileICMP  (cParameterList& params)
     return icmppacket;
 }
 
-cLinkable* cInstructionParser::compileICMPWithEmbedded  (cParameterList& params, uint8_t type)
+cLinkable* cInstructionParser::compileICMPWithEmbedded  (bool noEthHeader, cParameterList& params, uint8_t type)
 {
     cIcmpPacket* icmppacket = new cIcmpPacket;
     try
@@ -1143,10 +1269,12 @@ cLinkable* cInstructionParser::compileICMPWithEmbedded  (cParameterList& params,
         cEthernetPacket& eth = icmppacket->getFirstEthernetPacket();
         bool destIsMulticast = parseIPv4Params (params, icmppacket);
 
-        // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
-        compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
-        compileVLANTags   (params, &eth);
-
+        if (!noEthHeader)
+        {
+            // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+            compileMacHeader  (params, &eth, false, m_ipOptionalDestMAC || destIsMulticast);
+            compileVLANTags   (params, &eth);
+        }
         uint8_t code = params.findParameter ("code", (uint32_t)0)->asInt8();
 
         size_t len = 0;
@@ -1167,7 +1295,7 @@ cLinkable* cInstructionParser::compileICMPWithEmbedded  (cParameterList& params,
     return icmppacket;
 }
 
-cLinkable* cInstructionParser::compileICMPRedirect  (cParameterList& params)
+cLinkable* cInstructionParser::compileICMPRedirect  (bool noEthHeader, cParameterList& params)
 {
     cIcmpPacket* icmppacket = new cIcmpPacket;
     try
@@ -1175,10 +1303,12 @@ cLinkable* cInstructionParser::compileICMPRedirect  (cParameterList& params)
         cEthernetPacket& eth = icmppacket->getFirstEthernetPacket();
         bool destIsMulticast = parseIPv4Params (params, icmppacket);
 
-        // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
-        compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
-        compileVLANTags   (params, &eth);
-
+        if (!noEthHeader)
+        {
+            // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+            compileMacHeader  (params, &eth, false, m_ipOptionalDestMAC || destIsMulticast);
+            compileVLANTags   (params, &eth);
+        }
         uint8_t code = params.findParameter ("code", (uint32_t)0)->asInt8();
         const cIPv4 gw = params.findParameter ("gw")->asIPv4();
 
@@ -1200,7 +1330,7 @@ cLinkable* cInstructionParser::compileICMPRedirect  (cParameterList& params)
     return icmppacket;
 }
 
-cLinkable* cInstructionParser::compileICMPPing (cParameterList& params, bool reply)
+cLinkable* cInstructionParser::compileICMPPing (bool noEthHeader, cParameterList& params, bool reply)
 {
     cIcmpPacket* icmppacket = new cIcmpPacket;
     try
@@ -1208,10 +1338,12 @@ cLinkable* cInstructionParser::compileICMPPing (cParameterList& params, bool rep
         cEthernetPacket& eth = icmppacket->getFirstEthernetPacket();
         bool destIsMulticast = parseIPv4Params (params, icmppacket);
 
-        // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
-        compileMacHeader  (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
-        compileVLANTags   (params, &eth);
-
+        if (!noEthHeader)
+        {
+            // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+            compileMacHeader  (params, &eth, false, m_ipOptionalDestMAC || destIsMulticast);
+            compileVLANTags   (params, &eth);
+        }
         uint16_t id  = params.findParameter ("id",  (uint32_t)0)->asInt16 ();
         uint16_t seq = params.findParameter ("seq", (uint32_t)0)->asInt16 ();
 
@@ -1234,7 +1366,7 @@ cLinkable* cInstructionParser::compileICMPPing (cParameterList& params, bool rep
 }
 
 
-cLinkable* cInstructionParser::compileGRE (cParameterList& params)
+cLinkable* cInstructionParser::compileGRE (bool noEthHeader, cParameterList& params)
 {
     cGrePacket* grepacket = new cGrePacket;
     try
@@ -1242,10 +1374,12 @@ cLinkable* cInstructionParser::compileGRE (cParameterList& params)
         cEthernetPacket& eth = grepacket->getFirstEthernetPacket();
         bool destIsMulticast = parseIPv4Params (params, grepacket);
 
-        // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
-        compileMacHeader (params, &eth, false, ipOptionalDestMAC || destIsMulticast);
-        compileVLANTags  (params, &eth);
-
+        if (!noEthHeader)
+        {
+            // --> dest mac is set automatically, if dest IP is a multicast OR user has NOT provided a dest MAC
+            compileMacHeader (params, &eth, false, m_ipOptionalDestMAC || destIsMulticast);
+            compileVLANTags  (params, &eth);
+        }
         grepacket->setProtocolType (params.findParameter ("protocol")->asInt16());
 
         cParameter* optionalPar;
@@ -1328,9 +1462,9 @@ cLinkable* cInstructionParser::compileListen (cParameterList& params)
 void cInstructionParser::throwParseException (const char* msg, const char* val, size_t valLen, const char* details)
 {
     if (details)
-        throw ParseException (currentInstruction, msg, details, val, (int)valLen);
+        throw ParseException (m_currentInstruction, msg, details, val, (int)valLen);
     else
-        throw ParseException (currentInstruction, msg, val, (int)valLen);
+        throw ParseException (m_currentInstruction, msg, val, (int)valLen);
 }
 
 
@@ -1375,7 +1509,7 @@ static const testcase_t tests[] = {
         22,
     },
     {
-        "raw(payload = 112233445566aabbccddeeff81231234567890abcdef)",
+        "raw(stream = 112233445566aabbccddeeff81231234567890abcdef)",
         {
             0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x81, 0x23, 0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef
         },
@@ -1500,6 +1634,20 @@ static const testcase_t tests[] = {
         },
         38,
     },
+    {
+        "raw(be16=0x1234, be16=0x1234, le16=0x1234)",
+        {
+            0x12, 0x34, 0x12, 0x34, 0x34, 0x12
+        },
+        6
+    },
+    {
+        "raw(byte=0x55, be16=0x1234, le16=0x1234, be32=0x11223344, le32=0x11223344, be64=0x0123456789abcdef, le64=0x0123456789abcdef, ip4=1.2.3.4, ip6=1002:3004:5006:7008:900A:B00C:D00E:F001, mac=10:20:30:40:50:60, stream=\"Hello World\")",
+        {
+            0x55, 0x12, 0x34, 0x34, 0x12, 0x11, 0x22, 0x33, 0x44, 0x44, 0x33, 0x22, 0x11, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0xef, 0xcd, 0xab, 0x89, 0x67, 0x45, 0x23, 0x01, 0x01, 0x02, 0x03, 0x04, 0x10, 0x02, 0x30, 0x04, 0x50, 0x06, 0x70, 0x08, 0x90, 0x0a, 0xb0, 0x0c, 0xd0, 0x0e, 0xf0, 0x01, 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x57, 0x6f, 0x72, 0x6c, 0x64
+        },
+        66
+    }
 
     // FIXME UDP Test Cases
     // FIXME VRRP Test Cases

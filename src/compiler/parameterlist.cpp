@@ -138,6 +138,36 @@ uint32_t cParameter::asInt32 (uint32_t rangeBegin, uint32_t rangeEnd) const
 }
 
 
+uint64_t cParameter::asInt64 (uint64_t rangeBegin, uint64_t rangeEnd) const
+{
+    BUG_ON (rangeEnd < rangeBegin);
+
+    unsigned long long v;
+
+    if (isRandom(false) == 0)
+    {
+        uint64_t range = rangeEnd - rangeBegin + 1;
+        v = (range ? cRandom::rand64() % range : cRandom::rand64()) + rangeBegin;
+    }
+    else
+    {
+        char* end;
+        errno = 0;
+        v = strtoull (value, &end, 0);
+        if (end != (value + valLen))
+        {
+            throw FormatException (exParFormat, value, (int)valLen);
+        }
+        else if ((!((v >= rangeBegin) && (v <= rangeEnd))) || (errno == ERANGE))
+        {
+            throw FormatException (exParRange, value, (int)valLen);
+        }
+    }
+
+    return (uint64_t)v;
+}
+
+
 uint16_t cParameter::asInt16 (uint16_t rangeBegin, uint16_t rangeEnd) const
 {
     return (uint16_t) asInt32 (rangeBegin, rangeEnd);
@@ -238,7 +268,7 @@ const uint8_t* cParameter::asStream (bool allowEmbPacket, bool &isEmbedded, size
                  (!allowEmbPacket && *value == '"'))
         {
             isEmbedded = *value == '<';
-            len = valLen - 2; // don't count " or <> at the begin an end of string/embedded packet
+            len = valLen - 2; // don't count " or <> at begin and end of string/embedded packet
             return (uint8_t*)value + 1;
         }
         else
@@ -1220,6 +1250,67 @@ void cParameterList::unitTest ()
     catch (FormatException& )
     {
         BUG_IF_NOT (0);
+    }
+
+    try
+    {
+        cParameterList obj ("(     first=100, second = 200, third   =300)");
+        BUG_IF_NOT (obj.isValid ());
+        int n = 0;
+        for (auto &parameter : obj)
+        {
+            auto name = parameter.name();
+            switch (n++)
+            {
+            case 0:
+                BUG_ON (std::strncmp (name.first, "first", name.second));
+                BUG_ON (parameter.asInt32()  != (uint32_t)100);
+                break;
+            case 1:
+                BUG_ON (std::strncmp (name.first, "second", name.second));
+                BUG_ON (parameter.asInt32()  != (uint32_t)200);
+                break;
+            case 2:
+                BUG_ON (std::strncmp (name.first, "third", name.second));
+                BUG_ON (parameter.asInt32()  != (uint32_t)300);
+                break;
+            }
+        }
+        BUG_ON (n != 3);
+    }
+    catch (FormatException& )
+    {
+        BUG ("unexpected exception");
+    }
+    try
+    {
+        cParameterList obj ("(     first=100, second = 200, third   =300)");
+        BUG_IF_NOT (obj.isValid ());
+        int n = 0;
+        for (const auto &parameter : obj)
+        {
+            auto name = parameter.name();
+            switch (n++)
+            {
+            case 0:
+                BUG_ON (std::strncmp (name.first, "first", name.second));
+                BUG_ON (parameter.asInt32()  != (uint32_t)100);
+                break;
+            case 1:
+                BUG_ON (std::strncmp (name.first, "second", name.second));
+                BUG_ON (parameter.asInt32()  != (uint32_t)200);
+                break;
+            case 2:
+                BUG_ON (std::strncmp (name.first, "third", name.second));
+                BUG_ON (parameter.asInt32()  != (uint32_t)300);
+                break;
+            }
+        }
+        BUG_ON (n != 3);
+    }
+    catch (FormatException& )
+    {
+        BUG ("unexpected exception");
     }
 
     // TODO fuzzing

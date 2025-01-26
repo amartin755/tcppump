@@ -58,10 +58,12 @@ add_test(NAME show-version--ok COMMAND tcppump --version WORKING_DIRECTORY ${TES
 add_test(NAME show-version-output--ok COMMAND tcppump --version WORKING_DIRECTORY ${TEST_WORKING_DIR})
 set_tests_properties(show-version-output--ok PROPERTIES PASS_REGULAR_EXPRESSION "version ${PROJECT_VERSION}")
 
-add_test(NAME raw-1--ok COMMAND tcppump ${DEFAULT_PARAMS} -w raw-1--ok.pcap "raw(payload = 0123456789abcdef0123456789abcdef)" WORKING_DIRECTORY ${TEST_WORKING_DIR})
+add_test(NAME raw-1--ok COMMAND tcppump ${DEFAULT_PARAMS} -w raw-1--ok.pcap "raw(stream = 0123456789abcdef0123456789abcdef)" WORKING_DIRECTORY ${TEST_WORKING_DIR})
 add_test(NAME raw-1--diff COMMAND cmake -E compare_files raw-1--ok.pcap ${TEST_FILE_PREFIX}/raw-01.pcap WORKING_DIRECTORY ${TEST_WORKING_DIR})
-add_test(NAME raw-2--nok COMMAND tcppump ${DEFAULT_PARAMS} -w raw-2--nok.pcap "raw(payload = abcdf)" WORKING_DIRECTORY ${TEST_WORKING_DIR})
+add_test(NAME raw-2--nok COMMAND tcppump ${DEFAULT_PARAMS} -w raw-2--nok.pcap "raw(stream = abcdf)" WORKING_DIRECTORY ${TEST_WORKING_DIR})
 set_tests_properties(raw-2--nok PROPERTIES WILL_FAIL TRUE)
+add_test(NAME raw-3--ok COMMAND tcppump ${DEFAULT_PARAMS} -w raw-3--ok.pcap "raw(byte=0x55, be16=0x1234, le16=0x1234, be32=0x11223344, le32=0x11223344, be64=0x0123456789abcdef, le64=0x0123456789abcdef, ip4=1.2.3.4, ip6=1002:3004:5006:7008:900A:B00C:D00E:F001, mac=10:20:30:40:50:60, stream=\"Hello World\", byte=0xaa)" WORKING_DIRECTORY ${TEST_WORKING_DIR})
+add_test(NAME raw-3--diff COMMAND cmake -E compare_files raw-3--ok.pcap ${TEST_FILE_PREFIX}/raw-03.pcap WORKING_DIRECTORY ${TEST_WORKING_DIR})
 
 add_test(NAME eth-1--ok COMMAND tcppump ${DEFAULT_PARAMS} -w eth-1--ok.pcap "eth(dmac=11:22:33:44:55:66, payload = 0123456789abcdef0123456789abcdef)" WORKING_DIRECTORY ${TEST_WORKING_DIR})
 add_test(NAME eth-1--diff COMMAND cmake -E compare_files eth-1--ok.pcap ${TEST_FILE_PREFIX}/eth-01.pcap WORKING_DIRECTORY ${TEST_WORKING_DIR})
@@ -577,7 +579,7 @@ add_test(NAME igmp-10--nok COMMAND tcppump ${DEFAULT_PARAMS} -w igmp-10--nok.pca
 set_tests_properties(igmp-10--nok PROPERTIES WILL_FAIL TRUE)
 
 add_test(NAME script-01--ok COMMAND tcppump ${DEFAULT_PARAMS} -w script-01--ok.pcap -vvv -s ${TEST_FILE_PREFIX}/all.pump WORKING_DIRECTORY ${TEST_WORKING_DIR})
-set_tests_properties(script-01--ok PROPERTIES PASS_REGULAR_EXPRESSION "Will send 264 packets.*Successfully wrote 264 packets")
+set_tests_properties(script-01--ok PROPERTIES PASS_REGULAR_EXPRESSION "Will send 265 packets.*Successfully wrote 265 packets")
 add_test(NAME script-01--diff COMMAND cmake -E compare_files script-01--ok.pcap ${TEST_FILE_PREFIX}/all.pcap WORKING_DIRECTORY ${TEST_WORKING_DIR})
 
 ### AFL findings

@@ -58,21 +58,75 @@ Example:
 
 ## Protocol Definitions
 
-### Raw unstructured ethernet packet as byte stream
+### Fully configurable raw Ethernet packet consisting of standard data types
+For the definition of "normal" Ethernet packets the protocol `eth` is more suitable. The `raw` protocol is a powerful tool when it is used embedded into other protocols. For example it can be used to create the payload of an UDP packet.
+
 #### Protocol Specifier
 
     raw
 
 #### Parameters
-Payload (bytestream). Must be at least 14 bytes
+All parameters are optional and can be unsed multiple times. The packet is compiled by adding parameter by parameter to the payload and therefore the order of the parameter is important.
 
-    payload
+Bytestream
+
+    stream
+
+Byte (integer: range 0 - 255)
+
+    byte
+
+16 bit big endian integer (range 0 - 65535)
+
+    be16
+
+16 bit little endian integer (range 0 - 65535)
+
+    le16
+
+32 bit big endian integer (range 0 - 4294967295)
+
+    be32
+
+32 bit little endian integer (range 0 - 4294967295)
+
+    le32
+
+64 bit big endian integer (range 0 - 18446744073709551615)
+
+    be64
+
+64 bit little endian integer (range 0 - 18446744073709551615)
+
+    le64
+
+IPv4 address
+
+    ip4
+
+IPv6 address
+
+    ip6
+
+EUI-48 MAC address
+
+    mac
 
 #### Examples
 
-    raw(payload = 112233445566aabbccddeeff08001234567890abcdef);
-    raw(payload = "Hello");
-    raw(payload = *64);
+    raw(stream=112233445566aabbccddeeff08001234567890abcdef);
+    raw(stream="Hello");
+    raw(stream=*64);
+
+    # demo of all available data types
+    raw(byte=0x55, be16=0x1234, le16=0x1234, be32=0x11223344, le32=0x11223344,
+        be64=0x0123456789abcdef, le64=0x0123456789abcdef, ip4=1.2.3.4,
+        ip6=1002:3004:5006:7008:900A:B00C:D00E:F001, mac=10:20:30:40:50:60,
+        stream="Hello World", byte=0xaa);
+
+    # hand craftet ethernet packet. This is identical to
+    #  eth(dmac=11:22:33:44:55:66, smac=aa:bb:cc:dd:ee:ff, ethertype=0x0800, payload=1234567890abcdef)
+    raw(mac=11:22:33:44:55:66, mac=aa:bb:cc:dd:ee:ff, be16=0x0800, payload=1234567890abcdef);
 
 
 ### Ethernet II or IEEE802.3 packet format
@@ -473,6 +527,9 @@ Optionally all vlan tag parameters and all optional ipv4 parameters (see above) 
     udp(dmac=12:23:34:34:44:44, dip=1.2.3.4, sport=1234, dport=2345);
     # UDP packet with random payload
     udp(dmac=12:23:34:34:44:44, dip=1.2.3.4, sport=1234, dport=2345, payload=*);
+    # UDP packet embedded structured payload
+    udp(dmac=12:23:34:34:44:44, dip=1.2.3.4, sport=1234, dport=2345,
+        payload=<raw(byte=0x55, be16=0x1234, le16=0x1234, be32=0x11223344)>);
 
 ### TCP
 #### Protocol Specifier

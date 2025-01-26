@@ -35,6 +35,7 @@ public:
     cParameter (const cParameter&);
     virtual ~cParameter();
 
+    virtual uint64_t    asInt64 (uint64_t rangeBegin = 0, uint64_t rangeEnd = static_cast<int64_t>(0xffffffffffffffff)) const;
     virtual uint32_t    asInt32 (uint32_t rangeBegin = 0, uint32_t rangeEnd = 0xffffffff) const;
     virtual uint16_t    asInt16 (uint16_t rangeBegin = 0, uint16_t rangeEnd = 0xffff) const;
     virtual uint8_t     asInt8  (uint8_t  rangeBegin = 0, uint8_t rangeEnd = 0xff) const;
@@ -44,6 +45,11 @@ public:
     virtual const uint8_t* asEmbedded (bool &isEmbedded, size_t& len);
     virtual cIPv4  asIPv4  () const;
     virtual cIPv6  asIPv6  () const;
+
+    std::pair<const char*, size_t> name () const
+    {
+        return std::pair<const char*, size_t> (parameter, parLen);
+    }
 
     void throwValueException (void) const;
 
@@ -111,6 +117,18 @@ public:
     cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, double optionalValue);
     cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, const cMacAddress& optionalValue);
     cParameter* findParameter (const cParameter* startAfter, const char* stopAt, const char* parameter, const cIPv4& optionalValue);
+
+    typedef std::vector<cParameter>::iterator iterator;
+    typedef std::vector<cParameter>::const_iterator const_iterator;
+    iterator begin () { return list.begin (); }
+    iterator end ()   { return list.end (); }
+    const_iterator cbegin () const { return list.cbegin(); }
+    const_iterator cend () const   { return list.cend(); }
+
+    void setParameterUsed (const cParameter* s, bool val)
+    {
+        used.at(s->index) = val;
+    }
 
 #ifdef WITH_UNITTESTS
     static void unitTest ();

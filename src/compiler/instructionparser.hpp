@@ -61,7 +61,7 @@ public:
 
     cInstructionParser (bool ipOptionalDestMAC);
     ~cInstructionParser ();
-    void parse (const char* instruction, cResult& result, bool ignoreTrailingGarbage = false);
+    void parse (const char* instruction, cResult& result, bool ignoreTrailingGarbage = false, bool noEthHeader = false);
 
 #ifdef WITH_UNITTESTS
         static void unitTest ();
@@ -71,36 +71,38 @@ private:
     const char* parseTimestamp (const char* p, bool& hasTimestamp, uint64_t& timestamp, bool& isAbsolute);
     const char* parseProtocollIdentifier (const char* p, const char** identifier, size_t *len);
 
-    cLinkable* compileRAW  (cParameterList& params);
+    // protocol specific parsers
+    cLinkable* compileRAW  (bool noEthHeader, cParameterList& params);
     cLinkable* compileETH  (cParameterList& params);
     cLinkable* compileARP  (cParameterList& params, bool isProbe = false, bool isGratuitous = false);
-    cLinkable* compileSNAP (cParameterList& params);
-    cLinkable* compileIP   (cParameterList& params, bool isIPv6);
-    cLinkable* compileUDP  (cParameterList& params);
-    cLinkable* compileVXLAN (cParameterList& params);
-    cLinkable* compileVRRP (cParameterList& params, int version);
-    cLinkable* compileSTP  (cParameterList& params, bool isRSTP = false, bool isTCN = false);
-    cLinkable* compileIGMP (cParameterList& params, bool v3, bool query, bool report, bool leave);
-    cLinkable* compileICMP (cParameterList& params);
-    cLinkable* compileICMPWithEmbedded (cParameterList& params, uint8_t type);
-    cLinkable* compileICMPRedirect (cParameterList& params);
-    cLinkable* compileICMPPing (cParameterList& params, bool reply);
-    cLinkable* compileTCP  (cParameterList& params);
-    cLinkable* compileTCPSYN  (cParameterList& params);
-    cLinkable* compileTCPSYNACK  (cParameterList& params);
-    cLinkable* compileTCPSYNACK2  (cParameterList& params);
-    cLinkable* compileTCPFIN  (cParameterList& params);
-    cLinkable* compileTCPFINACK  (cParameterList& params);
-    cLinkable* compileTCPFINACK2  (cParameterList& params);
-    cLinkable* compileTCPRST  (cParameterList& params);
-    cLinkable* compileListen  (cParameterList& params);
-    cLinkable* compileGRE (cParameterList& params);
+    cLinkable* compileIP   (bool noEthHeader, cParameterList& params, bool isIPv6);
+    cLinkable* compileUDP  (bool noEthHeader, cParameterList& params);
+    cLinkable* compileVXLAN (bool noEthHeader, cParameterList& params);
+    cLinkable* compileVRRP (bool noEthHeader, cParameterList& params, int version);
+    cLinkable* compileSTP  (bool noEthHeader, cParameterList& params, bool isRSTP = false, bool isTCN = false);
+    cLinkable* compileIGMP (bool noEthHeader, cParameterList& params, bool v3, bool query, bool report, bool leave);
+    cLinkable* compileICMP (bool noEthHeader, cParameterList& params);
+    cLinkable* compileICMPWithEmbedded (bool noEthHeader, cParameterList& params, uint8_t type);
+    cLinkable* compileICMPRedirect (bool noEthHeader, cParameterList& params);
+    cLinkable* compileICMPPing (bool noEthHeader, cParameterList& params, bool reply);
+    cLinkable* compileTCP  (bool noEthHeader, cParameterList& params);
+    cLinkable* compileTCPSYN  (bool noEthHeader, cParameterList& params);
+    cLinkable* compileTCPSYNACK  (bool noEthHeader, cParameterList& params);
+    cLinkable* compileTCPSYNACK2  (bool noEthHeader, cParameterList& params);
+    cLinkable* compileTCPFIN  (bool noEthHeader, cParameterList& params);
+    cLinkable* compileTCPFINACK  (bool noEthHeader, cParameterList& params);
+    cLinkable* compileTCPFINACK2  (bool noEthHeader, cParameterList& params);
+    cLinkable* compileTCPRST  (bool noEthHeader, cParameterList& params);
+    cLinkable* compileGRE (bool noEthHeader, cParameterList& params);
 
+    cLinkable* compileListen  (cParameterList& params);
+
+    // helpers
     bool   compileMacHeader (cParameterList& params, cEthernetPacket* packet, bool noDestination, bool destIsOptional = false);
     size_t compileVLANTags  (cParameterList& params, cEthernetPacket* packet);
     bool   parseIPv4Params  (cParameterList& params, cIPPacket* packet, bool noDestinationIP = false);
     bool   parseIPv6Params  (cParameterList& params, cIPPacket* packet, bool noDestinationIP = false);
-    const uint8_t* compileEmbedded  (cParameter* emb, bool skipEthHeader, size_t& len);
+    const uint8_t* compileEmbedded  (cParameter* emb, bool noEthHeader, size_t& len);
     cMacAddress getParameterOrOwnMac (cParameterList& params, const char* par) const;
     cIPv4  getParameterOrOwnIPv4 (cParameterList& params, const char* par) const;
     cIPv6  getParameterOrOwnIPv6 (cParameterList& params, const char* par) const;
@@ -108,8 +110,9 @@ private:
 
     void throwParseException (const char* msg, const char* val, size_t valLen = 0, const char* details = nullptr);
 
-    const char* currentInstruction;
-    bool ipOptionalDestMAC;
+    const char* m_currentInstruction;
+    bool        m_ipOptionalDestMAC;
+    unsigned    m_recursionDepth;
 };
 
 class ParseException

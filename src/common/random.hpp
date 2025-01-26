@@ -27,6 +27,7 @@ class cRandom
 public:
     static cRandom* create (void);
     static void destroy (void);
+    static uint64_t rand64 (void);
     static uint32_t rand32 (void);
     static uint16_t rand16 (void);
     static uint8_t  rand8 (void);

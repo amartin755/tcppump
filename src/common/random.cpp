@@ -58,6 +58,11 @@ cRandom::cRandom () : countOnly(false), seq(0)
         std::srand ((unsigned)std::time (NULL));
 }
 
+uint64_t cRandom::rand64 (void)
+{
+    return (uint64_t)rand () | ((uint64_t)rand ()) << 32;
+}
+
 uint32_t cRandom::rand32 (void)
 {
     return rand ();

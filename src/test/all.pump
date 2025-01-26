@@ -1,4 +1,5 @@
-raw(payload = 0123456789abcdef0123456789abcdef);
+raw(stream = 0123456789abcdef0123456789abcdef);
+raw(byte=0x55, be16=0x1234, le16=0x1234, be32=0x11223344, le32=0x11223344, be64=0x0123456789abcdef, le64=0x0123456789abcdef, ip4=1.2.3.4, ip6=1002:3004:5006:7008:900A:B00C:D00E:F001, mac=10:20:30:40:50:60, stream="Hello World", byte=0xaa);
 eth(dmac=11:22:33:44:55:66, payload = 0123456789abcdef0123456789abcdef);
 eth(dmac=11:22:33:44:55:66, ethertype=0x9000, payload = 0123456789abcdef0123456789abcdef);
 eth(dmac=11:22:33:44:55:66, smac=80:81:82:83:84:85, payload = 0123456789abcdef0123456789abcdef);

@@ -25,7 +25,8 @@
 
 
 
-cEthernetPacket::cEthernetPacket () : cEthernetPacket (cSettings::get().getMyMTU() + sizeof (mac_header_t) + 4)
+cEthernetPacket::cEthernetPacket ()
+: cEthernetPacket (cSettings::get().getMyMTU() + sizeof (mac_header_t) + 4)
 {
 }
 
@@ -43,7 +44,7 @@ cEthernetPacket::cEthernetPacket (size_t maxLength)
 
     packet          = (uint8_t*)data;
     packetMaxLength = maxLength;
-
+    std::memset (packet, 0, sizeof (mac_header_t)); // initialize at least the ethernet header to zero
     reset ();
 }
 
