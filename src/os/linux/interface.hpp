@@ -31,16 +31,13 @@
 #include "netinterface.hpp"
 
 
-// forward declarations
-typedef struct pcap pcap_t;
-
 
 class cInterface : public cNetInterface
 {
 public:
     cInterface(const char* ifname, bool needPriviledges);
     virtual ~cInterface();
-    bool open (bool sendOnly);
+    bool open ();
     bool close ();
     bool sendPacket (const uint8_t* payload, size_t length, const cTimeval& t);
     bool prepareSendQueue (size_t packetCnt, size_t totalBytes, bool synchronized);
@@ -53,19 +50,11 @@ public:
     uint64_t getLinkSpeed (void);
     bool isOpen () const;
     const char* getName (void) const;
-    bool addReceiveFilter (const char* filter);
     bool isReady (void) const;
 
 private:
-    pcap_t* getCaptureInterface (void)
-    {
-        BUG_ON (sendOnly);
-        return pcapHandle;
-    }
-
     std::string name;
     int ifcHandle;
-    pcap_t *pcapHandle;
     int ifIndex;
     cMacAddress myMac;
     cIPv4 myIP;
@@ -78,7 +67,6 @@ private:
     std::chrono::high_resolution_clock::time_point tStart;
     uint64_t sentPackets;
     uint64_t sentBytes;
-    bool sendOnly;
 };
 
 #endif /* INTERFACE_H_ */

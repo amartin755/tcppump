@@ -43,8 +43,6 @@
 #include "preprocessor.hpp"
 #include "output.hpp"
 #include "random.hpp"
-#include "dissector.hpp"
-#include "responder.hpp"
 
 
 cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const char* description)
@@ -59,7 +57,6 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
 
     timeScale       = 0;
     realtimeMode    = false;
-    responder       = NONE;
     ifc             = nullptr;
 
     addCmdLineOption (false, 'i', "interface", "IFC",
@@ -116,12 +113,6 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
             "If dmac parameter of IPv4 based packets is omitted, the destination MAC will be automatically\n\t"
             "determined via ARP.",
             &options.arp);
-    addCmdLineOption (true, 0, "listener", "MODE",
-            "Enable responder mode (EXPERIMENTAL). Possible values for MODE are:\n\t"
-            "mirror  Each received packet will be mirrored back to the sender.\n\t"
-            "trigger Each received packet will trigger sending of specified packets.",
-            &options.responderMode);
-    addCmdLineOption (true, 0, "bpf-filter", "FILTER", "Receive bpf filter for responder mode.", &options.bpf);
     addCmdLineOption (true, 0, "predictable-random",
             "Don't use random numbers, use simple sequence instead.", &options.testPredictableRandom);
 }
@@ -189,20 +180,7 @@ int cTcpPump::execute (const std::list<std::string>& args)
         }
     }
 
-    if (options.responderMode)
-    {
-        if (!std::strcmp ("mirror", options.responderMode))
-            responder = MIRROR;
-        else if (!std::strcmp ("trigger", options.responderMode))
-            responder = TRIGGER;
-        else
-        {
-            Console::PrintError ("Unsupported responder mode '%s'\n", options.responderMode);
-            return -2;
-        }
-    }
-
-    if (!args.size() && (responder != MIRROR))
+    if (!args.size())
     {
         Console::PrintError (options.script ? "no script files provided\n": "no packet data provided\n");
         return -2;
@@ -298,109 +276,94 @@ int cTcpPump::execute (const std::list<std::string>& args)
     // Install a signal handler
     cSignal::sigintEnable ();
 
-    if (responder == MIRROR)
+    cCompiler compiler (options.script ? cCompiler::SCRIPT : options.pcap ? cCompiler::PCAP : cCompiler::PACKET,
+            activeDelay, timeScale, !!options.arp, pcapScale);
+    cFilter    filter (options.overwriteDMAC ? &overwriteDMAC : nullptr);
+    cResolver  resolver (*ifc);
+    cScheduler scheduler;
+
+    try
     {
-        if (!ifc->open (false))
+        // Packet-flow-chain: args --> compiler -> filter -> resolver -> scheduler -> packetData
+        // Each step may alter the content of packetData
+        cPacketData& packetData = compiler  << args;
+
+        if (!options.outfile && !ifc->open ())
             return -1;
 
-        if (options.bpf && !ifc->addReceiveFilter (options.bpf))
-            return -1;
+        filter    << packetData;
+        resolver  << packetData;
+        scheduler << packetData;
 
-        cResponder resp (*ifc);
-        resp.mirror();
+        // if user has set a default packet delay, real-time mode is ALWAYS enabled
+        if (!activeDelay.isNull ())
+            realtimeMode = true;
+        else
+            realtimeMode = packetData.hasUserTimestamps;
+
+        // prepare backend for packet output
+        cPreprocessor preprop(options.randSrcMac, options.randDstMac);
+        cOutput backend (preprop);
+        if (options.outfile)    // write output to file?
+            backend.prepare (options.outfile, options.outFormat, options.repeat);
+        else
+            backend.prepare (*ifc, realtimeMode, options.repeat);
+
+        Console::PrintMoreVerbose ("Will send %zu packets\n", packetData.getPacketCnt());
+        if (options.repeat > 1)
+            Console::PrintMoreVerbose ("Repeating %d times\n", options.repeat);
+        else if (options.repeat == 0)
+            Console::PrintMoreVerbose ("Repeating infinitely\n");
+        if (realtimeMode)
+            Console::PrintMoreVerbose ("Real-time mode with default delay between packets %" PRIu64 " usecs\n\n", activeDelay.us());
+        else
+            Console::PrintMoreVerbose ("Max. throughput mode\n\n");
+
+
+        // send all the packets
+        backend << packetData;
+
+        uint64_t sentPackets, sentBytes; double duration;
+        backend.statistic (sentPackets, sentBytes, duration);
+
+        Console::PrintVerbose ("Successfully %s %" PRIu64 " %s. ", options.outfile ? "wrote" : "sent" ,sentPackets, sentPackets == 1 ? "packet" : "packets");
+        if (duration > 0.0)
+            Console::PrintVerbose ("%" PRIu64 " bytes in %f seconds (= %f Mbit/s)", sentBytes, duration, ((sentBytes*8)/duration)/1000000.0);
+        Console::PrintVerbose ("\n");
+
+        return !sentPackets;
     }
-    else
+    catch (FileParseException &e)
     {
-        cCompiler compiler (options.script ? cCompiler::SCRIPT : options.pcap ? cCompiler::PCAP : cCompiler::PACKET,
-                activeDelay, timeScale, !!options.arp, pcapScale);
-        cFilter    filter (options.overwriteDMAC ? &overwriteDMAC : nullptr);
-        cResolver  resolver (*ifc);
-        cScheduler scheduler;
-
-        try
-        {
-            // Packet-flow-chain: args --> compiler -> filter -> resolver -> scheduler -> packetData
-            // Each step may alter the content of packetData
-            cPacketData& packetData = compiler  << args;
-
-            if (!options.outfile && !ifc->open (!packetData.hasTriggerPoints ()))
-                return -1;
-            if (options.bpf && !ifc->addReceiveFilter (options.bpf))
-                return -1;
-
-            filter    << packetData;
-            resolver  << packetData;
-            scheduler << packetData;
-
-            // if user has set a default packet delay, real-time mode is ALWAYS enabled
-            if (!activeDelay.isNull ())
-                realtimeMode = true;
-            else
-                realtimeMode = packetData.hasUserTimestamps;
-
-            // prepare backend for packet output
-            cPreprocessor preprop(options.randSrcMac, options.randDstMac);
-            cOutput backend (preprop);
-            if (options.outfile)    // write output to file?
-                backend.prepare (options.outfile, options.outFormat, options.repeat);
-            else
-                backend.prepare (*ifc, realtimeMode, options.repeat, responder == TRIGGER);
-
-            Console::PrintMoreVerbose ("Will send %zu packets\n", packetData.getPacketCnt());
-            if (options.repeat > 1)
-                Console::PrintMoreVerbose ("Repeating %d times\n", options.repeat);
-            else if (options.repeat == 0)
-                Console::PrintMoreVerbose ("Repeating infinitely\n");
-            if (realtimeMode)
-                Console::PrintMoreVerbose ("Real-time mode with default delay between packets %" PRIu64 " usecs\n\n", activeDelay.us());
-            else
-                Console::PrintMoreVerbose ("Max. throughput mode\n\n");
-
-
-            // send all the packets
-            backend << packetData;
-
-            uint64_t sentPackets, sentBytes; double duration;
-            backend.statistic (sentPackets, sentBytes, duration);
-
-            Console::PrintVerbose ("Successfully %s %" PRIu64 " %s. ", options.outfile ? "wrote" : "sent" ,sentPackets, sentPackets == 1 ? "packet" : "packets");
-            if (duration > 0.0)
-                Console::PrintVerbose ("%" PRIu64 " bytes in %f seconds (= %f Mbit/s)", sentBytes, duration, ((sentBytes*8)/duration)/1000000.0);
-            Console::PrintVerbose ("\n");
-
-            return !sentPackets;
-        }
-        catch (FileParseException &e)
-        {
-            printFileParseError (e);
-            return -2;
-        }
-        catch (ParseException &e)
-        {
-            printParseError (e);
-            return -2;
-        }
-        catch (FileIOException &e)
-        {
-            Console::PrintError ("%s %s\n", e.what(), e.value());
-            return -2;
-        }
-        catch (std::runtime_error &e)
-        {
-            Console::PrintError ("%s\n", e.what());
-            return -2;
-        }
-        catch (std::bad_alloc& e)
-        {
-            Console::PrintError ("Not enough memory (%s)\n", e.what ());
-            return -2;
-        }
-        catch (...)
-        {
-            BUG ("unexpected exception");
-        }
-        BUG ("unreachable code");
+        printFileParseError (e);
+        return -2;
     }
+    catch (ParseException &e)
+    {
+        printParseError (e);
+        return -2;
+    }
+    catch (FileIOException &e)
+    {
+        Console::PrintError ("%s %s\n", e.what(), e.value());
+        return -2;
+    }
+    catch (std::runtime_error &e)
+    {
+        Console::PrintError ("%s\n", e.what());
+        return -2;
+    }
+    catch (std::bad_alloc& e)
+    {
+        Console::PrintError ("Not enough memory (%s)\n", e.what ());
+        return -2;
+    }
+    catch (...)
+    {
+        BUG ("unexpected exception");
+    }
+    BUG ("unreachable code");
+
     return 0;
 }
 

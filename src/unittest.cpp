@@ -24,7 +24,6 @@
 #include "timeval.hpp"
 #include "cmdline.hpp"
 #include "pcapfileio.hpp"
-#include "pcapfilter.hpp"
 #include "ethernetpacket.hpp"
 #include "arppacket.hpp"
 #include "common/bug.hpp"
@@ -76,7 +75,6 @@ int main (void)
 
 #if HAVE_PCAP
         cPcapFileIO::unitTest ("../src/test/readtest.pcap");
-        cPcapFilter::unitTest ();
 #endif
     }
     catch (...)

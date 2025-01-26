@@ -22,7 +22,6 @@
 
 #include "ethernetpacket.hpp"
 #include "ippacket.hpp"
-#include "listener.hpp"
 #include "timeval.hpp"
 #include "linkable.hpp"
 
@@ -33,7 +32,7 @@ public:
     {
         hasUserTimestamps = false;
         head = tail = nullptr;
-        elements = ethPackets = ipv4Packets = totalBytes = triggerPoints = 0;
+        elements = ethPackets = ipv4Packets = totalBytes = 0;
     }
 
     ~cPacketData ()
@@ -89,11 +88,6 @@ public:
         return totalBytes;
     }
 
-    bool hasTriggerPoints (void) const
-    {
-        return !!triggerPoints;
-    }
-
     // TODO encapsulate
     bool hasUserTimestamps; // is true, if at least one timestamp in timestamp list is user defined (no default value)
 
@@ -124,12 +118,6 @@ private:
                     totalBytes += p.getLength();
                 }
             }
-            else
-            {
-                cListener* event = dynamic_cast<cListener*>(packet);
-                if (event)
-                    triggerPoints++;
-            }
         }
     }
     cLinkable* head;
@@ -138,8 +126,6 @@ private:
     size_t ethPackets;
     size_t ipv4Packets;
     size_t totalBytes;
-    size_t triggerPoints;
-
 };
 
 #endif /* PACKETDATA_HPP_ */

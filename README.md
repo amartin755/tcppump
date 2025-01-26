@@ -18,7 +18,6 @@ Features
 * Automatic ARP resolution of unknown hosts
 * Random source and destination MAC addresses
 * Output of generated network traffic to PCAP files
-* Responder mode allows mirroring of received packets or receive triggered transmission of custom packets
 
 Supported protocols and packet formats
 * Raw packets as bytestream
@@ -87,6 +86,8 @@ For debugging add:
             Name of the network interface via which the packets are sent.
     --myip4=IPV4
             Use IPV4 as source IPv4 address instead of the network adapters ip address
+    --myip6=IPV6
+            Use IPV6 as source IPv6 address instead of the network adapters ip address
     --mymac=MAC
             Use MAC as source MAC address instead of the network adapters MAC address
     --mtu=MTU
@@ -116,18 +117,15 @@ For debugging add:
     -t RESOLUTION --resolution=RESOLUTION
             Resolution of transmission time. This affects -d parameter as well as all timestamps in script files.
             Possible values are 'u'= microseconds, 'm'= milliseconds(default), 'c'= centiseconds and 's'= seconds
-    -o OUTFILE --write-to-file=OUTFILE
-            Write generated packets to pcap file OUTFILE instead of sending them to the network.
+    -w OUTFILE
+            Write raw packet data to OUTFILE or to the standard output if OUTFILE is '-'.
+    -F FORMAT
+            Set the file format of the output capture file written using the -w option.
+            Supported formats are: 'pcap' (default), 'text', 'hexstream', 'hexdump'
     -a --arp
             Resolve destination MAC address for IPv4 packets.
             If dmac parameter of IPv4 based packets is omitted, the destination MAC will be automatically
             determined via ARP.
-    --listener=MODE
-            Enable responder mode (EXPERIMENTAL). Possible values for MODE are:
-            mirror  Each received packet will be mirrored back to the sender.
-            trigger Each received packet will trigger sending of specified packets.
-    --bpf-filter=FILTER
-            Receive bpf filter for responder mode.
     --predictable-random
             Don't use random numbers, use simple sequence instead.
 

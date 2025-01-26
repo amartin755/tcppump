@@ -47,8 +47,6 @@ struct appOptions
     int          arp;
     const char*  overwriteDMAC;
     int          testPredictableRandom;
-    const char*  responderMode;
-    const char*  bpf;
     unsigned     mtu;
     const char*  outFormat;
 };
@@ -78,8 +76,6 @@ private:
     unsigned timeScale; // 1 = us, 1000 = ms, 1000000 = sec
     bool realtimeMode;  // if true, packets will be sent time triggered
 
-    enum reponder_mode {NONE = 0, MIRROR, TRIGGER};
-    reponder_mode responder;
     cNetInterface* ifc;
 };
 

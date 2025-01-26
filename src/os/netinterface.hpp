@@ -28,7 +28,6 @@
 #include "ipaddress.hpp"
 #include "macaddress.hpp"
 #include "timeval.hpp"
-#include "pcapfilter.hpp"
 
 // forward declarations
 typedef struct pcap pcap_t;
@@ -39,7 +38,7 @@ class cNetInterface
 public:
     static cNetInterface* create(const char* ifname, bool needPriviledges);
     virtual ~cNetInterface () {};
-    virtual bool open (bool sendOnly) = 0;
+    virtual bool open () = 0;
     virtual bool close () = 0;
     virtual bool sendPacket (const uint8_t* payload, size_t length, const cTimeval& t) = 0;
     virtual bool prepareSendQueue (size_t packetCnt, size_t totalBytes, bool synchronized) = 0;
@@ -50,15 +49,8 @@ public:
     virtual bool getIPv6 (cIPv6&) = 0;
     virtual uint32_t getMTU (void) = 0;
     virtual bool isOpen () const = 0;
-    virtual bool addReceiveFilter (const char* filter) = 0;
     virtual const char* getName (void) const = 0;
     virtual bool isReady (void) const = 0;
-    bool waitForPacket (void);
-    const uint8_t* receivePacket (cTimeval* timestamp, int* len, const cPcapFilter* filter = nullptr, const cTimeval* dropBefore = nullptr);
-
-private:
-    virtual pcap_t* getCaptureInterface (void) = 0;
-
 };
 
 #endif /* NETINTERFACE_H_ */

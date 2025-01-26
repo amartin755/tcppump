@@ -290,7 +290,6 @@ cInterface::cInterface(const char* ifname, bool)
     sentPackets = 0;
     sentBytes = 0;
     duration = 0;
-    sendOnly = true;
 
     winNetAdapters = getAdapterAddresses ();
     adapterInfo    = getAdapterInfo (); // find selected adapter
@@ -310,13 +309,11 @@ bool cInterface::isReady (void) const
     return !!adapterInfo;
 }
 
-bool cInterface::open (bool txOnly)
+bool cInterface::open ()
 {
     // aleady open
     if (ifcHandle)
         return true;
-
-    sendOnly = txOnly;
 
     if (!adapterInfo)
         return false;
@@ -327,8 +324,8 @@ bool cInterface::open (bool txOnly)
 
     char errbuf[PCAP_ERRBUF_SIZE] = {0};
     ifcHandle = pcap_open (pcapIfName.c_str(),
-            sendOnly ? 0 : 65536, // if we don't want to receive any packets, thus we set the capbuf=0
-            sendOnly ? 0 : PCAP_OPENFLAG_MAX_RESPONSIVENESS | PCAP_OPENFLAG_NOCAPTURE_LOCAL,
+            0, // if we don't want to receive any packets, thus we set the capbuf=0
+            0,
             1000, NULL, errbuf);
 
     if (!ifcHandle)
@@ -387,7 +384,6 @@ bool cInterface::sendPacket (const uint8_t* payload, size_t length, const cTimev
 // packetCnt = 0 means endless loop
 bool cInterface::prepareSendQueue (size_t packetCnt, size_t totalBytes, bool synchronized)
 {
-    BUG_ON (!sendOnly); // in responder mode we do not want to send queue based
     BUG_ON (job); // we only support one job at a time
     BUG_ON (!ifcHandle);
 
@@ -574,13 +570,3 @@ const char* cInterface::getName (void) const
 {
     return name.c_str();
 }
-
-
-bool cInterface::addReceiveFilter (const char* filter)
-{
-    if (sendOnly)
-        return true;
-    cPcapFilter f(ifcHandle);
-    return f.compile (filter) && f.apply();
-}
-

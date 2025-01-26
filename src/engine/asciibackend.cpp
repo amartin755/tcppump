@@ -23,7 +23,7 @@
 #include "asciibackend.hpp"
 #include "fileioexception.hpp"
 #include "ethernetpacket.hpp"
-#include "dissector.hpp"
+
 
 cAsciiBackend::cAsciiBackend (const char* file, bool printPacketNumber,
     bool printPacketTime, bool hexdump, const char* colSeparator, const char* byteSeparator)

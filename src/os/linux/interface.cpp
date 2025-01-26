@@ -32,13 +32,13 @@
 #include <netinet/in.h>
 #include <net/if_arp.h>       // ARPHRD_ETHER
 #include <ifaddrs.h>
+#include <netdb.h>            // NI_MAXHOST, NI_NUMERICHOST
 
 #include "interface.hpp"
 
 #include "bug.hpp"
 #include "console.hpp"
 #include "sleep.hpp"
-#include "pcapfilter.hpp"
 #include "signal.hpp"
 
 
@@ -52,8 +52,6 @@ cInterface::cInterface(const char* ifname, bool needPriviledges)
     firstPacket = true;
     mtu         = 0;
     linkSpeed   = 0;
-    sendOnly    = true;
-    pcapHandle  = nullptr;
 
     ifIndex = if_nametoindex (name.c_str ());
     if (!ifIndex)
@@ -93,13 +91,11 @@ bool cInterface::isReady (void) const
     return !!ifIndex;
 }
 
-bool cInterface::open (bool txOnly)
+bool cInterface::open ()
 {
     // aleady open
     if (ifcHandle > 0)
         return true;
-
-    sendOnly = txOnly;
 
     // open raw socket for tx only
     // thus we set proto = 0 and size of receive buffer to zero
@@ -125,38 +121,6 @@ bool cInterface::open (bool txOnly)
 
     lastSentPacket.clear();
 
-    if (!sendOnly)
-    {
-        char errbuf[PCAP_ERRBUF_SIZE] = {0};
-        pcapHandle = pcap_create (name.c_str(), errbuf);
-        if (!pcapHandle)
-        {
-            Console::PrintError ("Unable to open the pcap interface %s.\n", name.c_str());
-            Console::PrintError ("pcap error: %s\n", errbuf);
-            this->close();
-        }
-        if (pcap_set_timeout (pcapHandle, 1000)  ||
-            pcap_set_snaplen (pcapHandle, 65536) ||
-            pcap_set_immediate_mode (pcapHandle, 1))
-        {
-            Console::PrintError ("Error during setup of pcap interface. %s\n", pcap_geterr (pcapHandle));
-        }
-        int ret = pcap_activate (pcapHandle);
-        if (ret)
-        {
-            if (ret == PCAP_ERROR_IFACE_NOT_UP)
-                Console::PrintError ("Interface %s is down\n", name.c_str());
-            else
-                Console::PrintError ("Could not active pcap interface for capturing. %s\n", pcap_geterr (pcapHandle));
-            this->close();
-        }
-        if (pcap_setdirection (pcapHandle, PCAP_D_IN))
-        {
-            Console::PrintError ("Could not set filter to receive only incoming packets. %s\n", pcap_geterr (pcapHandle));
-            Console::PrintError ("We might receive our own packets.\n");
-        }
-    }
-
     return (isOpen());
 }
 
@@ -166,10 +130,7 @@ bool cInterface::close ()
     // aleady closed
     if (ifcHandle > 0)
         ::close (ifcHandle);
-    if (pcapHandle)
-        pcap_close (pcapHandle);
     ifcHandle = -1;
-    pcapHandle = nullptr;
     ifIndex = 0;
     myMac.clear ();
     myIP.clear ();
@@ -443,12 +404,4 @@ bool cInterface::isOpen () const
 const char* cInterface::getName (void) const
 {
     return name.c_str();
-}
-
-bool cInterface::addReceiveFilter (const char* filter)
-{
-    if (sendOnly)
-        return true;
-    cPcapFilter f(pcapHandle);
-    return f.compile (filter) && f.apply();
 }

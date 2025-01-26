@@ -25,8 +25,6 @@ set (SOURCES
      ${CMAKE_CURRENT_SOURCE_DIR}/scheduler.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/output.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/preprocessor.cpp
-     ${CMAKE_CURRENT_SOURCE_DIR}/responder.cpp
-     ${CMAKE_CURRENT_SOURCE_DIR}/listener.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/pcapbackend.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/asciibackend.cpp
      PARENT_SCOPE

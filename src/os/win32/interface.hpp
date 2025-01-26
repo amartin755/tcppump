@@ -40,7 +40,7 @@ class cInterface : public cNetInterface
 public:
     cInterface(const char* ifname, bool needPriviledges);
     virtual ~cInterface();
-    bool open (bool sendOnly);
+    bool open ();
     bool close ();
     bool sendPacket (const uint8_t* payload, size_t length, const cTimeval& t);
     bool prepareSendQueue (size_t packetCnt, size_t totalBytes, bool synchronized);
@@ -52,17 +52,9 @@ public:
     uint32_t getMTU (void);
     bool isOpen () const;
     const char* getName (void) const;
-    bool addReceiveFilter (const char* filter);
     bool isReady (void) const;
 
 private:
-    pcap_t* getCaptureInterface (void)
-    {
-        BUG_ON (sendOnly);
-        return ifcHandle;
-    }
-
-
     PIP_ADAPTER_ADDRESSES getAdapterInfo ();
     PIP_ADAPTER_ADDRESSES getAdapterAddresses ();
     uint64_t getLinkSpeed (const char* adapterName);
@@ -78,7 +70,6 @@ private:
     double   duration;
 
     cJob* job;
-    bool sendOnly;
 };
 
 #endif /* INTERFACE_H_ */

@@ -26,13 +26,12 @@
 #include "fileioexception.hpp"
 #include "console.hpp"
 #include "signal.hpp"
-#include "listener.hpp"
 #include "pcapbackend.hpp"
 #include "asciibackend.hpp"
 
 
 cOutput::cOutput (const cPreprocessor &p)
-: m_outfile (nullptr), preproc (p), netif (nullptr), realtimeMode (false), repeat (1), responderMode(false)
+: m_outfile (nullptr), preproc (p), netif (nullptr), realtimeMode (false), repeat (1)
 {
 }
 
@@ -44,12 +43,11 @@ cOutput::~cOutput ()
     m_outfile = nullptr;
 }
 
-void cOutput::prepare(cNetInterface &netif, bool realtime, int repeat, bool responderMode)
+void cOutput::prepare(cNetInterface &netif, bool realtime, int repeat)
 {
     this->netif  = &netif;
     realtimeMode = realtime;
     this->repeat = repeat;
-    this->responderMode = responderMode;
 }
 
 void cOutput::prepare (const char* file, const char* format, int repeat)
@@ -84,7 +82,7 @@ cPacketData& cOutput::operator<< (cPacketData& input)
 {
     cTimeval sendTime;
     bool endless = !repeat;
-    bool queuedOutput = netif && !responderMode && !input.hasTriggerPoints();
+    bool queuedOutput = netif;
 
 
     if (queuedOutput)
@@ -98,13 +96,6 @@ cPacketData& cOutput::operator<< (cPacketData& input)
     {
         for (cLinkable* p = input.getFirst(); !cSignal::sigintSignalled() && (p != nullptr); p = p->getNext())
         {
-            if (responderMode && !netif->waitForPacket())
-                break;
-
-            cListener* event = dynamic_cast<cListener*>(p);
-            if (event && !event->wait (*netif))
-                break;
-
             sendTime.add (p->getTime());
             cEthernetPacket* eth;
             cIPPacket* ipv4;

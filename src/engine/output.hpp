@@ -34,7 +34,7 @@ class cOutput
 public:
     cOutput (const cPreprocessor &preproc);
     ~cOutput ();
-    void prepare (cNetInterface &netif, bool realtime, int repeat, bool responderMode);
+    void prepare (cNetInterface &netif, bool realtime, int repeat);
     void prepare (const char* outfile, const char* format, int repeat);
     cPacketData& operator<< (cPacketData& input);
     void statistic (uint64_t& sentPackets, uint64_t& sentBytes, double& duration) const;
@@ -47,7 +47,6 @@ private:
     cNetInterface *netif;
     bool realtimeMode;
     int repeat;
-    bool responderMode;
 };
 
 #endif /* OUTPUT_HPP_ */

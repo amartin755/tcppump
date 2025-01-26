@@ -37,7 +37,6 @@
 #include "igmppacket.hpp"
 #include "icmppacket.hpp"
 #include "grepacket.hpp"
-#include "listener.hpp"
 #include "settings.hpp"
 #include "endian.h"
 #include "bytearray.hpp"
@@ -151,8 +150,6 @@ void cInstructionParser::parse (const char* instruction, cResult& result, bool i
             result.packets = compileVXLAN (noEthHeader, params);
         else if (!strncmp ("gre", keyword, keywordLen))
             result.packets = compileGRE (noEthHeader, params);
-        else if (!strncmp ("LISTEN", keyword, keywordLen))
-            result.packets = compileListen (params);
         else
             throwParseException ("Unknown protocol type", keyword, keywordLen);
 
@@ -1415,47 +1412,6 @@ cLinkable* cInstructionParser::compileGRE (bool noEthHeader, cParameterList& par
     }
 
     return grepacket;
-}
-
-
-cLinkable* cInstructionParser::compileListen (cParameterList& params)
-{
-    cListener* event = new cListener;
-    try
-    {
-        cParameter* optionalPar;
-        // TODO
-        // - new parameter "pattern=STREAM" memmem(STREAM)
-        // - new parameter "packet="eth(kdkd, dlsl)" which compiles the provided embedded packet
-        // - packet and pattern can be combined with bpf, whereas bpf has to match first
-        // - only packet OR pattern are possible. they exclude each other
-        // - new parameter timeout
-
-        optionalPar = params.findParameter ("bpf", true);
-        if (optionalPar)
-        {
-            size_t len;
-            const char* p = (const char*)optionalPar->asStream (len);
-            std::string s (p, len);
-            if (!event->compileBpfFilter (s.c_str()))
-                optionalPar->throwValueException ();
-        }
-        optionalPar = params.findParameter ("pattern", true);
-        if (optionalPar)
-        {
-            size_t len = 0;
-            const uint8_t* pattern = optionalPar->asStream(len);
-            event->setPatternFilter (pattern, len);
-        }
-        event->setTimeout (params.findParameter ("timeout", (uint32_t)0)->asInt32());
-    }
-    catch (...)
-    {
-        delete event;
-        event = nullptr;
-        throw;
-    }
-    return event;
 }
 
 

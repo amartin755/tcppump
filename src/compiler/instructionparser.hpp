@@ -95,8 +95,6 @@ private:
     cLinkable* compileTCPRST  (bool noEthHeader, cParameterList& params);
     cLinkable* compileGRE (bool noEthHeader, cParameterList& params);
 
-    cLinkable* compileListen  (cParameterList& params);
-
     // helpers
     bool   compileMacHeader (cParameterList& params, cEthernetPacket* packet, bool noDestination, bool destIsOptional = false);
     size_t compileVLANTags  (cParameterList& params, cEthernetPacket* packet);
