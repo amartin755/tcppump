@@ -32,6 +32,7 @@
 #include "signal.hpp"
 #include "console.hpp"
 #include "ethernetpacket.hpp"
+#include "libpcap.h"
 
 
 class cPcapSendQueue

@@ -22,7 +22,6 @@
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
-#include "libpcap.h"
 
 #include "bug.hpp"
 #include "console.hpp"
