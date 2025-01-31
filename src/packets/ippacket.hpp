@@ -116,8 +116,8 @@ struct ipv4_header_with_router_alert_t : public ipv4_header_t
 
         this->srcIp       = srcIp;
         this->dstIp       = dstIp;
-        this->ttl         = ttl;
-        this->protocol    = proto;
+        this->ttl         = (uint8_t)ttl;
+        this->protocol    = (uint8_t)proto;
         this->totalLength = htons (totalLen);
         this->ident       = htons (ident);
 
@@ -162,7 +162,7 @@ struct ipv6_header_t
     void setDSCP (unsigned dscp)
     {
         dscp &= 0x3f;
-        vers_tc = (6 << 4) | (dscp >> 2);
+        vers_tc = (6 << 4) | (uint8_t)(dscp >> 2);
         tc_fl = (dscp & 3) << 6 | (tc_fl & 0x3f);
     }
     void setECN (unsigned ecn)
@@ -171,7 +171,7 @@ struct ipv6_header_t
     }
     void setFlowLabel (unsigned fl)
     {
-        tc_fl = (fl & 0x0F0000) >> 16 | (tc_fl & 0xf0);
+        tc_fl = (uint8_t)((fl & 0x0F0000) >> 16) | (tc_fl & 0xf0);
     }
     void setPayloadLen (uint16_t len)
     {
@@ -190,11 +190,11 @@ struct ipv6_header_t
         uint8_t proto, unsigned dscp, unsigned ecn, unsigned flowlabel, uint16_t paylodLen)
     {
         vers_tc = (6 << 4) | ((dscp & 0x3f) >> 2);
-        tc_fl = ((dscp & 3) << 6) | ((ecn & 3) << 4) | ((flowlabel & 0x0f0000) >> 16);
+        tc_fl = ((dscp & 3) << 6) | ((ecn & 3) << 4) | (uint8_t)((flowlabel & 0x0f0000) >> 16);
         fl = htons(flowlabel & 0xffff);
         payloadLength = htons (paylodLen);
         nextHeader = proto;
-        hopLimit = ttl;
+        hopLimit = (uint8_t)ttl;
         std::memcpy ((void*)&this->srcIp, &srcIp, sizeof (this->srcIp));
         std::memcpy ((void*)&this->dstIp, &dstIp, sizeof (this->dstIp));
     }

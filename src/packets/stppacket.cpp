@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
  * TCPPUMP <https://github.com/amartin755/tcppump>
- * Copyright (C) 2012-2021 Andreas Martin (netnag@mailbox.org)
+ * Copyright (C) 2012-2025 Andreas Martin (netnag@mailbox.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -94,7 +94,7 @@ inline void cStpPacket::compileConfigPdu (stp_bpdu_t& bpdu, unsigned rootBridgeP
     bpdu.root.set (rootBridgePrio, rootBridgeId, rootBridgeMac);
     bpdu.rootPathCost = htonl (pathCost);
     bpdu.bridge.set (bridgePrio, bridgeId, bridgeMac);
-    bpdu.setPortId (portPrio, portNumber);
+    bpdu.setPortId (portPrio, (uint16_t)portNumber);
     bpdu.messageAge = htons (toTime (msgAge));
     bpdu.maxAge = htons (toTime (maxAge));
     bpdu.forwardDelay = htons (toTime (forwardDelay));

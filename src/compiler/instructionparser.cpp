@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
  * TCPPUMP <https://github.com/amartin755/tcppump>
- * Copyright (C) 2012-2021 Andreas Martin (netnag@mailbox.org)
+ * Copyright (C) 2012-2025 Andreas Martin (netnag@mailbox.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -509,9 +509,9 @@ size_t cInstructionParser::compileVLANTags (cParameterList& params, cEthernetPac
     while ((optionalPar = params.findParameter(optionalPar, nullptr, "vid", true)) != nullptr)
     {
         bool isCTag   = params.findParameter (optionalPar, "vid", "vtype", (uint32_t)1)->asInt8 (1, 2) == 1 ? true : false;
-        unsigned vid  = (unsigned)optionalPar->asInt16 (0, 0x0fff);
-        unsigned prio = (unsigned)params.findParameter (optionalPar, "vid", "prio",  (uint32_t)0)->asInt8 (0, 7);
-        unsigned dei  = (unsigned)params.findParameter (optionalPar, "vid", "dei",   (uint32_t)0)->asInt8 (0, 1);
+        uint16_t vid  = optionalPar->asInt16 (0, 0x0fff);
+        uint16_t prio = params.findParameter (optionalPar, "vid", "prio",  (uint32_t)0)->asInt8 (0, 7);
+        uint16_t dei  = params.findParameter (optionalPar, "vid", "dei",   (uint32_t)0)->asInt8 (0, 1);
         packet->addVlanTag (isCTag, vid, prio, dei);
     }
     return packet->getLength();

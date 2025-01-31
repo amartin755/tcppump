@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
  * TCPPUMP <https://github.com/amartin755/tcppump>
- * Copyright (C) 2012-2021 Andreas Martin (netnag@mailbox.org)
+ * Copyright (C) 2012-2025 Andreas Martin (netnag@mailbox.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,9 +26,8 @@
 
 
 cGrePacket::cGrePacket ()
+: hasChecksum (false), hasKey (false), hasSeq (false), checksum (0), key (0), seq  (0)
 {
-    hasChecksum = hasKey = hasSeq = false;
-    checksum = key = seq = 0;
     std::memset (&basicHeader, 0, sizeof(basicHeader));
 }
 

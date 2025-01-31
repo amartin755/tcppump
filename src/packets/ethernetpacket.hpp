@@ -56,7 +56,7 @@ public:
     void setMacHeader (const cMacAddress& src, const cMacAddress& dest);
     void addLlcHeader (uint8_t dsap, uint8_t ssap, uint16_t control);
     void addSnapHeader (uint32_t oui, uint16_t protocol);
-    void addVlanTag (bool isCTag, unsigned id, unsigned prio, unsigned dei);
+    void addVlanTag (bool isCTag, uint16_t id, uint16_t prio, uint16_t dei);
     void setTypeLength (uint16_t ethertypeLenth);
     void setLength ();
     void setPayload (const uint8_t* payload, size_t len);
@@ -118,7 +118,7 @@ private:
     bool      hasDMAC;
 };
 
-enum ethertypes_t
+enum ethertypes_t : uint16_t
 {
     ETHERTYPE_IPV4  = 0x0800,
     ETHERTYPE_ARP   = 0x0806,

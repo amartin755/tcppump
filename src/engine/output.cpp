@@ -108,9 +108,9 @@ cPacketData& cOutput::operator<< (cPacketData& input)
             {
                 std::list<cEthernetPacket>& packets = ipv4->getAllEthernetPackets();
 
-                for (auto & p : packets)
+                for (auto & currPacket : packets)
                 {
-                    processPacket (sendTime, p);
+                    processPacket (sendTime, currPacket);
                 }
             }
         }

@@ -1,0 +1,223 @@
+diff --git a/src/compiler/instructionparser.cpp b/src/compiler/instructionparser.cpp
+index ff6c6c2..a18114e 100644
+--- a/src/compiler/instructionparser.cpp
++++ b/src/compiler/instructionparser.cpp
+@@ -1,7 +1,7 @@
+ // SPDX-License-Identifier: GPL-3.0-only
+ /*
+  * TCPPUMP <https://github.com/amartin755/tcppump>
+- * Copyright (C) 2012-2021 Andreas Martin (netnag@mailbox.org)
++ * Copyright (C) 2012-2025 Andreas Martin (netnag@mailbox.org)
+  *
+  * This program is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+@@ -509,9 +509,9 @@ size_t cInstructionParser::compileVLANTags (cParameterList& params, cEthernetPac
+     while ((optionalPar = params.findParameter(optionalPar, nullptr, "vid", true)) != nullptr)
+     {
+         bool isCTag   = params.findParameter (optionalPar, "vid", "vtype", (uint32_t)1)->asInt8 (1, 2) == 1 ? true : false;
+-        unsigned vid  = (unsigned)optionalPar->asInt16 (0, 0x0fff);
+-        unsigned prio = (unsigned)params.findParameter (optionalPar, "vid", "prio",  (uint32_t)0)->asInt8 (0, 7);
+-        unsigned dei  = (unsigned)params.findParameter (optionalPar, "vid", "dei",   (uint32_t)0)->asInt8 (0, 1);
++        uint16_t vid  = optionalPar->asInt16 (0, 0x0fff);
++        uint16_t prio = params.findParameter (optionalPar, "vid", "prio",  (uint32_t)0)->asInt8 (0, 7);
++        uint16_t dei  = params.findParameter (optionalPar, "vid", "dei",   (uint32_t)0)->asInt8 (0, 1);
+         packet->addVlanTag (isCTag, vid, prio, dei);
+     }
+     return packet->getLength();
+diff --git a/src/compiler/parameterlist.cpp b/src/compiler/parameterlist.cpp
+index a32f3e7..ad890d9 100644
+--- a/src/compiler/parameterlist.cpp
++++ b/src/compiler/parameterlist.cpp
+@@ -1,7 +1,7 @@
+ // SPDX-License-Identifier: GPL-3.0-only
+ /*
+  * TCPPUMP <https://github.com/amartin755/tcppump>
+- * Copyright (C) 2012-2021 Andreas Martin (netnag@mailbox.org)
++ * Copyright (C) 2012-2025 Andreas Martin (netnag@mailbox.org)
+  *
+  * This program is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+@@ -103,8 +103,6 @@ int cParameter::isRandom (bool allowRange) const
+     {
+         throw FormatException (exParFormat, value+1, (int)valLen-1);
+     }
+-
+-    return -1;
+ }
+ 
+ 
+diff --git a/src/engine/output.cpp b/src/engine/output.cpp
+index 9e02a5c..60385f8 100644
+--- a/src/engine/output.cpp
++++ b/src/engine/output.cpp
+@@ -108,9 +108,9 @@ cPacketData& cOutput::operator<< (cPacketData& input)
+             {
+                 std::list<cEthernetPacket>& packets = ipv4->getAllEthernetPackets();
+ 
+-                for (auto & p : packets)
++                for (auto & currPacket : packets)
+                 {
+-                    processPacket (sendTime, p);
++                    processPacket (sendTime, currPacket);
+                 }
+             }
+         }
+diff --git a/src/os/win32/interface.cpp b/src/os/win32/interface.cpp
+index ec1a32d..0400bf9 100644
+--- a/src/os/win32/interface.cpp
++++ b/src/os/win32/interface.cpp
+@@ -1,7 +1,7 @@
+ // SPDX-License-Identifier: GPL-3.0-only
+ /*
+  * TCPPUMP <https://github.com/amartin755/tcppump>
+- * Copyright (C) 2012-2021 Andreas Martin (netnag@mailbox.org)
++ * Copyright (C) 2012-2025 Andreas Martin (netnag@mailbox.org)
+  *
+  * This program is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+@@ -554,7 +554,7 @@ uint64_t cInterface::getLinkSpeed (const char* guid)
+             unsigned cnt = 0;
+             do
+             {
+-                speed[cnt++] = c;
++                speed[cnt++] = (char)c;
+                 if (cnt >= (sizeof (speed) - 1))
+                     break;
+             }
+diff --git a/src/packets/ethernetpacket.cpp b/src/packets/ethernetpacket.cpp
+index 029f898..80eb7a8 100644
+--- a/src/packets/ethernetpacket.cpp
++++ b/src/packets/ethernetpacket.cpp
+@@ -1,7 +1,7 @@
+ // SPDX-License-Identifier: GPL-3.0-only
+ /*
+  * TCPPUMP <https://github.com/amartin755/tcppump>
+- * Copyright (C) 2012-2021 Andreas Martin (netnag@mailbox.org)
++ * Copyright (C) 2012-2025 Andreas Martin (netnag@mailbox.org)
+  *
+  * This program is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+@@ -249,7 +249,7 @@ void cEthernetPacket::addSnapHeader (uint32_t oui, uint16_t protocol)
+ }
+ 
+ 
+-void cEthernetPacket::addVlanTag (bool isCTag, unsigned id, unsigned prio, unsigned dei)
++void cEthernetPacket::addVlanTag (bool isCTag, uint16_t id, uint16_t prio, uint16_t dei)
+ {
+     checkPacketLength (sizeof (vlan_t));
+ 
+diff --git a/src/packets/ethernetpacket.hpp b/src/packets/ethernetpacket.hpp
+index 1a4da33..227e368 100644
+--- a/src/packets/ethernetpacket.hpp
++++ b/src/packets/ethernetpacket.hpp
+@@ -56,7 +56,7 @@ public:
+     void setMacHeader (const cMacAddress& src, const cMacAddress& dest);
+     void addLlcHeader (uint8_t dsap, uint8_t ssap, uint16_t control);
+     void addSnapHeader (uint32_t oui, uint16_t protocol);
+-    void addVlanTag (bool isCTag, unsigned id, unsigned prio, unsigned dei);
++    void addVlanTag (bool isCTag, uint16_t id, uint16_t prio, uint16_t dei);
+     void setTypeLength (uint16_t ethertypeLenth);
+     void setLength ();
+     void setPayload (const uint8_t* payload, size_t len);
+@@ -118,7 +118,7 @@ private:
+     bool      hasDMAC;
+ };
+ 
+-enum ethertypes_t
++enum ethertypes_t : uint16_t
+ {
+     ETHERTYPE_IPV4  = 0x0800,
+     ETHERTYPE_ARP   = 0x0806,
+diff --git a/src/packets/grepacket.cpp b/src/packets/grepacket.cpp
+index 07f699f..fb98689 100644
+--- a/src/packets/grepacket.cpp
++++ b/src/packets/grepacket.cpp
+@@ -1,7 +1,7 @@
+ // SPDX-License-Identifier: GPL-3.0-only
+ /*
+  * TCPPUMP <https://github.com/amartin755/tcppump>
+- * Copyright (C) 2012-2021 Andreas Martin (netnag@mailbox.org)
++ * Copyright (C) 2012-2025 Andreas Martin (netnag@mailbox.org)
+  *
+  * This program is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+@@ -26,9 +26,8 @@
+ 
+ 
+ cGrePacket::cGrePacket ()
++: hasChecksum (false), hasKey (false), hasSeq (false), checksum (0), key (0), seq  (0)
+ {
+-    hasChecksum = hasKey = hasSeq = false;
+-    checksum = key = seq = 0;
+     std::memset (&basicHeader, 0, sizeof(basicHeader));
+ }
+ 
+diff --git a/src/packets/ippacket.hpp b/src/packets/ippacket.hpp
+index 677f724..9e8506c 100644
+--- a/src/packets/ippacket.hpp
++++ b/src/packets/ippacket.hpp
+@@ -116,8 +116,8 @@ struct ipv4_header_with_router_alert_t : public ipv4_header_t
+ 
+         this->srcIp       = srcIp;
+         this->dstIp       = dstIp;
+-        this->ttl         = ttl;
+-        this->protocol    = proto;
++        this->ttl         = (uint8_t)ttl;
++        this->protocol    = (uint8_t)proto;
+         this->totalLength = htons (totalLen);
+         this->ident       = htons (ident);
+ 
+@@ -162,7 +162,7 @@ struct ipv6_header_t
+     void setDSCP (unsigned dscp)
+     {
+         dscp &= 0x3f;
+-        vers_tc = (6 << 4) | (dscp >> 2);
++        vers_tc = (6 << 4) | (uint8_t)(dscp >> 2);
+         tc_fl = (dscp & 3) << 6 | (tc_fl & 0x3f);
+     }
+     void setECN (unsigned ecn)
+@@ -171,7 +171,7 @@ struct ipv6_header_t
+     }
+     void setFlowLabel (unsigned fl)
+     {
+-        tc_fl = (fl & 0x0F0000) >> 16 | (tc_fl & 0xf0);
++        tc_fl = (uint8_t)((fl & 0x0F0000) >> 16) | (tc_fl & 0xf0);
+     }
+     void setPayloadLen (uint16_t len)
+     {
+@@ -190,11 +190,11 @@ struct ipv6_header_t
+         uint8_t proto, unsigned dscp, unsigned ecn, unsigned flowlabel, uint16_t paylodLen)
+     {
+         vers_tc = (6 << 4) | ((dscp & 0x3f) >> 2);
+-        tc_fl = ((dscp & 3) << 6) | ((ecn & 3) << 4) | ((flowlabel & 0x0f0000) >> 16);
++        tc_fl = ((dscp & 3) << 6) | ((ecn & 3) << 4) | (uint8_t)((flowlabel & 0x0f0000) >> 16);
+         fl = htons(flowlabel & 0xffff);
+         payloadLength = htons (paylodLen);
+         nextHeader = proto;
+-        hopLimit = ttl;
++        hopLimit = (uint8_t)ttl;
+         std::memcpy ((void*)&this->srcIp, &srcIp, sizeof (this->srcIp));
+         std::memcpy ((void*)&this->dstIp, &dstIp, sizeof (this->dstIp));
+     }
+diff --git a/src/packets/stppacket.cpp b/src/packets/stppacket.cpp
+index 5f1be44..e8a12d5 100644
+--- a/src/packets/stppacket.cpp
++++ b/src/packets/stppacket.cpp
+@@ -1,7 +1,7 @@
+ // SPDX-License-Identifier: GPL-3.0-only
+ /*
+  * TCPPUMP <https://github.com/amartin755/tcppump>
+- * Copyright (C) 2012-2021 Andreas Martin (netnag@mailbox.org)
++ * Copyright (C) 2012-2025 Andreas Martin (netnag@mailbox.org)
+  *
+  * This program is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+@@ -94,7 +94,7 @@ inline void cStpPacket::compileConfigPdu (stp_bpdu_t& bpdu, unsigned rootBridgeP
+     bpdu.root.set (rootBridgePrio, rootBridgeId, rootBridgeMac);
+     bpdu.rootPathCost = htonl (pathCost);
+     bpdu.bridge.set (bridgePrio, bridgeId, bridgeMac);
+-    bpdu.setPortId (portPrio, portNumber);
++    bpdu.setPortId (portPrio, (uint16_t)portNumber);
+     bpdu.messageAge = htons (toTime (msgAge));
+     bpdu.maxAge = htons (toTime (maxAge));
+     bpdu.forwardDelay = htons (toTime (forwardDelay));
