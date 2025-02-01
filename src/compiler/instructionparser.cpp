@@ -95,7 +95,9 @@ void cInstructionParser::parse (const char* instruction, cResult& result, bool i
         else if (!strncmp ("ipv6", keyword, keywordLen))
             result.packets = compileIP (noEthHeader, params, true);
         else if (!strncmp ("udp", keyword, keywordLen))
-            result.packets = compileUDP (noEthHeader, params);
+            result.packets = compileUDP (noEthHeader, params, false);
+        else if (!strncmp ("udp6", keyword, keywordLen))
+            result.packets = compileUDP (noEthHeader, params, true);
         else if (!strncmp ("vrrp", keyword, keywordLen))
             result.packets = compileVRRP (noEthHeader, params, 2);
         else if (!strncmp ("vrrp3", keyword, keywordLen))
@@ -147,9 +149,13 @@ void cInstructionParser::parse (const char* instruction, cResult& result, bool i
         else if (!strncmp ("tcp-reset", keyword, keywordLen))
             result.packets = compileTCPRST (noEthHeader, params);
         else if (!strncmp ("vxlan", keyword, keywordLen))
-            result.packets = compileVXLAN (noEthHeader, params);
+            result.packets = compileVXLAN (noEthHeader, params, false);
+        else if (!strncmp ("vxlan6", keyword, keywordLen))
+            result.packets = compileVXLAN (noEthHeader, params, true);
         else if (!strncmp ("gre", keyword, keywordLen))
-            result.packets = compileGRE (noEthHeader, params);
+            result.packets = compileGRE (noEthHeader, params, false);
+        else if (!strncmp ("gre6", keyword, keywordLen))
+            result.packets = compileGRE (noEthHeader, params, true);
         else
             throwParseException ("Unknown protocol type", keyword, keywordLen);
 
@@ -634,13 +640,13 @@ cLinkable* cInstructionParser::compileIP (bool noEthHeader, cParameterList& para
 }
 
 
-cLinkable* cInstructionParser::compileUDP (bool noEthHeader, cParameterList& params)
+cLinkable* cInstructionParser::compileUDP (bool noEthHeader, cParameterList& params, bool isIPv6)
 {
-    cUdpPacket* udppacket = new cUdpPacket;
+    cUdpPacket* udppacket = new cUdpPacket (isIPv6);
     try
     {
         cEthernetPacket& eth = udppacket->getFirstEthernetPacket();
-        bool destIsMulticast = parseIPv4Params (params, udppacket);
+        bool destIsMulticast = isIPv6 ? parseIPv6Params (params, udppacket) : parseIPv4Params (params, udppacket);
 
         if (!noEthHeader)
         {
@@ -673,13 +679,13 @@ cLinkable* cInstructionParser::compileUDP (bool noEthHeader, cParameterList& par
 }
 
 
-cLinkable* cInstructionParser::compileVXLAN (bool noEthHeader, cParameterList& params)
+cLinkable* cInstructionParser::compileVXLAN (bool noEthHeader, cParameterList& params, bool isIPv6)
 {
-    cVxlanPacket* vxlanpacket = new cVxlanPacket;
+    cVxlanPacket* vxlanpacket = new cVxlanPacket (isIPv6);
     try
     {
         cEthernetPacket& eth = vxlanpacket->getFirstEthernetPacket();
-        bool destIsMulticast = parseIPv4Params (params, vxlanpacket);
+        bool destIsMulticast = isIPv6 ? parseIPv6Params (params, vxlanpacket) : parseIPv4Params (params, vxlanpacket);
 
         if (!noEthHeader)
         {
@@ -1363,13 +1369,13 @@ cLinkable* cInstructionParser::compileICMPPing (bool noEthHeader, cParameterList
 }
 
 
-cLinkable* cInstructionParser::compileGRE (bool noEthHeader, cParameterList& params)
+cLinkable* cInstructionParser::compileGRE (bool noEthHeader, cParameterList& params, bool isIPv6)
 {
-    cGrePacket* grepacket = new cGrePacket;
+    cGrePacket* grepacket = new cGrePacket (isIPv6);
     try
     {
         cEthernetPacket& eth = grepacket->getFirstEthernetPacket();
-        bool destIsMulticast = parseIPv4Params (params, grepacket);
+        bool destIsMulticast = isIPv6 ? parseIPv6Params (params, grepacket) : parseIPv4Params (params, grepacket);
 
         if (!noEthHeader)
         {

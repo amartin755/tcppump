@@ -45,7 +45,7 @@ static_assert (sizeof (vxlan_header_t) == 8, "vxlan_header_t is not packed");
 class cVxlanPacket : public cUdpPacket
 {
 public:
-    cVxlanPacket ();
+    cVxlanPacket (bool isIPv6);
 
     void compile (const uint8_t* payload, size_t len);
     void setVni (uint32_t vni);

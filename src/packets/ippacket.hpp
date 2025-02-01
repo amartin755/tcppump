@@ -143,6 +143,16 @@ struct ipv4_pseudo_header_t
 };
 static_assert (sizeof (ipv4_pseudo_header_t) == 12, "ipv4_pseudo_header_t is not packed");
 
+struct ipv6_pseudo_header_t
+{
+    struct in6_addr srcIp;
+    struct in6_addr dstIp;
+    uint32_t        len;
+    uint8_t         zeroes[3];
+    uint8_t         protocol;
+};
+static_assert (sizeof (ipv6_pseudo_header_t) == 40, "ipv6_pseudo_header_t is not packed");
+
 struct ipv6_header_t
 {
     uint8_t  vers_tc; // version (bit 0 - 3) | traffic class (bit 4 - 7)
@@ -255,6 +265,7 @@ protected:
     size_t   getPayloadLength () const;
     void     updateL4Header (const uint8_t* l4header, size_t l4headerLen);
     void     addRouterAlertOption (void);
+    bool     isIPv6 () const {return m_isIPv6;}
 
 private:
     size_t getHeaderLength () const

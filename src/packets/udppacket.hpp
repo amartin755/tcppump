@@ -39,7 +39,7 @@ static_assert (sizeof (udp_header_t) == 8, "udp_header_t is not natural aligned"
 class cUdpPacket : public cIPPacket
 {
 public:
-    cUdpPacket ();
+    cUdpPacket (bool isIPv6 = false);
 
     void compile (const uint8_t* payload, size_t len);
     void setSourcePort (uint16_t port);

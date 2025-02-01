@@ -25,7 +25,7 @@
 #include "inetchecksum.hpp"
 
 
-cVxlanPacket::cVxlanPacket ()
+cVxlanPacket::cVxlanPacket (bool isIPv6) : cUdpPacket (isIPv6)
 {
     std::memset (&header, 0, sizeof(header));
     header.flags = 0x08;

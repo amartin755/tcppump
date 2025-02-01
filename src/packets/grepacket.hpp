@@ -61,7 +61,7 @@ static_assert (sizeof (gre_basic_header_t) == 4, "gre_basic_header_t is not pack
 class cGrePacket : public cIPPacket
 {
 public:
-    cGrePacket ();
+    cGrePacket (bool isIPv6);
 
     void compile (const uint8_t* payload, size_t len, bool calcChecksum);
     void setProtocolType (uint16_t proto);

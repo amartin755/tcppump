@@ -25,8 +25,8 @@
 #include "inetchecksum.hpp"
 
 
-cGrePacket::cGrePacket ()
-: hasChecksum (false), hasKey (false), hasSeq (false), checksum (0), key (0), seq  (0)
+cGrePacket::cGrePacket (bool isIPv6)
+: cIPPacket (isIPv6), hasChecksum (false), hasKey (false), hasSeq (false), checksum (0), key (0), seq  (0)
 {
     std::memset (&basicHeader, 0, sizeof(basicHeader));
 }

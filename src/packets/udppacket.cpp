@@ -25,7 +25,7 @@
 #include "inetchecksum.hpp"
 
 
-cUdpPacket::cUdpPacket ()
+cUdpPacket::cUdpPacket (bool isIPv6) : cIPPacket (isIPv6)
 {
     std::memset (&header, 0, sizeof(header));
 }
@@ -58,19 +58,40 @@ void cUdpPacket::setChecksum (uint16_t checksum)
 
 uint16_t cUdpPacket::calcChecksum (const uint8_t* payload, size_t len) const
 {
-    cIPv4 src, dst;
-    getSource (src);
-    getDestination (dst);
-    const ipv4_pseudo_header_t ipPseudoHeader = {
-        src.get(),
-        dst.get(),
-        0,
-        PROTO_UDP,
-        htons((uint16_t)cIPPacket::getPayloadLength())
-    };
+    uint16_t chksum;
+    if (!isIPv6())
+    {
+        cIPv4 src, dst;
+        getSource (src);
+        getDestination (dst);
+        const ipv4_pseudo_header_t ipPseudoHeader = {
+            src.get(),
+            dst.get(),
+            0,
+            PROTO_UDP,
+            htons((uint16_t)cIPPacket::getPayloadLength())
+        };
 
-    uint16_t ret = cInetChecksum::rfc1071 ((const void*)&ipPseudoHeader, sizeof (ipPseudoHeader), &header, sizeof(header), payload, len);
-    return ret ? ret : 0xffff;
+        chksum = cInetChecksum::rfc1071 ((const void*)&ipPseudoHeader, sizeof (ipPseudoHeader), &header, sizeof(header), payload, len);
+    }
+    else
+    {
+        cIPv6 src, dst;
+        getSource (src);
+        getDestination (dst);
+        const ipv6_pseudo_header_t ipPseudoHeader = {
+            src.get(),
+            dst.get(),
+            htons((uint32_t)cIPPacket::getPayloadLength()),
+            0,
+            0,
+            0,
+            PROTO_UDP,
+        };
+
+        chksum = cInetChecksum::rfc1071 ((const void*)&ipPseudoHeader, sizeof (ipPseudoHeader), &header, sizeof(header), payload, len);
+    }
+    return chksum ? chksum : 0xffff;
 }
 
 #ifdef WITH_UNITTESTS

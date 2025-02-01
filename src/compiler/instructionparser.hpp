@@ -76,8 +76,8 @@ private:
     cLinkable* compileETH  (cParameterList& params);
     cLinkable* compileARP  (cParameterList& params, bool isProbe = false, bool isGratuitous = false);
     cLinkable* compileIP   (bool noEthHeader, cParameterList& params, bool isIPv6);
-    cLinkable* compileUDP  (bool noEthHeader, cParameterList& params);
-    cLinkable* compileVXLAN (bool noEthHeader, cParameterList& params);
+    cLinkable* compileUDP  (bool noEthHeader, cParameterList& params, bool isIPv6);
+    cLinkable* compileVXLAN (bool noEthHeader, cParameterList& params, bool isIPv6);
     cLinkable* compileVRRP (bool noEthHeader, cParameterList& params, int version);
     cLinkable* compileSTP  (bool noEthHeader, cParameterList& params, bool isRSTP = false, bool isTCN = false);
     cLinkable* compileIGMP (bool noEthHeader, cParameterList& params, bool v3, bool query, bool report, bool leave);
@@ -93,7 +93,7 @@ private:
     cLinkable* compileTCPFINACK  (bool noEthHeader, cParameterList& params);
     cLinkable* compileTCPFINACK2  (bool noEthHeader, cParameterList& params);
     cLinkable* compileTCPRST  (bool noEthHeader, cParameterList& params);
-    cLinkable* compileGRE (bool noEthHeader, cParameterList& params);
+    cLinkable* compileGRE (bool noEthHeader, cParameterList& params, bool isIPv6);
 
     // helpers
     bool   compileMacHeader (cParameterList& params, cEthernetPacket* packet, bool noDestination, bool destIsOptional = false);
