@@ -1,35 +1,33 @@
 # Packet Syntax Reference
 
-tcppumps input is a list of ethernet packets, defined in an human readable c-like syntax. The list is either directly passed as command line parameter or part of a script file (parameter `-s` or `--script`).
+tcppump's input consists of a list of Ethernet packets, defined using a human-readable C-like syntax. The list can either be passed directly as a command-line parameter or included in a script file (using the `-s` or `--script` parameter).
 
 ## Packet
-### Abstract format
-Each packet is defined as follows (optional parameters are market with [])
+### Abstract Format
+Each packet is defined as follows (optional parameters are marked with brackets `[]`):
 
-    [timestamp:] protocol([parameterlist])
+    [timestamp:] protocol([parameter_list])
 
-* `timestamp` relative time as integer followed by ':' (relative to start of tcppump) e.g. 123456 if time starts with '+', time is relative to the previous packet; e.g. +100
-* `protocol` protocol specifier , see *Protocol Definitions*
-* `parameterlist` protocol parameters in parantheses as comma separated parameter-value pairs `par=value, par=value, ...`. e.g. (hugo=123, egon=456)
+* `timestamp`: A relative time value, specified as an integer followed by `:` (relative to the start of tcppump), e.g., `123456`. If the time starts with `+`, it is relative to the previous packet, e.g., `+100`.
+* `protocol`: A protocol specifier (see *Protocol Definitions*).
+* `parameter_list`: Protocol parameters enclosed in parentheses, provided as comma-separated key-value pairs: `key=value, key=value, ...`. Example: `(hugo=123, egon=456)`.
 
-Note: all identifiers are case-sensitive
+**Note:** All identifiers are case-sensitive.
 
 ### Parameters
-Each protocol defines name and type of its parameters (see PROTOCOLS). Depending on its type, parameter values can be
-* Integer: decimal (`1234`), hex (`0x1234`), random number (`*`)
-* Float: e.g. `1.2`
-* Bytestream: A stream of 8 bit values (aka bytes or octetts), which can be defined as
+Each protocol defines the names and types of its parameters (see *PROTOCOLS*). Depending on their type, parameter values can be:
 
-  ASCII hex values: where each byte is defined as ascii-hex value (e.g. `01020304ABCD`)
+* **Integer:** Decimal (`1234`), hexadecimal (`0x1234`), or a random number (`*`).
+* **Float:** Example: `1.2`
+* **Bytestream:** A sequence of 8-bit values (bytes or octets), which can be defined as:
 
-  String: A stream of printable ascii values surrounded by double-quotes(e.g. `"Hello World"`)
+  - **ASCII Hex Values:** Each byte is represented as an ASCII-hex value (e.g., `01020304ABCD`).
+  - **String:** A sequence of printable ASCII characters enclosed in double quotes (e.g., `"Hello World"`).
+  - **Random:** `*` represents a random sequence of 32 bytes. A specific length can be defined by appending the desired byte length after the asterisk. For example, `*16` generates a random 16-byte sequence.
 
-  Random: `*` defines a random stream of 32 bytes length. Any length can be specified by adding the length in bytes after the asterisk. For example `*16` expands to a random byte
-           stream of 16 bytes.
-
-* MAC-Address: A EUI-48 MAC address (e.g. `12:23:34:45:56:67`)
-* IPv4 address: e.g. `1.2.3.4`
-* Embedded packet: a full specified packet can itself be embedded into another packet. Its definition is surrounded by '< >' (e.g. `<eth(dmac=11:22:33:44:55:66, smac=aa:bb:cc:dd:ee:ff, payload=*)>`)
+* **MAC Address:** A EUI-48 MAC address (e.g., `12:23:34:45:56:67`).
+* **IPv4 Address:** Example: `1.2.3.4`.
+* **Embedded Packet:** A fully defined packet can be embedded within another packet. The definition is enclosed in angle brackets `< >`, e.g., `<eth(dmac=11:22:33:44:55:66, smac=aa:bb:cc:dd:ee:ff, payload=*)>`.
 
 
 ### Examples
@@ -45,7 +43,7 @@ Each protocol defines name and type of its parameters (see PROTOCOLS). Depending
     +1234:   protoMickey(color = 10, index = 0x16, msg = <protoMouse(payload = *32)>)
 
 ## Script files
-Script files contain a list of packets as specified above. Each packet definition has to be terminated with semicolon. Comments start with '#'.
+Script files contain a list of packets as specified above. Each packet definition musr be terminated with a semicolon (`;`). Comments start with `#`.
 
 Example:
 
@@ -661,6 +659,192 @@ Code (integer: range 0 - 255)
 Checksum (integer: range 0 - 0xffff) If ommited, checksum is calculated automatically. Setting the checksum manually is only useful to force creation of malformed packets.
 
     chksum (optional)
+
+Payload (bytestream)
+
+    payload (optional)
+
+#### Protocol Specifier (ICMPv4 Unreachable)
+
+    icmp-unreachable
+
+#### Parameters
+Destination EUI-48 MAC address. Note: If `dip` is a multicast address `dmac` will be set automatically.
+
+    dmac (optional if dip is multicast)
+
+Destination IPv4 address
+
+    dip
+
+Source EUI-48 MAC address. If ommited, address of the network interface is used
+
+    smac (optional)
+
+Source IPv4 address; If ommited, address of the network interface is used
+
+    sip (optional)
+
+Code (integer: 0 = network, 1 = host, 2 = protocol, 3 = port, range 0 - 255, default 0)
+
+    code (optional)
+
+Payload (bytestream)
+
+    payload (optional)
+
+#### Protocol Specifier (ICMPv4 Source Quench)
+
+    icmp-src-quench
+
+#### Parameters
+Destination EUI-48 MAC address. Note: If `dip` is a multicast address `dmac` will be set automatically.
+
+    dmac (optional if dip is multicast)
+
+Destination IPv4 address
+
+    dip
+
+Source EUI-48 MAC address. If ommited, address of the network interface is used
+
+    smac (optional)
+
+Source IPv4 address; If ommited, address of the network interface is used
+
+    sip (optional)
+
+Code (integer: range 0 - 255, default 0)
+
+    code (optional)
+
+Payload (bytestream)
+
+    payload (optional)
+
+#### Protocol Specifier (ICMPv4 Time Exceeded)
+
+    icmp-time-exceeded
+
+#### Parameters
+Destination EUI-48 MAC address. Note: If `dip` is a multicast address `dmac` will be set automatically.
+
+    dmac (optional if dip is multicast)
+
+Destination IPv4 address
+
+    dip
+
+Source EUI-48 MAC address. If ommited, address of the network interface is used
+
+    smac (optional)
+
+Source IPv4 address; If ommited, address of the network interface is used
+
+    sip (optional)
+
+Code (integer: 0 = Time to Live exceeded in transit, 1 = Fragment reassembly time exceeded, range 0 - 255, default 0)
+
+    code (optional)
+
+Payload (bytestream)
+
+    payload (optional)
+
+#### Protocol Specifier (ICMPv4 Redirect)
+
+    icmp-redirect
+
+#### Parameters
+Destination EUI-48 MAC address. Note: If `dip` is a multicast address `dmac` will be set automatically.
+
+    dmac (optional if dip is multicast)
+
+Destination IPv4 address
+
+    dip
+
+Gateway IPv4 address
+
+    gw
+
+Source EUI-48 MAC address. If ommited, address of the network interface is used
+
+    smac (optional)
+
+Source IPv4 address; If ommited, address of the network interface is used
+
+    sip (optional)
+
+Code (integer: 0 = network, 1 = host, 2 = protocol, default 0)
+
+    code (optional)
+
+Payload (bytestream)
+
+    payload (optional)
+
+#### Protocol Specifier (ICMPv4 Echo Request)
+
+    icmp-echo
+
+#### Parameters
+Destination EUI-48 MAC address. Note: If `dip` is a multicast address `dmac` will be set automatically.
+
+    dmac (optional if dip is multicast)
+
+Destination IPv4 address
+
+    dip
+
+Source EUI-48 MAC address. If ommited, address of the network interface is used
+
+    smac (optional)
+
+Source IPv4 address; If ommited, address of the network interface is used
+
+    sip (optional)
+
+Identifier (integer: range 0 - 65535, default 0)
+
+    id (optional)
+
+Sequence number (integer: range 0 - 65535, default 0)
+
+    seq (optional)
+
+Payload (bytestream)
+
+    payload (optional)
+
+#### Protocol Specifier (ICMPv4 Echo Reply)
+
+    icmp-echo-reply
+
+#### Parameters
+Destination EUI-48 MAC address. Note: If `dip` is a multicast address `dmac` will be set automatically.
+
+    dmac (optional if dip is multicast)
+
+Destination IPv4 address
+
+    dip
+
+Source EUI-48 MAC address. If ommited, address of the network interface is used
+
+    smac (optional)
+
+Source IPv4 address; If ommited, address of the network interface is used
+
+    sip (optional)
+
+Identifier (integer: range 0 - 65535, default 0)
+
+    id (optional)
+
+Sequence number (integer: range 0 - 65535, default 0)
+
+    seq (optional)
 
 Payload (bytestream)
 
