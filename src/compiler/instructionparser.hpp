@@ -62,10 +62,12 @@ public:
     cInstructionParser (bool ipOptionalDestMAC);
     ~cInstructionParser ();
     void parse (const char* instruction, cResult& result, bool ignoreTrailingGarbage = false, bool noEthHeader = false);
+    static int printProtocolList ();
 
 #ifdef WITH_UNITTESTS
         static void unitTest ();
 #endif
+
 
 private:
     const char* parseTimestamp (const char* p, bool& hasTimestamp, uint64_t& timestamp, bool& isAbsolute);

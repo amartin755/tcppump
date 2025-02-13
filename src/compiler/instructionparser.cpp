@@ -40,6 +40,8 @@
 #include "settings.hpp"
 #include "endian.h"
 #include "bytearray.hpp"
+#include "syntax.hpp"
+#include "console.hpp"
 
 
 cInstructionParser::cInstructionParser (bool optDestMAC)
@@ -80,81 +82,81 @@ void cInstructionParser::parse (const char* instruction, cResult& result, bool i
             throwParseException ("Maximum depth of embedded instructions reached", keyword, keywordLen);
 
         //TODO find better way for protocol selection (e.g. hash table)
-        if (!strncmp ("raw", keyword, keywordLen))
+        if (!strncmp (PR_RAW.syntax, keyword, keywordLen))
             result.packets = compileRAW (noEthHeader, params);
-        else if (!strncmp ("eth", keyword, keywordLen))
+        else if (!strncmp (PR_ETH.syntax, keyword, keywordLen))
             result.packets = compileETH (params);
-        else if (!strncmp ("arp", keyword, keywordLen))
+        else if (!strncmp (PR_ARP.syntax, keyword, keywordLen))
             result.packets = compileARP (params);
-        else if (!strncmp ("arp-probe", keyword, keywordLen))
+        else if (!strncmp (PR_ARP_PROBE.syntax, keyword, keywordLen))
             result.packets = compileARP (params, true);
-        else if (!strncmp ("arp-announce", keyword, keywordLen))
+        else if (!strncmp (PR_ARP_ANNOUNCE.syntax, keyword, keywordLen))
             result.packets = compileARP (params, false, true);
-        else if (!strncmp ("ipv4", keyword, keywordLen))
+        else if (!strncmp (PR_IPV4.syntax, keyword, keywordLen))
             result.packets = compileIP (noEthHeader, params, false);
-        else if (!strncmp ("ipv6", keyword, keywordLen))
+        else if (!strncmp (PR_IPV6.syntax, keyword, keywordLen))
             result.packets = compileIP (noEthHeader, params, true);
-        else if (!strncmp ("udp", keyword, keywordLen))
+        else if (!strncmp (PR_UDP4.syntax, keyword, keywordLen))
             result.packets = compileUDP (noEthHeader, params, false);
-        else if (!strncmp ("udp6", keyword, keywordLen))
+        else if (!strncmp (PR_UDP6.syntax, keyword, keywordLen))
             result.packets = compileUDP (noEthHeader, params, true);
-        else if (!strncmp ("vrrp", keyword, keywordLen))
+        else if (!strncmp (PR_VRRP.syntax, keyword, keywordLen))
             result.packets = compileVRRP (noEthHeader, params, 2);
-        else if (!strncmp ("vrrp3", keyword, keywordLen))
+        else if (!strncmp (PR_VRRP3.syntax, keyword, keywordLen))
             result.packets = compileVRRP (noEthHeader, params, 3);
-        else if (!strncmp ("stp", keyword, keywordLen))
+        else if (!strncmp (PR_STP.syntax, keyword, keywordLen))
             result.packets = compileSTP (noEthHeader, params);
-        else if (!strncmp ("stp-tcn", keyword, keywordLen))
+        else if (!strncmp (PR_STP_TCN.syntax, keyword, keywordLen))
             result.packets = compileSTP (noEthHeader, params, false, true);
-        else if (!strncmp ("rstp", keyword, keywordLen))
+        else if (!strncmp (PR_RSTP.syntax, keyword, keywordLen))
             result.packets = compileSTP (noEthHeader, params, true);
-        else if (!strncmp ("igmp", keyword, keywordLen))
+        else if (!strncmp (PR_IGMP.syntax, keyword, keywordLen))
             result.packets = compileIGMP (noEthHeader, params, false, false, false, false);
-        else if (!strncmp ("igmp-query", keyword, keywordLen))
+        else if (!strncmp (PR_IGMP_QUERY.syntax, keyword, keywordLen))
             result.packets = compileIGMP (noEthHeader, params, false, true, false, false);
-        else if (!strncmp ("igmp3-query", keyword, keywordLen))
+        else if (!strncmp (PR_IGMP3_QUERY.syntax, keyword, keywordLen))
             result.packets = compileIGMP (noEthHeader, params, true, true, false, false);
-        else if (!strncmp ("igmp-report", keyword, keywordLen))
+        else if (!strncmp (PR_IGMP_REPORT.syntax, keyword, keywordLen))
             result.packets = compileIGMP (noEthHeader, params, false, false, true, false);
-        else if (!strncmp ("igmp-leave", keyword, keywordLen))
+        else if (!strncmp (PR_IGMP_LEAVE.syntax, keyword, keywordLen))
             result.packets = compileIGMP (noEthHeader, params, false, false, false, true);
-        else if (!strncmp ("icmp", keyword, keywordLen))
+        else if (!strncmp (PR_ICMP4.syntax, keyword, keywordLen))
             result.packets = compileICMP (noEthHeader, params);
-        else if (!strncmp ("icmp-unreachable", keyword, keywordLen))
+        else if (!strncmp (PR_ICMP4_UNREACH.syntax, keyword, keywordLen))
             result.packets = compileICMPWithEmbedded (noEthHeader, params, 3);
-        else if (!strncmp ("icmp-src-quench", keyword, keywordLen))
+        else if (!strncmp (PR_ICMP4_SRCQ.syntax, keyword, keywordLen))
             result.packets = compileICMPWithEmbedded (noEthHeader, params, 4);
-        else if (!strncmp ("icmp-time-exceeded", keyword, keywordLen))
+        else if (!strncmp (PR_ICMP4_TIMEX.syntax, keyword, keywordLen))
             result.packets = compileICMPWithEmbedded (noEthHeader, params, 11);
-        else if (!strncmp ("icmp-redirect", keyword, keywordLen))
+        else if (!strncmp (PR_ICMP4_REDIR.syntax, keyword, keywordLen))
             result.packets = compileICMPRedirect (noEthHeader, params);
-        else if (!strncmp ("icmp-echo", keyword, keywordLen))
+        else if (!strncmp (PR_ICMP4_ECHO.syntax, keyword, keywordLen))
             result.packets = compileICMPPing (noEthHeader, params, false);
-        else if (!strncmp ("icmp-echo-reply", keyword, keywordLen))
+        else if (!strncmp (PR_ICMP4_ECHOR.syntax, keyword, keywordLen))
             result.packets = compileICMPPing (noEthHeader, params, true);
-        else if (!strncmp ("tcp", keyword, keywordLen))
+        else if (!strncmp (PR_TCP4.syntax, keyword, keywordLen))
             result.packets = compileTCP (noEthHeader, params);
-        else if (!strncmp ("tcp-syn", keyword, keywordLen))
+        else if (!strncmp ("tcp-syn", keyword, keywordLen)) // TODO remove
             result.packets = compileTCPSYN (noEthHeader, params);
-        else if (!strncmp ("tcp-syn-ack", keyword, keywordLen))
+        else if (!strncmp ("tcp-syn-ack", keyword, keywordLen)) // TODO remove
             result.packets = compileTCPSYNACK (noEthHeader, params);
-        else if (!strncmp ("tcp-syn-ack2", keyword, keywordLen))
+        else if (!strncmp ("tcp-syn-ack2", keyword, keywordLen)) // TODO remove
             result.packets = compileTCPSYNACK2 (noEthHeader, params);
-        else if (!strncmp ("tcp-fin", keyword, keywordLen))
+        else if (!strncmp ("tcp-fin", keyword, keywordLen)) // TODO remove
             result.packets = compileTCPFIN (noEthHeader, params);
-        else if (!strncmp ("tcp-fin-ack", keyword, keywordLen))
+        else if (!strncmp ("tcp-fin-ack", keyword, keywordLen)) // TODO remove
             result.packets = compileTCPFINACK (noEthHeader, params);
-        else if (!strncmp ("tcp-fin-ack2", keyword, keywordLen))
+        else if (!strncmp ("tcp-fin-ack2", keyword, keywordLen)) // TODO remove
             result.packets = compileTCPFINACK2 (noEthHeader, params);
-        else if (!strncmp ("tcp-reset", keyword, keywordLen))
+        else if (!strncmp ("tcp-reset", keyword, keywordLen)) // TODO remove
             result.packets = compileTCPRST (noEthHeader, params);
-        else if (!strncmp ("vxlan", keyword, keywordLen))
+        else if (!strncmp (PR_VXLAN4.syntax, keyword, keywordLen))
             result.packets = compileVXLAN (noEthHeader, params, false);
-        else if (!strncmp ("vxlan6", keyword, keywordLen))
+        else if (!strncmp (PR_VXLAN6.syntax, keyword, keywordLen))
             result.packets = compileVXLAN (noEthHeader, params, true);
-        else if (!strncmp ("gre", keyword, keywordLen))
+        else if (!strncmp (PR_GRE4.syntax, keyword, keywordLen))
             result.packets = compileGRE (noEthHeader, params, false);
-        else if (!strncmp ("gre6", keyword, keywordLen))
+        else if (!strncmp (PR_GRE6.syntax, keyword, keywordLen))
             result.packets = compileGRE (noEthHeader, params, true);
         else
             throwParseException ("Unknown protocol type", keyword, keywordLen);
@@ -1352,7 +1354,7 @@ cLinkable* cInstructionParser::compileICMPPing (bool noEthHeader, cParameterList
 
         size_t len = 0;
         const uint8_t* payload = nullptr;
-        cParameter* optionalPar = params.findParameter ("data", true);
+        cParameter* optionalPar = params.findParameter ("payload", true);
         if (optionalPar)
             payload = compileEmbedded (optionalPar, true, len);
 
@@ -1430,9 +1432,28 @@ void cInstructionParser::throwParseException (const char* msg, const char* val, 
 }
 
 
-#ifdef WITH_UNITTESTS
+int cInstructionParser::printProtocolList ()
+{
+    int protos = 0;
+    for (const auto& proto : all_protos)
+    {
+        protos++;
+        Console::Print ("%-20s", proto->syntax);
 
-#include "console.hpp"
+        for (const auto& m: proto->mandatory)
+        {
+            Console::Print ("%s ", m->syntax);
+        }
+        for (const auto& o: proto->optional)
+        {
+            Console::Print ("[%s] ", o->syntax);
+        }
+        Console::Print ("\n");
+    }
+    return protos;
+}
+
+#ifdef WITH_UNITTESTS
 
 struct testcase_t
 {
