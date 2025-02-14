@@ -88,13 +88,6 @@ private:
     cLinkable* compileICMPRedirect (bool noEthHeader, cParameterList& params);
     cLinkable* compileICMPPing (bool noEthHeader, cParameterList& params, bool reply);
     cLinkable* compileTCP  (bool noEthHeader, cParameterList& params);
-    cLinkable* compileTCPSYN  (bool noEthHeader, cParameterList& params);
-    cLinkable* compileTCPSYNACK  (bool noEthHeader, cParameterList& params);
-    cLinkable* compileTCPSYNACK2  (bool noEthHeader, cParameterList& params);
-    cLinkable* compileTCPFIN  (bool noEthHeader, cParameterList& params);
-    cLinkable* compileTCPFINACK  (bool noEthHeader, cParameterList& params);
-    cLinkable* compileTCPFINACK2  (bool noEthHeader, cParameterList& params);
-    cLinkable* compileTCPRST  (bool noEthHeader, cParameterList& params);
     cLinkable* compileGRE (bool noEthHeader, cParameterList& params, bool isIPv6);
 
     // helpers

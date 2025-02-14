@@ -436,13 +436,6 @@ add_test(NAME tcp-44--nok COMMAND tcppump ${DEFAULT_PARAMS} -w tcp-44--nok.pcap 
 set_tests_properties(tcp-44--nok PROPERTIES WILL_FAIL TRUE)
 add_test(NAME tcp-45--ok COMMAND tcppump ${DEFAULT_PARAMS} -w tcp-45--ok.pcap "tcp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=0, dport=0, seq=0, ack=0, payload=*)" WORKING_DIRECTORY ${TEST_WORKING_DIR})
 add_test(NAME tcp-45--diff COMMAND cmake -E compare_files tcp-45--ok.pcap ${TEST_FILE_PREFIX}/tcp-45.pcap WORKING_DIRECTORY ${TEST_WORKING_DIR})
-add_test(NAME tcp-46--ok COMMAND tcppump ${DEFAULT_PARAMS} -w tcp-46--ok.pcap "tcp-syn(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=0, dport=0)" WORKING_DIRECTORY ${TEST_WORKING_DIR})
-add_test(NAME tcp-46--diff COMMAND cmake -E compare_files tcp-46--ok.pcap ${TEST_FILE_PREFIX}/tcp-25.pcap WORKING_DIRECTORY ${TEST_WORKING_DIR})
-add_test(NAME tcp-47--ok COMMAND tcppump ${DEFAULT_PARAMS} -w tcp-47--ok.pcap "tcp-reset(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=0, dport=0)" WORKING_DIRECTORY ${TEST_WORKING_DIR})
-add_test(NAME tcp-47--diff COMMAND cmake -E compare_files tcp-47--ok.pcap ${TEST_FILE_PREFIX}/tcp-26.pcap WORKING_DIRECTORY ${TEST_WORKING_DIR})
-add_test(NAME tcp-48--ok COMMAND tcppump ${DEFAULT_PARAMS} -w tcp-48--ok.pcap "tcp-syn(sip=1.2.3.4, dip=10.20.30.40, smac=10:11:11:11:11:11, dmac=10:22:33:44:55:66, sport=0, dport=2)" "tcp-syn-ack(dip=1.2.3.4, sip=10.20.30.40, dmac=10:11:11:11:11:11, smac=10:22:33:44:55:66, dport=0, sport=2)" "tcp-syn-ack2(sip=1.2.3.4, dip=10.20.30.40, smac=10:11:11:11:11:11, dmac=10:22:33:44:55:66, sport=0, dport=2)" "tcp-fin(sip=1.2.3.4, dip=10.20.30.40, smac=10:11:11:11:11:11, dmac=10:22:33:44:55:66, sport=0, dport=2)" "tcp-fin-ack(dip=1.2.3.4, sip=10.20.30.40, dmac=10:11:11:11:11:11, smac=10:22:33:44:55:66, dport=0, sport=2)" "tcp-fin-ack2(sip=1.2.3.4, dip=10.20.30.40, smac=10:11:11:11:11:11, dmac=10:22:33:44:55:66, sport=0, dport=2)" WORKING_DIRECTORY ${TEST_WORKING_DIR})
-add_test(NAME tcp-48--diff COMMAND cmake -E compare_files tcp-48--ok.pcap ${TEST_FILE_PREFIX}/tcp-48.pcap WORKING_DIRECTORY ${TEST_WORKING_DIR})
-
 
 
 add_test(NAME vrrp-1--nok COMMAND tcppump ${DEFAULT_PARAMS} -w vrrp-1--nok.pcap "vrrp()" WORKING_DIRECTORY ${TEST_WORKING_DIR})
@@ -579,7 +572,7 @@ add_test(NAME igmp-10--nok COMMAND tcppump ${DEFAULT_PARAMS} -w igmp-10--nok.pca
 set_tests_properties(igmp-10--nok PROPERTIES WILL_FAIL TRUE)
 
 add_test(NAME script-01--ok COMMAND tcppump ${DEFAULT_PARAMS} -w script-01--ok.pcap -vvv -s ${TEST_FILE_PREFIX}/all.pump WORKING_DIRECTORY ${TEST_WORKING_DIR})
-set_tests_properties(script-01--ok PROPERTIES PASS_REGULAR_EXPRESSION "Will send 265 packets.*Successfully wrote 265 packets")
+set_tests_properties(script-01--ok PROPERTIES PASS_REGULAR_EXPRESSION "Will send 257 packets.*Successfully wrote 257 packets")
 add_test(NAME script-01--diff COMMAND cmake -E compare_files script-01--ok.pcap ${TEST_FILE_PREFIX}/all.pcap WORKING_DIRECTORY ${TEST_WORKING_DIR})
 
 ### AFL findings
