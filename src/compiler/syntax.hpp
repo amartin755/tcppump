@@ -20,18 +20,16 @@
 #ifndef SYNTAX_HPP_
 #define SYNTAX_HPP_
 
-#include <map>
-#include <list>
 #include <vector>
 
 
-enum Type {INTEGER, FLOAT, MAC, IP, STREAM};
+enum Type {Integer, Float, Mac, IP, Bytestream, Bit};
 
 struct Parameter
 {
     const char* syntax;
     const char* descr;
-    Type type;
+    const Type type;
 };
 
 struct Protocol
@@ -46,37 +44,37 @@ struct Protocol
 static const Parameter PAR_RAW_BYTE = {
     "byte",
     "Raw byte value",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_RAW_BE16 = {
     "be16",
     "Big-endian 16-bit value",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_RAW_BE32 = {
     "be32",
     "Big-endian 32-bit value",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_RAW_BE64 = {
     "be64",
     "Big-endian 64-bit value",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_RAW_LE16 = {
     "le16",
     "Little-endian 16-bit value",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_RAW_LE32 = {
     "le32",
     "Little-endian 32-bit value",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_RAW_LE64 = {
     "le64",
     "Little-endian 64-bit value",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_RAW_IP4 = {
     "ip4",
@@ -90,13 +88,13 @@ static const Parameter PAR_RAW_IP6 = {
 };
 static const Parameter PAR_RAW_MAC = {
     "mac",
-    "EUI-48 MAC address",
-    MAC
+    "EUI-48 Mac address",
+    Mac
 };
 static const Parameter PAR_RAW_STREAM = {
     "stream",
     "Data stream",
-    STREAM
+    Bytestream
 };
 static const Protocol PR_RAW = {
     "raw",
@@ -120,74 +118,74 @@ static const Protocol PR_RAW = {
 
 static const Parameter PAR_ETH_SMAC = {
     "smac",
-    "Source EUI-48 MAC address",
-    MAC
+    "Source EUI-48 Mac address",
+    Mac
 };
 static const Parameter PAR_ETH_DMAC = {
     "dmac",
-    "Destination EUI-48 MAC address",
-    MAC
+    "Destination EUI-48 Mac address",
+    Mac
 };
 static const Parameter PAR_ETH_DSAP = {
     "dsap",
     "IEEE 802.2 DSAP field",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_ETH_SSAP = {
     "ssap",
     "IEEE 802.2 SSAP field",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_ETH_CONTROL = {
     "control",
     "Control field",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_ETH_OUI = {
     "oui",
     "Organizationally Unique Identifier",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_ETH_PROTOCOL = {
     "protocol",
     "Protocol identifier",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_ETH_PAYLOAD = {
     "payload",
     "Ethernet payload data",
-    STREAM
+    Bytestream
 };
 static const Parameter PAR_ETH_ETHERTYPE = {
     "ethertype",
     "EtherType field",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_ETH_VID = {
     "vid",
     "VLAN Identifier",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_ETH_VTYPE = {
     "vtype",
     "VLAN Type",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_ETH_PRIO = {
     "prio",
     "VLAN Priority",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_ETH_DEI = {
     "dei",
     "Drop Eligible Indicator",
-    INTEGER
+    Bit
 };
 // shortcut for VLAN tag parameters
 #define PAR_VLAN &PAR_ETH_VID, &PAR_ETH_VTYPE, &PAR_ETH_PRIO, &PAR_ETH_DEI
 static const Protocol PR_ETH = {
     "eth",
-    "bla bla bla",
+    "Ethernet II or IEEE802.3 packet",
     {
         &PAR_ETH_DMAC,
         &PAR_ETH_PAYLOAD
@@ -208,17 +206,17 @@ static const Protocol PR_ETH = {
 static const Parameter PAR_IP_DSCP = {
     "dscp",
     "Differentiated Services Code Point",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_IP_ECN = {
     "ecn",
     "Explicit Congestion Notification",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_IP_TTL = {
     "ttl",
     "Time To Live",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_IP_DIP = {
     "dip",
@@ -233,27 +231,27 @@ static const Parameter PAR_IP_SIP = {
 static const Parameter PAR_IP_PROTOCOL = {
     "protocol",
     "Transport layer protocol",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_IP_PAYLOAD = {
     "payload",
     "IP packet payload",
-    STREAM
+    Bytestream
 };
 static const Parameter PAR_IP4_ID = {
     "id",
     "IPv4 packet identifier",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_IP4_DF = {
     "df",
     "IPv4 Don't Fragment flag",
-    INTEGER
+    Bit
 };
 static const Parameter PAR_IP6_FL = {
     "fl",
     "IPv6 Flow Label",
-    INTEGER
+    Integer
 };
 // shortcuts for IP header parameters
 #define PAR_IP4_OPT &PAR_IP_DSCP, &PAR_IP_ECN, &PAR_IP_TTL, &PAR_IP4_DF, &PAR_IP_SIP, &PAR_IP4_ID
@@ -262,7 +260,7 @@ static const Parameter PAR_IP6_FL = {
 #define PAR_IP6 &PAR_IP_DIP
 static const Protocol PR_IPV4 = {
     "ipv4",
-    "bla bla bla",
+    "Raw IPv4 packet",
     {
         PAR_IP4,
         &PAR_IP_PROTOCOL,
@@ -277,7 +275,7 @@ static const Protocol PR_IPV4 = {
 };
 static const Protocol PR_IPV6 = {
     "ipv6",
-    "bla bla bla",
+    "Raw IPv6 packet",
     {
         PAR_IP6,
         &PAR_IP_PROTOCOL,
@@ -295,22 +293,22 @@ static const Protocol PR_IPV6 = {
 static const Parameter PAR_UDP_SPORT = {
     "sport",
     "Source UDP port",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_UDP_DPORT = {
     "dport",
     "Destination UDP port",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_UDP_PAYLOAD = {
     "payload",
     "UDP packet payload",
-    STREAM
+    Bytestream
 };
 static const Parameter PAR_UDP_CHKSUM = {
     "chksum",
     "UDP checksum",
-    INTEGER
+    Integer
 };
 static const Protocol PR_UDP4 = {
     "udp",
@@ -352,8 +350,8 @@ static const Protocol PR_UDP6 = {
 
 static const Parameter PAR_ARP_OP = {
     "op",
-    "TODO",
-    INTEGER
+    "Opcode, 1 = request, 2 = reply",
+    Integer
 };
 static const Protocol PR_ARP = {
     "arp",
@@ -391,27 +389,27 @@ static const Parameter PAR_VRRP_VRIP = {
 static const Parameter PAR_VRRP_VRID = {
     "vrid",
     "Virtual Router ID",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_VRRP_VRPRIO = {
     "vrprio",
     "Virtual Router Priority",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_VRRP_TYPE = {
     "type",
     "VRRP message type",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_VRRP_AINT = {
     "aint",
     "Advertisement Interval",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_VRRP_CHKSUM = {
     "chksum",
     "VRRP checksum",
-    INTEGER
+    Integer
 };
 static const Protocol PR_VRRP = {
     "vrrp",
@@ -452,102 +450,102 @@ static const Protocol PR_VRRP3 = {
 static const Parameter PAR_STP_RBPRIO = {
     "rbprio",
     "Root Bridge Priority",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_STP_RBIDEXT = {
     "rbidext",
     "Root Bridge ID Extension",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_STP_RBMAC = {
     "rbmac",
-    "Root Bridge EUI-48 MAC address",
-    MAC
+    "Root Bridge EUI-48 Mac address",
+    Mac
 };
 static const Parameter PAR_STP_BPRIO = {
     "bprio",
     "Bridge Priority",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_STP_BIDEXT = {
     "bidext",
     "Bridge ID Extension",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_STP_BMAC = {
     "bmac",
-    "Bridge EUI-48 MAC address",
-    MAC
+    "Bridge EUI-48 Mac address",
+    Mac
 };
 static const Parameter PAR_STP_PPRIO = {
     "pprio",
     "Port Priority",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_STP_PNUM = {
     "pnum",
     "Port Number",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_STP_MSGAGE = {
     "msgage",
     "Message Age",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_STP_MAXAGE = {
     "maxage",
     "Max Age",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_STP_HELLO = {
     "hello",
     "Hello Time",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_STP_DELAY = {
     "delay",
     "Forward Delay",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_STP_TOPOCHANGE = {
     "topochange",
     "Topology Change",
-    INTEGER
+    Bit
 };
 static const Parameter PAR_STP_TOPOCHANGEACK = {
     "topochangeack",
     "Topology Change Acknowledgement",
-    INTEGER
+    Bit
 };
 static const Parameter PAR_STP_RPATHCOST = {
     "rpathcost",
     "Root Path Cost",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_STP_PORTROLE = {
     "portrole",
     "Port Role",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_STP_PROPOSAL = {
     "proposal",
     "Proposal",
-    INTEGER
+    Bit
 };
 static const Parameter PAR_STP_LEARNING = {
     "learning",
     "Learning Mode",
-    INTEGER
+    Bit
 };
 static const Parameter PAR_STP_FORWARDING = {
     "forwarding",
     "Forwarding Mode",
-    INTEGER
+    Bit
 };
 static const Parameter PAR_STP_AGREEMENT = {
     "agreement",
     "Agreement",
-    INTEGER
+    Bit
 };
 static const Protocol PR_STP = {
     "stp",
@@ -613,22 +611,22 @@ static const Protocol PR_STP_TCN = {
 static const Parameter PAR_IGMP_S = {
     "s",
     "Suppress Router-side Processing",
-    INTEGER
+    Bit
 };
 static const Parameter PAR_IGMP_QRV = {
     "qrv",
     "Query Response Interval",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_IGMP_QQIC = {
     "qqic",
     "Querier's Query Interval Count",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_IGMP_TIME = {
     "time",
     "IGMP Time",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_IGMP_RSIP = {
     "rsip",
@@ -643,7 +641,7 @@ static const Parameter PAR_IGMP_GROUP = {
 static const Parameter PAR_IGMP_TYPE = {
     "type",
     "IGMP message type",
-    INTEGER
+    Integer
 };
 static const Protocol PR_IGMP = {
     "igmp",
@@ -710,22 +708,22 @@ static const Protocol PR_IGMP_LEAVE = {
 static const Parameter PAR_ICMP4_TYPE = {
     "type",
     "ICMPv4 message type",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_ICMP4_CODE = {
     "code",
     "ICMPv4 message code",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_ICMP4_PAYLOAD = {
     "payload",
     "ICMPv4 message payload",
-    STREAM
+    Bytestream
 };
 static const Parameter PAR_ICMP4_CHKSUM = {
     "chksum",
     "ICMPv4 checksum",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_ICMP4_GW = {
     "gw",
@@ -735,12 +733,12 @@ static const Parameter PAR_ICMP4_GW = {
 static const Parameter PAR_ICMP4_ID = {
     "id",
     "ICMPv4 identifier",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_ICMP4_SEQ = {
     "seq",
     "ICMPv4 sequence number",
-    INTEGER
+    Integer
 };
 static const Protocol PR_ICMP4 = {
     "icmp",
@@ -863,87 +861,87 @@ static const Protocol PR_ICMP4_ECHOR = {
 static const Parameter PAR_TCP_SPORT = {
     "sport",
     "Source TCP port",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_TCP_DPORT = {
     "dport",
     "Destination TCP port",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_TCP_SEQ = {
     "seq",
     "TCP sequence number",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_TCP_ACK = {
     "ack",
     "TCP acknowledgment number",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_TCP_WIN = {
     "win",
     "TCP window size",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_TCP_URGPTR = {
     "urgptr",
     "TCP urgent pointer",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_TCP_FIN = {
     "FIN",
     "TCP FIN flag",
-    INTEGER
+    Bit
 };
 static const Parameter PAR_TCP_SYN = {
     "SYN",
     "TCP SYN flag",
-    INTEGER
+    Bit
 };
 static const Parameter PAR_TCP_RESET = {
     "RESET",
     "TCP RESET flag",
-    INTEGER
+    Bit
 };
 static const Parameter PAR_TCP_PUSH = {
     "PUSH",
     "TCP PUSH flag",
-    INTEGER
+    Bit
 };
 static const Parameter PAR_TCP_ACKFLAG = {
     "ACK",
     "TCP ACK flag",
-    INTEGER
+    Bit
 };
 static const Parameter PAR_TCP_URGENT = {
     "URGENT",
     "TCP URGENT flag",
-    INTEGER
+    Bit
 };
 static const Parameter PAR_TCP_ECN = {
     "ECN",
     "TCP ECN flag",
-    INTEGER
+    Bit
 };
 static const Parameter PAR_TCP_CWR = {
     "CWR",
     "TCP CWR flag",
-    INTEGER
+    Bit
 };
 static const Parameter PAR_TCP_NONCE = {
     "NONCE",
     "TCP nonce",
-    INTEGER
+    Bit
 };
 static const Parameter PAR_TCP_PAYLOAD = {
     "payload",
     "TCP packet payload",
-    STREAM
+    Bytestream
 };
 static const Parameter PAR_TCP_CHKSUM = {
     "chksum",
     "TCP checksum",
-    INTEGER
+    Integer
 };
 static const Protocol PR_TCP4 = {
     "tcp",
@@ -980,12 +978,12 @@ static const Protocol PR_TCP4 = {
 static const Parameter PAR_VXLAN_VNI = {
     "vni",
     "VXLAN Network Identifier",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_VXLAN_PAYLOAD = {
     "payload",
     "VXLAN payload data",
-    STREAM
+    Bytestream
 };
 static const Protocol PR_VXLAN4 = {
     "vxlan",
@@ -1027,22 +1025,22 @@ static const Parameter PAR_GRE_PROTOCOL = PAR_IP_PROTOCOL;
 static const Parameter PAR_GRE_KEY = {
     "key",
     "GRE key",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_GRE_SEQ = {
     "seq",
     "GRE sequence number",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_GRE_CHKSUM = {
     "chksum",
     "GRE checksum",
-    INTEGER
+    Integer
 };
 static const Parameter PAR_GRE_PAYLOAD = {
     "payload",
     "GRE payload data",
-    STREAM
+    Bytestream
 };
 static const Protocol PR_GRE4 = {
     "gre",
