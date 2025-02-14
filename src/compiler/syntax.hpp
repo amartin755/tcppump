@@ -621,12 +621,12 @@ static const Parameter PAR_IGMP_QRV = {
 static const Parameter PAR_IGMP_QQIC = {
     "qqic",
     "Querier's Query Interval Count",
-    Integer
+    Float
 };
 static const Parameter PAR_IGMP_TIME = {
     "time",
     "IGMP Time",
-    Integer
+    Float
 };
 static const Parameter PAR_IGMP_RSIP = {
     "rsip",

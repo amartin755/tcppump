@@ -269,51 +269,51 @@ cLinkable* cInstructionParser::compileRAW (bool noEthHeader, cParameterList& par
     {
         auto name = par.name();
         params.setParameterUsed (&par, true);
-        if (!strncmp ("byte", name.first, name.second))
+        if (!strncmp (PAR_RAW_BYTE.syntax, name.first, name.second))
         {
             payload << par.asInt8 ();
         }
-        else if (!strncmp ("be16", name.first, name.second))
+        else if (!strncmp (PAR_RAW_BE16.syntax, name.first, name.second))
         {
             payload << toBE16 (par.asInt16 ());
         }
-        else if (!strncmp ("be32", name.first, name.second))
+        else if (!strncmp (PAR_RAW_BE32.syntax, name.first, name.second))
         {
             payload << toBE32 (par.asInt32 ());
         }
-        else if (!strncmp ("be64", name.first, name.second))
+        else if (!strncmp (PAR_RAW_BE64.syntax, name.first, name.second))
         {
             payload << toBE64 (par.asInt64 ());
         }
-        else if (!strncmp ("le16", name.first, name.second))
+        else if (!strncmp (PAR_RAW_LE16.syntax, name.first, name.second))
         {
             payload << toLE16 (par.asInt16 ());
         }
-        else if (!strncmp ("le32", name.first, name.second))
+        else if (!strncmp (PAR_RAW_LE32.syntax, name.first, name.second))
         {
             payload << toLE32 (par.asInt32 ());
         }
-        else if (!strncmp ("le64", name.first, name.second))
+        else if (!strncmp (PAR_RAW_LE64.syntax, name.first, name.second))
         {
             payload << toLE64 (par.asInt64 ());
         }
-        else if (!strncmp ("ip4", name.first, name.second))
+        else if (!strncmp (PAR_RAW_IP4.syntax, name.first, name.second))
         {
             cIPv4 ip4 = par.asIPv4 ();
             payload.append (ip4.getAsArray(), 4);
         }
-        else if (!strncmp ("ip6", name.first, name.second))
+        else if (!strncmp (PAR_RAW_IP6.syntax, name.first, name.second))
         {
             cIPv6 ip6 = par.asIPv6 ();
             payload.append (ip6.getAsArray(), 16);
         }
-        else if (!strncmp ("mac", name.first, name.second))
+        else if (!strncmp (PAR_RAW_MAC.syntax, name.first, name.second))
         {
             cMacAddress mac = par.asMac ();
             payload.append (mac.get (), mac.size ());
         }
         // TODO do we want to allow embedded packets? If yes with or without Ethernet header?
-        else if (!strncmp ("stream", name.first, name.second))
+        else if (!strncmp (PAR_RAW_STREAM.syntax, name.first, name.second))
         {
             size_t len;
             const uint8_t* value = par.asStream(len);
@@ -350,11 +350,11 @@ cLinkable* cInstructionParser::compileRAW (bool noEthHeader, cParameterList& par
 bool cInstructionParser::compileMacHeader (cParameterList& params, cEthernetPacket *packet, bool noDestination, bool destIsOptional)
 {
     // default value of source mac is our own mac address
-    packet->setSrcMac (getParameterOrOwnMac (params, "smac"));
+    packet->setSrcMac (getParameterOrOwnMac (params, PAR_ETH_SMAC.syntax));
 
     if (!noDestination)
     {
-        const cParameter* destMacPar = params.findParameter ("dmac", destIsOptional);
+        const cParameter* destMacPar = params.findParameter (PAR_ETH_DMAC.syntax, destIsOptional);
         if (destMacPar)
         {
             packet->setDestMac (destMacPar->asMac ());
@@ -466,30 +466,30 @@ cLinkable* cInstructionParser::compileETH (cParameterList& params)
         // LLC header
         // NOTE: dsap and ssap are mandatory parameters for llc header;
         //       if only one of them is defined, we ignore all LLC parameters
-        optionalPar = params.findParameter ("dsap",  true);
+        optionalPar = params.findParameter (PAR_ETH_DSAP.syntax,  true);
         if (optionalPar)
         {
             uint8_t dsap = optionalPar->asInt8 ();
-            uint8_t ssap = params.findParameter ("ssap")->asInt8 ();
-            eth->addLlcHeader(dsap, ssap, params.findParameter("control", (uint32_t)3)->asInt16 ());
+            uint8_t ssap = params.findParameter (PAR_ETH_SSAP.syntax)->asInt8 ();
+            eth->addLlcHeader(dsap, ssap, params.findParameter(PAR_ETH_CONTROL.syntax, (uint32_t)3)->asInt16 ());
         }
         else
         {
             // SNAP extension
-            optionalPar = params.findParameter ("oui",  true);
+            optionalPar = params.findParameter (PAR_ETH_OUI.syntax,  true);
             if (optionalPar)
             {
                 eth->addSnapHeader (optionalPar->asInt32 (0, 0x00ffffff),
-                        params.findParameter ("protocol")->asInt16 ());
+                        params.findParameter (PAR_ETH_PROTOCOL.syntax)->asInt16 ());
             }
         }
 
         size_t len;
-        const uint8_t* value = params.findParameter ("payload")->asStream(len);
+        const uint8_t* value = params.findParameter (PAR_ETH_PAYLOAD.syntax)->asStream(len);
         eth->setPayload (value, len);
 
         // if llc header or no ethertype/length is provided, we calculate the length ourself
-        if (eth->hasLlcHeader() || (optionalPar = params.findParameter ("ethertype", true)) == NULL)
+        if (eth->hasLlcHeader() || (optionalPar = params.findParameter (PAR_ETH_ETHERTYPE.syntax, true)) == NULL)
         {
             eth->setLength ();
         }
@@ -514,12 +514,12 @@ size_t cInstructionParser::compileVLANTags (cParameterList& params, cEthernetPac
     const cParameter* optionalPar = nullptr;
 
     // VLAN tags
-    while ((optionalPar = params.findParameter(optionalPar, nullptr, "vid", true)) != nullptr)
+    while ((optionalPar = params.findParameter(optionalPar, nullptr, PAR_ETH_VID.syntax, true)) != nullptr)
     {
-        bool isCTag   = params.findParameter (optionalPar, "vid", "vtype", (uint32_t)1)->asInt8 (1, 2) == 1 ? true : false;
+        bool isCTag   = params.findParameter (optionalPar, PAR_ETH_VID.syntax, PAR_ETH_VTYPE.syntax, (uint32_t)1)->asInt8 (1, 2) == 1 ? true : false;
         uint16_t vid  = optionalPar->asInt16 (0, 0x0fff);
-        uint16_t prio = params.findParameter (optionalPar, "vid", "prio",  (uint32_t)0)->asInt8 (0, 7);
-        uint16_t dei  = params.findParameter (optionalPar, "vid", "dei",   (uint32_t)0)->asInt8 (0, 1);
+        uint16_t prio = params.findParameter (optionalPar, PAR_ETH_VID.syntax, PAR_ETH_PRIO.syntax,  (uint32_t)0)->asInt8 (0, 7);
+        uint16_t dei  = params.findParameter (optionalPar, PAR_ETH_VID.syntax, PAR_ETH_DEI.syntax,   (uint32_t)0)->asInt8 (0, 1);
         packet->addVlanTag (isCTag, vid, prio, dei);
     }
     return packet->getLength();
@@ -534,21 +534,21 @@ cLinkable* cInstructionParser::compileARP (cParameterList& params, bool isProbe,
 
         if (isProbe)
         {
-            arp->probe (cSettings::get().getMyMAC(), params.findParameter ("dip")->asIPv4());
+            arp->probe (cSettings::get().getMyMAC(), params.findParameter (PAR_IP_DIP.syntax)->asIPv4());
         }
         else if (isGratuitous)
         {
-            arp->announce (cSettings::get().getMyMAC(), getParameterOrOwnIPv4 (params, "dip"));
+            arp->announce (cSettings::get().getMyMAC(), getParameterOrOwnIPv4 (params, PAR_IP_DIP.syntax));
         }
         else
         {
-            cMacAddress targetMac = params.findParameter ("dmac", cMacAddress ((unsigned)0))->asMac();
+            cMacAddress targetMac = params.findParameter (PAR_ETH_DMAC.syntax, cMacAddress ((unsigned)0))->asMac();
 
-            arp->setAll (params.findParameter ("op", (uint32_t)1)->asInt16(),
-                         getParameterOrOwnMac (params, "smac"),
-                         getParameterOrOwnIPv4 (params, "sip"),
+            arp->setAll (params.findParameter (PAR_ARP_OP.syntax, (uint32_t)1)->asInt16(),
+                         getParameterOrOwnMac (params, PAR_ETH_SMAC.syntax),
+                         getParameterOrOwnIPv4 (params, PAR_IP_SIP.syntax),
                          targetMac,
-                         params.findParameter ("dip")->asIPv4()
+                         params.findParameter (PAR_IP_DIP.syntax)->asIPv4()
                         );
         }
 
@@ -571,18 +571,18 @@ bool cInstructionParser::parseIPv4Params (cParameterList& params, cIPPacket* pac
 {
     bool isMulticast = false;
 
-    packet->setDSCP         (params.findParameter ("dscp", (uint32_t)0)->asInt8(0, 0x3f));
-    packet->setECN          (params.findParameter ("ecn", (uint32_t)0)->asInt8(0, 3));
-    packet->setTimeToLive   (params.findParameter ("ttl", (uint32_t)64)->asInt8());
-    packet->setDontFragment (params.findParameter ("df", (uint32_t)0)->asInt8(0, 1));
+    packet->setDSCP         (params.findParameter (PAR_IP_DSCP.syntax, (uint32_t)0)->asInt8(0, 0x3f));
+    packet->setECN          (params.findParameter (PAR_IP_ECN.syntax, (uint32_t)0)->asInt8(0, 3));
+    packet->setTimeToLive   (params.findParameter (PAR_IP_TTL.syntax, (uint32_t)64)->asInt8());
+    packet->setDontFragment (params.findParameter (PAR_IP4_DF.syntax, (uint32_t)0)->asInt8(0, 1));
     if (!noDestinationIP)
     {
-        const cIPv4 destIP = params.findParameter ("dip")->asIPv4();
+        const cIPv4 destIP = params.findParameter (PAR_IP_DIP.syntax)->asIPv4();
         packet->setDestination (destIP);
         isMulticast = destIP.isMulticast();
     }
-    packet->setSource (getParameterOrOwnIPv4 (params, "sip"));
-    cParameter* optionalPar = params.findParameter ("id", true);
+    packet->setSource (getParameterOrOwnIPv4 (params, PAR_IP_SIP.syntax));
+    cParameter* optionalPar = params.findParameter (PAR_IP4_ID.syntax, true);
     if (optionalPar)
         packet->setIdentification(optionalPar->asInt16());
 
@@ -595,18 +595,18 @@ bool cInstructionParser::parseIPv6Params (cParameterList& params, cIPPacket* pac
 {
     bool isMulticast = false;
 
-    packet->setDSCP       (params.findParameter ("dscp", (uint32_t)0)->asInt8(0, 0x3f));
-    packet->setECN        (params.findParameter ("ecn",  (uint32_t)0)->asInt8(0, 3));
-    packet->setTimeToLive (params.findParameter ("ttl", (uint32_t)64)->asInt8());
+    packet->setDSCP       (params.findParameter (PAR_IP_DSCP.syntax, (uint32_t)0)->asInt8(0, 0x3f));
+    packet->setECN        (params.findParameter (PAR_IP_ECN.syntax,  (uint32_t)0)->asInt8(0, 3));
+    packet->setTimeToLive (params.findParameter (PAR_IP_TTL.syntax, (uint32_t)64)->asInt8());
 
     if (!noDestinationIP)
     {
-        const cIPv6 destIP = params.findParameter ("dip")->asIPv6();
+        const cIPv6 destIP = params.findParameter (PAR_IP_DIP.syntax)->asIPv6();
         packet->setDestination (destIP);
         isMulticast = destIP.isMulticast();
     }
-    packet->setSource (getParameterOrOwnIPv6 (params, "sip"));
-    cParameter* optionalPar = params.findParameter ("fl", true);
+    packet->setSource (getParameterOrOwnIPv6 (params, PAR_IP_SIP.syntax));
+    cParameter* optionalPar = params.findParameter (PAR_IP6_FL.syntax, true);
     if (optionalPar)
         packet->setFlowLabel (optionalPar->asInt32(0, 0xfffff));
 
@@ -629,8 +629,8 @@ cLinkable* cInstructionParser::compileIP (bool noEthHeader, cParameterList& para
             compileVLANTags   (params, &eth);
         }
         size_t len;
-        const uint8_t* payload = params.findParameter ("payload")->asStream(len);
-        ippacket->compile (params.findParameter ("protocol")->asInt8(), nullptr, 0, payload, len);
+        const uint8_t* payload = params.findParameter (PAR_IP_PAYLOAD.syntax)->asStream(len);
+        ippacket->compile (params.findParameter (PAR_IP_PROTOCOL.syntax)->asInt8(), nullptr, 0, payload, len);
     }
     catch (...)
     {
@@ -656,17 +656,17 @@ cLinkable* cInstructionParser::compileUDP (bool noEthHeader, cParameterList& par
             compileMacHeader  (params, &eth, false, m_ipOptionalDestMAC || destIsMulticast);
             compileVLANTags   (params, &eth);
         }
-        udppacket->setSourcePort(params.findParameter ("sport")->asInt16());
-        udppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
+        udppacket->setSourcePort(params.findParameter (PAR_UDP_SPORT.syntax)->asInt16());
+        udppacket->setDestinationPort(params.findParameter (PAR_UDP_DPORT.syntax)->asInt16());
 
         size_t len = 0;
         const uint8_t* payload = nullptr;
-        cParameter* optionalPar = params.findParameter ("payload", true);
+        cParameter* optionalPar = params.findParameter (PAR_UDP_PAYLOAD.syntax, true);
         if (optionalPar)
             payload = optionalPar->asStream(len);
         udppacket->compile (payload, len);
 
-        optionalPar = params.findParameter ("chksum", true);
+        optionalPar = params.findParameter (PAR_UDP_CHKSUM.syntax, true);
         if (optionalPar)
             udppacket->setChecksum (optionalPar->asInt16());
     }
@@ -695,14 +695,14 @@ cLinkable* cInstructionParser::compileVXLAN (bool noEthHeader, cParameterList& p
             compileMacHeader (params, &eth, false, m_ipOptionalDestMAC || destIsMulticast);
             compileVLANTags  (params, &eth);
         }
-        vxlanpacket->setSourcePort (params.findParameter ("sport")->asInt16());
-        vxlanpacket->setDestinationPort (params.findParameter ("dport", (uint32_t)4789)->asInt16());
-        vxlanpacket->setVni (params.findParameter ("vni", (uint32_t)0)->asInt32(0, 0x00ffffff));
+        vxlanpacket->setSourcePort (params.findParameter (PAR_UDP_SPORT.syntax)->asInt16());
+        vxlanpacket->setDestinationPort (params.findParameter (PAR_UDP_DPORT.syntax, (uint32_t)4789)->asInt16());
+        vxlanpacket->setVni (params.findParameter (PAR_VXLAN_VNI.syntax, (uint32_t)0)->asInt32(0, 0x00ffffff));
 
         size_t len = 0;
         const uint8_t* payload = nullptr;
 
-        cParameter* optionalPar = params.findParameter ("payload", true);
+        cParameter* optionalPar = params.findParameter (PAR_VXLAN_PAYLOAD.syntax, true);
         if (optionalPar)
         {
             payload = compileEmbedded (optionalPar, false, len);
@@ -736,33 +736,33 @@ cLinkable* cInstructionParser::compileTCP (bool noEthHeader, cParameterList& par
             compileMacHeader  (params, &eth, false, m_ipOptionalDestMAC || destIsMulticast);
             compileVLANTags   (params, &eth);
         }
-        tcppacket->setSourcePort(params.findParameter ("sport")->asInt16());
-        tcppacket->setDestinationPort(params.findParameter ("dport")->asInt16());
+        tcppacket->setSourcePort(params.findParameter (PAR_TCP_SPORT.syntax)->asInt16());
+        tcppacket->setDestinationPort(params.findParameter (PAR_TCP_DPORT.syntax)->asInt16());
 
-        tcppacket->setSeqNumber (params.findParameter ("seq")->asInt32());
-        tcppacket->setAckNumber (params.findParameter ("ack")->asInt32());
+        tcppacket->setSeqNumber (params.findParameter (PAR_TCP_SEQ.syntax)->asInt32());
+        tcppacket->setAckNumber (params.findParameter (PAR_TCP_ACK.syntax)->asInt32());
 
-        tcppacket->setWindow (params.findParameter ("win", (uint32_t)1024)->asInt16());
-        tcppacket->setUrgentPointer (params.findParameter ("urgptr", (uint32_t)0)->asInt16());
+        tcppacket->setWindow (params.findParameter (PAR_TCP_WIN.syntax, (uint32_t)1024)->asInt16());
+        tcppacket->setUrgentPointer (params.findParameter (PAR_TCP_URGPTR.syntax, (uint32_t)0)->asInt16());
 
         // Flags
-        tcppacket->setFlagFIN (!!(params.findParameter ("FIN",    (uint32_t)0)->asInt8(0, 1)));
-        tcppacket->setFlagSYN (!!(params.findParameter ("SYN",    (uint32_t)0)->asInt8(0, 1)));
-        tcppacket->setFlagRST (!!(params.findParameter ("RESET",  (uint32_t)0)->asInt8(0, 1)));
-        tcppacket->setFlagPSH (!!(params.findParameter ("PUSH",   (uint32_t)0)->asInt8(0, 1)));
-        tcppacket->setFlagACK (!!(params.findParameter ("ACK",    (uint32_t)0)->asInt8(0, 1)));
-        tcppacket->setFlagURG (!!(params.findParameter ("URGENT", (uint32_t)0)->asInt8(0, 1)));
-        tcppacket->setFlagECE (!!(params.findParameter ("ECN",    (uint32_t)0)->asInt8(0, 1)));
-        tcppacket->setFlagCWR (!!(params.findParameter ("CWR",    (uint32_t)0)->asInt8(0, 1)));
-        tcppacket->setFlagNON (!!(params.findParameter ("NONCE",  (uint32_t)0)->asInt8(0, 1)));
+        tcppacket->setFlagFIN (!!(params.findParameter (PAR_TCP_FIN.syntax,    (uint32_t)0)->asInt8(0, 1)));
+        tcppacket->setFlagSYN (!!(params.findParameter (PAR_TCP_SYN.syntax,    (uint32_t)0)->asInt8(0, 1)));
+        tcppacket->setFlagRST (!!(params.findParameter (PAR_TCP_RESET.syntax,  (uint32_t)0)->asInt8(0, 1)));
+        tcppacket->setFlagPSH (!!(params.findParameter (PAR_TCP_PUSH.syntax,   (uint32_t)0)->asInt8(0, 1)));
+        tcppacket->setFlagACK (!!(params.findParameter (PAR_TCP_ACKFLAG.syntax,(uint32_t)0)->asInt8(0, 1)));
+        tcppacket->setFlagURG (!!(params.findParameter (PAR_TCP_URGENT.syntax, (uint32_t)0)->asInt8(0, 1)));
+        tcppacket->setFlagECE (!!(params.findParameter (PAR_TCP_ECN.syntax,    (uint32_t)0)->asInt8(0, 1)));
+        tcppacket->setFlagCWR (!!(params.findParameter (PAR_TCP_CWR.syntax,    (uint32_t)0)->asInt8(0, 1)));
+        tcppacket->setFlagNON (!!(params.findParameter (PAR_TCP_NONCE.syntax,  (uint32_t)0)->asInt8(0, 1)));
 
         size_t len = 0;
         const uint8_t* payload = nullptr;
-        optionalPar = params.findParameter ("payload", true);
+        optionalPar = params.findParameter (PAR_TCP_PAYLOAD.syntax, true);
         if (optionalPar)
             payload = optionalPar->asStream(len);
 
-        optionalPar = params.findParameter ("chksum", true);
+        optionalPar = params.findParameter (PAR_TCP_CHKSUM.syntax, true);
         if (optionalPar)
         {
             userDefinedChecksum = true;
@@ -1044,18 +1044,18 @@ cLinkable* cInstructionParser::compileVRRP (bool noEthHeader, cParameterList& pa
             compileMacHeader  (params, &eth, true);
             compileVLANTags   (params, &eth);
         }
-        const cParameter* firstVRIP = params.findParameter ("vrip");
+        const cParameter* firstVRIP = params.findParameter (PAR_VRRP_VRIP.syntax);
 
         vrrp->setVersion(version);
-        vrrp->setVRID(params.findParameter ("vrid")->asInt8(1, 255));
+        vrrp->setVRID(params.findParameter (PAR_VRRP_VRID.syntax)->asInt8(1, 255));
         vrrp->addVirtualIP(firstVRIP->asIPv4());
-        vrrp->setPrio(params.findParameter ("vrprio", (uint32_t)100)->asInt8());
-        vrrp->setType(params.findParameter ("type", (uint32_t)1)->asInt8(0, 15));
+        vrrp->setPrio(params.findParameter (PAR_VRRP_VRPRIO.syntax, (uint32_t)100)->asInt8());
+        vrrp->setType(params.findParameter (PAR_VRRP_TYPE.syntax, (uint32_t)1)->asInt8(0, 15));
         if (version == 2)
-            vrrp->setInterval(params.findParameter ("aint", (uint32_t)1)->asInt8());
+            vrrp->setInterval(params.findParameter (PAR_VRRP_AINT.syntax, (uint32_t)1)->asInt8());
         else
-            vrrp->setInterval(params.findParameter ("aint", (uint32_t)100)->asInt16(0, 4095));
-        const cParameter* optionalPar = params.findParameter ("chksum", true);
+            vrrp->setInterval(params.findParameter (PAR_VRRP_AINT.syntax, (uint32_t)100)->asInt16(0, 4095));
+        const cParameter* optionalPar = params.findParameter (PAR_VRRP_CHKSUM.syntax, true);
         if (optionalPar)
         {
             userDefinedChecksum = true;
@@ -1066,7 +1066,7 @@ cLinkable* cInstructionParser::compileVRRP (bool noEthHeader, cParameterList& pa
         optionalPar = firstVRIP;
         int vripCount = 1;
         while ((++vripCount <= 255 ) &&
-               ((optionalPar = params.findParameter(optionalPar, nullptr, "vrip", true)) != nullptr))
+               ((optionalPar = params.findParameter(optionalPar, nullptr, PAR_VRRP_VRIP.syntax, true)) != nullptr))
         {
             vrrp->addVirtualIP (optionalPar->asIPv4());
         }
@@ -1099,38 +1099,38 @@ cLinkable* cInstructionParser::compileSTP (bool noEthHeader, cParameterList& par
         {
             int flags = 0;
             uint32_t pathCost;
-            unsigned rootBridgePrio          = params.findParameter ("rbprio", (uint32_t)8)->asInt8 (0, 15);
-            unsigned rootBridgeId            = params.findParameter ("rbidext", (uint32_t)0)->asInt16 (0, 4095);
-            const cMacAddress& rootBridgeMac = getParameterOrOwnMac (params, "rbmac");
-            unsigned bridgePrio              = params.findParameter ("bprio", (uint32_t)8)->asInt8 (0, 15);
-            unsigned bridgeId                = params.findParameter ("bidext", (uint32_t)0)->asInt16 (0, 4095);
-            const cMacAddress& bridgeMac     = getParameterOrOwnMac (params, "bmac");
-            unsigned portPrio                = params.findParameter ("pprio", (uint32_t)8)->asInt8 (0, 15);
-            unsigned portNumber              = params.findParameter ("pnum", (uint32_t)1)->asInt16 (1, 4095);
-            double msgAge                    = params.findParameter ("msgage", 0.0)->asDouble (0.0, 255.996);
-            double maxAge                    = params.findParameter ("maxage", 20.0)->asDouble (0.0, 255.996);
-            double helloTime                 = params.findParameter ("hello", 2.0)->asDouble (0.0, 255.996);
-            double forwardDelay              = params.findParameter ("delay", 15.0)->asDouble (0.0, 255.996);
+            unsigned rootBridgePrio          = params.findParameter (PAR_STP_RBPRIO.syntax, (uint32_t)8)->asInt8 (0, 15);
+            unsigned rootBridgeId            = params.findParameter (PAR_STP_RBIDEXT.syntax, (uint32_t)0)->asInt16 (0, 4095);
+            const cMacAddress& rootBridgeMac = getParameterOrOwnMac (params, PAR_STP_RBMAC.syntax);
+            unsigned bridgePrio              = params.findParameter (PAR_STP_BPRIO.syntax, (uint32_t)8)->asInt8 (0, 15);
+            unsigned bridgeId                = params.findParameter (PAR_STP_BIDEXT.syntax, (uint32_t)0)->asInt16 (0, 4095);
+            const cMacAddress& bridgeMac     = getParameterOrOwnMac (params, PAR_STP_BMAC.syntax);
+            unsigned portPrio                = params.findParameter (PAR_STP_PPRIO.syntax, (uint32_t)8)->asInt8 (0, 15);
+            unsigned portNumber              = params.findParameter (PAR_STP_PNUM.syntax, (uint32_t)1)->asInt16 (1, 4095);
+            double msgAge                    = params.findParameter (PAR_STP_MSGAGE.syntax, 0.0)->asDouble (0.0, 255.996);
+            double maxAge                    = params.findParameter (PAR_STP_MAXAGE.syntax, 20.0)->asDouble (0.0, 255.996);
+            double helloTime                 = params.findParameter (PAR_STP_HELLO.syntax, 2.0)->asDouble (0.0, 255.996);
+            double forwardDelay              = params.findParameter (PAR_STP_DELAY.syntax, 15.0)->asDouble (0.0, 255.996);
 
-            flags |= params.findParameter ("topochange",    (uint32_t)0)->asInt8 (0, 1) ? cStpPacket::TOPO_CHANGE : 0;
-            flags |= params.findParameter ("topochangeack", (uint32_t)0)->asInt8 (0, 1) ? cStpPacket::TOPO_CHANGE_ACK : 0;
+            flags |= params.findParameter (PAR_STP_TOPOCHANGE.syntax,    (uint32_t)0)->asInt8 (0, 1) ? cStpPacket::TOPO_CHANGE : 0;
+            flags |= params.findParameter (PAR_STP_TOPOCHANGEACK.syntax, (uint32_t)0)->asInt8 (0, 1) ? cStpPacket::TOPO_CHANGE_ACK : 0;
 
             if (isRSTP)
             {
-                pathCost      = params.findParameter ("rpathcost", (uint32_t)20000)->asInt32 (1, 4294967295);
-                unsigned role = params.findParameter ("portrole",  (uint32_t)3)->asInt8 (1, 3);
+                pathCost      = params.findParameter (PAR_STP_RPATHCOST.syntax, (uint32_t)20000)->asInt32 (1, 4294967295);
+                unsigned role = params.findParameter (PAR_STP_PORTROLE.syntax,  (uint32_t)3)->asInt8 (1, 3);
 
-                flags |= params.findParameter ("proposal",   (uint32_t)0)->asInt8 (0, 1) ? cStpPacket::PROPOSAL   : 0;
-                flags |= params.findParameter ("learning",   (uint32_t)1)->asInt8 (0, 1) ? cStpPacket::LEARNING   : 0;
-                flags |= params.findParameter ("forwarding", (uint32_t)1)->asInt8 (0, 1) ? cStpPacket::FORWARDING : 0;
-                flags |= params.findParameter ("agreement",  (uint32_t)0)->asInt8 (0, 1) ? cStpPacket::AGREEMENT  : 0;
+                flags |= params.findParameter (PAR_STP_PROPOSAL.syntax,   (uint32_t)0)->asInt8 (0, 1) ? cStpPacket::PROPOSAL   : 0;
+                flags |= params.findParameter (PAR_STP_LEARNING.syntax,   (uint32_t)1)->asInt8 (0, 1) ? cStpPacket::LEARNING   : 0;
+                flags |= params.findParameter (PAR_STP_FORWARDING.syntax, (uint32_t)1)->asInt8 (0, 1) ? cStpPacket::FORWARDING : 0;
+                flags |= params.findParameter (PAR_STP_AGREEMENT.syntax,  (uint32_t)0)->asInt8 (0, 1) ? cStpPacket::AGREEMENT  : 0;
 
                 stp->compileConfigPduRstp (rootBridgePrio, rootBridgeId, rootBridgeMac, pathCost, bridgePrio, bridgeId,
                         bridgeMac, portPrio, portNumber, msgAge, maxAge, helloTime, forwardDelay, flags, role);
             }
             else
             {
-                pathCost = params.findParameter ("rpathcost", (uint32_t)4)->asInt32 (1, 65535);
+                pathCost = params.findParameter (PAR_STP_RPATHCOST.syntax, (uint32_t)4)->asInt32 (1, 65535);
 
                 stp->compileConfigPdu (rootBridgePrio, rootBridgeId, rootBridgeMac, pathCost, bridgePrio, bridgeId,
                         bridgeMac, portPrio, portNumber, msgAge, maxAge, helloTime, forwardDelay, flags);
@@ -1175,23 +1175,23 @@ cLinkable* cInstructionParser::compileIGMP  (bool noEthHeader, cParameterList& p
             if (v3)
             {
                 cParameter* optionalPar = nullptr;
-                s    = !!params.findParameter ("s", (uint32_t)0)->asInt8 (0, 1);
-                qrv  =   params.findParameter ("qrv", (uint32_t)2)->asInt8 (0, 7);
-                qqic =   params.findParameter ("qqic", 125.0)->asDouble (0, 31744.0);
-                time =   params.findParameter ("time", 10.0)->asDouble (0, 3174.4);
+                s    = !!params.findParameter (PAR_IGMP_S.syntax, (uint32_t)0)->asInt8 (0, 1);
+                qrv  =   params.findParameter (PAR_IGMP_QRV.syntax, (uint32_t)2)->asInt8 (0, 7);
+                qqic =   params.findParameter (PAR_IGMP_QQIC.syntax, 125.0)->asDouble (0, 31744.0);
+                time =   params.findParameter (PAR_IGMP_TIME.syntax, 10.0)->asDouble (0, 3174.4);
 
                 int sources = 0;
                 while ((++sources <= 366 ) &&
-                       ((optionalPar = params.findParameter(optionalPar, nullptr, "rsip", true)) != nullptr))
+                       ((optionalPar = params.findParameter(optionalPar, nullptr, PAR_IGMP_RSIP.syntax, true)) != nullptr))
                 {
                     igmp->v3addSource (optionalPar->asIPv4());
                 }
             }
             else
             {
-                time = params.findParameter ("time", 10.0)->asDouble (0, 25.5);
+                time = params.findParameter (PAR_IGMP_TIME.syntax, 10.0)->asDouble (0, 25.5);
             }
-            cParameter* optionalPar = params.findParameter ("group", true);
+            cParameter* optionalPar = params.findParameter (PAR_IGMP_GROUP.syntax, true);
             if (optionalPar)
                 igmp->compileGroupQuery(v3, time, s, qrv, qqic, optionalPar->asIPv4 ());
             else
@@ -1199,7 +1199,7 @@ cLinkable* cInstructionParser::compileIGMP  (bool noEthHeader, cParameterList& p
         }
         else
         {
-            cIPv4 group = params.findParameter ("group")->asIPv4 ();
+            cIPv4 group = params.findParameter (PAR_IGMP_GROUP.syntax)->asIPv4 ();
             if (report)
             {
                 igmp->compileReport (group);
@@ -1210,8 +1210,8 @@ cLinkable* cInstructionParser::compileIGMP  (bool noEthHeader, cParameterList& p
             }
             else    // raw v12 packet
             {
-                uint8_t type = params.findParameter ("type")->asInt8();
-                uint8_t time = params.findParameter ("time", (uint32_t)0)->asInt8();
+                uint8_t type = params.findParameter (PAR_IGMP_TYPE.syntax)->asInt8();
+                uint8_t time = params.findParameter (PAR_IGMP_TIME.syntax, (uint32_t)0)->asInt8();
                 igmp->v12compile (type, time, group);
             }
         }
@@ -1241,16 +1241,16 @@ cLinkable* cInstructionParser::compileICMP  (bool noEthHeader, cParameterList& p
             compileMacHeader  (params, &eth, false, m_ipOptionalDestMAC || destIsMulticast);
             compileVLANTags   (params, &eth);
         }
-        uint8_t type = params.findParameter ("type")->asInt8();
-        uint8_t code = params.findParameter ("code")->asInt8();
+        uint8_t type = params.findParameter (PAR_ICMP4_TYPE.syntax)->asInt8();
+        uint8_t code = params.findParameter (PAR_ICMP4_CODE.syntax)->asInt8();
 
         size_t len = 0;
         const uint8_t* payload = nullptr;
-        cParameter* optionalPar = params.findParameter ("payload", true);
+        cParameter* optionalPar = params.findParameter (PAR_ICMP4_PAYLOAD.syntax, true);
         if (optionalPar)
             payload = optionalPar->asStream(len);
 
-        optionalPar = params.findParameter ("chksum", true);
+        optionalPar = params.findParameter (PAR_ICMP4_CHKSUM.syntax, true);
         if (optionalPar)
             icmppacket->compileRaw(type, code, optionalPar->asInt16(), payload, len);
         else
@@ -1280,11 +1280,11 @@ cLinkable* cInstructionParser::compileICMPWithEmbedded  (bool noEthHeader, cPara
             compileMacHeader  (params, &eth, false, m_ipOptionalDestMAC || destIsMulticast);
             compileVLANTags   (params, &eth);
         }
-        uint8_t code = params.findParameter ("code", (uint32_t)0)->asInt8();
+        uint8_t code = params.findParameter (PAR_ICMP4_CODE.syntax, (uint32_t)0)->asInt8();
 
         size_t len = 0;
         const uint8_t* payload = nullptr;
-        cParameter* optionalPar = params.findParameter ("payload", true);
+        cParameter* optionalPar = params.findParameter (PAR_ICMP4_PAYLOAD.syntax, true);
         if (optionalPar)
             payload = compileEmbedded (optionalPar, true, len);
 
@@ -1314,12 +1314,12 @@ cLinkable* cInstructionParser::compileICMPRedirect  (bool noEthHeader, cParamete
             compileMacHeader  (params, &eth, false, m_ipOptionalDestMAC || destIsMulticast);
             compileVLANTags   (params, &eth);
         }
-        uint8_t code = params.findParameter ("code", (uint32_t)0)->asInt8();
-        const cIPv4 gw = params.findParameter ("gw")->asIPv4();
+        uint8_t code = params.findParameter (PAR_ICMP4_CODE.syntax, (uint32_t)0)->asInt8();
+        const cIPv4 gw = params.findParameter (PAR_ICMP4_GW.syntax)->asIPv4();
 
         size_t len = 0;
         const uint8_t* payload = nullptr;
-        cParameter* optionalPar = params.findParameter ("payload", true);
+        cParameter* optionalPar = params.findParameter (PAR_ICMP4_PAYLOAD.syntax, true);
         if (optionalPar)
             payload = compileEmbedded (optionalPar, true, len);
 
@@ -1349,12 +1349,12 @@ cLinkable* cInstructionParser::compileICMPPing (bool noEthHeader, cParameterList
             compileMacHeader  (params, &eth, false, m_ipOptionalDestMAC || destIsMulticast);
             compileVLANTags   (params, &eth);
         }
-        uint16_t id  = params.findParameter ("id",  (uint32_t)0)->asInt16 ();
-        uint16_t seq = params.findParameter ("seq", (uint32_t)0)->asInt16 ();
+        uint16_t id  = params.findParameter (PAR_ICMP4_ID.syntax,  (uint32_t)0)->asInt16 ();
+        uint16_t seq = params.findParameter (PAR_ICMP4_SEQ.syntax, (uint32_t)0)->asInt16 ();
 
         size_t len = 0;
         const uint8_t* payload = nullptr;
-        cParameter* optionalPar = params.findParameter ("payload", true);
+        cParameter* optionalPar = params.findParameter (PAR_ICMP4_PAYLOAD.syntax, true);
         if (optionalPar)
             payload = compileEmbedded (optionalPar, true, len);
 
@@ -1385,18 +1385,18 @@ cLinkable* cInstructionParser::compileGRE (bool noEthHeader, cParameterList& par
             compileMacHeader (params, &eth, false, m_ipOptionalDestMAC || destIsMulticast);
             compileVLANTags  (params, &eth);
         }
-        grepacket->setProtocolType (params.findParameter ("protocol")->asInt16());
+        grepacket->setProtocolType (params.findParameter (PAR_GRE_PROTOCOL.syntax)->asInt16());
 
         cParameter* optionalPar;
-        optionalPar = params.findParameter ("key", true);
+        optionalPar = params.findParameter (PAR_GRE_KEY.syntax, true);
         if (optionalPar)
             grepacket->setKey (optionalPar->asInt32 ());
-        optionalPar = params.findParameter ("seq", true);
+        optionalPar = params.findParameter (PAR_GRE_SEQ.syntax, true);
         if (optionalPar)
             grepacket->setSequence (optionalPar->asInt32 ());
 
         bool calcChecksum = false;
-        optionalPar = params.findParameter ("chksum", true);
+        optionalPar = params.findParameter (PAR_GRE_CHKSUM.syntax, true);
         if (optionalPar)
         {
             uint16_t checksum = optionalPar->asInt16();
@@ -1406,7 +1406,7 @@ cLinkable* cInstructionParser::compileGRE (bool noEthHeader, cParameterList& par
 
         size_t len = 0;
         const uint8_t* payload = nullptr;
-        optionalPar = params.findParameter ("payload", true);
+        optionalPar = params.findParameter (PAR_GRE_PAYLOAD.syntax, true);
         if (optionalPar)
             payload = compileEmbedded (optionalPar, true, len);
         grepacket->compile (payload, len, calcChecksum);
