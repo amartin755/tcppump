@@ -1,0 +1,3 @@
+[submodule "libcmdline"]
+	path = libcmdline
+	url = git@github.com:amartin755/libcmdline.git

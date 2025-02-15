@@ -61,7 +61,8 @@ class FileParseException;
 class cTcpPump : public cCmdlineApp
 {
 public:
-    cTcpPump (const char* name, const char* brief, const char* usage, const char* description);
+    cTcpPump (const char* name, const char* brief, const char* usage, const char* description,
+        const char* version, const char* build, const char* buildDetails);
     virtual ~cTcpPump();
 
     int execute (const std::list<std::string>& args);

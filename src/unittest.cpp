@@ -26,7 +26,7 @@
 #include "pcapfileio.hpp"
 #include "ethernetpacket.hpp"
 #include "arppacket.hpp"
-#include "common/bug.hpp"
+#include "bug.hpp"
 #include "ippacket.hpp"
 #include "parameterlist.hpp"
 #include "instructionparser.hpp"
@@ -64,7 +64,6 @@ int main (void)
         cIPv6::unitTest ();
         cMacAddress::unitTest ();
         cTimeval::unitTest ();
-        cCmdline::unitTest ();
         cInetChecksum::unitTest();
         cEthernetPacket::unitTest ();
         cArpPacket::unitTest ();

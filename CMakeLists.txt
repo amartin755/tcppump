@@ -252,12 +252,13 @@ if (HAVE_PCAP)
     endif ()
 endif ()
 
+add_subdirectory (libcmdline)
 
 # target tcppump (main binary)
 ###############################################################################
 add_executable (tcppump)
 add_subdirectory (src)
-target_link_libraries (tcppump LINK_PUBLIC ${LIBS})
+target_link_libraries (tcppump PRIVATE ${LIBS} cmdline)
 target_sources (tcppump PRIVATE ${MAIN_SOURCES})
 target_include_directories (tcppump PRIVATE ${INCLUDES})
 
@@ -278,7 +279,7 @@ endif()
 if (WITH_UNITTESTS)
     add_executable (unittest)
 
-    target_link_libraries (unittest PRIVATE ${LIBS})
+    target_link_libraries (unittest PRIVATE ${LIBS} cmdline)
     target_compile_definitions (unittest PRIVATE WITH_UNITTESTS)
     target_sources (unittest PRIVATE ${UTEST_SOURCES})
     target_include_directories (unittest PRIVATE ${INCLUDES})

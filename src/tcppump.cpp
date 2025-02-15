@@ -45,8 +45,9 @@
 #include "random.hpp"
 
 
-cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const char* description)
-: cCmdlineApp (name, brief, usage, description)
+cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const char* description,
+    const char* version, const char* build, const char* buildDetails)
+: cCmdlineApp (name, brief, usage, description, version, build, buildDetails)
 {
     cRandom::create();
 
@@ -434,6 +435,7 @@ int main(int argc, char* argv[])
             "tcppump",
             "An Ethernet packet generator",
             "tcppump -i IFC [OPTIONS] packets/infiles",
-            "Homepage: <https://github.com/amartin755/tcppump>");
+            "Homepage: <https://github.com/amartin755/tcppump>",
+            APP_VERSION, BUILD_TIME,  GIT_BRANCH GIT_COMMIT BUILD_TYPE);
     return app.main (argc, argv);
 }
