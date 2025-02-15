@@ -21,7 +21,6 @@
 #define TCPPUMP_HPP
 
 
-#include <list>
 #include <cstddef>
 #include "cmdlineapp.hpp"
 #include "ethernetpacket.hpp"
@@ -32,7 +31,6 @@ struct appOptions
 {
     const char*  ifc;
     int          repeat;
-    int          verbosity;
     int          delay;
     const char*  timeRes;
     int          script;
@@ -65,7 +63,7 @@ public:
         const char* version, const char* build, const char* buildDetails);
     virtual ~cTcpPump();
 
-    int execute (const std::list<std::string>& args);
+    int execute (const std::vector<std::string>& args);
 
 private:
     void printParseError (const ParseException &e) const;

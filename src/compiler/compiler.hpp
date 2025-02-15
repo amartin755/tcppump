@@ -21,7 +21,7 @@
 #define COMPILER_HPP_
 
 #include <string>
-#include <list>
+#include <vector>
 #include <iostream>
 #include "packetdata.hpp"
 #include "macaddress.hpp"
@@ -40,12 +40,12 @@ public:
     };
 
     cCompiler (inputType type, const cTimeval& activeDelay, unsigned defaultDelayScale, bool ipOptionalDestMAC, double pcapScaling);
-    cPacketData& operator<< (const std::list<std::string>& input);
+    cPacketData& operator<< (const std::vector<std::string>& input);
 
 private:
-    void processPackets (const std::list<std::string>& input);
-    void processScriptFiles (const std::list<std::string>& input);
-    void processPcapFiles (const std::list<std::string>& input);
+    void processPackets (const std::vector<std::string>& input);
+    void processScriptFiles (const std::vector<std::string>& input);
+    void processPcapFiles (const std::vector<std::string>& input);
 
     cPacketData data;
     inputType type;

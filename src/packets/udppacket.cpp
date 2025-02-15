@@ -83,9 +83,7 @@ uint16_t cUdpPacket::calcChecksum (const uint8_t* payload, size_t len) const
             src.get(),
             dst.get(),
             htons((uint32_t)cIPPacket::getPayloadLength()),
-            0,
-            0,
-            0,
+            {0, 0, 0},
             PROTO_UDP,
         };
 

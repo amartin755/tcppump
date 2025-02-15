@@ -35,7 +35,7 @@ cCompiler::cCompiler (inputType t, const cTimeval& delay, unsigned delayScale, b
 }
 
 
-cPacketData& cCompiler::operator<< (const std::list<std::string>& input)
+cPacketData& cCompiler::operator<< (const std::vector<std::string>& input)
 {
     switch (type)
     {
@@ -55,7 +55,7 @@ cPacketData& cCompiler::operator<< (const std::list<std::string>& input)
 }
 
 
-void cCompiler::processPcapFiles (const std::list<std::string>& input)
+void cCompiler::processPcapFiles (const std::vector<std::string>& input)
 {
     Console::PrintDebug ("Parsing %d PCAP files ...\n", (int)input.size());
 
@@ -96,7 +96,7 @@ void cCompiler::processPcapFiles (const std::list<std::string>& input)
 }
 
 
-void cCompiler::processPackets (const std::list<std::string>& input)
+void cCompiler::processPackets (const std::vector<std::string>& input)
 {
     cInstructionParser::cResult result;
     cTimeval timestamp, currtime;
@@ -139,7 +139,7 @@ void cCompiler::processPackets (const std::list<std::string>& input)
 }
 
 
-void cCompiler::processScriptFiles (const std::list<std::string>& input)
+void cCompiler::processScriptFiles (const std::vector<std::string>& input)
 {
     cInstructionParser::cResult result;
     cTimeval timestamp, currtime, scriptStartTime;

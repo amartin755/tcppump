@@ -83,10 +83,6 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
             "Use random destination MAC address. Overwrites all explicitly defined addresses in packets.", &options.randDstMac);
     addCmdLineOption (true, 0, "overwrite-dmac", "MAC",
             "Overwrite destination MAC address of all packets to MAC", &options.overwriteDMAC);
-    addCmdLineOption (true, 'v', "verbose",
-            "When parsing and printing, produce verbose output. This option can be supplied multiple times\n\t"
-            "(max. 4 times, i.e. -vvvv) for even more debug output. "
-            , &options.verbosity);
     addCmdLineOption (true, 's', "script",
             "Packets are defined in script files, that contain token based packets.", &options.script);
     addCmdLineOption (true, "pcap", "SCALE",
@@ -124,34 +120,17 @@ cTcpPump::~cTcpPump()
     cRandom::destroy();
 }
 
-int cTcpPump::execute (const std::list<std::string>& args)
+int cTcpPump::execute (const std::vector<std::string>& args)
 {
     cMacAddress overwriteDMAC;
     double pcapScale = 1.0;
 
 
-    switch (options.verbosity)
-    {
-    case 1:
-        Console::SetPrintLevel(Console::Verbose);
-        break;
-    case 2:
-        Console::SetPrintLevel(Console::MoreVerbose);
-        break;
-    case 3:
-        Console::SetPrintLevel(Console::MostVerbose);
-        break;
-    case 4:
-        Console::SetPrintLevel(Console::Debug);
-        break;
-    }
-
-    if (args.size() && !args.cbegin()->compare ("help"))
+    if (args.size() && !args[0].compare ("help"))
     {
         if (args.size() > 1)
         {
-            const auto& protocol = ++args.cbegin();
-            cInstructionParser::printProtocolList (protocol->c_str());
+            cInstructionParser::printProtocolList (args[0].c_str());
         }
         else
         {
