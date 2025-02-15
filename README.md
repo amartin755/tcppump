@@ -42,7 +42,6 @@ Supported protocols and packet formats
 `tcppump` has been successfully compiled on **Ubuntu Linux (x64)** using **GCC** and on **Windows 10/11** using **MinGW32, MinGW64 (MSYS2), and MSVC.**
 In theory, it should also compile with other **C++11-compatible** compilers, though this has not been tested.
 
-
 ### Dependencies
 * cmake >= V3.13
 * C++11 compiler
@@ -360,7 +359,6 @@ rstp                Rapid Spanning Tree Protocol
    dei              Drop Eligible Indicator
 
 stp-tcn             STP Topology Change Notification
- optional
 
 igmp                Raw IGMP V1/V2 packet
    dmac             Destination EUI-48 Mac address
