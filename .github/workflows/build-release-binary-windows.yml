@@ -20,7 +20,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
-        ref: ${{ github.ref }}
+        submodules: 'true'
 
     - name: ipconfig
       run: ipconfig /all

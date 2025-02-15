@@ -15,7 +15,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
-        ref: ${{ github.ref }}
+        submodules: 'true'
 
     - name: Install Dependencies
       # install libpcap and its development files
