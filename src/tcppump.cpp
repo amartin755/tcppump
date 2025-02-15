@@ -61,57 +61,62 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
     ifc             = nullptr;
 
     addCmdLineOption (true, 'i', "interface", "IFC",
-            "Name of the network interface via which the packets are sent."
+            "Specify the name of the network interface through which packets are sent."
 #if HAVE_WINDOWS
-            "\n\t"
-            "It can either be the AdapterName (GUID) like \"{3F4A136A-2ED5-4226-9CB2-7A511E93CD48}\", \n\t"
-            "or the so-called FriendlyName, which is changeable by the user.\n\t"
+            "It can either be the AdapterName (GUID) like \"{3F4A136A-2ED5-4226-9CB2-7A511E93CD48}\", "
+            "or the so-called FriendlyName, which is changeable by the user. "
             "For example \"WiFi\" or \"Local Area Connection 1\"."
 #endif
             , &options.ifc);
     addCmdLineOption (true, 0, "myip4", "IPV4",
-            "Use IPV4 as source IPv4 address instead of the network adapters ip address", &options.myIP);
+            "Use the specified IPv4 address as the source IP address instead of the network interface's IP address.",
+            &options.myIP);
     addCmdLineOption (true, 0, "myip6", "IPV6",
-            "Use IPV6 as source IPv6 address instead of the network adapters ip address", &options.myIPv6);
+            "Use the specified IPv6 address as the source IP address instead of the network interface's IP address.",
+            &options.myIPv6);
     addCmdLineOption (true, 0, "mymac", "MAC",
-            "Use MAC as source MAC address instead of the network adapters MAC address", &options.myMAC);
+            "Use the specified MAC address as the source MAC address instead of the network interface's MAC address.",
+            &options.myMAC);
     addCmdLineOption (true, 0, "mtu", "MTU",
-            "Use MTU instead of the network adapters mtu", (int*)&options.mtu);
+            "Use the specified MTU instead of the network interface's MTU.", (int*)&options.mtu);
     addCmdLineOption (true, 0, "rand-smac",
-            "Use random source MAC address. Overwrites --mymac as well as explicitly defined addresses in packets.", &options.randSrcMac);
+            "Use a random source MAC address. This overwrites --mymac and any explicitly defined addresses in the packets.",
+            &options.randSrcMac);
     addCmdLineOption (true, 0, "rand-dmac",
-            "Use random destination MAC address. Overwrites all explicitly defined addresses in packets.", &options.randDstMac);
+            "Use a random destination MAC address. This overwrites all explicitly defined destination MAC addresses in the packets.",
+             &options.randDstMac);
     addCmdLineOption (true, 0, "overwrite-dmac", "MAC",
-            "Overwrite destination MAC address of all packets to MAC", &options.overwriteDMAC);
+            "Overwrite the destination MAC address of all packets with the specified MAC address.", &options.overwriteDMAC);
     addCmdLineOption (true, 's', "script",
-            "Packets are defined in script files, that contain token based packets.", &options.script);
+            "Read packets from script file instead of command-line.", &options.script);
     addCmdLineOption (true, "pcap", "SCALE",
-            "pcap file of captured packets (e.g via wireshark or tcpdump) will be replayed.\n\t"
-            "The transmission time can be scaled via the optional parameter SCALE. \n\t"
-            "Default value of SCALE is 1.0, which means the file is played in realtime.\n\t"
-            "For example a value of 2.0 means it is played half as fast, 0.5 means twice as fast.\n\t"
-            "If SCALE is 0 the file will be played as fast as possible."
+            "Replay PCAP files of captured packets (e.g via Wireshark or tcpdump). "
+            "The transmission time can be scaled using the optional SCALE parameter. "
+            "The default value for SCALE is 1.0, meaning the file is played in real-time. "
+            "A value of 2.0 slows playback to half speed, while 0.5 plays it at twice the speed. "
+            "A value of 0 plays the file as quickly as possible."
             , &options.pcap, &options.pcapScaling);
     addCmdLineOption (true, 'l', "loop", "N",
-            "Send all files/packets N times. Default: N = 1. If N = 0, packets will be sent infinitely\n\t"
-            "until ctrl+c is pressed.", &options.repeat);
-    addCmdLineOption (true, 'd', "delay", "TIME", "Packet transmission is delayed TIME."
-            "Resolution depends on -t parameter. Default is no delay.", &options.delay);
+            "Send all files/packets N times. Default: N = 1. If N = 0, packets will be sent infinitely "
+            "until Ctrl+c is pressed.", &options.repeat);
+    addCmdLineOption (true, 'd', "delay", "TIME", "Delay the packet transmission by TIME. "
+            "Resolution depends on the -t parameter. By default, no delay is applied.",
+            &options.delay);
     addCmdLineOption (true, 't', "resolution", "RESOLUTION",
-            "Resolution of transmission time. This affects -d parameter as well as all timestamps in script files.\n\t"
-            "Possible values are 'u'= microseconds, 'm'= milliseconds(default), 'c'= centiseconds and 's'= seconds" , &options.timeRes);
+            "Set the time resolution for packet transmission. This affects -d parameter as well as all timestamps in script files. "
+            "Possible values are 'u'= microseconds, 'm'= milliseconds(default), 'c'= centiseconds and 's'= seconds",
+            &options.timeRes);
     addCmdLineOption (true, 'w', nullptr, "OUTFILE",
-            "Write raw packet data to OUTFILE or to the standard output if OUTFILE is '-'.", &options.outfile);
+            "Write raw packet data to OUTFILE, or to the standard output if OUTFILE is set to '-'.", &options.outfile);
     addCmdLineOption (true, 'F', nullptr, "FORMAT",
-            "Set the file format of the output capture file written using the -w option.\n\t"
+            "Set the file format of the output capture file written using the -w option. "
             "Supported formats are: 'pcap' (default), 'text', 'hexstream', 'hexdump'", &options.outFormat);
     addCmdLineOption (true, 'a', "arp",
-            "Resolve destination MAC address for IPv4 packets.\n\t"
-            "If dmac parameter of IPv4 based packets is omitted, the destination MAC will be automatically\n\t"
-            "determined via ARP.",
+            "Resolve the destination MAC address for IPv4 packets using ARP. "
+            "If the destination MAC address is omitted in IPv4 packets, it will be automatically determined via ARP.",
             &options.arp);
     addCmdLineOption (true, 0, "predictable-random",
-            "Don't use random numbers, use simple sequence instead.", &options.testPredictableRandom);
+            "Use a simple sequence instead of random numbers to generate predictable values.", &options.testPredictableRandom);
 }
 
 cTcpPump::~cTcpPump()
@@ -125,17 +130,10 @@ int cTcpPump::execute (const std::vector<std::string>& args)
     cMacAddress overwriteDMAC;
     double pcapScale = 1.0;
 
-
+    // print packet syntax if requested and exit
     if (args.size() && !args[0].compare ("help"))
     {
-        if (args.size() > 1)
-        {
-            cInstructionParser::printProtocolList (args[0].c_str());
-        }
-        else
-        {
-            cInstructionParser::printProtocolList();
-        }
+        cInstructionParser::printProtocolList (args.size() > 1 ? args[1].c_str() : nullptr);
         return 0;
     }
 
@@ -413,8 +411,11 @@ int main(int argc, char* argv[])
     cTcpPump app (
             "tcppump",
             "An Ethernet packet generator",
-            "tcppump -i IFC [OPTIONS] packets/infiles",
-            "Homepage: <https://github.com/amartin755/tcppump>",
+            "tcppump -i IFC [OPTIONS] packets|infiles "
+            "</br> tcppump -w OUTFILE [OPTIONS] packets|infiles",
+            "'tcppump help' lists all available network protocol types. "
+            "Use 'tcppump help <protocol type>' to show the detailed syntax of the specified protocol. "
+            "</br> </br> Homepage: <https://github.com/amartin755/tcppump>",
             APP_VERSION, BUILD_TIME,  GIT_BRANCH GIT_COMMIT BUILD_TYPE);
     return app.main (argc, argv);
 }

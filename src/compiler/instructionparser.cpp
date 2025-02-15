@@ -1178,18 +1178,20 @@ void cInstructionParser::printProtocolList (const char* proto)
         {
             Console::Print ("%-20s%s\n", p->syntax, p->descr);
 
-            for (const auto& m: p->mandatory)
-            {
-                Console::Print ("   %-17s%s\n", m->syntax, m->descr);
-            }
-            Console::Print (" optional\n");
-            for (const auto& o: p->optional)
-            {
-                Console::Print ("   %-17s%s\n", o->syntax, o->descr);
-            }
-            Console::Print ("\n");
             if (proto)
+            {
+                for (const auto& m: p->mandatory)
+                {
+                    Console::Print ("   %-17s%s\n", m->syntax, m->descr);
+                }
+                Console::Print (" optional\n");
+                for (const auto& o: p->optional)
+                {
+                    Console::Print ("   %-17s%s\n", o->syntax, o->descr);
+                }
+                Console::Print ("\n");
                 return;
+            }
         }
     }
 }
