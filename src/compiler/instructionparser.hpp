@@ -62,7 +62,7 @@ public:
     cInstructionParser (bool ipOptionalDestMAC);
     ~cInstructionParser ();
     void parse (const char* instruction, cResult& result, bool ignoreTrailingGarbage = false, bool noEthHeader = false);
-    static int printProtocolList ();
+    static void printProtocolList (const char* proto = nullptr);
 
 #ifdef WITH_UNITTESTS
         static void unitTest ();

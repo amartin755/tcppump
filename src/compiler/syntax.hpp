@@ -317,7 +317,6 @@ static const Protocol PR_UDP4 = {
         PAR_IP4,
         &PAR_UDP_SPORT,
         &PAR_UDP_DPORT,
-        &PAR_IP_PAYLOAD
     },
     {
         &PAR_ETH_SMAC,
@@ -335,7 +334,7 @@ static const Protocol PR_UDP6 = {
         PAR_IP6,
         &PAR_UDP_SPORT,
         &PAR_UDP_DPORT,
-        &PAR_IP_PAYLOAD
+
     },
     {
         &PAR_ETH_SMAC,

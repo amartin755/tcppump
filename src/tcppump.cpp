@@ -59,7 +59,7 @@ cTcpPump::cTcpPump(const char* name, const char* brief, const char* usage, const
     realtimeMode    = false;
     ifc             = nullptr;
 
-    addCmdLineOption (false, 'i', "interface", "IFC",
+    addCmdLineOption (true, 'i', "interface", "IFC",
             "Name of the network interface via which the packets are sent."
 #if HAVE_WINDOWS
             "\n\t"
@@ -145,6 +145,33 @@ int cTcpPump::execute (const std::list<std::string>& args)
         break;
     }
 
+    if (args.size() && !args.cbegin()->compare ("help"))
+    {
+        if (args.size() > 1)
+        {
+            const auto& protocol = ++args.cbegin();
+            cInstructionParser::printProtocolList (protocol->c_str());
+        }
+        else
+        {
+            cInstructionParser::printProtocolList();
+        }
+        return 0;
+    }
+
+    // ommiting of option -i is only allowed if output is written to a file (-w option)
+    if (!options.ifc && !options.outfile)
+    {
+        Console::PrintError ("Option -i --interface not set\n");
+        return -1;
+    }
+
+    if (!args.size())
+    {
+        Console::PrintError (options.script ? "no script files provided\n": "no packet data provided\n");
+        return -2;
+    }
+
     if (options.testPredictableRandom)
         cRandom::setCounterMode(0);
 
@@ -178,12 +205,6 @@ int cTcpPump::execute (const std::list<std::string>& args)
             Console::PrintError ("Unsupported pcap scaling value '%s'\n", options.pcapScaling);
             return -2;
         }
-    }
-
-    if (!args.size())
-    {
-        Console::PrintError (options.script ? "no script files provided\n": "no packet data provided\n");
-        return -2;
     }
 
     if (options.myIP)
@@ -224,34 +245,40 @@ int cTcpPump::execute (const std::list<std::string>& args)
         return -1;
     }
 
-    ifc = cNetInterface::create (options.ifc, !options.outfile);
-    if (!ifc->isReady())
-        return -1;
+    if (options.ifc)
+    {
+        ifc = cNetInterface::create (options.ifc, !options.outfile);
+        if (!ifc->isReady())
+            return -1;
+    }
 
     if (!cSettings::get().isMacSet())
     {
         cMacAddress ifMAC;
-        if (ifc->getMAC(ifMAC))
+        if (ifc && ifc->getMAC(ifMAC))
             cSettings::get().setMyMAC(ifMAC);
         else
-            Console::PrintError ("Warning: Could not determine mac address of interface.\n");
+            Console::PrintVerbose ("Warning: Could not determine mac address of interface or -i option not set.\n"
+                                   "         Automatic source mac usage is will be disabled.\n");
     }
     if (!cSettings::get().isIPSet())
     {
         cIPv4 ifIPv4;
-        if (ifc->getIPv4(ifIPv4))
+        if (ifc && ifc->getIPv4(ifIPv4))
             cSettings::get().setMyIPv4(ifIPv4);
         else
-            Console::PrintVerbose ("Warning: Could not determine IPv4 address of interface.\n");
-    }
+            Console::PrintVerbose ("Warning: Could not determine IPv4 address of interface or -i option not set.\n"
+                                   "         Automatic source IPv4 usage is will be disabled.\n");
+        }
     if (!cSettings::get().isIPv6Set())
     {
         cIPv6 ifIPv6;
-        if (ifc->getIPv6(ifIPv6))
+        if (ifc && ifc->getIPv6(ifIPv6))
             cSettings::get().setMyIPv6(ifIPv6);
         else
-            Console::PrintVerbose ("Warning: Could not determine IPv6 address of interface.\n");
-    }
+            Console::PrintVerbose ("Warning: Could not determine IPv6 address of interface or -i option not set.\n"
+                                   "         Automatic source IPv6 usage is will be disabled.\n");
+        }
     if (options.mtu)
     {
         if (options.mtu < 68 || options.mtu > 1024*1024) // limit the configurable MTU
@@ -263,11 +290,14 @@ int cTcpPump::execute (const std::list<std::string>& args)
     }
     else
     {
-        unsigned mtu = (unsigned)ifc->getMTU();
-        if (mtu)
-            cSettings::get().setMyMTU (mtu);
-        else
-            Console::PrintError ("Warning: Could not determine MTU of interface. Using default value %u\n", cSettings::get().getMyMTU());
+        if (ifc)
+        {
+            unsigned mtu = (unsigned)ifc->getMTU();
+            if (mtu)
+                cSettings::get().setMyMTU (mtu);
+            else
+                Console::PrintError ("Warning: Could not determine MTU of interface or -i option not set. Using default value %u\n", cSettings::get().getMyMTU());
+        }
     }
 
 

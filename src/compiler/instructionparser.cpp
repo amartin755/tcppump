@@ -1170,26 +1170,30 @@ void cInstructionParser::throwParseException (const char* msg, const char* val, 
 }
 
 
-int cInstructionParser::printProtocolList ()
+void cInstructionParser::printProtocolList (const char* proto)
 {
-    int protos = 0;
-    for (const auto& proto : all_protos)
+    for (const auto& p : all_protos)
     {
-        protos++;
-        Console::Print ("%-20s", proto->syntax);
+        if (!proto || !std::strcmp (p->syntax, proto))
+        {
+            Console::Print ("%-20s%s\n", p->syntax, p->descr);
 
-        for (const auto& m: proto->mandatory)
-        {
-            Console::Print ("%s ", m->syntax);
+            for (const auto& m: p->mandatory)
+            {
+                Console::Print ("   %-17s%s\n", m->syntax, m->descr);
+            }
+            Console::Print (" optional\n");
+            for (const auto& o: p->optional)
+            {
+                Console::Print ("   %-17s%s\n", o->syntax, o->descr);
+            }
+            Console::Print ("\n");
+            if (proto)
+                return;
         }
-        for (const auto& o: proto->optional)
-        {
-            Console::Print ("[%s] ", o->syntax);
-        }
-        Console::Print ("\n");
     }
-    return protos;
 }
+
 
 #ifdef WITH_UNITTESTS
 
