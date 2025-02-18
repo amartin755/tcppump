@@ -43,7 +43,7 @@ Each protocol defines the names and types of its parameters (see *PROTOCOLS*). D
     +1234:   protoMickey(color = 10, index = 0x16, msg = <protoMouse(payload = *32)>)
 
 ## Script files
-Script files contain a list of packets as specified above. Each packet definition musr be terminated with a semicolon (`;`). Comments start with `#`.
+Script files contain a list of packets as specified above. Each packet definition must be terminated with a semicolon (`;`). Comments start with `#`.
 
 Example:
 
@@ -56,7 +56,7 @@ Example:
 
 ## Protocol Definitions
 
-### Fully configurable raw Ethernet packet consisting of standard data types
+### Full configurable raw Ethernet packet consisting of standard data types
 For the definition of "normal" Ethernet packets the protocol `eth` is more suitable. The `raw` protocol is a powerful tool when it is used embedded into other protocols. For example it can be used to create the payload of an UDP packet.
 
 #### Protocol Specifier
@@ -124,7 +124,7 @@ EUI-48 MAC address
 
     # hand craftet ethernet packet. This is identical to
     #  eth(dmac=11:22:33:44:55:66, smac=aa:bb:cc:dd:ee:ff, ethertype=0x0800, payload=1234567890abcdef)
-    raw(mac=11:22:33:44:55:66, mac=aa:bb:cc:dd:ee:ff, be16=0x0800, payload=1234567890abcdef);
+    raw(mac=11:22:33:44:55:66, mac=aa:bb:cc:dd:ee:ff, be16=0x0800, stream=1234567890abcdef);
 
 
 ### Ethernet II or IEEE802.3 packet format
