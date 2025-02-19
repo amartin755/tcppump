@@ -42,8 +42,6 @@ Supported protocols and packet formats
 `tcppump` has been successfully compiled on **Ubuntu Linux (x64)** using **GCC** and on **Windows 10/11** using **MinGW32, MinGW64 (MSYS2), and MSVC.**
 In theory, it should also compile with other **C++11-compatible** compilers, though this has not been tested.
 
-tcppump has been successfully compiled on ubuntu linux (x64) with gcc and on windows 10/11 with mingw32, mingw64(MSYS2) and MSVC.
-Theoretically it should also be compilable with other C++11 compilers, but this was never tested.
 
 ### Dependencies
 * cmake >= V3.13
