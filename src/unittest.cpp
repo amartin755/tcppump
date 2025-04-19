@@ -37,6 +37,8 @@
 #include "inetchecksum.hpp"
 #include "random.hpp"
 #include "bytearray.hpp"
+#include "uuid.hpp"
+#include "md5.hpp"
 #if HAVE_MSVC
 #include <crtdbg.h>
 #endif
@@ -59,6 +61,8 @@ int main (void)
         tcppump::SleepInit ();
         tcppump::SleepUnitTest ();
         cByteArray::unitTest ();
+        cUUID::unitTest ();
+        cMD5::unitTest ();
         cRandom::unitTest ();
         cIPv4::unitTest ();
         cIPv6::unitTest ();

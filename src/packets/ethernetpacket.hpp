@@ -126,6 +126,7 @@ enum ethertypes_t : uint16_t
     ETHERTYPE_IPV6  = 0x86DD,
     ETHERTYPE_SVLAN = 0x88a8,
     ETHERTYPE_PN    = 0x8892,
+    ETHERTYPE_LLDP  = 0x88CC
 };
 
 #pragma pack(1)

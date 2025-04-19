@@ -233,10 +233,10 @@ cMacAddress cParameter::asMac () const
 }
 
 
-const uint8_t* cParameter::asStream (size_t& len)
+const uint8_t* cParameter::asStream (size_t& len, size_t maxLen)
 {
     bool dummy;
-    return asStream (false, dummy, len);
+    return asStream (false, dummy, len, maxLen);
 }
 
 
@@ -246,7 +246,7 @@ const uint8_t* cParameter::asEmbedded (bool &isEmbedded, size_t& len)
 }
 
 
-const uint8_t* cParameter::asStream (bool allowEmbPacket, bool &isEmbedded, size_t& len)
+const uint8_t* cParameter::asStream (bool allowEmbPacket, bool &isEmbedded, size_t& len, size_t maxLen)
 {
     if (!data)
     {
@@ -267,6 +267,9 @@ const uint8_t* cParameter::asStream (bool allowEmbPacket, bool &isEmbedded, size
         {
             isEmbedded = *value == '<';
             len = valLen - 2; // don't count " or <> at begin and end of string/embedded packet
+            if (len > maxLen)
+                throw FormatException (exParFormat, value, (int)valLen);
+    
             return (uint8_t*)value + 1;
         }
         else
@@ -276,6 +279,9 @@ const uint8_t* cParameter::asStream (bool allowEmbPacket, bool &isEmbedded, size
                 throw FormatException (exParFormat, value, (int)valLen);
         }
     }
+
+    if (dataLen > maxLen)
+        throw FormatException (exParFormat, value, (int)valLen);
 
     len = dataLen;
 

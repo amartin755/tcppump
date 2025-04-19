@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
  * TCPPUMP <https://github.com/amartin755/tcppump>
- * Copyright (C) 2012-2021 Andreas Martin (netnag@mailbox.org)
+ * Copyright (C) 2012-2025 Andreas Martin (netnag@mailbox.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -89,6 +89,7 @@ private:
     cLinkable* compileICMPPing (bool noEthHeader, cParameterList& params, bool reply);
     cLinkable* compileTCP  (bool noEthHeader, cParameterList& params);
     cLinkable* compileGRE (bool noEthHeader, cParameterList& params, bool isIPv6);
+    cLinkable* compileLLDP (bool noEthHeader, cParameterList& params);
 
     // helpers
     bool   compileMacHeader (cParameterList& params, cEthernetPacket* packet, bool noDestination, bool destIsOptional = false);
@@ -112,55 +113,47 @@ class ParseException
 {
 public:
     ParseException (const char* inst, const char* errMsg, const char* errBegin, int errLen = 0)
+    : m_errMsg (errMsg), m_errorBegin (errBegin), m_inst (inst), m_details (), m_errorLen (errLen)
     {
-        this->errMsg  = errMsg;
-        this->p    = errBegin;
-        this->inst = inst;
-        this->l    = errLen;
-        this->d    = nullptr;
     }
     ParseException (const char* inst, const char* errMsg, const char* details, const char* errBegin, int errLen)
+    : m_errMsg (errMsg), m_errorBegin (errBegin), m_inst (inst), m_details (!details ? "" : details), m_errorLen (errLen)
     {
-        this->errMsg  = errMsg;
-        this->p    = errBegin;
-        this->inst = inst;
-        this->l    = errLen;
-        this->d    = details;
     }
 
     const char* errorMsg () const
     {
-        return errMsg;
+        return m_errMsg.c_str();
     }
 
     const char* instruction () const
     {
-        return inst;
+        return m_inst;
     }
 
     const char* errorBegin () const
     {
-        return p;
+        return m_errorBegin;
     }
 
     int errorLen () const
     {
-        return l;
+        return m_errorLen;
     }
 
     const char* details () const
     {
-        return d;
+        return m_details.empty() ? nullptr : m_details.c_str();
     }
 
 
 
 private:
-    const char* errMsg;
-    const char* p;
-    const char* inst;
-    const char* d;
-    int l;
+    const std::string m_errMsg;
+    const char* m_errorBegin;
+    const char* m_inst;
+    const std::string m_details;
+    int m_errorLen;
 };
 
 

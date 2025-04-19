@@ -10,7 +10,7 @@ Each packet is defined as follows (optional parameters are marked with brackets 
 
 * `timestamp`: A relative time value, specified as an integer followed by `:` (relative to the start of tcppump), e.g., `123456`. If the time starts with `+`, it is relative to the previous packet, e.g., `+100`.
 * `protocol`: A protocol specifier (see *Protocol Definitions*).
-* `parameter_list`: Protocol parameters enclosed in parentheses, provided as comma-separated key-value pairs: `key=value, key=value, ...`. Example: `(hugo=123, egon=456)`.
+* `parameter_list`: Protocol parameters enclosed in parentheses, provided as comma-separated parameter-value pairs: `parameter=value, parameter=value, ...`. Example: `(hugo=123, egon=456)`.
 
 **Note:** All identifiers are case-sensitive.
 
@@ -64,7 +64,7 @@ For the definition of "normal" Ethernet packets the protocol `eth` is more suita
     raw
 
 #### Parameters
-All parameters are optional and can be unsed multiple times. The packet is compiled by adding parameter by parameter to the payload and therefore the order of the parameter is important.
+All parameters are optional and can be used multiple times. The packet is compiled by adding parameter by parameter to the payload and therefore the order of the parameter is important.
 
 Bytestream
 

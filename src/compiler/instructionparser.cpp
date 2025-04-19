@@ -37,11 +37,13 @@
 #include "igmppacket.hpp"
 #include "icmppacket.hpp"
 #include "grepacket.hpp"
+#include "lldppacket.hpp"
 #include "settings.hpp"
 #include "endian.h"
 #include "bytearray.hpp"
 #include "syntax.hpp"
 #include "console.hpp"
+#include "lldpparser.hpp"
 
 
 cInstructionParser::cInstructionParser (bool optDestMAC)
@@ -144,6 +146,8 @@ void cInstructionParser::parse (const char* instruction, cResult& result, bool i
             result.packets = compileGRE (noEthHeader, params, false);
         else if (!strncmp (PR_GRE6.syntax, keyword, keywordLen))
             result.packets = compileGRE (noEthHeader, params, true);
+        else if (!strncmp (PR_LLDP.syntax, keyword, keywordLen))
+            result.packets = compileLLDP (noEthHeader, params);
         else
             throwParseException ("Unknown protocol type", keyword, keywordLen);
 
@@ -1158,6 +1162,103 @@ cLinkable* cInstructionParser::compileGRE (bool noEthHeader, cParameterList& par
     }
 
     return grepacket;
+}
+
+
+cLinkable* cInstructionParser::compileLLDP (bool noEthHeader, cParameterList& params)
+{
+    cLldpPacket*  lldp = new cLldpPacket;
+
+    /* GOALS: because the amount of parameters is very high
+       - lldp() creates a minimal packet with good default values
+       - it should be as simple as possible to create "good" lldp packets
+       - TLVs must be automatically sorted to get a standard conforming packet
+       - in order to allow creation of non-conforming packets, it must be also possible to
+         - violate the TLV order
+         - leave away mandatory TLVs (including End Of LLDPDU TLV)
+         - inject End Of LLDPDU TLV between regular TLVs
+       TODO
+        - lldp-raw: same parameter, no defaults, compile only tvls where user provided parameters, tlv-order==order of parameters
+          --> lldp-raw() will create an empty lldp-packet (no tlvs, no End TLV)
+        - 802.3 TLVs (Poe type 3/4, additional caps, poe measurement)
+        - lldp-med TLVs (all)
+        - Profinet TLVs (NME and 802.1AS)
+        - 802.1AB-2023 multiframe PDUs
+        - Rethink parameter-naming
+        - good defaults for TLVs, maybe a special bool parameter that creates TLV with full defaults
+    */
+
+    try
+    {
+        if (!noEthHeader)
+        {
+            compileMacHeader (params, lldp, false, true);
+            compileVLANTags  (params, lldp);
+        }
+        cLldpParser parser (m_currentInstruction, *lldp, params);
+
+        // Mandatory IEEE802.1AB TLVs
+        parser.chassisID ();
+        parser.portID ();
+        lldp->addTTL (params.findParameter (PAR_LLDP_TTL.syntax, (uint32_t)120)->asInt16 ());
+
+        // Optional IEEE802.1AB TLVs
+        parser.portDescription ();
+        parser.systemName ();
+        parser.systemDescription ();
+        parser.systemCapabilities ();
+        parser.managementAddress ();
+
+        // IEEE802.1 TLVs
+        parser.portVID ();
+        parser.portProtocolVID ();
+        parser.vlanName ();
+        parser.protocolIdentity ();
+        parser.vidUsageDigest ();
+        parser.managementVID ();
+        parser.linkAggregation ();
+        parser.congestionNotification ();
+        parser.etsConfiguration ();
+        parser.etsRecommendation ();
+        parser.pfcControlConfig ();
+        parser.applicationPriority ();
+        parser.evb ();
+        parser.cdcb ();
+        parser.applicationVLAN ();
+
+        // IEEE802.3 TLVs
+        parser.macPhyConfigStatus ();
+        parser.powerViaMDI ();
+        parser.maxFrameSize ();
+        parser.eee ();
+        parser.eeeFastWake ();
+
+        // Profinet TLVs
+        parser.pnDelay ();
+        parser.pnPortStatus ();
+        parser.pnAlias ();
+        parser.pnMrpPortState ();
+        parser.pnChassisMac ();
+        parser.pnPTCPStatus ();
+        parser.pnMAUTypeExtension ();
+        parser.pnMrpIcPortStatus ();
+
+        // RAW TLVs
+        parser.allRawTLVs ();
+
+        // OUI TLVs
+        parser.allOidTLVs ();
+
+        lldp->compile ();
+    }
+    catch (...)
+    {
+        delete lldp;
+        lldp = nullptr;
+        throw;
+    }
+
+    return lldp;
 }
 
 

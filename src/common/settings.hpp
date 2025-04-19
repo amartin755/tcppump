@@ -20,6 +20,8 @@
 #ifndef SETTINGS_HPP
 #define SETTINGS_HPP
 
+#include <string>
+
 #include "macaddress.hpp"
 #include "ipaddress.hpp"
 
@@ -46,6 +48,8 @@ public:
     bool isMacSet (void) const {return hasMAC;}
     bool isIPSet (void) const {return hasIPv4;}
     bool isIPv6Set (void) const {return hasIPv6;}
+    void setIfName (const char* ifc);
+    const std::string getIfName () const;
 
 private:
     bool hasMAC;
@@ -55,6 +59,7 @@ private:
     cIPv4 myIP;
     cIPv6 myIPv6;
     unsigned mtu;
+    std::string ifName;
 };
 
 #endif /* SETTINGS_HPP */

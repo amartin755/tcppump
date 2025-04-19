@@ -22,27 +22,42 @@
 
 #include <cstdint>
 #include <cstring>
+#include <stdexcept>
 
 #include "bug.hpp"
 
 
 class cByteArray
 {
+    static const size_t DEFAULT_CHUNK = 2048;
 public:
-    cByteArray (size_t initialLength = 0) : m_data (nullptr), m_capacity (0), m_currPos (0)
+    // dynamic array
+    cByteArray (size_t initialLength = 0, size_t chunksize = cByteArray::DEFAULT_CHUNK) 
+    : m_chunkSize (chunksize), m_data (nullptr), m_capacity (0), m_currPos (0), m_dynSize (true), m_extData (false)
     {
         if (initialLength)
         {
-            initialLength = alignLength (initialLength);
-            m_data = new uint8_t[initialLength];
-            m_capacity = initialLength;
+            resize (initialLength);
         }
     }
 
-    ~cByteArray ()
+    // fixed size array either with memory provided by caller (buffer != 0) or managed internally
+    cByteArray (void* buffer, size_t size)
+    : m_chunkSize (size), m_data ((uint8_t*)buffer), m_capacity (size), m_currPos (0), m_dynSize (false), m_extData (buffer != nullptr)
     {
-        delete[] m_data;
-        m_data = nullptr;
+        if (!buffer)
+        {
+            m_data = new uint8_t[size];
+        }
+    }
+
+    virtual ~cByteArray ()
+    {
+        if (!m_extData)
+        {
+            delete[] m_data;
+            m_data = nullptr;
+        }
     }
 
     const uint8_t* data () const
@@ -104,9 +119,12 @@ public:
         return m_currPos;
     }
 
-private:
+protected:
     void resize (size_t newLength)
     {
+        if (!m_dynSize || m_extData)
+            throw std::out_of_range ("resizing of fixed size array is not possible");
+
         newLength = alignLength (newLength);
 
         // nothing to do
@@ -136,10 +154,14 @@ private:
         if (!len) chunks++;
         return chunks * m_chunkSize;
     }
+
+private:
+    const size_t m_chunkSize;
     uint8_t* m_data;
     size_t   m_capacity;
     size_t   m_currPos;  // m_currPos == m_capacity --> full
-    static const size_t m_chunkSize = 2048;
+    bool     m_dynSize;  // false, if resizing is not allowd
+    bool     m_extData;  // true, if m_data is not managed within this class
 
 #ifdef WITH_UNITTESTS
 public:
@@ -151,17 +173,17 @@ public:
             BUG_ON (obj.size() != 0);
         }
         {
-            cByteArray obj (cByteArray::m_chunkSize);
+            cByteArray obj (cByteArray::DEFAULT_CHUNK);
             BUG_ON (obj.capacity() != obj.m_chunkSize);
             BUG_ON (obj.size() != 0);
         }
         {
-            cByteArray obj (cByteArray::m_chunkSize-1);
+            cByteArray obj (cByteArray::DEFAULT_CHUNK-1);
             BUG_ON (obj.capacity() != obj.m_chunkSize);
             BUG_ON (obj.size() != 0);
         }
         {
-            cByteArray obj (cByteArray::m_chunkSize+1);
+            cByteArray obj (cByteArray::DEFAULT_CHUNK+1);
             BUG_ON (obj.capacity() != (obj.m_chunkSize*2));
             BUG_ON (obj.size() != 0);
         }
@@ -215,9 +237,90 @@ public:
             BUG_ON (obj.capacity() != (obj.m_chunkSize*2));
             BUG_ON (obj.size() != (obj.m_chunkSize+1));
         }
+        {
+            cByteArray obj;
+            obj << (uint8_t)1 << (uint16_t)0x0202 << (uint32_t)0x03030303 << (uint64_t)0x0404040404040404;
+            BUG_ON (obj.capacity() != obj.m_chunkSize);
+            BUG_ON (obj.size() != 15);
+            BUG_ON (obj[0] != 1);
+            BUG_ON (obj[1] != 2);
+            BUG_ON (obj[2] != 2);
+            BUG_ON (obj[3] != 3);
+            BUG_ON (obj[4] != 3);
+            BUG_ON (obj[5] != 3);
+            BUG_ON (obj[6] != 3);
+            BUG_ON (obj[7] != 4);
+            BUG_ON (obj[8] != 4);
+            BUG_ON (obj[9] != 4);
+            BUG_ON (obj[10] != 4);
+            BUG_ON (obj[11] != 4);
+            BUG_ON (obj[12] != 4);
+            BUG_ON (obj[13] != 4);
+            BUG_ON (obj[14] != 4);
+        }
+        {
+            cByteArray obj (nullptr, 1);
+            BUG_ON (obj.capacity() != 1);
+            BUG_ON (obj.size() != 0);
+        }
+        {
+            bool catched = false;
+            cByteArray obj (nullptr, 3);
+            BUG_ON (obj.capacity() != 3);
+            BUG_ON (obj.size() != 0);
+            obj << (uint8_t)1;
+            obj << (uint16_t)23;
+            try
+            {
+                obj << (uint8_t)4;
+            }
+            catch (const std::out_of_range&)
+            {
+                catched = true;
+            }
+            BUG_ON (!catched);
+            BUG_ON (obj.capacity() != 3);
+            BUG_ON (obj.size() != 3);
+        }
+        {
+            bool catched = false;
+            uint8_t buffer[3];
+            cByteArray obj (buffer, sizeof (buffer));
+            BUG_ON (obj.capacity() != sizeof (buffer));
+            BUG_ON (obj.size() != 0);
+            obj << (uint8_t)1;
+            obj << (uint16_t)23;
+            try
+            {
+                obj << (uint8_t)4;
+            }
+            catch (const std::out_of_range&)
+            {
+                catched = true;
+            }
+            BUG_ON (!catched);
+            BUG_ON (obj.capacity() != 3);
+            BUG_ON (obj.size() != 3);
+            BUG_ON (buffer[0] != 1);
+#if HAVE_BIG_ENDIAN
+            BUG_ON (buffer[1] != 0);
+            BUG_ON (buffer[2] != 23);
+#else
+            BUG_ON (buffer[2] != 0);
+            BUG_ON (buffer[1] != 23);
+#endif
+        }
     }
 #endif
 
+};
+
+class cFixedByteArray : public cByteArray
+{
+public:
+    cFixedByteArray (size_t length) : cByteArray (nullptr, length)
+    {
+    }
 };
 
 #endif

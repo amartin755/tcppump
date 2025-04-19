@@ -366,6 +366,11 @@ int cTcpPump::execute (const std::vector<std::string>& args)
         Console::PrintError ("Not enough memory (%s)\n", e.what ());
         return -2;
     }
+    catch(std::exception & e)
+    {
+        Console::PrintError ("std::exception (%s)\n", e.what ());
+        BUG ("unexpected exception");
+    }
     catch (...)
     {
         BUG ("unexpected exception");

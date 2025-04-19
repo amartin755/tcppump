@@ -105,3 +105,16 @@ unsigned cSettings::getMyMTU (void) const
 {
     return mtu;
 }
+
+void cSettings::setIfName (const char* ifc)
+{
+    ifName = ifc;
+}
+
+const std::string cSettings::getIfName () const
+{
+    if (!ifName.size())
+        throw std::runtime_error("Could not determine network interface name.\n"
+                "Please set parameter -i.");
+    return ifName;
+}

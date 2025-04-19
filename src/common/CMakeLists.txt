@@ -22,6 +22,7 @@ set (SOURCES
      ${SOURCES}
      ${CMAKE_CURRENT_SOURCE_DIR}/random.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/settings.cpp
+     ${CMAKE_CURRENT_SOURCE_DIR}/md5.cpp
      PARENT_SCOPE
 )
 set (INCLUDES

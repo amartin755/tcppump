@@ -25,6 +25,7 @@
 
 #include "ipaddress.hpp"
 #include "macaddress.hpp"
+#include "uuid.hpp"
 #include "formatexception.hpp"
 #include "bug.hpp"
 
@@ -41,10 +42,24 @@ public:
     virtual uint8_t     asInt8  (uint8_t  rangeBegin = 0, uint8_t rangeEnd = 0xff) const;
     virtual double      asDouble(double rangeBegin = DBL_MIN, double rangeEnd = DBL_MAX) const;
     virtual cMacAddress asMac   () const;
-    virtual const uint8_t* asStream (size_t& len);
+    virtual const uint8_t* asStream (size_t& len, size_t maxLen = SIZE_MAX);
     virtual const uint8_t* asEmbedded (bool &isEmbedded, size_t& len);
     virtual cIPv4  asIPv4  () const;
     virtual cIPv6  asIPv6  () const;
+    virtual cUUID  asUUID  ()
+    {
+        size_t len;
+        const uint8_t* pUuid = asStream (len, cUUID::stringSize());
+        std::string uuidAsString ((const char*)pUuid, len);
+        try
+        {
+            return cUUID::fromString(uuidAsString);
+        }
+        catch(...)
+        {
+            throw FormatException (exParFormat, value, (int)valLen);
+        }
+    }
 
     std::pair<const char*, size_t> name () const
     {
@@ -56,7 +71,7 @@ public:
 private:
     void clear ();
     int isRandom (bool allowRange) const;
-    const uint8_t* asStream (bool allowEmbPacket, bool &isEmbedded, size_t& len);
+    const uint8_t* asStream (bool allowEmbPacket, bool &isEmbedded, size_t& len, size_t maxLen = SIZE_MAX);
 
     const char* parameter;
     size_t      parLen;
@@ -80,7 +95,7 @@ public:
     virtual uint8_t     asInt8  (uint8_t,  uint8_t) const {return (uint8_t)int32;}
     virtual double      asDouble(double,  double) const {return dbl;}
     virtual cMacAddress asMac   () const {return mac;}
-    virtual const uint8_t* asStream   (size_t&)
+    virtual const uint8_t* asStream   (size_t&, size_t)
     {
         BUG ("no raw access for optional parameters");
         return NULL;
@@ -91,6 +106,7 @@ public:
         return NULL;
     }
     virtual cIPv4  asIPv4  () const {return ip;}
+    virtual cUUID  asUUID () {return cUUID::fromZero();}
 
 private:
     uint32_t    int32;

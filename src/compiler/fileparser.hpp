@@ -61,22 +61,20 @@ class FileParseException : public ParseException
 {
 public:
     FileParseException (const char* file, int lineNbr, const char* inst, const char* errMsg, const char* details, const char* errBegin, int errLen) :
-        ParseException(inst, errMsg, details, errBegin, errLen)
+        ParseException(inst, errMsg, details, errBegin, errLen), m_lineNbr (lineNbr), m_file (file)
     {
-        this->lineNbr = lineNbr;
-        this->file    = file;
     }
     int lineNumber () const
     {
-        return lineNbr;
+        return m_lineNbr;
     }
     const char* filePath () const
     {
-        return file;
+        return m_file;
     }
 private:
-    int lineNbr;
-    const char* file;
+    int m_lineNbr;
+    const char* m_file;
 };
 
 #endif /* FILEPARSER_HPP_ */

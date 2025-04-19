@@ -23,6 +23,9 @@
 #include <vector>
 
 
+// TODO maybe it makes sense to think about a bitwise encoding
+//      because there a parameters LLDP chassis-ID that can be
+//      multiple types (IP, MAC, Bytestream)
 enum Type {Integer, Float, Mac, IP, Bytestream, Bit};
 
 struct Parameter
@@ -1077,6 +1080,860 @@ static const Protocol PR_GRE6 = {
 };
 
 
+static const Parameter PAR_LLDP_CHASSIS_ID = {
+    "chassis-id",
+    "Chassis ID",
+    Bytestream
+};
+static const Parameter PAR_LLDP_CHASSIS_ID_T = {
+    "chassis-id-type",
+    "Chassis ID Subtype: 1 = chassis component, 2 = interface alias, 3 = port component, 4 = MAC, 5 = network address, 6 = interface name, 7 = local",
+    Integer
+};
+static const Parameter PAR_LLDP_PORT_ID = {
+    "port-id",
+    "Port ID",
+    Bytestream
+};
+static const Parameter PAR_LLDP_PORT_ID_T = {
+    "port-id-type",
+    "Port ID Subtype: 1 = interface alias, 2 = port component, 3 = MAC, 4 = network address, 5 = interface name, 6 = agent circuit ID, 7 = local",
+    Integer
+};
+static const Parameter PAR_LLDP_TTL = {
+    "ttl",
+    "Time To Live",
+    Integer
+};
+static const Parameter PAR_LLDP_PORT_DESC = {
+    "port-desc",
+    "Port Description",
+    Bytestream
+};
+static const Parameter PAR_LLDP_SYSNAME = {
+    "sys-name",
+    "System Name",
+    Bytestream
+};
+static const Parameter PAR_LLDP_SYSDESC = {
+    "sys-desc",
+    "System Description",
+    Bytestream
+};
+static const Parameter PAR_LLDP_SYSCAP_OTHER = {
+    "O",
+    "System Capability 'Other'",
+    Bit
+};
+static const Parameter PAR_LLDP_SYSCAP_REPEATER = {
+    "P",
+    "System Capability 'Repeater'",
+    Bit
+};
+static const Parameter PAR_LLDP_SYSCAP_BRIDGE = {
+    "B",
+    "System Capability 'Bridge'",
+    Bit
+};
+static const Parameter PAR_LLDP_SYSCAP_WLAN = {
+    "W",
+    "System Capability 'WLAN AP'",
+    Bit
+};
+static const Parameter PAR_LLDP_SYSCAP_ROUTER = {
+    "R",
+    "System Capability 'Router'",
+    Bit
+};
+static const Parameter PAR_LLDP_SYSCAP_PHONE = {
+    "T",
+    "System Capability 'Telephone'",
+    Bit
+};
+static const Parameter PAR_LLDP_SYSCAP_DOCSIS = {
+    "C",
+    "System Capability 'DOCSIS cable device'",
+    Bit
+};
+static const Parameter PAR_LLDP_SYSCAP_STATION = {
+    "S",
+    "System Capability 'Station only'",
+    Bit
+};
+static const Parameter PAR_LLDP_SYSCAP_OTHER_EN = {
+    "O-EN",
+    "Enabled System Capability 'Other'",
+    Bit
+};
+static const Parameter PAR_LLDP_SYSCAP_REPEATER_EN = {
+    "P-EN",
+    "Enabled System Capability 'Repeater'",
+    Bit
+};
+static const Parameter PAR_LLDP_SYSCAP_BRIDGE_EN = {
+    "B-EN",
+    "Enabled System Capability 'Bridge'",
+    Bit
+};
+static const Parameter PAR_LLDP_SYSCAP_WLAN_EN = {
+    "W-EN",
+    "Enabled System Capability 'WLAN AP'",
+    Bit
+};
+static const Parameter PAR_LLDP_SYSCAP_ROUTER_EN = {
+    "R-EN",
+    "Enabled System Capability 'Router'",
+    Bit
+};
+static const Parameter PAR_LLDP_SYSCAP_PHONE_EN = {
+    "T-EN",
+    "Enabled System Capability 'Telephone'",
+    Bit
+};
+static const Parameter PAR_LLDP_SYSCAP_DOCSIS_EN = {
+    "C-EN",
+    "Enabled System Capability 'DOCSIS cable device'",
+    Bit
+};
+static const Parameter PAR_LLDP_SYSCAP_STATION_EN = {
+    "S-EN",
+    "Enabled System Capability 'Station only'",
+    Bit
+};
+static const Parameter PAR_LLDP_MGT_ADDR = {
+    "mgt-addr",
+    "Management Address",
+    Bytestream
+};
+static const Parameter PAR_LLDP_MGT_ADDR_T = {
+    "mgt-addr-type",
+    "Management Address Subtype (see ianaAddressFamilyNumbers of RFC 3232 )",
+    Integer
+};
+static const Parameter PAR_LLDP_IF_NUMBER = {
+    "if-number",
+    "Interface Number",
+    Integer
+};
+static const Parameter PAR_LLDP_IF_NUMBER_T = {
+    "if-number-type",
+    "Interface Number Subtype: 1 = unknown, 2 = ifIndex, 3 = system port number",
+    Integer
+};
+static const Parameter PAR_LLDP_MGT_OID = {
+    "mgt-oid",
+    "Management Object Identifier",
+    Bytestream
+};
+static const Parameter PAR_LLDP_PVID = {
+    "pvid",
+    "Port VLAN ID",
+    Integer
+};
+static const Parameter PAR_LLDP_PPVID = {
+    "ppvid",
+    "Port and Protocol VLAN ID",
+    Integer
+};
+static const Parameter PAR_LLDP_PPVID_SUP = {
+    "PPVID-SUP",
+    "Port and Protocol VLAN supported",
+    Bit
+};
+static const Parameter PAR_LLDP_PPVID_EN = {
+    "PPVID-EN",
+    "Port and Protocol VLAN enabled",
+    Bit
+};
+static const Parameter PAR_LLDP_VLAN_NAME = {
+    "vlan-name",
+    "VLAN name",
+    Bytestream
+};
+static const Parameter PAR_LLDP_VLAN_NAME_VID = {
+    "vlan-name-id",
+    "VLAN ID of given name",
+    Integer
+};
+static const Parameter PAR_LLDP_PROTO_ID = {
+    "proto-id",
+    "Protocol Identity",
+    Bytestream
+};
+// VID Usage Digest TLV (IEEE 802.1Q-2022 D.2.5)
+static const Parameter PAR_LLDP_VID_USAGE_DIGEST = {
+    "vid-usage-digest",
+    "VID usage digest",
+    Integer
+};
+// Management VID TLV (IEEE 802.1Q-2022 D.2.6)
+static const Parameter PAR_LLDP_MGT_VID = {
+    "mgt-vid",
+    "Management VID associated with the system",
+    Integer
+};
+// Link Aggregation TLV (IEEE 802.1AX)
+static const Parameter PAR_LLDP_LAG_CAP = {
+    "lag-cap",
+    "Link aggregation capability (0 = not capable, 1 = capable)",
+    Bit
+};
+static const Parameter PAR_LLDP_LAG_STATUS = {
+    "lag-status",
+    "Link aggregation status (0 = not currently in aggregation, 1 = currently in aggregation)",
+    Bit
+};
+static const Parameter PAR_LLDP_LAG_PORT_TYPE = {
+    "lag-port-type",
+    "Aggregation Port Type (0 = no port type, 1 = Aggregation Port, 2 = Aggregator, 3 = Aggregator with single port)",
+    Integer
+};
+static const Parameter PAR_LLDP_LAG_PORT_ID = {
+    "lag-port-id",
+    "Aggregated Port ID",
+    Integer
+};
+// Congestion Notification TLV (IEEE 802.1Q-2022 D.2.7)
+static const Parameter PAR_LLDP_CONG_NOTE_CNPV = {
+    "cong-cnpv",
+    "Per-priority CNPV indicators",
+    Integer
+};
+static const Parameter PAR_LLDP_CONG_NOTE_READY = {
+    "cong-ready",
+    "Per-priority Ready indicators",
+    Integer
+};
+// ETS Notification TLV (IEEE 802.1Q-2022 D.2.8)
+static const Parameter PAR_LLDP_ETS_CFG_W = {
+    "ets-cfg-willing",
+    "Willing bit, if set, station accepts configurations",
+    Bit
+};
+static const Parameter PAR_LLDP_ETS_CFG_CBS = {
+    "ets-cfg-cbs",
+    "Credit-based Shaper bit, if set, station supports CBS",
+    Bit
+};
+static const Parameter PAR_LLDP_ETS_CFG_MAX_TC = {
+    "ets-cfg-max-tc",
+    "Maximum number of traffic classes supported (0 = 8 TCs)",
+    Integer
+};
+static const Parameter PAR_LLDP_ETS_CFG_PRIO = {
+    "ets-cfg-prio",
+    "Priority Assignment Table",
+    Integer
+};
+static const Parameter PAR_LLDP_ETS_CFG_BW = {
+    "ets-cfg-bw",
+    "TC Bandwidth Table",
+    Integer
+};
+static const Parameter PAR_LLDP_ETS_CFG_TSA = {
+    "ets-cfg-tsa",
+    "TSA Assignment Table",
+    Integer
+};
+// ETS Recommendation TLV (IEEE 802.1Q-2022 D.2.9)
+static const Parameter PAR_LLDP_ETS_REC_PRIO = {
+    "ets-rec-prio",
+    "Priority Assignment Table",
+    Integer
+};
+static const Parameter PAR_LLDP_ETS_REC_BW = {
+    "ets-rec-bw",
+    "TC Bandwidth Table",
+    Integer
+};
+static const Parameter PAR_LLDP_ETS_REC_TSA = {
+    "ets-rec-tsa",
+    "TSA Assignment Table",
+    Integer
+};
+// Priority-based Flow Control Configuration TLV (IEEE 802.1Q-2022 D.2.10)
+static const Parameter PAR_LLDP_PFC_W = {
+    "pfc-willing",
+    "Willing bit, if set, station accepts configurations",
+    Bit
+};
+static const Parameter PAR_LLDP_PFC_MBC = {
+    "pfc-mbc",
+    "MACsec Bypass Capability",
+    Bit
+};
+static const Parameter PAR_LLDP_PFC_CAP = {
+    "pfc-cap",
+    "PFC Capability",
+    Integer
+};
+static const Parameter PAR_LLDP_PFC_ENABLE = {
+    "pfc-enable",
+    "PFC Enable bit vector",
+    Integer
+};
+// Application Priority TLV (IEEE 802.1Q-2022 D.2.11)
+static const Parameter PAR_LLDP_APPL_PRIO = {
+    "appl-prio",
+    "Priority",
+    Integer
+};
+static const Parameter PAR_LLDP_APPL_SEL = {
+    "appl-prio-sel",
+    "Meaning of the protocol ID (1 = Ethertype, 2 = TCP/SCTP port, 3 = UDP port, 4 = UDP/TCP/SCTP/DCCP port, 5 = DSCP)",
+    Integer
+};
+static const Parameter PAR_LLDP_APPL_PROTO = {
+    "appl-prio-proto",
+    "Protocol ID",
+    Integer
+};
+// Application Priority TLV (IEEE 802.1Q-2022 D.2.12)
+static const Parameter PAR_LLDP_EVB_BRIDGE_STATUS = {
+    "evb-bridge-status",
+    "EVB capabilities that are supported by the EVB bridge",
+    Integer
+};
+static const Parameter PAR_LLDP_EVB_STATION_STATUS = {
+    "evb-station-status",
+    "EVB capabilities that are supported by the EVB station",
+    Integer
+};
+static const Parameter PAR_LLDP_EVB_RETRIES = {
+    "evb-max-retries",
+    "maxRetries value for the ECP state machine",
+    Integer
+};
+static const Parameter PAR_LLDP_EVB_RTE = {
+    "evb-rte",
+    "Retransmission exponent",
+    Integer
+};
+static const Parameter PAR_LLDP_EVB_MODE = {
+    "evb-mode",
+    "EVB mode",
+    Integer
+};
+static const Parameter PAR_LLDP_EVB_ROL_RWD = {
+    "evb-rol-rwd",
+    "Remote or Local flag for RWD value (0 = local, 1 = remote)",
+    Bit
+};
+static const Parameter PAR_LLDP_EVB_RWD = {
+    "evb-rwd",
+    "RWD value transmitted by the EVB bridge",
+    Integer
+};
+static const Parameter PAR_LLDP_EVB_ROL_RKA = {
+    "evb-rol-rka",
+    "Remote or Local flag for RKA value (0 = local, 1 = remote)",
+    Bit
+};
+static const Parameter PAR_LLDP_EVB_RKA = {
+    "evb-rka",
+    "RKA value transmitted by the EVB station",
+    Integer
+};
+// CDCP TLV (IEEE 802.1Q-2022 D.2.13)
+static const Parameter PAR_LLDP_CDCP_ROLE = {
+    "cdcp-role",
+    "Role (0 = Bridge, 1 = Station)",
+    Bit
+};
+static const Parameter PAR_LLDP_CDCP_SCOMP = {
+    "cdcp-scomp",
+    "Presence of S-VLAN component for S-Channel",
+    Bit
+};
+static const Parameter PAR_LLDP_CDCP_CHN_CAP = {
+    "cdcp-ch-cap",
+    "Channel capacity",
+    Integer
+};
+static const Parameter PAR_LLDP_CDCP_SCID = {
+    "cdcp-scid",
+    "Index number of S-channel",
+    Integer
+};
+static const Parameter PAR_LLDP_CDCP_SVID = {
+    "cdcp-svid",
+    "VID assigned to the S-channel",
+    Integer
+};
+// Application VLAN TLV (IEEE 802.1Q-2022 D.2.14)
+static const Parameter PAR_LLDP_APPL_VLAN_VID = {
+    "appl-vlan-vid",
+    "VLAN ID",
+    Integer
+};
+static const Parameter PAR_LLDP_APPL_VLAN_SEL = {
+    "appl-vlan-sel",
+    "Meaning of the protocol ID (1 = Ethertype, 2 = TCP/SCTP port, 3 = UDP port, 4 = UDP/TCP/SCTP/DCCP port, 5 = DSCP)",
+    Integer
+};
+static const Parameter PAR_LLDP_APPL_VLAN_PROTO = {
+    "appl-vlan-proto",
+    "Protocol ID",
+    Integer
+};
+
+// MAC/PHY Configuration/Status TLV (IEEE802.3-2022 clause 79.3.1)
+static const Parameter PAR_LLDP_MACPHY_ANEG_SUP = {
+    "autoneg-sup",
+    "Auto-negotiation support",
+    Bit
+};
+static const Parameter PAR_LLDP_MACPHY_ANEG_ENA = {
+    "autoneg-en",
+    "Auto-negotiation enabled",
+    Bit
+};
+static const Parameter PAR_LLDP_MACPHY_ANEG_CAPS = {
+    "autoneg-caps",
+    "PMD auto-negotiation advertised capability",
+    Integer
+};
+static const Parameter PAR_LLDP_MACPHY_MAU_TYPE = {
+    "mautype",
+    "operational MAU type",
+    Integer
+};
+// Power Via MDI TLV (IEEE802.3-2022 clause 79.3.2)
+//  basic fields
+static const Parameter PAR_LLDP_POE_MDI_POWER_SUP_PORT_CLASS = {
+    "poe-port-class",
+    "Port class (0 = PD, 1 = PSE)",
+    Bit
+};
+static const Parameter PAR_LLDP_POE_MDI_POWER_SUP_PSE_MDI_SUP = {
+    "poe-power-sup",
+    "PSE MDI power support (0 = supported, 1 = not supported)",
+    Bit
+};
+static const Parameter PAR_LLDP_POE_MDI_POWER_SUP_PSE_MDI_ENA = {
+    "poe-power-state",
+    "PSE MDI power state (0 = disabled, 1 = not enabled)",
+    Bit
+};
+static const Parameter PAR_LLDP_POE_MDI_POWER_SUP_PSE_PAIR_CTRL = {
+    "poe-pair-ctrl",
+    "PSE pairs control ability (0 = pair selection can not be controlled, 1 = pair selection can be controlled)",
+    Bit
+};
+static const Parameter PAR_LLDP_POE_PSE_POWER_PAIR = {
+    "poe-power-pair",
+    "PSE power pair field (1 = signal, 2 = spare)",
+    Integer
+};
+static const Parameter PAR_LLDP_POE_POWER_CLASS = {
+    "poe-power-class",
+    "Power class (1 = Class 0 PD, 2 = Class 1 PD, ... , 5 = Class 4 and above PD)",
+    Integer
+};
+//  DLL classification extension
+static const Parameter PAR_LLDP_POE_DLL_POWER_TYPE = {
+    "poe-power-type",
+    "DLL power type (0 = Type 2 PSE, 1 = Type 2 PD, 2 = Type 1 PSE, 3 = Type 1 PD)",
+    Integer
+};
+static const Parameter PAR_LLDP_POE_DLL_POWER_SOURCE = {
+    "poe-power-src",
+    "DLL power source (Power type = PSE: 0 = unknown, 1 = primary, 2 = backup | Power type = PD: 0 = unknown, 1 = PSE, 3 = PSE and local)",
+    Integer
+};
+static const Parameter PAR_LLDP_POE_DLL_PD_4PID = {
+    "poe-pd-4pid",
+    "PD 4PID (1 = PD supports powering of both Modes simultaneously, 0 = PD does not support...)",
+    Integer
+};
+static const Parameter PAR_LLDP_POE_DLL_POWER_PRIO = {
+    "poe-power-prio",
+    "DLL power priority (0 = unknown, 1 = critical, 2 = high, 3 = low)",
+    Integer
+};
+static const Parameter PAR_LLDP_POE_DLL_PD_REQ_POWER = {
+    "poe-req-power",
+    "PD requested power value",
+    Float
+};
+static const Parameter PAR_LLDP_POE_DLL_PD_ALLOC_POWER = {
+    "poe-alloc-power",
+    "PSE allocated power value",
+    Float
+};
+// TODO Type 3 and Type 4 extension (~14 parameters!!!)
+
+// Maximum Frame Size TLV (IEEE802.3-2022 clause 79.3.4)
+static const Parameter PAR_LLDP_MAX_FRAME_SIZE = {
+    "max-frame-size",
+    "Maximum 802.3 frame size",
+    Integer
+};
+// EEE TLV (IEEE802.3-2022 clause 79.3.5)
+static const Parameter PAR_LLDP_EEE_TX_TW = {
+    "eee-tx-tw",
+    "EEE transmit Tw",
+    Integer
+};
+static const Parameter PAR_LLDP_EEE_RX_TW = {
+    "eee-rx-tw",
+    "EEE recieve Tw",
+    Integer
+};
+static const Parameter PAR_LLDP_EEE_FB_RX_TW = {
+    "eee-fb-rx-tw",
+    "EEE fallback receive Tw",
+    Integer
+};
+static const Parameter PAR_LLDP_EEE_ECHO_TX_TW = {
+    "eee-echo-tx-tw",
+    "EEE echo transmit Tw",
+    Integer
+};
+static const Parameter PAR_LLDP_EEE_ECHO_RX_TW = {
+    "eee-echo-rx-tw",
+    "EEE echo receive  Tw",
+    Integer
+};
+// EEE Fast Wake TLV (IEEE802.3-2022 clause 79.3.6)
+static const Parameter PAR_LLDP_EEE_FW_TX = {
+    "eee-fw-tx",
+    "Transmit fast wake",
+    Bit
+};
+static const Parameter PAR_LLDP_EEE_FW_RX = {
+    "eee-fw-rx",
+    "Receive fast wake",
+    Bit
+};
+static const Parameter PAR_LLDP_EEE_FW_ECHO_TX = {
+    "eee-fw-echo-tx",
+    "Echo transmit fast wake",
+    Bit
+};
+static const Parameter PAR_LLDP_EEE_FW_ECHO_RX = {
+    "eee-fw-echo-rx",
+    "Echo receive fast wake",
+    Bit
+};
+
+// Profinet TLV LLDP_PNIO_DELAY
+static const Parameter PAR_LLDP_PN_DELAY_PORT_RX_LOC = {
+    "pn-port-delay-rx",
+    "PTCP_PortRxDelayLocal (nanoseconds)",
+    Integer
+};
+static const Parameter PAR_LLDP_PN_DELAY_PORT_RX_REM = {
+    "pn-port-delay-rx-rem",
+    "PTCP_PortRxDelayRemote (nanoseconds)",
+    Integer
+};
+static const Parameter PAR_LLDP_PN_DELAY_PORT_TX_LOC = {
+    "pn-port-delay-tx",
+    "PTCP_PortTxDelayLocal (nanoseconds)",
+    Integer
+};
+static const Parameter PAR_LLDP_PN_DELAY_PORT_TX_REM = {
+    "pn-port-delay-tx-rem",
+    "PTCP_PortTxDelayRemote (nanoseconds)",
+    Integer
+};
+static const Parameter PAR_LLDP_PN_DELAY_LINE = {
+    "pn-cable-delay",
+    "Measured cable delay (nanoseconds)",
+    Integer
+};
+// Profinet TLV LLDP_PNIO_PORTSTATUS
+static const Parameter PAR_LLDP_PN_RTC2_STATE = {
+    "pn-rtc2-state",
+    "RTClass2_PortStatus.State (0 = OFF, 1 = SYNC-DATA-LOADED, 2 = UP)",
+    Integer
+};
+static const Parameter PAR_LLDP_PN_RTC3_STATE = {
+    "pn-rtc3-state",
+    "RTClass3_PortStatus.State (0 = OFF, 2 = UP, 4 = RUN)",
+    Integer
+};
+static const Parameter PAR_LLDP_PN_RTC3_FRAG = {
+    "pn-rtc3-frag",
+    "Fragmentation Mode (0 = disabled, 1 = enabled)",
+    Bit
+};
+static const Parameter PAR_LLDP_PN_RTC3_PREAMP = {
+    "pn-rtc3-short-preamp",
+    "Short preample (0 = disabled (8 octets), 1 = enabled (1 octet))",
+    Bit
+};
+static const Parameter PAR_LLDP_PN_RTC3_OPTIMIZED = {
+    "pn-rtc3-opt",
+    "Optimized (0 = OFF, 1 = ON)",
+    Bit
+};
+// Profinet TLV LLDP_PNIO_ALIAS
+static const Parameter PAR_LLDP_PN_ALIAS = {
+    "pn-alias",
+    "Alias name value",
+    Bytestream
+};
+// Profinet TLV LLDP_PNIO_MRPPORTSTATUS
+static const Parameter PAR_LLDP_PN_MRP_DOMAIN = {
+    "pn-mrp-domain",
+    "MRP domain name",
+    Bytestream
+};
+static const Parameter PAR_LLDP_PN_MRP_DOMAIN_UUID = {
+    "pn-mrp-domain-uuid",
+    "MRP domain uuid",
+    Bytestream
+};
+static const Parameter PAR_LLDP_PN_MRP_MRRT_STATE = {
+    "pn-mrp-mrrt-state",
+    "MRRT port status (0 = OFF, 1 = CONFIGURED, 2 = UP)",
+    Integer
+};
+// Profinet TLV LLDP_PNIO_CHASSIS_MAC
+static const Parameter PAR_LLDP_PN_CHASSIS_MAC = {
+    "pn-chassis-mac",
+    "Chassis MAC address",
+    Mac
+};
+// Profinet TLV LLDP_PNIO_PTCPSTATUS
+static const Parameter PAR_LLDP_PN_PTCP_MAST_SRC_MAC = {
+    "pn-ptcp-master-mac",
+    "PTCP master source MAC address",
+    Mac
+};
+static const Parameter PAR_LLDP_PN_PTCP_DOMAIN_UUID = {
+    "pn-ptcp-domain-uuid",
+    "PTCP domain UUID",
+    Bytestream
+};
+static const Parameter PAR_LLDP_PN_PTCP_IRDATA_UUID = {
+    "pn-ptcp-irdata-uuid",
+    "IRDATA UUID",
+    Bytestream
+};
+static const Parameter PAR_LLDP_PN_PTCP_PERIOD_LEN = {
+    "pn-ptcp-period-len",
+    "Length of period (nanoseconds)",
+    Integer
+};
+static const Parameter PAR_LLDP_PN_PTCP_RED_ORANGE = {
+    "pn-ptcp-red-orange",
+    "Frame offset of red/orange period (nanoseconds)",
+    Integer
+};
+static const Parameter PAR_LLDP_PN_PTCP_ORANGE = {
+    "pn-ptcp-orange",
+    "Frame offset of orange period (nanoseconds)",
+    Integer
+};
+static const Parameter PAR_LLDP_PN_PTCP_GREEN = {
+    "pn-ptcp-green",
+    "Frame offset of gree period (nanoseconds)",
+    Integer
+};
+// Profinet TLV LLDP_PNIO_MAUTypeExtension
+static const Parameter PAR_LLDP_PN_MAU_TYPE_EXT = {
+    "pn-mautype-ext",
+    "MAUTYPE extension",
+    Integer
+};
+// Profinet TLV LLDP_PNIO_MRPICPORT_STATUS
+static const Parameter PAR_LLDP_PN_MRP_IC_DOMAIN_ID = {
+    "pn-mrp-ic-domain-id",
+    "MRP interconnection domain identifier",
+    Integer
+};
+static const Parameter PAR_LLDP_PN_MRP_IC_ROLE = {
+    "pn-mrp-ic-role",
+    "MRP interconnection role (0 = none, 1 = client, 2 = manager)",
+    Integer
+};
+static const Parameter PAR_LLDP_PN_MRP_IC_MIC_POS = {
+    "pn-mrp-ic-mic-pos",
+    "MRP interconnection mic position",
+    Integer
+};
+
+// Raw user defined TLV
+static const Parameter PAR_LLDP_TLV_TYPE = {
+    "type",
+    "Raw TLV Type Number",
+    Integer
+};
+static const Parameter PAR_LLDP_TLV_VALUE = {
+    "value",
+    "Raw TLV Value as bytestream",
+    Bytestream
+};
+// Raw user defined organizationally specific TLV
+static const Parameter PAR_LLDP_OUI_TLV_OUI = {
+    "oui",
+    "Organizationally Specific TLV OUI",
+    Bytestream
+};
+static const Parameter PAR_LLDP_OUI_TLV_TYPE = {
+    "oui-type",
+    "Organizationally Specific TLV Subtype Number",
+    Integer
+};
+static const Parameter PAR_LLDP_OUI_TLV_VALUE = {
+    "oui-value",
+    "Organizationally Specific TLV Value as bytestream",
+    Bytestream
+};
+static const Protocol PR_LLDP = {
+    "lldp",
+    "Link Layer Discovery Protocol",
+    {
+    },
+    {
+        &PAR_ETH_DMAC,
+        &PAR_ETH_SMAC,
+        PAR_VLAN,
+        &PAR_LLDP_CHASSIS_ID,
+        &PAR_LLDP_CHASSIS_ID_T,
+        &PAR_LLDP_PORT_ID,
+        &PAR_LLDP_PORT_ID_T,
+        &PAR_LLDP_TTL,
+        &PAR_LLDP_PORT_DESC,
+        &PAR_LLDP_SYSNAME,
+        &PAR_LLDP_SYSDESC,
+        &PAR_LLDP_SYSCAP_OTHER,
+        &PAR_LLDP_SYSCAP_REPEATER,
+        &PAR_LLDP_SYSCAP_BRIDGE,
+        &PAR_LLDP_SYSCAP_WLAN,
+        &PAR_LLDP_SYSCAP_ROUTER,
+        &PAR_LLDP_SYSCAP_PHONE,
+        &PAR_LLDP_SYSCAP_DOCSIS,
+        &PAR_LLDP_SYSCAP_STATION,
+        &PAR_LLDP_SYSCAP_OTHER_EN,
+        &PAR_LLDP_SYSCAP_REPEATER_EN,
+        &PAR_LLDP_SYSCAP_BRIDGE_EN,
+        &PAR_LLDP_SYSCAP_WLAN_EN,
+        &PAR_LLDP_SYSCAP_ROUTER_EN,
+        &PAR_LLDP_SYSCAP_PHONE_EN,
+        &PAR_LLDP_SYSCAP_DOCSIS_EN,
+        &PAR_LLDP_SYSCAP_STATION_EN,
+        &PAR_LLDP_MGT_ADDR,
+        &PAR_LLDP_MGT_ADDR_T,
+        &PAR_LLDP_IF_NUMBER,
+        &PAR_LLDP_IF_NUMBER_T,
+        &PAR_LLDP_MGT_OID,
+        &PAR_LLDP_PVID,
+        &PAR_LLDP_PPVID,
+        &PAR_LLDP_PPVID_SUP,
+        &PAR_LLDP_PPVID_EN,
+        &PAR_LLDP_VLAN_NAME_VID,
+        &PAR_LLDP_VLAN_NAME,
+        &PAR_LLDP_PROTO_ID,
+        &PAR_LLDP_VID_USAGE_DIGEST,
+        &PAR_LLDP_MGT_VID,
+        &PAR_LLDP_LAG_CAP,
+        &PAR_LLDP_LAG_STATUS,
+        &PAR_LLDP_LAG_PORT_TYPE,
+        &PAR_LLDP_LAG_PORT_ID,
+        &PAR_LLDP_CONG_NOTE_CNPV,
+        &PAR_LLDP_CONG_NOTE_READY,
+        &PAR_LLDP_ETS_CFG_W,
+        &PAR_LLDP_ETS_CFG_CBS,
+        &PAR_LLDP_ETS_CFG_MAX_TC,
+        &PAR_LLDP_ETS_CFG_PRIO,
+        &PAR_LLDP_ETS_CFG_BW,
+        &PAR_LLDP_ETS_CFG_TSA,
+        &PAR_LLDP_ETS_REC_PRIO,
+        &PAR_LLDP_ETS_REC_BW,
+        &PAR_LLDP_ETS_REC_TSA,
+        &PAR_LLDP_PFC_W,
+        &PAR_LLDP_PFC_MBC,
+        &PAR_LLDP_PFC_CAP,
+        &PAR_LLDP_PFC_ENABLE,
+        &PAR_LLDP_APPL_PRIO,
+        &PAR_LLDP_APPL_SEL,
+        &PAR_LLDP_APPL_PROTO,
+        &PAR_LLDP_EVB_BRIDGE_STATUS,
+        &PAR_LLDP_EVB_STATION_STATUS,
+        &PAR_LLDP_EVB_RETRIES,
+        &PAR_LLDP_EVB_RTE,
+        &PAR_LLDP_EVB_MODE,
+        &PAR_LLDP_EVB_ROL_RWD,
+        &PAR_LLDP_EVB_RWD,
+        &PAR_LLDP_EVB_ROL_RKA,
+        &PAR_LLDP_EVB_RKA,
+        &PAR_LLDP_CDCP_ROLE,
+        &PAR_LLDP_CDCP_SCOMP,
+        &PAR_LLDP_CDCP_CHN_CAP,
+        &PAR_LLDP_CDCP_SCID,
+        &PAR_LLDP_CDCP_SVID,
+        &PAR_LLDP_APPL_VLAN_VID,
+        &PAR_LLDP_APPL_VLAN_SEL,
+        &PAR_LLDP_APPL_VLAN_PROTO,
+
+        &PAR_LLDP_MACPHY_ANEG_SUP,
+        &PAR_LLDP_MACPHY_ANEG_ENA,
+        &PAR_LLDP_MACPHY_ANEG_CAPS,
+        &PAR_LLDP_MACPHY_MAU_TYPE,
+
+        &PAR_LLDP_POE_MDI_POWER_SUP_PORT_CLASS,
+        &PAR_LLDP_POE_MDI_POWER_SUP_PSE_MDI_SUP,
+        &PAR_LLDP_POE_MDI_POWER_SUP_PSE_MDI_ENA,
+        &PAR_LLDP_POE_MDI_POWER_SUP_PSE_PAIR_CTRL,
+        &PAR_LLDP_POE_PSE_POWER_PAIR,
+        &PAR_LLDP_POE_POWER_CLASS,
+        &PAR_LLDP_POE_DLL_POWER_TYPE,
+        &PAR_LLDP_POE_DLL_POWER_SOURCE,
+        &PAR_LLDP_POE_DLL_PD_4PID,
+        &PAR_LLDP_POE_DLL_POWER_PRIO,
+        &PAR_LLDP_POE_DLL_PD_REQ_POWER,
+        &PAR_LLDP_POE_DLL_PD_ALLOC_POWER,
+
+        &PAR_LLDP_MAX_FRAME_SIZE,
+        &PAR_LLDP_EEE_TX_TW,
+        &PAR_LLDP_EEE_RX_TW,
+        &PAR_LLDP_EEE_FB_RX_TW,
+        &PAR_LLDP_EEE_ECHO_TX_TW,
+        &PAR_LLDP_EEE_ECHO_RX_TW,
+        &PAR_LLDP_EEE_FW_TX,
+        &PAR_LLDP_EEE_FW_RX,
+        &PAR_LLDP_EEE_FW_ECHO_TX,
+        &PAR_LLDP_EEE_FW_ECHO_RX,
+
+        &PAR_LLDP_PN_DELAY_PORT_RX_LOC,
+        &PAR_LLDP_PN_DELAY_PORT_RX_REM,
+        &PAR_LLDP_PN_DELAY_PORT_TX_LOC,
+        &PAR_LLDP_PN_DELAY_PORT_TX_REM,
+        &PAR_LLDP_PN_DELAY_LINE,
+        &PAR_LLDP_PN_RTC2_STATE,
+        &PAR_LLDP_PN_RTC3_STATE,
+        &PAR_LLDP_PN_RTC3_FRAG,
+        &PAR_LLDP_PN_RTC3_PREAMP,
+        &PAR_LLDP_PN_RTC3_OPTIMIZED,
+        &PAR_LLDP_PN_ALIAS,
+        &PAR_LLDP_PN_MRP_DOMAIN,
+        &PAR_LLDP_PN_MRP_DOMAIN_UUID,
+        &PAR_LLDP_PN_MRP_MRRT_STATE,
+        &PAR_LLDP_PN_CHASSIS_MAC,
+        &PAR_LLDP_PN_PTCP_MAST_SRC_MAC,
+        &PAR_LLDP_PN_PTCP_DOMAIN_UUID,
+        &PAR_LLDP_PN_PTCP_IRDATA_UUID,
+        &PAR_LLDP_PN_PTCP_PERIOD_LEN,
+        &PAR_LLDP_PN_PTCP_RED_ORANGE,
+        &PAR_LLDP_PN_PTCP_ORANGE,
+        &PAR_LLDP_PN_PTCP_GREEN,
+        &PAR_LLDP_PN_MAU_TYPE_EXT,
+        &PAR_LLDP_PN_MRP_IC_DOMAIN_ID,
+        &PAR_LLDP_PN_MRP_IC_ROLE,
+        &PAR_LLDP_PN_MRP_IC_MIC_POS,
+
+        &PAR_LLDP_TLV_TYPE,
+        &PAR_LLDP_TLV_VALUE,
+        &PAR_LLDP_OUI_TLV_OUI,
+        &PAR_LLDP_OUI_TLV_TYPE,
+        &PAR_LLDP_OUI_TLV_VALUE
+    }
+};
+
 static const std::vector<const Protocol*> all_protos
 {
     &PR_RAW,
@@ -1110,6 +1967,7 @@ static const std::vector<const Protocol*> all_protos
     &PR_VXLAN6,
     &PR_GRE4,
     &PR_GRE6,
+    &PR_LLDP
 };
 
 #endif

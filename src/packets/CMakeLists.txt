@@ -27,6 +27,7 @@ set (SOURCES
      ${CMAKE_CURRENT_SOURCE_DIR}/inetchecksum.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/ippacket.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/grepacket.cpp
+     ${CMAKE_CURRENT_SOURCE_DIR}/lldppacket.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/stppacket.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/tcppacket.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/udppacket.cpp
