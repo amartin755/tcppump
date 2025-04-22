@@ -170,7 +170,7 @@ void cLldpPacket::addManagementAddress (uint8_t mgtAddrSubtype, const uint8_t* m
 {
     const size_t tlvLen = 1+1+mgtAddrLen + 1+sizeof (ifNumber) + 1+oidLen;
     cFixedByteArray* value = new cFixedByteArray (tlvLen);
-    *value << mgtAddrLen << mgtAddrSubtype;
+    *value << uint8_t(mgtAddrLen+1) << mgtAddrSubtype;
     value->append (mgtAddr, mgtAddrLen);
     *value << ifNbSubtype << toBE32(ifNumber) << oidLen;
     if (oidLen)

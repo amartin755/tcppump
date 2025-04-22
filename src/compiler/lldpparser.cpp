@@ -176,14 +176,15 @@ void cLldpParser::managementAddress ()
     optionalPar = m_params.findParameter (PAR_LLDP_MGT_OID.syntax, true);
     if (optionalPar)
     {
-        mgtOid = optionalPar->asStream (len, 255);
+        mgtOid = optionalPar->asStream (len, 128);
+        mgtOidLen = (uint8_t)len;
     }
 
     optionalPar = m_params.findParameter (PAR_LLDP_MGT_ADDR_T.syntax, true);
     if (optionalPar)
     {
         // User defined subtype. Management Address MUST be provided too
-        const uint8_t* mgtAddr = m_params.findParameter (PAR_LLDP_MGT_ADDR.syntax)->asStream (len, 255);
+        const uint8_t* mgtAddr = m_params.findParameter (PAR_LLDP_MGT_ADDR.syntax)->asStream (len, 31);
         uint8_t subtype = optionalPar->asInt8 ();
         m_packet.addManagementAddress (subtype, mgtAddr, (uint8_t)len, ifNumberSubtype, ifNumber, mgtOid, mgtOidLen);
     }
@@ -207,16 +208,7 @@ void cLldpParser::managementAddress ()
                 }
                 catch (const FormatException&)
                 {
-                    try
-                    {
-                        m_packet.addManagementAddress (optionalPar->asMac(), ifNumberSubtype, ifNumber, mgtOid, mgtOidLen);
-                    }
-                    catch (const FormatException&)
-                    {
-                        // if the type isn't IPv4, IPv6 or MAC, it MUST be a valid bytestream
-                        const uint8_t* mgtAddr = optionalPar->asStream (len, 255);
-                        m_packet.addManagementAddress (0, mgtAddr, (uint8_t)len, ifNumberSubtype, ifNumber, mgtOid, mgtOidLen);
-                    }
+                    m_packet.addManagementAddress (optionalPar->asMac(), ifNumberSubtype, ifNumber, mgtOid, mgtOidLen);
                 }
             }
         }
