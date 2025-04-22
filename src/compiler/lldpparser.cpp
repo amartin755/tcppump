@@ -26,8 +26,8 @@
 #include "md5.hpp"
 
 
-cLldpParser::cLldpParser (const char* instruction, cLldpPacket& packet, cParameterList& params)
-: m_packet (packet), m_params (params), m_currentInstruction (instruction)
+cLldpParser::cLldpParser (cLldpPacket& packet, cParameterList& params)
+: m_packet (packet), m_params (params)
 {
 
 }

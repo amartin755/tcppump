@@ -24,7 +24,7 @@
 class cLldpParser
 {
 public:
-    cLldpParser (const char* instruction, cLldpPacket&, cParameterList&);
+    cLldpParser (cLldpPacket&, cParameterList&);
     void chassisID ();
     void portID ();
     void portDescription ();
@@ -73,7 +73,6 @@ public:
 private:
     cLldpPacket& m_packet;
     cParameterList& m_params;
-    const char* m_currentInstruction;
 };
 
 #endif /* LLDP_PARSER_HPP_ */

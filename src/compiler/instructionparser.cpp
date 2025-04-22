@@ -1195,7 +1195,7 @@ cLinkable* cInstructionParser::compileLLDP (bool noEthHeader, cParameterList& pa
             compileMacHeader (params, lldp, false, true);
             compileVLANTags  (params, lldp);
         }
-        cLldpParser parser (m_currentInstruction, *lldp, params);
+        cLldpParser parser (*lldp, params);
 
         // Mandatory IEEE802.1AB TLVs
         parser.chassisID ();
