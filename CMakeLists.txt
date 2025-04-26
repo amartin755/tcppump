@@ -25,7 +25,7 @@ project (tcppump VERSION 0.4.0
 ###############################################################################
 
 option(WITH_UNITTESTS "enable/disable generation of unittest binary (default ON)" ON)
-option(WITH_ASAN      "enable/disable address sanitizer (default OFF)" ON)
+option(WITH_ASAN      "enable/disable address sanitizer (default OFF)" OFF)
 option(WITH_UBSAN     "enable/disable undefined behavior sanitizer (default OFF)" OFF)
 option(WITH_GCOV      "enable/disable code coverage profiling (default OFF)" OFF)
 option(WITH_WERROR    "enable/disable compilation warnings as errors (default OFF)" OFF)
@@ -166,6 +166,7 @@ test_big_endian (HAVE_BIG_ENDIAN)
 # preprocessor definitions
 ###############################################################################
 add_compile_definitions (APP_VERSION="${PROJECT_VERSION}")
+add_compile_definitions ($<$<CONFIG:Release>:_FORTIFY_SOURCE=2>)
 
 if (HAVE_WS2)
     add_compile_definitions (HAVE_WS2)
