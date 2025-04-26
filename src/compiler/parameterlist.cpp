@@ -492,7 +492,7 @@ cParameter* cParameterList::findParameter (const char* parameter, const cIPv4& o
 // returns nullptr on success. Otherwise a pointer to the syntax error
 const char* cParameterList::parseParameters (const char* parameters, bool ignoreTrailingGarbage)
 {
-    static const char BOOLVALUE[] = "1";
+    static const char BOOLVALUE[] = "01";
     const char* p = parameters;
     cParameter v;
     bool isString = false;
