@@ -29,6 +29,7 @@ option(WITH_ASAN      "enable/disable address sanitizer (default OFF)" OFF)
 option(WITH_UBSAN     "enable/disable undefined behavior sanitizer (default OFF)" OFF)
 option(WITH_GCOV      "enable/disable code coverage profiling (default OFF)" OFF)
 option(WITH_WERROR    "enable/disable compilation warnings as errors (default OFF)" OFF)
+option(WITH_CPPCHECK  "enable/disable cppcheck (default OFF)" OFF)
 
 # set output directories to "bin"
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
@@ -84,6 +85,17 @@ endif ()
 if (WITH_GCOV)
     add_compile_options (--coverage)
     add_link_options (--coverage)
+endif ()
+
+if (WITH_CPPCHECK)
+    find_program(CMAKE_CXX_CPPCHECK NAMES cppcheck)
+    if (CMAKE_CXX_CPPCHECK)
+        list (APPEND CMAKE_CXX_CPPCHECK "--check-level=exhaustive")
+        list (APPEND CMAKE_CXX_CPPCHECK "--enable=warning")
+        list (APPEND CMAKE_CXX_CPPCHECK "-q")
+        list (APPEND CMAKE_CXX_CPPCHECK "--suppress=duplInheritedMember")
+        list (APPEND CMAKE_CXX_CPPCHECK "--inline-suppr")
+    endif ()
 endif ()
 
 # download dependencies

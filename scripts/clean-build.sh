@@ -12,6 +12,7 @@ UNITTESTS=OFF
 ASAN=OFF
 UBSAN=OFF
 WERROR=OFF
+CPPCHECK=OFF
 TOOLCHAIN=GCC
 
 usage() {
@@ -21,6 +22,7 @@ usage() {
     echo "  -t             Compile with unit tests"
     echo "  -a             Enable ASAN"
     echo "  -u             Enable UBSAN"
+    echo "  -c             Enable cppcheck"
     echo "  -e             Compile with -Werror"
     echo "  -C <config>    Build config (Debug, Release, ...)"
     echo "  -T <toolchain> Toolchain (GCC, CLANG)"
@@ -29,12 +31,13 @@ usage() {
     echo
     }
 
-while getopts htaueC:T:B: arg
+while getopts htauceC:T:B: arg
 do
    case $arg in
        t) UNITTESTS=ON;;
        a) ASAN=ON;;
        u) UBSAN=ON;;
+       c) CPPCHECK=ON;;
        e) WERROR=ON;;
        C) BUILD_CONIFG=$OPTARG;;
        T) TOOLCHAIN=$OPTARG;;
@@ -54,5 +57,5 @@ fi
 
 cd $PROJROOT
 rm -rf $PROJROOT/$BUILDDIRNAME
-cmake -B $BUILDDIRNAME  -DWITH_UNITTESTS=$UNITTESTS -DWITH_ASAN=$ASAN -DWITH_UBSAN=$UBSAN -DWITH_WERROR=$WERROR -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONIFG
+cmake -B $BUILDDIRNAME  -DWITH_UNITTESTS=$UNITTESTS -DWITH_ASAN=$ASAN -DWITH_UBSAN=$UBSAN -DWITH_CPPCHECK=$CPPCHECK -DWITH_WERROR=$WERROR -DCMAKE_BUILD_TYPE:STRING=$BUILD_CONIFG
 cmake --build $BUILDDIRNAME -j
