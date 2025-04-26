@@ -31,6 +31,11 @@ class cByteArray
 {
     static const size_t DEFAULT_CHUNK = 2048;
 public:
+    cByteArray(const cByteArray&) = delete;
+    cByteArray(const cByteArray&&) = delete;
+    cByteArray& operator= (const cByteArray&) = delete;
+    cByteArray& operator= (const cByteArray&&) = delete;
+
     // dynamic array
     cByteArray (size_t initialLength = 0, size_t chunksize = cByteArray::DEFAULT_CHUNK) 
     : m_chunkSize (chunksize), m_data (nullptr), m_capacity (0), m_currPos (0), m_dynSize (true), m_extData (false)

@@ -25,6 +25,7 @@
 
 
 
+// cppcheck-suppress uninitMemberVar
 cIcmpPacket::cIcmpPacket ()
 {
 }

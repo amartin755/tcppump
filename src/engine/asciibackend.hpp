@@ -29,6 +29,11 @@
 class cAsciiBackend : public cFileBackend
 {
 public:
+    cAsciiBackend(const cAsciiBackend&) = delete;
+    cAsciiBackend(const cAsciiBackend&&) = delete;
+    cAsciiBackend& operator= (const cAsciiBackend&) = delete;
+    cAsciiBackend& operator= (const cAsciiBackend&&) = delete;
+    
     cAsciiBackend (const char* file, bool printPacketNumber, bool printPacketTime, bool hexdump, const char* colSeparator, const char* byteSeparator);
     void write (const cTimeval& sendTime, cEthernetPacket& p);
     void statistic (uint64_t& sentPackets, uint64_t& sentBytes, double& duration) const;

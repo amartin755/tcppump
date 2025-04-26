@@ -24,6 +24,8 @@
 #include <cstring>
 #include <cctype>
 #include <string>
+#include <stdexcept>
+
 
 #include "bug.hpp"
 #include "random.hpp"
@@ -43,7 +45,11 @@ public:
     }
     cMacAddress (const char* s)
     {
-        set (s);
+        if (!set (s))
+        {
+            clear ();
+            throw std::out_of_range ("invalid mac address string");
+        }
     }
     cMacAddress (const cMacAddress& obj)
     {

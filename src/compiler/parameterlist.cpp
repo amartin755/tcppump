@@ -383,7 +383,7 @@ cParameter* cParameterList::findParameter (const cParameter* startAfter, const c
     {
         cParameter &par = list.at (n);
 
-        if (len2 == par.parLen && !strncmp (stopAt, par.parameter, par.parLen))
+        if (stopAt && len2 == par.parLen && !strncmp (stopAt, par.parameter, par.parLen))
         {
             break;
         }
