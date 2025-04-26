@@ -64,7 +64,7 @@ public:
         char ipAsString[INET_ADDRSTRLEN];
         if ((len+1) > sizeof(ipAsString))
             return false;
-        std::strncpy (ipAsString, ip, len);
+        std::memcpy (ipAsString, ip, len);
         ipAsString[len] = '\0';
         return set (ipAsString);
     }
@@ -207,7 +207,7 @@ public:
         char ipAsString[INET6_ADDRSTRLEN];
         if ((len+1) > sizeof(ipAsString))
             return false;
-        std::strncpy (ipAsString, ip, len);
+        std::memcpy (ipAsString, ip, len);
         ipAsString[len] = '\0';
         return set (ipAsString);
     }

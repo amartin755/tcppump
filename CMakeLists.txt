@@ -25,7 +25,7 @@ project (tcppump VERSION 0.4.0
 ###############################################################################
 
 option(WITH_UNITTESTS "enable/disable generation of unittest binary (default ON)" ON)
-option(WITH_ASAN      "enable/disable address sanitizer (default OFF)" OFF)
+option(WITH_ASAN      "enable/disable address sanitizer (default OFF)" ON)
 option(WITH_UBSAN     "enable/disable undefined behavior sanitizer (default OFF)" OFF)
 option(WITH_GCOV      "enable/disable code coverage profiling (default OFF)" OFF)
 option(WITH_WERROR    "enable/disable compilation warnings as errors (default OFF)" OFF)
@@ -194,7 +194,7 @@ endif ()
 if (HAVE_BIG_ENDIAN)
     add_compile_definitions (HAVE_BIG_ENDIAN)
 endif ()
-
+#add_compile_definitions (_FORTIFY_SOURCE=2)
 if (WIN32)
     add_compile_definitions (HAVE_WINDOWS)
     # min. supported version is Windows 7
