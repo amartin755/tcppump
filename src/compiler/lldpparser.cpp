@@ -551,7 +551,15 @@ void cLldpParser::eeeFastWake ()
 
 void cLldpParser::pnDelay ()
 {
-
+    cParameter* optionalPar = m_params.findParameter (PAR_LLDP_PN_DELAY_PORT_RX_LOC.syntax, true);
+    if (optionalPar)
+    {
+        m_packet.addPnDelay (optionalPar->asInt32(),
+            m_params.findParameter (PAR_LLDP_PN_DELAY_PORT_RX_REM.syntax)->asInt32 (),
+            m_params.findParameter (PAR_LLDP_PN_DELAY_PORT_TX_LOC.syntax)->asInt32 (),
+            m_params.findParameter (PAR_LLDP_PN_DELAY_PORT_TX_REM.syntax)->asInt32 (),
+            m_params.findParameter (PAR_LLDP_PN_DELAY_LINE.syntax)->asInt32 ());
+    }
 }
 
 void cLldpParser::pnPortStatus ()
