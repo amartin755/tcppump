@@ -53,6 +53,7 @@ public:
     static const char* nextCharIgnoreWhitspaces (const char* p, char c);
     static int isOneOf (char c, const char* accept);
     static uint8_t* hexStringToBin (const char* hexString, size_t hexStringLen, size_t& binLength);
+    static bool range (const char* p, size_t len, int base, uint64_t& begin, uint64_t& end);
 
 #ifdef WITH_UNITTESTS
         static void unitTest ();

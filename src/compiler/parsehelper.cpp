@@ -20,6 +20,7 @@
 #include <cctype>
 #include <cstring>
 #include <cstdlib>
+#include <cerrno>
 
 #include "parsehelper.hpp"
 #include "bug.hpp"
@@ -115,6 +116,36 @@ uint8_t* cParseHelper::hexStringToBin (const char* hexString, size_t hexStringLe
     binLength = length / 2;
 
     return bin;
+}
+
+bool cParseHelper::range (const char* p, size_t len, int base, uint64_t& begin, uint64_t& end)
+{
+    unsigned long long b, e;
+    char* numend;
+
+    BUG_ON (!p);
+
+    //smallest valid range "(n-n)"
+    if (len < 5)
+        return false;
+
+    if (*p != '(' || *(p + len - 1) != ')')
+        return false;
+
+    if (isspace (*(p + 1)))
+        return false;
+    b = strtoull (p + 1, &numend, base);
+    if (errno == ERANGE || *numend != '-' || (numend + 1) >= (p + len))
+        return false;
+    if (isspace (*(numend + 1)))
+        return false;
+    e = strtoull (numend + 1, &numend, base);
+    if (errno == ERANGE || *numend != ')' || numend >= (p + len))
+        return false;
+
+    begin = b;
+    end = e;
+    return true;
 }
 
 
@@ -222,6 +253,213 @@ void cParseHelper::unitTest ()
         const char* p;
         p = nextKeyStart (s);
         BUG_IF_NOT (!p);
+    }
+
+    struct testcase_t
+    {
+        const char* range;
+        int base;
+        uint64_t begin;
+        uint64_t end;
+        bool ret;
+    };
+
+    const testcase_t ranges[] = {
+        {
+            "(1-2)",
+            0,
+            1,
+            2,
+            true
+        },
+        {
+            "(1-2)",
+            10,
+            1,
+            2,
+            true
+        },
+        {
+            "(1b-cd)",
+            16,
+            0x1b,
+            0xcd,
+            true
+        },
+        {
+            "(0x1b-0xcd)",
+            0,
+            0x1b,
+            0xcd,
+            true
+        },
+        {
+            "(0x1b-100)",
+            0,
+            0x1b,
+            100,
+            true
+        },
+        {
+            "(1-2",
+            0,
+            1,
+            2,
+            false
+        },
+        {
+            "1-2)",
+            0,
+            1,
+            2,
+            false
+        },
+        {
+            "(1 -2)",
+            0,
+            1,
+            2,
+            false
+        },
+        {
+            "(1- 2)",
+            0,
+            1,
+            2,
+            false
+        },
+        {
+            "(1 - 2)",
+            0,
+            1,
+            2,
+            false
+        },
+        { // 10
+            "( 1-2)",
+            0,
+            1,
+            2,
+            false
+        },
+        {
+            "(1-2 )",
+            0,
+            1,
+            2,
+            false
+        },
+        {
+            " (1-2)",
+            0,
+            1,
+            2,
+            false
+        },
+        {
+            "(1-2) ",
+            0,
+            1,
+            2,
+            false
+        },
+        {
+            "(1-)",
+            0,
+            1,
+            2,
+            false
+        },
+        {
+            "(1- ) ",
+            0,
+            1,
+            2,
+            false
+        },
+        {
+            "( -2)",
+            0,
+            1,
+            2,
+            false
+        },
+        { // 17
+            "(-2)",
+            0,
+            1,
+            2,
+            false
+        },
+        {
+            "(-)",
+            0,
+            1,
+            2,
+            false
+        },
+        {
+            "()",
+            0,
+            1,
+            2,
+            false
+        },
+        { // 20
+            "(",
+            0,
+            1,
+            2,
+            false
+        },
+        {
+            ")",
+            0,
+            1,
+            2,
+            false
+        },
+        {
+            "",
+            0,
+            1,
+            2,
+            false
+        },
+        {
+            " ",
+            0,
+            1,
+            2,
+            false
+        },
+        {
+            "(1--2)",
+            0,
+            1,
+            uint64_t(-2),
+            true
+        },
+        {
+            "(-1-2)",
+            0,
+            uint64_t(-1),
+            2,
+            true
+        },
+    };
+
+    for (unsigned n = 0; n < sizeof(ranges)/sizeof(ranges[0]); n++)
+    {
+        uint64_t begin = 0;
+        uint64_t end = 0;
+        Console::PrintDebug("range %d: ", n);
+        BUG_ON (range (ranges[n].range, std::strlen (ranges[n].range), ranges[n].base, begin, end) != ranges[n].ret);
+        if (ranges[n].ret)
+            BUG_ON (begin != ranges[n].begin || end != ranges[n].end);
+        else
+            BUG_ON (begin != 0 || end != 0);
+        Console::PrintDebug("\r");
     }
 
     // TODO much more detailed tests
