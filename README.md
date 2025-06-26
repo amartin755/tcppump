@@ -35,6 +35,7 @@ Supported protocols and packet formats
 * ICMP
 * VXLAN
 * GRE
+* LLDP
 
 **Note: This tool is currently in the alpha stage. Interfaces and functionality are subject to change.**
 
@@ -688,6 +689,150 @@ gre6                IPv6 Generic Routing Encapsulation
    vtype            VLAN Type
    prio             VLAN Priority
    dei              Drop Eligible Indicator
+
+lldp                Link Layer Discovery Protocol
+ optional
+   dmac             Destination EUI-48 Mac address
+   smac             Source EUI-48 Mac address
+   vid              VLAN Identifier
+   vtype            VLAN Type
+   prio             VLAN Priority
+   dei              Drop Eligible Indicator
+   chassis-id       Chassis ID
+   chassis-id-type  Chassis ID Subtype: 1 = chassis component, 2 = interface alias, 3 = port component, 4 = MAC, 5 = network address, 6 = interface name, 7 = local
+   port-id          Port ID
+   port-id-type     Port ID Subtype: 1 = interface alias, 2 = port component, 3 = MAC, 4 = network address, 5 = interface name, 6 = agent circuit ID, 7 = local
+   ttl              Time To Live
+   port-desc        Port Description
+   sys-name         System Name
+   sys-desc         System Description
+   O                System Capability 'Other'
+   P                System Capability 'Repeater'
+   B                System Capability 'Bridge'
+   W                System Capability 'WLAN AP'
+   R                System Capability 'Router'
+   T                System Capability 'Telephone'
+   C                System Capability 'DOCSIS cable device'
+   S                System Capability 'Station only'
+   O-EN             Enabled System Capability 'Other'
+   P-EN             Enabled System Capability 'Repeater'
+   B-EN             Enabled System Capability 'Bridge'
+   W-EN             Enabled System Capability 'WLAN AP'
+   R-EN             Enabled System Capability 'Router'
+   T-EN             Enabled System Capability 'Telephone'
+   C-EN             Enabled System Capability 'DOCSIS cable device'
+   S-EN             Enabled System Capability 'Station only'
+   mgt-addr         Management Address
+   mgt-addr-type    Management Address Subtype (see ianaAddressFamilyNumbers of RFC 3232 )
+   if-number        Interface Number
+   if-number-type   Interface Number Subtype: 1 = unknown, 2 = ifIndex, 3 = system port number
+   mgt-oid          Management Object Identifier
+   pvid             Port VLAN ID
+   ppvid            Port and Protocol VLAN ID
+   PPVID-SUP        Port and Protocol VLAN supported
+   PPVID-EN         Port and Protocol VLAN enabled
+   vlan-name-id     VLAN ID of given name
+   vlan-name        VLAN name
+   proto-id         Protocol Identity
+   vid-usage-digest VID usage digest
+   mgt-vid          Management VID associated with the system
+   lag-cap          Link aggregation capability (0 = not capable, 1 = capable)
+   lag-status       Link aggregation status (0 = not currently in aggregation, 1 = currently in aggregation)
+   lag-port-type    Aggregation Port Type (0 = no port type, 1 = Aggregation Port, 2 = Aggregator, 3 = Aggregator with single port)
+   lag-port-id      Aggregated Port ID
+   cong-cnpv        Per-priority CNPV indicators
+   cong-ready       Per-priority Ready indicators
+   ets-cfg-willing  Willing bit, if set, station accepts configurations
+   ets-cfg-cbs      Credit-based Shaper bit, if set, station supports CBS
+   ets-cfg-max-tc   Maximum number of traffic classes supported (0 = 8 TCs)
+   ets-cfg-prio     Priority Assignment Table
+   ets-cfg-bw       TC Bandwidth Table
+   ets-cfg-tsa      TSA Assignment Table
+   ets-rec-prio     Priority Assignment Table
+   ets-rec-bw       TC Bandwidth Table
+   ets-rec-tsa      TSA Assignment Table
+   pfc-willing      Willing bit, if set, station accepts configurations
+   pfc-mbc          MACsec Bypass Capability
+   pfc-cap          PFC Capability
+   pfc-enable       PFC Enable bit vector
+   appl-prio        Priority
+   appl-prio-sel    Meaning of the protocol ID (1 = Ethertype, 2 = TCP/SCTP port, 3 = UDP port, 4 = UDP/TCP/SCTP/DCCP port, 5 = DSCP)
+   appl-prio-proto  Protocol ID
+   evb-bridge-statusEVB capabilities that are supported by the EVB bridge
+   evb-station-statusEVB capabilities that are supported by the EVB station
+   evb-max-retries  maxRetries value for the ECP state machine
+   evb-rte          Retransmission exponent
+   evb-mode         EVB mode
+   evb-rol-rwd      Remote or Local flag for RWD value (0 = local, 1 = remote)
+   evb-rwd          RWD value transmitted by the EVB bridge
+   evb-rol-rka      Remote or Local flag for RKA value (0 = local, 1 = remote)
+   evb-rka          RKA value transmitted by the EVB station
+   cdcp-role        Role (0 = Bridge, 1 = Station)
+   cdcp-scomp       Presence of S-VLAN component for S-Channel
+   cdcp-ch-cap      Channel capacity
+   cdcp-scid        Index number of S-channel
+   cdcp-svid        VID assigned to the S-channel
+   appl-vlan-vid    VLAN ID
+   appl-vlan-sel    Meaning of the protocol ID (1 = Ethertype, 2 = TCP/SCTP port, 3 = UDP port, 4 = UDP/TCP/SCTP/DCCP port, 5 = DSCP)
+   appl-vlan-proto  Protocol ID
+   autoneg-sup      Auto-negotiation support
+   autoneg-en       Auto-negotiation enabled
+   autoneg-caps     PMD auto-negotiation advertised capability
+   mautype          operational MAU type
+   poe-port-class   Port class (0 = PD, 1 = PSE)
+   poe-power-sup    PSE MDI power support (0 = supported, 1 = not supported)
+   poe-power-state  PSE MDI power state (0 = disabled, 1 = not enabled)
+   poe-pair-ctrl    PSE pairs control ability (0 = pair selection can not be controlled, 1 = pair selection can be controlled)
+   poe-power-pair   PSE power pair field (1 = signal, 2 = spare)
+   poe-power-class  Power class (1 = Class 0 PD, 2 = Class 1 PD, ... , 5 = Class 4 and above PD)
+   poe-power-type   DLL power type (0 = Type 2 PSE, 1 = Type 2 PD, 2 = Type 1 PSE, 3 = Type 1 PD)
+   poe-power-src    DLL power source (Power type = PSE: 0 = unknown, 1 = primary, 2 = backup | Power type = PD: 0 = unknown, 1 = PSE, 3 = PSE and local)
+   poe-pd-4pid      PD 4PID (1 = PD supports powering of both Modes simultaneously, 0 = PD does not support...)
+   poe-power-prio   DLL power priority (0 = unknown, 1 = critical, 2 = high, 3 = low)
+   poe-req-power    PD requested power value
+   poe-alloc-power  PSE allocated power value
+   max-frame-size   Maximum 802.3 frame size
+   eee-tx-tw        EEE transmit Tw
+   eee-rx-tw        EEE recieve Tw
+   eee-fb-rx-tw     EEE fallback receive Tw
+   eee-echo-tx-tw   EEE echo transmit Tw
+   eee-echo-rx-tw   EEE echo receive  Tw
+   eee-fw-tx        Transmit fast wake
+   eee-fw-rx        Receive fast wake
+   eee-fw-echo-tx   Echo transmit fast wake
+   eee-fw-echo-rx   Echo receive fast wake
+   pn-port-delay-rx PTCP_PortRxDelayLocal (nanoseconds)
+   pn-port-delay-rx-remPTCP_PortRxDelayRemote (nanoseconds)
+   pn-port-delay-tx PTCP_PortTxDelayLocal (nanoseconds)
+   pn-port-delay-tx-remPTCP_PortTxDelayRemote (nanoseconds)
+   pn-cable-delay   Measured cable delay (nanoseconds)
+   pn-rtc2-state    RTClass2_PortStatus.State (0 = OFF, 1 = SYNC-DATA-LOADED, 2 = UP)
+   pn-rtc3-state    RTClass3_PortStatus.State (0 = OFF, 2 = UP, 4 = RUN)
+   pn-rtc3-frag     Fragmentation Mode (0 = disabled, 1 = enabled)
+   pn-rtc3-short-preampShort preample (0 = disabled (8 octets), 1 = enabled (1 octet))
+   pn-rtc3-opt      Optimized (0 = OFF, 1 = ON)
+   pn-alias         Alias name value
+   pn-mrp-domain    MRP domain name
+   pn-mrp-domain-uuidMRP domain uuid
+   pn-mrp-mrrt-stateMRRT port status (0 = OFF, 1 = CONFIGURED, 2 = UP)
+   pn-chassis-mac   Chassis MAC address
+   pn-ptcp-master-macPTCP master source MAC address
+   pn-ptcp-domain-uuidPTCP domain UUID
+   pn-ptcp-irdata-uuidIRDATA UUID
+   pn-ptcp-period-lenLength of period (nanoseconds)
+   pn-ptcp-red-orangeFrame offset of red/orange period (nanoseconds)
+   pn-ptcp-orange   Frame offset of orange period (nanoseconds)
+   pn-ptcp-green    Frame offset of gree period (nanoseconds)
+   pn-mautype-ext   MAUTYPE extension
+   pn-mrp-ic-domain-idMRP interconnection domain identifier
+   pn-mrp-ic-role   MRP interconnection role (0 = none, 1 = client, 2 = manager)
+   pn-mrp-ic-mic-posMRP interconnection mic position
+   type             Raw TLV Type Number
+   value            Raw TLV Value as bytestream
+   oui              Organizationally Specific TLV OUI
+   oui-type         Organizationally Specific TLV Subtype Number
+   oui-value        Organizationally Specific TLV Value as bytestream
+
 ```
 
 
