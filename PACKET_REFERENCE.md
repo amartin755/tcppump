@@ -17,7 +17,7 @@ Each packet is defined as follows (optional parameters are marked with brackets 
 ### Parameters
 Each protocol defines the names and types of its parameters (see *PROTOCOLS*). Depending on their type, parameter values can be:
 
-* **Integer:** Decimal (`1234`), hexadecimal (`0x1234`), or a random number (`*`).
+* **Integer:** Decimal (`1234`), hexadecimal (`0x1234`), random number (`*`) or range restricted random number (`*[1-4]` `*[0x10-0x13]`).
 * **Float:** Example: `1.2`
 * **Bytestream:** A sequence of 8-bit values (bytes or octets), which can be defined as:
 
@@ -25,8 +25,8 @@ Each protocol defines the names and types of its parameters (see *PROTOCOLS*). D
   - **String:** A sequence of printable ASCII characters enclosed in double quotes (e.g., `"Hello World"`).
   - **Random:** `*` represents a random sequence of 32 bytes. A specific length can be defined by appending the desired byte length after the asterisk. For example, `*16` generates a random 16-byte sequence.
 
-* **MAC Address:** A EUI-48 MAC address (e.g., `12:23:34:45:56:67`).
-* **IPv4 Address:** Example: `1.2.3.4`.
+* **MAC Address:** A EUI-48 MAC address as six colon separated hexadecimal numbers (e.g., `12:23:34:45:56:67`). The entire MAC address or it components can also be random (`*`) or range restricted random (`*[80-8a]`)
+* **IPv4 Address:** Example: `1.2.3.4`.  The whole address as well it's components can also be random (examples: `*`, `192.168.10.*` `192.168.*.*[100-2000]`)
 * **Embedded Packet:** A fully defined packet can be embedded within another packet. The definition is enclosed in angle brackets `< >`, e.g., `<eth(dmac=11:22:33:44:55:66, smac=aa:bb:cc:dd:ee:ff, payload=*)>`.
 
 

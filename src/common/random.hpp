@@ -27,10 +27,19 @@ class cRandom
 public:
     static cRandom* create (void);
     static void destroy (void);
-    static uint64_t rand64 (void);
-    static uint32_t rand32 (void);
-    static uint16_t rand16 (void);
-    static uint8_t  rand8 (void);
+    static uint64_t rand64 (uint64_t min = 0, uint64_t max = static_cast<int64_t>(0xffffffffffffffff));
+    static uint32_t rand32 (uint32_t min = 0, uint32_t max = 0xffffffff)
+    {
+        return rand (min, max);
+    }
+    static uint16_t rand16 (uint16_t min = 0, uint16_t max = 0xffff)
+    {
+        return (uint16_t)rand (min, max);
+    }
+    static uint8_t  rand8 (uint8_t min = 0, uint8_t max = 0xff)
+    {
+        return (uint8_t)rand (min, max);
+    }
     static void rand (void* p, size_t len);
     static void setCounterMode (unsigned startValue);
 
@@ -42,7 +51,7 @@ private:
     cRandom ();
     uint32_t pseudoRandom (void);
     uint32_t sequence (void);
-    static uint32_t rand (void);
+    static uint32_t rand (uint32_t min = 0, uint32_t max = 0xffffffff);
     static cRandom* instance;
     bool countOnly;
     uint32_t seq;

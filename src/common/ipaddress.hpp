@@ -27,6 +27,7 @@
 #include "inet.h"
 #include "bug.hpp"
 #include "random.hpp"
+#include "parsehelper.hpp"
 
 
 class cIPv4
@@ -61,20 +62,73 @@ public:
     }
     bool set (const char* ip, size_t len)
     {
-        char ipAsString[INET_ADDRSTRLEN];
-        if ((len+1) > sizeof(ipAsString))
+        if (len == 1 && *ip == '*')
+        {
+            setRandom ();
+            return true;
+        }
+        if (len < 7)
             return false;
-        std::memcpy (ipAsString, ip, len);
-        ipAsString[len] = '\0';
-        return set (ipAsString);
+
+        // collect all tokens
+        const char* tokens[] = {ip, nullptr, nullptr, nullptr, ip + len};
+        int t = 1;
+        const char* p = ip;
+        for (size_t n = 0; n < len; n++)
+        {
+            if (*p++ == '.' && n != 0)
+                tokens[t++] = p; // note, on malformed IPs this might point to ip[len]!
+            if (t > 4)
+                return false;
+        }
+        if (t < 4)
+            return false;
+
+        // parse tokens
+        uint8_t ipBin[4];
+        for (int n = 0; n < t; n++)
+        {
+            // only the first three tokens end with '.'
+            size_t tokLen = n == t-1 ? tokens[n+1] - tokens[n] : tokens[n+1] - tokens[n] - 1;
+
+            if (tokLen == 0)
+                return false;
+
+            // random number?
+            if (*tokens[n] == '*')
+            {
+                if (tokLen == 1)
+                    ipBin[n] = cRandom::rand8 ();
+                else
+                {
+                    // random number with specified range?
+                    uint64_t min, max;
+                    if (!cParseHelper::range (tokens[n] + 1, tokLen - 1, 10, min, max))
+                        return false;
+                    if (min > 255 || max > 255)
+                        return false;
+                    ipBin[n] = cRandom::rand8 (min, max);
+                }
+            }
+            else
+            {
+                try
+                {
+                    ipBin[n] = cParseHelper::strToUint8 (tokens[n], tokLen, 10);
+                }
+                catch(...)
+                {
+                    return false;
+                }
+            }
+        }
+        static_assert (sizeof (ipBin) == sizeof (ipv4), "");
+        std::memcpy (&ipv4.s_addr, ipBin, sizeof (ipv4));
+        return true;
     }
     bool set (const char* ip)
     {
-#if HAVE_PTON
-        return !!inet_pton(AF_INET, ip, &ipv4);
-#else
-        return (ipv4.s_addr = inet_addr (ip)) != INADDR_NONE;
-#endif
+        return set (ip, std::strlen (ip));
     }
     const cIPv4& setRandom ()
     {
@@ -149,6 +203,8 @@ public:
         const char x[] = "1.2.3.4dfadfasd";
         cIPv4 a; a.set(x, 7);
         BUG_IF_NOT (cIPv4("1.2.3.4") == a);
+        a.clear ();
+        BUG_ON (a.get().s_addr);
         BUG_IF_NOT (!a.set("laskdfj"));
         BUG_IF_NOT (!cIPv4("223.255.255.255").isMulticast());
         BUG_IF_NOT (cIPv4("224.0.0.0").isMulticast());
@@ -164,6 +220,146 @@ public:
         {
             BUG_IF_NOT (cIPv4().setRandom() != cIPv4().setRandom());
         }
+
+        BUG_ON (a.set (""));
+        BUG_ON (a.set ("1"));
+        BUG_ON (a.set ("."));
+        BUG_ON (a.set ("..1."));
+        BUG_ON (a.set ("...."));
+        BUG_ON (a.set ("a.b.c.d"));
+        BUG_ON (a.set ("1.2"));
+        BUG_ON (a.set ("1.2.3."));
+        BUG_ON (a.set ("1.2.3.4."));
+        BUG_ON (a.set ("1.2..3.4"));
+        BUG_ON (a.set ("1.2.3.."));
+        BUG_ON (a.set ("1.*.3."));
+        BUG_ON (a.set ("256.2.3.4"));
+        BUG_ON (a.set ("*[2-4].*.3."));
+        BUG_ON (a.set ("*[300-400].*.3.4"));
+        BUG_ON (a.set ("*.*.*.*.*"));
+        BUG_ON (a.set ("*[0x2-0x4].2.3.4"));
+        BUG_ON (a.set ("1.*[0x2-0x4].3.4"));
+        BUG_ON (a.set ("1.2.*[0x2-0x4].4"));
+        BUG_ON (a.set ("1.2.3.*[0x2-0x4]"));
+        BUG_ON (a.set ("[2-4].2.3.4"));
+        BUG_ON (a.set ("1.[2-4].3.4"));
+        BUG_ON (a.set ("1.2.[2-4].4"));
+        BUG_ON (a.set ("1.2.3.[2-4]"));
+
+        BUG_ON (!a.set ("*"));
+        a.clear ();
+        BUG_ON (!a.set ("1.2.3.*"));
+        BUG_ON (a.getAsArray()[0] != 1 || a.getAsArray()[1] != 2 || a.getAsArray()[2] != 3);
+        a.clear ();
+        BUG_ON (!a.set ("1.2.*.4"));
+        BUG_ON (a.getAsArray()[0] != 1 || a.getAsArray()[1] != 2 || a.getAsArray()[3] != 4);
+        a.clear ();
+        BUG_ON (!a.set ("1.2.*.*"));
+        BUG_ON (a.getAsArray()[0] != 1 || a.getAsArray()[1] != 2);
+        a.clear ();
+        BUG_ON (!a.set ("1.*.3.4"));
+        BUG_ON (a.getAsArray()[0] != 1 || a.getAsArray()[2] != 3 || a.getAsArray()[3] != 4);
+        a.clear ();
+        BUG_ON (!a.set ("1.*.3.*"));
+        BUG_ON (a.getAsArray()[0] != 1 || a.getAsArray()[2] != 3);
+        a.clear ();
+        BUG_ON (!a.set ("1.*.*.4"));
+        BUG_ON (a.getAsArray()[0] != 1 || a.getAsArray()[3] != 4);
+        a.clear ();
+        BUG_ON (!a.set ("1.*.*.*"));
+        BUG_ON (a.getAsArray()[0] != 1);
+        a.clear ();
+        BUG_ON (!a.set ("*.2.3.4"));
+        BUG_ON (a.getAsArray()[1] != 2 || a.getAsArray()[2] != 3 || a.getAsArray()[3] != 4);
+        a.clear ();
+        BUG_ON (!a.set ("*.2.3.*"));
+        BUG_ON (a.getAsArray()[1] != 2 || a.getAsArray()[2] != 3);
+        a.clear ();
+        BUG_ON (!a.set ("*.2.*.4"));
+        BUG_ON (a.getAsArray()[1] != 2 || a.getAsArray()[3] != 4);
+        a.clear ();
+        BUG_ON (!a.set ("*.2.*.*"));
+        BUG_ON (a.getAsArray()[1] != 2);
+        a.clear ();
+        BUG_ON (!a.set ("*.*.3.4"));
+        BUG_ON (a.getAsArray()[2] != 3 || a.getAsArray()[3] != 4);
+        a.clear ();
+        BUG_ON (!a.set ("*.*.3.*"));
+        BUG_ON (a.getAsArray()[2] != 3);
+        a.clear ();
+        BUG_ON (!a.set ("*.*.*.4"));
+        BUG_ON (a.getAsArray()[3] != 4);
+
+        a.clear ();
+        BUG_ON (!a.set ("1.2.3.*[10-11]"));
+        BUG_ON (a.getAsArray()[0] != 1 || a.getAsArray()[1] != 2 || a.getAsArray()[2] != 3);
+        BUG_ON (a.getAsArray()[3] != 10 && a.getAsArray()[3] != 11);
+        a.clear ();
+        BUG_ON (!a.set ("1.2.*[10-11].4"));
+        BUG_ON (a.getAsArray()[0] != 1 || a.getAsArray()[1] != 2 || a.getAsArray()[3] != 4);
+        BUG_ON (a.getAsArray()[2] != 10 && a.getAsArray()[2] != 11);
+        a.clear ();
+        BUG_ON (!a.set ("1.2.*[10-11].*[10-11]"));
+        BUG_ON (a.getAsArray()[0] != 1 || a.getAsArray()[1] != 2);
+        BUG_ON (a.getAsArray()[2] != 10 && a.getAsArray()[2] != 11);
+        BUG_ON (a.getAsArray()[3] != 10 && a.getAsArray()[3] != 11);
+        a.clear ();
+        BUG_ON (!a.set ("1.*[10-11].3.4"));
+        BUG_ON (a.getAsArray()[0] != 1 || a.getAsArray()[2] != 3 || a.getAsArray()[3] != 4);
+        BUG_ON (a.getAsArray()[1] != 10 && a.getAsArray()[1] != 11);
+        a.clear ();
+        BUG_ON (!a.set ("1.*[10-11].3.*[10-11]"));
+        BUG_ON (a.getAsArray()[0] != 1 || a.getAsArray()[2] != 3);
+        BUG_ON (a.getAsArray()[1] != 10 && a.getAsArray()[1] != 11);
+        BUG_ON (a.getAsArray()[3] != 10 && a.getAsArray()[3] != 11);
+        a.clear ();
+        BUG_ON (!a.set ("1.*[10-11].*[10-11].4"));
+        BUG_ON (a.getAsArray()[0] != 1 || a.getAsArray()[3] != 4);
+        BUG_ON (a.getAsArray()[1] != 10 && a.getAsArray()[1] != 11);
+        BUG_ON (a.getAsArray()[2] != 10 && a.getAsArray()[2] != 11);
+        a.clear ();
+        BUG_ON (!a.set ("1.*[10-11].*[10-11].*[10-11]"));
+        BUG_ON (a.getAsArray()[0] != 1);
+        BUG_ON (a.getAsArray()[1] != 10 && a.getAsArray()[1] != 11);
+        BUG_ON (a.getAsArray()[2] != 10 && a.getAsArray()[2] != 11);
+        BUG_ON (a.getAsArray()[3] != 10 && a.getAsArray()[3] != 11);
+        a.clear ();
+        BUG_ON (!a.set ("*[10-11].2.3.4"));
+        BUG_ON (a.getAsArray()[1] != 2 || a.getAsArray()[2] != 3 || a.getAsArray()[3] != 4);
+        BUG_ON (a.getAsArray()[0] != 10 && a.getAsArray()[0] != 11);
+        a.clear ();
+        BUG_ON (!a.set ("*[10-11].2.3.*[10-11]"));
+        BUG_ON (a.getAsArray()[1] != 2 || a.getAsArray()[2] != 3);
+        BUG_ON (a.getAsArray()[0] != 10 && a.getAsArray()[0] != 11);
+        BUG_ON (a.getAsArray()[3] != 10 && a.getAsArray()[3] != 11);
+        a.clear ();
+        BUG_ON (!a.set ("*[10-11].2.*[10-11].4"));
+        BUG_ON (a.getAsArray()[1] != 2 || a.getAsArray()[3] != 4);
+        BUG_ON (a.getAsArray()[0] != 10 && a.getAsArray()[0] != 11);
+        BUG_ON (a.getAsArray()[2] != 10 && a.getAsArray()[2] != 11);
+        a.clear ();
+        BUG_ON (!a.set ("*[10-11].2.*[10-11].*[10-11]"));
+        BUG_ON (a.getAsArray()[1] != 2);
+        BUG_ON (a.getAsArray()[0] != 10 && a.getAsArray()[0] != 11);
+        BUG_ON (a.getAsArray()[2] != 10 && a.getAsArray()[2] != 11);
+        BUG_ON (a.getAsArray()[3] != 10 && a.getAsArray()[3] != 11);
+        a.clear ();
+        BUG_ON (!a.set ("*[10-11].*[10-11].3.4"));
+        BUG_ON (a.getAsArray()[2] != 3 || a.getAsArray()[3] != 4);
+        BUG_ON (a.getAsArray()[0] != 10 && a.getAsArray()[0] != 11);
+        BUG_ON (a.getAsArray()[1] != 10 && a.getAsArray()[1] != 11);
+        a.clear ();
+        BUG_ON (!a.set ("*[10-11].*[10-11].3.*[10-11]"));
+        BUG_ON (a.getAsArray()[2] != 3);
+        BUG_ON (a.getAsArray()[0] != 10 && a.getAsArray()[0] != 11);
+        BUG_ON (a.getAsArray()[1] != 10 && a.getAsArray()[1] != 11);
+        BUG_ON (a.getAsArray()[3] != 10 && a.getAsArray()[3] != 11);
+        a.clear ();
+        BUG_ON (!a.set ("*[10-11].*[10-11].*[10-11].4"));
+        BUG_ON (a.getAsArray()[3] != 4);
+        BUG_ON (a.getAsArray()[0] != 10 && a.getAsArray()[0] != 11);
+        BUG_ON (a.getAsArray()[1] != 10 && a.getAsArray()[1] != 11);
+        BUG_ON (a.getAsArray()[2] != 10 && a.getAsArray()[2] != 11);
     }
 #endif
 

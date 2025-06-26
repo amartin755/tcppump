@@ -125,11 +125,11 @@ bool cParseHelper::range (const char* p, size_t len, int base, uint64_t& begin, 
 
     BUG_ON (!p);
 
-    //smallest valid range "(n-n)"
+    //smallest valid range "[n-n]"
     if (len < 5)
         return false;
 
-    if (*p != '(' || *(p + len - 1) != ')')
+    if (*p != '[' || *(p + len - 1) != ']')
         return false;
 
     if (isspace (*(p + 1)))
@@ -140,7 +140,9 @@ bool cParseHelper::range (const char* p, size_t len, int base, uint64_t& begin, 
     if (isspace (*(numend + 1)))
         return false;
     e = strtoull (numend + 1, &numend, base);
-    if (errno == ERANGE || *numend != ')' || numend >= (p + len))
+    if (errno == ERANGE || *numend != ']' || numend >= (p + len))
+        return false;
+    if (b > e)
         return false;
 
     begin = b;
@@ -266,154 +268,154 @@ void cParseHelper::unitTest ()
 
     const testcase_t ranges[] = {
         {
-            "(1-2)",
+            "[1-2]",
             0,
             1,
             2,
             true
         },
         {
-            "(1-2)",
+            "[1-2]",
             10,
             1,
             2,
             true
         },
         {
-            "(1b-cd)",
+            "[1b-cd]",
             16,
             0x1b,
             0xcd,
             true
         },
         {
-            "(0x1b-0xcd)",
+            "[0x1b-0xcd]",
             0,
             0x1b,
             0xcd,
             true
         },
         {
-            "(0x1b-100)",
+            "[0x1b-100]",
             0,
             0x1b,
             100,
             true
         },
         {
-            "(1-2",
+            "[1-2",
             0,
             1,
             2,
             false
         },
         {
-            "1-2)",
+            "1-2]",
             0,
             1,
             2,
             false
         },
         {
-            "(1 -2)",
+            "[1 -2]",
             0,
             1,
             2,
             false
         },
         {
-            "(1- 2)",
+            "[1- 2]",
             0,
             1,
             2,
             false
         },
         {
-            "(1 - 2)",
+            "[1 - 2]",
             0,
             1,
             2,
             false
         },
         { // 10
-            "( 1-2)",
+            "[ 1-2]",
             0,
             1,
             2,
             false
         },
         {
-            "(1-2 )",
+            "[1-2 ]",
             0,
             1,
             2,
             false
         },
         {
-            " (1-2)",
+            " [1-2]",
             0,
             1,
             2,
             false
         },
         {
-            "(1-2) ",
+            "[1-2] ",
             0,
             1,
             2,
             false
         },
         {
-            "(1-)",
+            "[1-]",
             0,
             1,
             2,
             false
         },
         {
-            "(1- ) ",
+            "[1- ] ",
             0,
             1,
             2,
             false
         },
         {
-            "( -2)",
+            "[ -2]",
             0,
             1,
             2,
             false
         },
         { // 17
-            "(-2)",
+            "[-2]",
             0,
             1,
             2,
             false
         },
         {
-            "(-)",
+            "[-]",
             0,
             1,
             2,
             false
         },
         {
-            "()",
+            "[]",
             0,
             1,
             2,
             false
         },
         { // 20
-            "(",
+            "[",
             0,
             1,
             2,
             false
         },
         {
-            ")",
+            "]",
             0,
             1,
             2,
@@ -434,18 +436,18 @@ void cParseHelper::unitTest ()
             false
         },
         {
-            "(1--2)",
+            "[1--2]",
             0,
             1,
             uint64_t(-2),
             true
         },
         {
-            "(-1-2)",
+            "[-1-2]",
             0,
             uint64_t(-1),
             2,
-            true
+            false
         },
     };
 

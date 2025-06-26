@@ -71,6 +71,7 @@ public:
 private:
     void clear ();
     int isRandom (bool allowRange) const;
+    int isRandomInteger (uint64_t& min, uint64_t& max) const;
     const uint8_t* asStream (bool allowEmbPacket, bool &isEmbedded, size_t& len, size_t maxLen = SIZE_MAX);
 
     const char* parameter;

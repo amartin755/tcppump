@@ -22,6 +22,8 @@
 
 #include <cstddef>    // size_t
 #include <cstdint>
+#include <stdexcept>
+#include <cerrno>
 
 
 class cParseHelper
@@ -46,7 +48,7 @@ public:
     static const char* nextValueEnd (const char* p)
     {
         // alphabetic characters, numbers, '.' and ':' are allowed
-        return nextTokenEnd (p, true, true, ".:*");
+        return nextTokenEnd (p, true, true, ".:*[-]");
     }
     static const char* nextTokenStart (const char* p, bool isAlpha, bool isDigit, const char* accept);
     static const char* nextTokenEnd (const char* p, bool isAlpha, bool isDigit, const char* accept);
@@ -54,6 +56,22 @@ public:
     static int isOneOf (char c, const char* accept);
     static uint8_t* hexStringToBin (const char* hexString, size_t hexStringLen, size_t& binLength);
     static bool range (const char* p, size_t len, int base, uint64_t& begin, uint64_t& end);
+    static uint8_t strToUint8 (const char* p, size_t len, int base)
+    {
+        if (len > 4) // max val: 255 or 0xff --> 4
+            throw std::out_of_range ("string too long");
+
+        char str[5];
+        std::memcpy (str, p, len);
+        str[len] = '\0';
+
+        char* end;
+        unsigned long val = strtoul (str, &end, base);
+        if (end != &str[len] || errno == ERANGE || val > 255)
+            throw std::out_of_range ("value > 255");
+
+        return (uint8_t)val;
+    }
 
 #ifdef WITH_UNITTESTS
         static void unitTest ();

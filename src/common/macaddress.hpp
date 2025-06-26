@@ -26,9 +26,10 @@
 #include <string>
 #include <stdexcept>
 
-
 #include "bug.hpp"
 #include "random.hpp"
+#include "parsehelper.hpp"
+
 
 class cMacAddress
 {
@@ -43,9 +44,9 @@ public:
     {
         set (val);
     }
-    cMacAddress (const char* s)
+    cMacAddress (const char* s, size_t len = 0)
     {
-        if (!set (s))
+        if (!set (s, len))
         {
             clear ();
             throw std::out_of_range ("invalid mac address string");
@@ -90,17 +91,73 @@ public:
     {
         mac[0] = mac[1] = mac[2] = mac[3] = mac[4] = mac[5] = (uint8_t)val;
     }
-    bool set (const char* s, size_t len = 0)
+    bool set (const char* sMac, size_t len = 0)
     {
-        if (!isValidString (s, len))
+        if (!len)
+            len = std::strlen (sMac);
+
+        if (len == 1 && *sMac == '*')
+        {
+            setRandom ();
+            return true;
+        }
+        if (len < 11)
             return false;
 
-        uint8_t* pMac = (uint8_t*)mac;
-        for (int n = 0; n < MACSTRLEN; n += 3)
+        // collect all tokens
+        const char* tokens[] = {sMac, nullptr, nullptr, nullptr, nullptr, nullptr, sMac + len};
+        int t = 1;
+        const char* p = sMac;
+        for (size_t n = 0; n < len; n++)
         {
-            *pMac++ = (uint8_t)strtoul (&s[n], NULL, 16);
+            if (*p++ == ':' && n != 0)
+                tokens[t++] = p;
+            if (t > (int)sizeof (mac_t))
+                return false;
         }
+        if (t < (int)sizeof (mac_t))
+            return false;
 
+        // parse tokens
+        uint8_t newMac[sizeof (mac_t)];
+        for (int n = 0; n < t; n++)
+        {
+            // only the first three tokens end with '.'
+            size_t tokLen = n == t-1 ? tokens[n+1] - tokens[n] : tokens[n+1] - tokens[n] - 1;
+
+            if (tokLen == 0)
+                return false;
+
+            // random number?
+            if (*tokens[n] == '*')
+            {
+                if (tokLen == 1)
+                    newMac[n] = cRandom::rand8 ();
+                else
+                {
+                    // random number with specified range?
+                    uint64_t min, max;
+                    if (!cParseHelper::range (tokens[n] + 1, tokLen - 1, 16, min, max))
+                        return false;
+                    if (min > 255 || max > 255)
+                        return false;
+                    newMac[n] = cRandom::rand8 (min, max);
+                }
+            }
+            else
+            {
+                try
+                {
+                    newMac[n] = cParseHelper::strToUint8 (tokens[n], tokLen, 16);
+                }
+                catch(...)
+                {
+                    return false;
+                }
+            }
+        }
+        static_assert (sizeof (newMac) == sizeof (mac), "");
+        std::memcpy (&mac, newMac, sizeof (mac));
         return true;
     }
     void set (const void* b, size_t len)
@@ -179,7 +236,6 @@ public:
         BUG_IF_NOT (!isValidString(""));
         BUG_IF_NOT (!isValidString("11:22:33:44:55:66:77"));
         BUG_IF_NOT (isValidString("11:22:33:44:55:66"));
-        BUG_IF_NOT (isValidString("11-22-33-44-55-66"));
         BUG_IF_NOT (isValidString("11:a2:33:44:55:66"));
         BUG_IF_NOT (!isValidString("11:a2:3g:44:55:66"));
         BUG_IF_NOT (!isValidString("11:a2:g3:44:55:66"));
@@ -194,6 +250,21 @@ public:
         BUG_IF_NOT (!cMacAddress("ff:ff:ff:ff:ff:ff").isMulticast());
         BUG_IF_NOT (cMacAddress("01:ff:ff:ff:ff:ff").isMulticast());
         BUG_IF_NOT (!cMacAddress("80:ff:ff:ff:ff:ff").isMulticast());
+
+        BUG_ON (b.set ("11:22:33:44:55:66:77"));
+        BUG_ON (!b.set ("11:a2:33:44:55:66"));
+        BUG_ON (b.set ("11:a2:3g:44:55:66"));
+        BUG_ON (!b.set ("00:*[1-2]:02:*[1-2]:04:*[1-2]"));
+        BUG_ON (b.mac[0] != 0 || b.mac[2] != 2 || b.mac[4] != 4);
+        BUG_ON (b.mac[1] != 1 && b.mac[1] != 2);
+        BUG_ON (b.mac[3] != 1 && b.mac[3] != 2);
+        BUG_ON (b.mac[5] != 1 && b.mac[5] != 2);
+        BUG_ON (!b.set ("00:*[aa-ab]:02:*[cc-cd]:04:*[ee-ef]"));
+        BUG_ON (b.mac[0] != 0 || b.mac[2] != 2 || b.mac[4] != 4);
+        BUG_ON (b.mac[1] != 0xaa && b.mac[1] != 0xab);
+        BUG_ON (b.mac[3] != 0xcc && b.mac[3] != 0xcd);
+        BUG_ON (b.mac[5] != 0xee && b.mac[5] != 0xef);
+        BUG_ON (b.set ("00:*[aa-100]:02:*[cc-cd]:04:*[ee-ef]"));
     }
 #endif
 
@@ -213,7 +284,7 @@ private:
             if (!std::isxdigit (mac[n]) || !std::isxdigit (mac[n + 1]))
                 return false;
             if ((n + 2) < len)
-                if (mac[n + 2] != '-' && mac[n + 2] != ':')
+                if (mac[n + 2] != ':')
                     return false;
         }
 

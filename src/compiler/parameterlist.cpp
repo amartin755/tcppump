@@ -106,16 +106,40 @@ int cParameter::isRandom (bool allowRange) const
 }
 
 
+int cParameter::isRandomInteger (uint64_t& min, uint64_t& max) const
+{
+    if (!valLen || *value != '*')
+        return -1;
+
+    if (valLen == 1)
+        return 0;
+
+    if (!cParseHelper::range (value + 1, valLen - 1, 0, min, max))
+        throw FormatException (exParFormat, value+1, (int)valLen-1);
+
+    return 1;
+}
+
+
 uint32_t cParameter::asInt32 (uint32_t rangeBegin, uint32_t rangeEnd) const
 {
     BUG_ON (rangeEnd < rangeBegin);
 
     unsigned long v;
+    int r;
+    uint64_t min, max;
 
-    if (isRandom(false) == 0)
+    if ((r = isRandomInteger (min, max)) >= 0)
     {
-        uint32_t range = rangeEnd - rangeBegin + 1;
-        v = (range ? cRandom::rand32() % range : cRandom::rand32()) + rangeBegin;
+        if (r)
+        {
+            // if there is a random range specified, it must not violate the values range
+            if (min < rangeBegin || max > rangeEnd)
+                throw FormatException (exParRange, value, (int)valLen);
+            rangeBegin = (uint32_t)min;
+            rangeEnd   = (uint32_t)max;
+        }
+        v = cRandom::rand32 (rangeBegin, rangeEnd);
     }
     else
     {
@@ -141,11 +165,20 @@ uint64_t cParameter::asInt64 (uint64_t rangeBegin, uint64_t rangeEnd) const
     BUG_ON (rangeEnd < rangeBegin);
 
     unsigned long long v;
+    int r;
+    uint64_t min, max;
 
-    if (isRandom(false) == 0)
+    if ((r = isRandomInteger (min, max)) >= 0)
     {
-        uint64_t range = rangeEnd - rangeBegin + 1;
-        v = (range ? cRandom::rand64() % range : cRandom::rand64()) + rangeBegin;
+        if (r)
+        {
+            // if there is a random range specified, it must not violate the values range
+            if (min < rangeBegin || max > rangeEnd)
+                throw FormatException (exParRange, value, (int)valLen);
+            rangeBegin = min;
+            rangeEnd   = max;
+        }
+        v = cRandom::rand64 (rangeBegin, rangeEnd);
     }
     else
     {
@@ -213,22 +246,14 @@ double cParameter::asDouble (double rangeBegin, double rangeEnd) const
 
 cMacAddress cParameter::asMac () const
 {
-    if (isRandom(false) == 0)
+    try
     {
-        cMacAddress mac (true, false);
+        cMacAddress mac(value, valLen);
         return mac;
     }
-    else
+    catch(const std::exception& e)
     {
-        cMacAddress mac;
-        if (mac.set(value, valLen))
-        {
-            return mac;
-        }
-        else
-        {
-            throw FormatException(exParFormat, value, (int)valLen);
-        }
+        throw FormatException (exParFormat, value, (int)valLen);
     }
 }
 
@@ -269,7 +294,7 @@ const uint8_t* cParameter::asStream (bool allowEmbPacket, bool &isEmbedded, size
             len = valLen - 2; // don't count " or <> at begin and end of string/embedded packet
             if (len > maxLen)
                 throw FormatException (exParFormat, value, (int)valLen);
-    
+
             return (uint8_t*)value + 1;
         }
         else
@@ -292,21 +317,13 @@ const uint8_t* cParameter::asStream (bool allowEmbPacket, bool &isEmbedded, size
 cIPv4 cParameter::asIPv4 () const
 {
     cIPv4 ip;
-    if (isRandom(false) == 0)
+    if (ip.set(value, valLen))
     {
-        ip.setRandom ();
         return ip;
     }
     else
     {
-        if (ip.set(value, valLen))
-        {
-            return ip;
-        }
-        else
-        {
-            throw FormatException (exParFormat, value, (int)valLen);
-        }
+        throw FormatException (exParFormat, value, (int)valLen);
     }
 }
 

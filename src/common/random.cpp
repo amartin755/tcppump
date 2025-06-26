@@ -58,30 +58,31 @@ cRandom::cRandom () : countOnly(false), seq(0)
         std::srand ((unsigned)std::time (NULL));
 }
 
-uint64_t cRandom::rand64 (void)
+uint64_t cRandom::rand64 (uint64_t min, uint64_t max)
 {
-    return (uint64_t)rand () | ((uint64_t)rand ()) << 32;
+#if HAVE_BIG_ENDIAN
+    uint64_t r = (uint64_t)rand () << 32 | ((uint64_t)rand ());
+#else
+    uint64_t r = (uint64_t)rand () | ((uint64_t)rand ()) << 32;
+#endif
+    uint64_t range = max - min + 1;
+
+    // if min...max spans the entire 64bit area, range becomes zero
+    // In this case we need special handling to avoid division by zero.
+    return (range ? r % range : r) + min;
 }
 
-uint32_t cRandom::rand32 (void)
-{
-    return rand ();
-}
 
-uint16_t cRandom::rand16 (void)
-{
-    return (uint16_t)rand ();
-}
-
-uint8_t cRandom::rand8 (void)
-{
-    return (uint8_t)rand ();
-}
-
-uint32_t cRandom::rand (void)
+uint32_t cRandom::rand (uint32_t min, uint32_t max)
 {
     assert (instance);
-    return instance->countOnly ? instance->sequence() : instance->pseudoRandom();
+    uint32_t r = instance->countOnly ? instance->sequence() : instance->pseudoRandom();
+
+    uint32_t range = max - min + 1;
+
+    // if min...max spans the entire 32bit area, range becomes zero
+    // In this case we need special handling to avoid division by zero.
+    return (range ? r % range : r) + min;
 }
 
 void cRandom::rand (void* p, size_t len /*number of bytes*/)

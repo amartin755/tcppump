@@ -1771,6 +1771,119 @@
             "will_fail": true
         },
         {
+            "name": "random-val-int-1--ok",
+            "input": [
+                "raw(be32=*)"
+            ],
+            "expected_output": "00000000"
+        },
+        {
+            "name": "random-val-int-2--ok",
+            "input": [
+                "raw(be32=*)",
+                "raw(be32=*)"
+            ],
+            "expected_output": "00000000\n00000001"
+        },
+        {
+            "name": "random-val-int-3--ok",
+            "input": [
+                "raw(be32=*[1-3])",
+                "raw(be32=*[1-3])",
+                "raw(be32=*[1-3])",
+                "raw(be32=*[1-3])"
+            ],
+            "expected_output": "00000001\n00000002\n00000003\n00000001"
+        },
+        {
+            "name": "random-val-int-4--ok",
+            "input": [
+                "raw(be32=*[0x10000000-0x10000001])"
+            ],
+            "expected_output": "10000000"
+        },
+        {
+            "name": "random-val-int-5--ok",
+            "input": [
+                "raw(byte=*[1-4])",
+                "raw(be16=*[1-4])",
+                "raw(be32=*[1-4])",
+                "raw(be64=*[1-4])"
+            ],
+            "expected_output": "01\n0002\n00000003\n0000000000000004"
+        },
+        {
+            "name": "random-val-stream-1--ok",
+            "input": [
+                "raw(stream=*)"
+            ],
+            "expected_output": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+        },
+        {
+            "name": "random-val-stream-2--ok",
+            "input": [
+                "raw(stream=*16)"
+            ],
+            "expected_output": "000102030405060708090a0b0c0d0e0f"
+        },
+        {
+            "name": "random-val-ipv4-1--ok",
+            "input": [
+                "raw(ip4=*)",
+                "raw(ip4=*)"
+            ],
+            "expected_output": "00000000\n00000001"
+        },
+        {
+            "name": "random-val-ipv4-2--ok",
+            "input": [
+                "raw(ip4=*.*.*.*)"
+            ],
+            "expected_output": "00010203"
+        },
+        {
+            "name": "random-val-ipv4-3--ok",
+            "input": [
+                "raw(ip4=1.*.3.*)"
+            ],
+            "expected_output": "01000301"
+        },
+        {
+            "name": "random-val-ipv4-4--ok",
+            "input": [
+                "raw(ip4=1.*[16-17].3.*[16-17])"
+            ],
+            "expected_output": "01100311"
+        },
+        {
+            "name": "random-val-mac-1--ok",
+            "input": [
+                "raw(mac=*)"
+            ],
+            "expected_output": "000102030405"
+        },
+        {
+            "name": "random-val-mac-2--ok",
+            "input": [
+                "raw(mac=*:*:*:*:*:*)"
+            ],
+            "expected_output": "000102030405"
+        },
+        {
+            "name": "random-val-mac-3--ok",
+            "input": [
+                "raw(mac=00:*:02:*:04:*)"
+            ],
+            "expected_output": "000002010402"
+        },
+        {
+            "name": "random-val-mac-4--ok",
+            "input": [
+                "raw(mac=00:*[1-2]:02:*[1-2]:04:*[1-2])"
+            ],
+            "expected_output": "000102020401"
+        },
+        {
             "name": "script-01--ok",
             "input": [
                 "file://all.pump"
