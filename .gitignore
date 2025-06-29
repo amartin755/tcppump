@@ -6,3 +6,4 @@ bin/
 libpcap/
 /Debug/
 .vscode/
+VERSION
