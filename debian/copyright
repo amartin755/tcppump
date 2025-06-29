@@ -1,0 +1,10 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: tcppump
+Upstream-Contact: Andreas Martin <netnag@mailbox.org>
+Source: https://github.com/amartin755/tcppump
+
+Files: *
+Copyright: 2012-2025, Andreas Martin
+License: GPL-3
+ On Debian systems, the complete text of the GNU General Public
+ License can be found in `/usr/share/common-licenses/GPL-3'.

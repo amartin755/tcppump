@@ -1,0 +1,16 @@
+Source: tcppump
+Rules-Requires-Root: no
+Section: net
+Priority: optional
+Maintainer: Andreas Martin <netnag@mailbox.org>
+Standards-Version: 4.7.2
+Build-Depends: debhelper (>= 13),
+               debhelper-compat (=13),
+               libpcap0.8-dev,
+               cmake
+Homepage: https://github.com/amartin755/tcppump
+
+Package: tcppump
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: A simple ethernet packet generator
