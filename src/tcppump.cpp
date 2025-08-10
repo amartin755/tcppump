@@ -137,8 +137,9 @@ int cTcpPump::execute (const std::vector<std::string>& args)
         return 0;
     }
 
-    // ommiting of option -i is only allowed if output is written to a file (-w option)
-    if (!options.ifc && !options.outfile)
+    // ommiting of option -i is only allowed if output is written to a file (-w option) and
+    // automatic mac address resolution is off
+    if (!options.ifc && (!options.outfile || options.arp))
     {
         Console::PrintError ("Option -i --interface not set\n");
         return -1;
