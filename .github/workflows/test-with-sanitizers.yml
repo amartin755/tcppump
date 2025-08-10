@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: GPL-3.0-only
+###############################################################################
+#
+# TCPPUMP <https://github.com/amartin755/tcppump>
+# Copyright (C) 2012-2024 Andreas Martin (netnag@mailbox.org)
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 3.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+
+name: test-with-sanitizers
+
+#on: [push, workflow_dispatch]
+on: [workflow_dispatch]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'true'
+
+    - name: Install Dependencies (linux)
+      run: sudo apt-get --assume-yes install libpcap-dev libubsan libasan valgrind
+
+    - name: Assign priviledges (linux)
+      working-directory: ${{github.workspace}}/scripts
+      shell: bash
+      run: build-and-test-ALL.sh
+
+    - uses: actions/upload-artifact@v4
+      if: ${{ failure() }}
+      with:
+        name: logfiles
+        path: |
+          ${{github.workspace}}/build/CMakeFiles/CMakeError.log
+          ${{github.workspace}}/build/CMakeFiles/CMakeOutput.log
+          ${{github.workspace}}/build/Testing/Temporary/LastTest.log
