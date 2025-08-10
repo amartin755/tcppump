@@ -37,10 +37,10 @@ jobs:
     - name: Install Dependencies (linux)
       run: sudo apt-get --assume-yes install libpcap-dev libubsan1 libasan8 valgrind
 
-    - name: Assign priviledges (linux)
+    - name: Build and run all tests
       working-directory: ${{github.workspace}}/scripts
       shell: bash
-      run: build-and-test-ALL.sh
+      run: ${{github.workspace}}/scripts/build-and-test-ALL.sh
 
     - uses: actions/upload-artifact@v4
       if: ${{ failure() }}
