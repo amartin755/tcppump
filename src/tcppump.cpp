@@ -288,7 +288,6 @@ int cTcpPump::execute (const std::vector<std::string>& args)
     cCompiler compiler (options.script ? cCompiler::SCRIPT : options.pcap ? cCompiler::PCAP : cCompiler::PACKET,
             activeDelay, timeScale, !!options.arp, pcapScale);
     cFilter    filter (options.overwriteDMAC ? &overwriteDMAC : nullptr);
-    cResolver  resolver (*ifc);
     cScheduler scheduler;
 
     try
@@ -300,8 +299,12 @@ int cTcpPump::execute (const std::vector<std::string>& args)
         if (!options.outfile && !ifc->open ())
             return -1;
 
-        filter    << packetData;
-        resolver  << packetData;
+        filter << packetData;
+        if (ifc)
+        {
+            cResolver resolver (*ifc);
+            resolver << packetData;
+        }
         scheduler << packetData;
 
         // if user has set a default packet delay, real-time mode is ALWAYS enabled
