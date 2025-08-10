@@ -35,7 +35,7 @@ jobs:
         submodules: 'true'
 
     - name: Install Dependencies (linux)
-      run: sudo apt-get --assume-yes install libpcap-dev libubsan libasan valgrind
+      run: sudo apt-get --assume-yes install libpcap-dev libubsan1 libasan8 valgrind
 
     - name: Assign priviledges (linux)
       working-directory: ${{github.workspace}}/scripts
