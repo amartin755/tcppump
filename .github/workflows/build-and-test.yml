@@ -41,12 +41,12 @@ jobs:
       shell: pwsh
       if: matrix.os == 'windows-latest'
       run: |
-        $name = (Get-NetAdapter | Where-Object {$_.Status -eq "Up"} | Select-Object -First 1 -ExpandProperty Name)
+        $name = (Get-NetAdapter | Where-Object {$_.Status -eq "Up" -and $_.InterfaceDescription -like "*Ethernet*"} | Select-Object -First 1 -ExpandProperty Name)
         echo "adapter_name=$name" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
-    - name: Use adapter name
-      if: matrix.os == 'windows-latest'
-      run: "echo Adapter: ${{ steps.get_adapter.outputs.adapter_name }}"
+#    - name: Use adapter name
+#      if: matrix.os == 'windows-latest'
+#      run: echo "Adapter: ${{ steps.get_adapter.outputs.adapter_name }}"
 
     - name: Install Dependencies (linux)
       if: matrix.os == 'ubuntu-latest'
@@ -59,7 +59,7 @@ jobs:
       run: Invoke-WebRequest -Uri "https://nmap.org/dist/nmap-7.12-setup.exe" -OutFile "nmap.exe"; Start-Process -Filepath "nmap.exe" -ArgumentList /S
 
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{ matrix.build }}
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{ matrix.build }} -DTEST_NET_ADAPTER="${{ steps.get_adapter.outputs.adapter_name }}"
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build --target tcppump unittest --config ${{ matrix.build }}
