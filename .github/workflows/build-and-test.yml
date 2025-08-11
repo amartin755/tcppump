@@ -38,7 +38,14 @@ jobs:
 
     - name: ipconfig
       if: matrix.os == 'windows-latest'
-      run: ipconfig /all
+      shell: pwsh
+      run: |
+        $name = (Get-NetAdapter | Where-Object {$_.Status -eq "Up"} | Select-Object -First 1 -ExpandProperty Name)
+        echo "adapter_name=$name" >> $env:GITHUB_OUTPUT
+
+    - name: Use adapter name
+      if: matrix.os == 'windows-latest'
+      run: echo "Adapter: ${{ steps.get_adapter.outputs.adapter_name }}"
 
     - name: Install Dependencies (linux)
       if: matrix.os == 'ubuntu-latest'
