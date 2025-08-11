@@ -1,0 +1,32 @@
+Name: tcppump
+Version: 0.4.0
+Release: 1%{?dist}
+Summary: A simple ethernet packet generator
+License: GPL-3
+URL: https://github.com/amartin755/tcppump
+Source: %{name}_%{version}.tar.gz
+BuildRequires: cmake
+BuildRequires: libpcap-devel
+
+%description
+tcppump is a simple ethernet packet generator that allows users to create and send custom packets over the network.
+
+%prep
+%setup -q
+
+%build
+mkdir build
+cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DWITH_UNITTESTS=OFF
+make
+
+%install
+mkdir -p %{buildroot}/usr/bin
+install -m 0755 bin/tcppump %{buildroot}/usr/bin/
+
+%files
+/usr/bin/tcppump
+
+%changelog
+* Sun Jun 29 2025 Andreas Martin <netnag@mailbox.org> - 0.4.0-1
+- Initial RPM package creation.
