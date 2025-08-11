@@ -41,7 +41,7 @@ jobs:
       shell: pwsh
       if: matrix.os == 'windows-latest'
       run: |
-        $name = (Get-NetAdapter | Where-Object {$_.Status -eq "Up" -and $_.InterfaceDescription -like "*Ethernet*"} | Select-Object -First 1 -ExpandProperty Name)
+        $name = (Get-NetAdapter -Physical | Where-Object {$_.Status -eq "Up" -and $_.InterfaceDescription -like "*Ethernet*"} | Select-Object -First 1 -ExpandProperty Name)
         echo "adapter_name=$name" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
 #    - name: Use adapter name
