@@ -36,16 +36,17 @@ jobs:
       with:
         submodules: 'true'
 
-    - name: ipconfig
-      if: matrix.os == 'windows-latest'
+    - name: Get first active Ethernet adapter name
+      id: get_adapter
       shell: pwsh
+      if: matrix.os == 'windows-latest'
       run: |
         $name = (Get-NetAdapter | Where-Object {$_.Status -eq "Up"} | Select-Object -First 1 -ExpandProperty Name)
-        echo "adapter_name=$name" >> $env:GITHUB_OUTPUT
+        echo "adapter_name=$name" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
     - name: Use adapter name
       if: matrix.os == 'windows-latest'
-      run: echo "Adapter: ${{ steps.get_adapter.outputs.adapter_name }}"
+      run: "echo Adapter: ${{ steps.get_adapter.outputs.adapter_name }}"
 
     - name: Install Dependencies (linux)
       if: matrix.os == 'ubuntu-latest'
