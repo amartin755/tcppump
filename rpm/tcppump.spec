@@ -24,6 +24,11 @@ make
 mkdir -p %{buildroot}/usr/bin
 install -m 0755 bin/tcppump %{buildroot}/usr/bin/
 
+%post
+if [ -x /usr/sbin/setcap ]; then
+    /usr/sbin/setcap cap_net_raw+eip /usr/bin/tcppump || :
+fi
+
 %files
 /usr/bin/tcppump
 
