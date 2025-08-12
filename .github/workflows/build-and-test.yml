@@ -36,18 +36,14 @@ jobs:
       with:
         submodules: 'true'
 
-    - name: Get first active Ethernet adapter name
+    - name: Get first active Ethernet adapter name (windows)
       id: get_adapter
       shell: pwsh
       if: matrix.os == 'windows-latest'
       run: |
         ipconfig /all
-        $name = (Get-NetAdapter -Physical | Where-Object {$_.Status -eq "Up" -and $_.InterfaceDescription -like "*Ethernet*"} | Select-Object -First 1 -ExpandProperty Name)
+        $name = (Get-NetAdapter | Where-Object {$_.Status -eq "Up" -and $_.InterfaceDescription -like "Ethernet*"} | Select-Object -First 1 -ExpandProperty Name)
         echo "adapter_name=$name" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-
-#    - name: Use adapter name
-#      if: matrix.os == 'windows-latest'
-#      run: echo "Adapter: ${{ steps.get_adapter.outputs.adapter_name }}"
 
     - name: Install Dependencies (linux)
       if: matrix.os == 'ubuntu-latest'
