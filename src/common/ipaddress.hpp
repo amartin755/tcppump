@@ -107,7 +107,7 @@ public:
                         return false;
                     if (min > 255 || max > 255)
                         return false;
-                    ipBin[n] = cRandom::rand8 (min, max);
+                    ipBin[n] = cRandom::rand8 ((uint8_t)min, (uint8_t)max);
                 }
             }
             else

@@ -27,31 +27,31 @@ class cLinkable
 public:
     cLinkable ()
     {
-        next = nullptr;
+        m_next = nullptr;
     }
     virtual ~cLinkable ()
     {
     }
     inline cLinkable* getNext (void)
     {
-        return next;
+        return m_next;
     }
     inline void setNext (cLinkable* next)
     {
-        this->next = next;
+        m_next = next;
     }
     inline const cTimeval& getTime (void)
     {
-        return t;
+        return m_t;
     }
     inline void setTime (const cTimeval& t)
     {
-        this->t = t;
+        m_t = t;
     }
 
 private:
-    cLinkable *next;
-    cTimeval t;
+    cLinkable *m_next;
+    cTimeval m_t;
 };
 
 #endif /* LINKABLE_HPP_ */

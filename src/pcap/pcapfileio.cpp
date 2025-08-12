@@ -28,13 +28,13 @@
 
 cPcapFileIO::cPcapFileIO ()
 {
-    modeWrite  = false;
-    fileHandle = NULL;
-    dumper     = NULL;
-    fileError  = false;
-    path       = NULL;
-    eof        = false;
-    firstRead  = false;
+    m_modeWrite  = false;
+    m_fileHandle = NULL;
+    m_dumper     = NULL;
+    m_fileError  = false;
+    m_path       = NULL;
+    m_eof        = false;
+    m_firstRead  = false;
 }
 
 
@@ -46,43 +46,43 @@ cPcapFileIO::~cPcapFileIO ()
 
 bool cPcapFileIO::open (const char* path, bool write)
 {
-    BUG_ON (fileHandle);
+    BUG_ON (m_fileHandle);
 
     char errbuf[PCAP_ERRBUF_SIZE] = {0};
 
     if (!write)
     {
-        fileHandle = pcap_open_offline (path, errbuf);
-        firstRead  = true;
+        m_fileHandle = pcap_open_offline (path, errbuf);
+        m_firstRead  = true;
     }
     else
     {
-        fileHandle = pcap_open_dead (DLT_EN10MB, 65535);
-        if (fileHandle)
+        m_fileHandle = pcap_open_dead (DLT_EN10MB, 65535);
+        if (m_fileHandle)
         {
-            dumper = pcap_dump_open (fileHandle, path);
-            if (!dumper)
+            m_dumper = pcap_dump_open (m_fileHandle, path);
+            if (!m_dumper)
             {
-                printError (pcap_geterr (fileHandle));
-                pcap_close (fileHandle);
-                fileHandle = NULL;
+                printError (pcap_geterr (m_fileHandle));
+                pcap_close (m_fileHandle);
+                m_fileHandle = NULL;
 
                 return false;
             }
         }
     }
 
-    if (!fileHandle)
+    if (!m_fileHandle)
     {
         printError (errbuf);
 
         return false;
     }
 
-    modeWrite  = write;
-    this->path = path;
-    eof        = false;
-    offset.clear ();
+    m_modeWrite = write;
+    m_path      = path;
+    m_eof       = false;
+    m_offset.clear ();
 
     return true;
 }
@@ -90,43 +90,43 @@ bool cPcapFileIO::open (const char* path, bool write)
 
 void cPcapFileIO::close ()
 {
-    if (dumper)
-        pcap_dump_close (dumper);
-    if (fileHandle)
-        pcap_close (fileHandle);
+    if (m_dumper)
+        pcap_dump_close (m_dumper);
+    if (m_fileHandle)
+        pcap_close (m_fileHandle);
 
-    fileHandle = NULL;
-    dumper     = NULL;
-    path       = NULL;
-    fileError  = false;
-    eof        = false;
+    m_fileHandle = NULL;
+    m_dumper     = NULL;
+    m_path       = NULL;
+    m_fileError  = false;
+    m_eof        = false;
 }
 
 
 bool cPcapFileIO::read (struct pcap_pkthdr **header, const u_char **data)
 {
-    BUG_ON (!fileHandle);
-    BUG_ON (modeWrite);
+    BUG_ON (!m_fileHandle);
+    BUG_ON (m_modeWrite);
 
-    if (!fileError && !eof)
+    if (!m_fileError && !m_eof)
     {
-        int res = pcap_next_ex(fileHandle, header, data);
-        fileError = res == 0 || res == -1;
-        eof = res == -2;
+        int res = pcap_next_ex(m_fileHandle, header, data);
+        m_fileError = res == 0 || res == -1;
+        m_eof = res == -2;
 
-        if (fileError)
+        if (m_fileError)
         {
-            Console::PrintError ("Could not read file %s.\n", path);
-            printError (pcap_geterr (fileHandle));
+            Console::PrintError ("Could not read file %s.\n", m_path);
+            printError (pcap_geterr (m_fileHandle));
         }
-        if (firstRead)
+        if (m_firstRead)
         {
-            offset = (*header)->ts;
-            firstRead = false;
+            m_offset = (*header)->ts;
+            m_firstRead = false;
         }
-        (*header)->ts = cTimeval ((*header)->ts).sub(offset).timeval();
+        (*header)->ts = cTimeval ((*header)->ts).sub(m_offset).timeval();
     }
-    return !(fileError || eof);
+    return !(m_fileError || m_eof);
 }
 
 
@@ -150,31 +150,31 @@ uint8_t* cPcapFileIO::read (cTimeval* timestamp, int* len)
 
 bool cPcapFileIO::write (const cTimeval& timestamp, const uint8_t* frame, int len, bool absoluteTimestamp)
 {
-    BUG_ON (!fileHandle);
-    BUG_ON (!dumper);
-    BUG_ON (!modeWrite);
+    BUG_ON (!m_fileHandle);
+    BUG_ON (!m_dumper);
+    BUG_ON (!m_modeWrite);
 
-    if (!fileError)
+    if (!m_fileError)
     {
         struct pcap_pkthdr hdr;
 
         if (absoluteTimestamp)
-            offset.set (timestamp);
+            m_offset.set (timestamp);
         else
-            offset.add (timestamp);
-        hdr.ts  = offset.timeval();
+            m_offset.add (timestamp);
+        hdr.ts  = m_offset.timeval();
         hdr.len = hdr.caplen = len;
 
-        pcap_dump ((u_char*)dumper, &hdr, (u_char*)frame);
+        pcap_dump ((u_char*)m_dumper, &hdr, (u_char*)frame);
 
         // as pcap_dump doesn't return an error code, we have to do error checking on dumpers underlying FILE pointer
-        fileError = ferror (pcap_dump_file (dumper));
-        if (fileError)
+        m_fileError = ferror (pcap_dump_file (m_dumper));
+        if (m_fileError)
         {
-            Console::PrintError ("Could not write file %s.\n", path);
+            Console::PrintError ("Could not write file %s.\n", m_path);
         }
     }
-    return !fileError;
+    return !m_fileError;
 }
 
 // FIXME same code as in cPcap!
@@ -193,28 +193,28 @@ void cPcapFileIO::unitTest (const char* file)
 
     cPcapFileIO obj;
 
-    BUG_IF_NOT (!obj.modeWrite);
-    BUG_IF_NOT (!obj.fileHandle);
-    BUG_IF_NOT (!obj.dumper);
-    BUG_IF_NOT (!obj.path);
-    BUG_IF_NOT (!obj.fileError);
-    BUG_IF_NOT (!obj.eof);
+    BUG_IF_NOT (!obj.m_modeWrite);
+    BUG_IF_NOT (!obj.m_fileHandle);
+    BUG_IF_NOT (!obj.m_dumper);
+    BUG_IF_NOT (!obj.m_path);
+    BUG_IF_NOT (!obj.m_fileError);
+    BUG_IF_NOT (!obj.m_eof);
 
     BUG_IF_NOT (!obj.open("nofile"));
-    BUG_IF_NOT (!obj.modeWrite);
-    BUG_IF_NOT (!obj.fileHandle);
-    BUG_IF_NOT (!obj.dumper);
-    BUG_IF_NOT (!obj.path);
-    BUG_IF_NOT (!obj.fileError);
-    BUG_IF_NOT (!obj.eof);
+    BUG_IF_NOT (!obj.m_modeWrite);
+    BUG_IF_NOT (!obj.m_fileHandle);
+    BUG_IF_NOT (!obj.m_dumper);
+    BUG_IF_NOT (!obj.m_path);
+    BUG_IF_NOT (!obj.m_fileError);
+    BUG_IF_NOT (!obj.m_eof);
 
     BUG_IF_NOT (!obj.open("nofile", false));
-    BUG_IF_NOT (!obj.modeWrite);
-    BUG_IF_NOT (!obj.fileHandle);
-    BUG_IF_NOT (!obj.dumper);
-    BUG_IF_NOT (!obj.path);
-    BUG_IF_NOT (!obj.fileError);
-    BUG_IF_NOT (!obj.eof);
+    BUG_IF_NOT (!obj.m_modeWrite);
+    BUG_IF_NOT (!obj.m_fileHandle);
+    BUG_IF_NOT (!obj.m_dumper);
+    BUG_IF_NOT (!obj.m_path);
+    BUG_IF_NOT (!obj.m_fileError);
+    BUG_IF_NOT (!obj.m_eof);
 
     struct frame
     {
@@ -244,13 +244,13 @@ void cPcapFileIO::unitTest (const char* file)
     int n = 0;
 
     BUG_IF_NOT (obj.open(file, false));
-    BUG_IF_NOT (!obj.modeWrite);
-    BUG_IF_NOT (obj.fileHandle);
-    BUG_IF_NOT (!obj.dumper);
-    BUG_IF_NOT (obj.path);
-    BUG_IF_NOT (!obj.fileError);
-    BUG_IF_NOT (!obj.eof);
-    BUG_IF_NOT (obj.offset.isNull());
+    BUG_IF_NOT (!obj.m_modeWrite);
+    BUG_IF_NOT (obj.m_fileHandle);
+    BUG_IF_NOT (!obj.m_dumper);
+    BUG_IF_NOT (obj.m_path);
+    BUG_IF_NOT (!obj.m_fileError);
+    BUG_IF_NOT (!obj.m_eof);
+    BUG_IF_NOT (obj.m_offset.isNull());
 
     while ((f = obj.read (&t, &len)) != NULL)
     {
@@ -260,21 +260,21 @@ void cPcapFileIO::unitTest (const char* file)
         n++;
     }
 
-    BUG_IF_NOT (!obj.fileError);
-    BUG_IF_NOT (obj.eof);
+    BUG_IF_NOT (!obj.m_fileError);
+    BUG_IF_NOT (obj.m_eof);
     BUG_IF_NOT (n == (sizeof (indata) / sizeof (indata[0])));
 
     obj.close ();
-    BUG_IF_NOT (!obj.modeWrite);
-    BUG_IF_NOT (!obj.fileHandle);
-    BUG_IF_NOT (!obj.dumper);
-    BUG_IF_NOT (!obj.path);
-    BUG_IF_NOT (!obj.fileError);
-    BUG_IF_NOT (!obj.eof);
+    BUG_IF_NOT (!obj.m_modeWrite);
+    BUG_IF_NOT (!obj.m_fileHandle);
+    BUG_IF_NOT (!obj.m_dumper);
+    BUG_IF_NOT (!obj.m_path);
+    BUG_IF_NOT (!obj.m_fileError);
+    BUG_IF_NOT (!obj.m_eof);
 
-    for (unsigned n = 0; n < sizeof (indata) / sizeof (indata[0]); n++)
+    for (unsigned i = 0; i < sizeof (indata) / sizeof (indata[0]); i++)
     {
-        delete[] (indata[n].bin);
+        delete[] (indata[i].bin);
     }
 
     //TODO unit tests

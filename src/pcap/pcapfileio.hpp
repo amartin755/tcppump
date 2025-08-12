@@ -40,20 +40,20 @@ public:
     bool read (struct pcap_pkthdr **, const u_char **);
     uint8_t* read (cTimeval* timestamp, int* len);
     bool write (const cTimeval& timestamp, const uint8_t* frame, int len, bool absoluteTimestamp = true);
-    bool error () const {return fileError;};
-    const char* name (void) const {return path;};
+    bool error () const {return m_fileError;};
+    const char* name (void) const {return m_path;};
 
 private:
     void printError (const char* err);
 
-    bool modeWrite;
-    pcap_t *fileHandle;
-    pcap_dumper_t* dumper;
-    const char* path;
-    bool fileError;
-    bool eof;
-    cTimeval offset;
-    bool firstRead;
+    bool m_modeWrite;
+    pcap_t *m_fileHandle;
+    pcap_dumper_t* m_dumper;
+    const char* m_path;
+    bool m_fileError;
+    bool m_eof;
+    cTimeval m_offset;
+    bool m_firstRead;
 };
 
 #endif /* PCAPFILEIO_HPP_ */

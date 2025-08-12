@@ -228,7 +228,7 @@ void cMD5::update (const void *data, size_t size)
 	saved_lo = m_ctx.lo;
 	if ((m_ctx.lo = (saved_lo + size) & 0x1fffffff) < saved_lo)
 		m_ctx.hi++;
-	m_ctx.hi += size >> 29;
+	m_ctx.hi += uint32_t(size >> 29);
 
 	used = saved_lo & 0x3f;
 

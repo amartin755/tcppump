@@ -1492,7 +1492,6 @@ void cInstructionParser::unitTest ()
     ownIPv4.set("10.10.10.10");
     cSettings::get().setMyMAC(ownMac);
     cSettings::get().setMyIPv4(ownIPv4);
-    std::list <cEthernetPacket> packets;
     cInstructionParser obj (false);
 
 
@@ -1793,10 +1792,10 @@ void cInstructionParser::unitTest ()
         cInstructionParser::cResult result;
 
         Console::PrintDebug("packet %d: ", n);
-        cInstructionParser obj (false);
+        cInstructionParser obj2 (false);
         try
         {
-            obj.parse (tests[n].tokens, result);
+            obj2.parse (tests[n].tokens, result);
         }
         catch (ParseException& )
         {
@@ -1816,7 +1815,7 @@ void cInstructionParser::unitTest ()
         {
             const uint8_t* p = packets->get();
 
-            for (size_t n = 0; n < packets->getLength(); n++)
+            for (size_t i = 0; i < packets->getLength(); i++)
             {
                 Console::PrintDebug ("0x%02x, ", (int)*p++);
             }

@@ -251,7 +251,7 @@ cMacAddress cParameter::asMac () const
         cMacAddress mac(value, valLen);
         return mac;
     }
-    catch(const std::exception& e)
+    catch(const std::exception&)
     {
         throw FormatException (exParFormat, value, (int)valLen);
     }
@@ -854,8 +854,8 @@ void cParameterList::unitTest ()
         }
         BUG_IF_NOT (catched);
         {
-            cParameterList obj ("(dk=,fjsdf=12)");
-            BUG_IF_NOT (!obj.isValid ());
+            cParameterList obj2 ("(dk=,fjsdf=12)");
+            BUG_IF_NOT (!obj2.isValid ());
         }
     }
     {

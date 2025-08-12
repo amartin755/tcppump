@@ -49,17 +49,17 @@ cFileParser::~cFileParser ()
     close ();
 }
 
-bool cFileParser::open (const char* path)
+bool cFileParser::open (const char* filepath)
 {
     BUG_ON (fp);
 
-    if ((fp = std::fopen (path, "rt")) == NULL)
+    if ((fp = std::fopen (filepath, "rt")) == NULL)
     {
         return false;
     }
 
     lineNbr    =  1;
-    this->path = path;
+    this->path = filepath;
 
     return true;
 }

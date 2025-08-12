@@ -43,10 +43,10 @@ public:
 private:
     cFileBackend* m_outfile;
     inline void processPacket (const cTimeval& sendTime, cEthernetPacket& p);
-    const cPreprocessor &preproc;
-    cNetInterface *netif;
-    bool realtimeMode;
-    int repeat;
+    const cPreprocessor &m_preproc;
+    cNetInterface *m_netif;
+    bool m_realtimeMode;
+    int m_repeat;
 };
 
 #endif /* OUTPUT_HPP_ */

@@ -72,23 +72,23 @@ void cGrePacket::setProtocolType (uint16_t proto)
     basicHeader.protocol = htons (proto);
 }
 
-void cGrePacket::setKey (uint32_t key)
+void cGrePacket::setKey (uint32_t k)
 {
-    this->key = key;
+    this->key = k;
     this->hasKey = true;
     basicHeader.setKeyFlag();
 }
 
-void cGrePacket::setSequence (uint32_t seq)
+void cGrePacket::setSequence (uint32_t s)
 {
-    this->seq = seq;
+    this->seq = s;
     this->hasSeq = true;
     basicHeader.setSeqFlag();
 }
 
-void cGrePacket::setChecksum (uint16_t checksum)
+void cGrePacket::setChecksum (uint16_t chk)
 {
-    this->checksum = checksum;
+    this->checksum = chk;
     this->hasChecksum = true;
     basicHeader.setChecksumFlag();
 }

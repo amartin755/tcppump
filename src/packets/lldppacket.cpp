@@ -666,7 +666,7 @@ void cLldpPacket::addEndTLV ()
 {
     cFixedByteArray* value = new cFixedByteArray (1);
     *value << (uint8_t)0;
-    m_tlvs.push_back (std::pair<uint8_t, const cFixedByteArray*> (0, value));
+    m_tlvs.push_back (std::pair<uint8_t, const cFixedByteArray*> (uint8_t(0), value));
 }
 
 void cLldpPacket::compile (bool withEndTLV)

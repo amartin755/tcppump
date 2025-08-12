@@ -161,23 +161,23 @@ void cParseHelper::unitTest ()
 
     size_t binLen;
     uint8_t* bin;
-    binLen = -1;
+    binLen = (size_t)-1;
     BUG_IF_NOT (!hexStringToBin ("", 0, binLen));
     BUG_IF_NOT (!binLen);
-    binLen = -1;
+    binLen = (size_t)-1;
     BUG_IF_NOT (!hexStringToBin ("1abcdef", 0, binLen));
     BUG_IF_NOT (!binLen);
-    binLen = -1;
+    binLen = (size_t)-1;
     BUG_IF_NOT (!hexStringToBin ("abcdefg", 0, binLen));
     BUG_IF_NOT (!binLen);
-    binLen = -1;
+    binLen = (size_t)-1;
     BUG_IF_NOT (!hexStringToBin ("1abcdefg", 0, binLen));
     BUG_IF_NOT (!binLen);
-    binLen = -1;
+    binLen = (size_t)-1;
     BUG_IF_NOT ((bin = hexStringToBin ("0123456789abcdef", 0, binLen)));
     BUG_IF_NOT (binLen == 8);
     BUG_IF_NOT (!memcmp (bin, "\x01\x23\x45\x67\x89\xab\xcd\xef", binLen));
-    binLen = -1;
+    binLen = (size_t)-1;
     delete[] bin;
 
 

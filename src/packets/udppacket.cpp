@@ -82,7 +82,7 @@ uint16_t cUdpPacket::calcChecksum (const uint8_t* payload, size_t len) const
         const ipv6_pseudo_header_t ipPseudoHeader = {
             src.get(),
             dst.get(),
-            htons((uint32_t)cIPPacket::getPayloadLength()),
+            htonl((uint32_t)cIPPacket::getPayloadLength()),
             {0, 0, 0},
             PROTO_UDP,
         };

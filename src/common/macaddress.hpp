@@ -58,12 +58,12 @@ public:
     }
     cMacAddress (uint8_t b0, uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4, uint8_t b5)
     {
-        mac[0] = b0;
-        mac[1] = b1;
-        mac[2] = b2;
-        mac[3] = b3;
-        mac[4] = b4;
-        mac[5] = b5;
+        m_mac[0] = b0;
+        m_mac[1] = b1;
+        m_mac[2] = b2;
+        m_mac[3] = b3;
+        m_mac[4] = b4;
+        m_mac[5] = b5;
     }
     cMacAddress (bool randUnicast, bool randMulticast) // construct random MAC address
     {
@@ -80,16 +80,16 @@ public:
     }
     void set (const cMacAddress& obj)
     {
-        mac[0] = obj.mac[0];
-        mac[1] = obj.mac[1];
-        mac[2] = obj.mac[2];
-        mac[3] = obj.mac[3];
-        mac[4] = obj.mac[4];
-        mac[5] = obj.mac[5];
+        m_mac[0] = obj.m_mac[0];
+        m_mac[1] = obj.m_mac[1];
+        m_mac[2] = obj.m_mac[2];
+        m_mac[3] = obj.m_mac[3];
+        m_mac[4] = obj.m_mac[4];
+        m_mac[5] = obj.m_mac[5];
     }
     void set (unsigned val)
     {
-        mac[0] = mac[1] = mac[2] = mac[3] = mac[4] = mac[5] = (uint8_t)val;
+        m_mac[0] = m_mac[1] = m_mac[2] = m_mac[3] = m_mac[4] = m_mac[5] = (uint8_t)val;
     }
     bool set (const char* sMac, size_t len = 0)
     {
@@ -141,7 +141,7 @@ public:
                         return false;
                     if (min > 255 || max > 255)
                         return false;
-                    newMac[n] = cRandom::rand8 (min, max);
+                    newMac[n] = cRandom::rand8 ((uint8_t)min, (uint8_t)max);
                 }
             }
             else
@@ -156,35 +156,35 @@ public:
                 }
             }
         }
-        static_assert (sizeof (newMac) == sizeof (mac), "");
-        std::memcpy (&mac, newMac, sizeof (mac));
+        static_assert (sizeof (newMac) == sizeof (m_mac), "");
+        std::memcpy (&m_mac, newMac, sizeof (m_mac));
         return true;
     }
     void set (const void* b, size_t len)
     {
         BUG_ON (len < size());
-        std::memcpy(mac, b, size());
+        std::memcpy(m_mac, b, size());
     }
     void setAt (int offset, uint8_t value)
     {
         BUG_ON (offset > 5);
         if (offset <= 5)
         {
-            mac[offset] = value;
+            m_mac[offset] = value;
         }
     }
     const void* get() const
     {
-        return mac;
+        return m_mac;
     }
     void get (char* s, size_t len) const
     {
         BUG_ON (len <= MACSTRLEN);
-        std::snprintf (s, len, "%02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+        std::snprintf (s, len, "%02x:%02x:%02x:%02x:%02x:%02x", m_mac[0], m_mac[1], m_mac[2], m_mac[3], m_mac[4], m_mac[5]);
     }
     void get (mac_t* mac) const
     {
-        std::memcpy(mac, this->mac, size());
+        std::memcpy(mac, m_mac, size());
     }
     void get (std::string& s) const
     {
@@ -196,37 +196,37 @@ public:
     {
         BUG_ON (!unicast && !multicast);
 
-        mac[0] = cRandom::rand8 ();
-        mac[1] = cRandom::rand8 ();
-        mac[2] = cRandom::rand8 ();
-        mac[3] = cRandom::rand8 ();
-        mac[4] = cRandom::rand8 ();
-        mac[5] = cRandom::rand8 ();
+        m_mac[0] = cRandom::rand8 ();
+        m_mac[1] = cRandom::rand8 ();
+        m_mac[2] = cRandom::rand8 ();
+        m_mac[3] = cRandom::rand8 ();
+        m_mac[4] = cRandom::rand8 ();
+        m_mac[5] = cRandom::rand8 ();
 
         if (unicast && !multicast)
-            mac[0] &= 0xfe;
+            m_mac[0] &= 0xfe;
         else if (!unicast && multicast)
-            mac[0] |= 1;
+            m_mac[0] |= 1;
     }
     static size_t size ()
     {
-        return sizeof(mac);
+        return sizeof(m_mac);
     }
     bool isNull () const
     {
-        return !mac[0] && !mac[1] && !mac[2] && !mac[3] && !mac[4] && !mac[5];
+        return !m_mac[0] && !m_mac[1] && !m_mac[2] && !m_mac[3] && !m_mac[4] && !m_mac[5];
     }
     bool isBroadcast () const
     {
-        return mac[0] == 0xffu && mac[1] == 0xffu && mac[2] == 0xffu && mac[3] == 0xffu && mac[4] == 0xffu && mac[5] == 0xffu;
+        return m_mac[0] == 0xffu && m_mac[1] == 0xffu && m_mac[2] == 0xffu && m_mac[3] == 0xffu && m_mac[4] == 0xffu && m_mac[5] == 0xffu;
     }
     bool isMulticast () const
     {
-        return (mac[0] & 1) && !isBroadcast ();
+        return (m_mac[0] & 1) && !isBroadcast ();
     }
     bool isUnicast () const
     {
-        return !(mac[0] & 1);
+        return !(m_mac[0] & 1);
     }
 
 
@@ -243,7 +243,7 @@ public:
         uint8_t a[] = {1,2,3,4,5,6};
         cMacAddress b("01:02:03:04:05:06");
         BUG_IF_NOT (b.size() == 6);
-        BUG_IF_NOT (!std::memcmp(a, b.mac, sizeof(a)));
+        BUG_IF_NOT (!std::memcmp(a, b.m_mac, sizeof(a)));
 
         BUG_IF_NOT (cMacAddress().isNull());
         BUG_IF_NOT (cMacAddress("ff:ff:ff:ff:ff:ff").isBroadcast());
@@ -255,15 +255,15 @@ public:
         BUG_ON (!b.set ("11:a2:33:44:55:66"));
         BUG_ON (b.set ("11:a2:3g:44:55:66"));
         BUG_ON (!b.set ("00:*[1-2]:02:*[1-2]:04:*[1-2]"));
-        BUG_ON (b.mac[0] != 0 || b.mac[2] != 2 || b.mac[4] != 4);
-        BUG_ON (b.mac[1] != 1 && b.mac[1] != 2);
-        BUG_ON (b.mac[3] != 1 && b.mac[3] != 2);
-        BUG_ON (b.mac[5] != 1 && b.mac[5] != 2);
+        BUG_ON (b.m_mac[0] != 0 || b.m_mac[2] != 2 || b.m_mac[4] != 4);
+        BUG_ON (b.m_mac[1] != 1 && b.m_mac[1] != 2);
+        BUG_ON (b.m_mac[3] != 1 && b.m_mac[3] != 2);
+        BUG_ON (b.m_mac[5] != 1 && b.m_mac[5] != 2);
         BUG_ON (!b.set ("00:*[aa-ab]:02:*[cc-cd]:04:*[ee-ef]"));
-        BUG_ON (b.mac[0] != 0 || b.mac[2] != 2 || b.mac[4] != 4);
-        BUG_ON (b.mac[1] != 0xaa && b.mac[1] != 0xab);
-        BUG_ON (b.mac[3] != 0xcc && b.mac[3] != 0xcd);
-        BUG_ON (b.mac[5] != 0xee && b.mac[5] != 0xef);
+        BUG_ON (b.m_mac[0] != 0 || b.m_mac[2] != 2 || b.m_mac[4] != 4);
+        BUG_ON (b.m_mac[1] != 0xaa && b.m_mac[1] != 0xab);
+        BUG_ON (b.m_mac[3] != 0xcc && b.m_mac[3] != 0xcd);
+        BUG_ON (b.m_mac[5] != 0xee && b.m_mac[5] != 0xef);
         BUG_ON (b.set ("00:*[aa-100]:02:*[cc-cd]:04:*[ee-ef]"));
     }
 #endif
@@ -293,7 +293,7 @@ private:
 
     static const int MACSTRLEN = 17;
 
-    uint8_t mac[6];
+    uint8_t m_mac[6];
 };
 
 

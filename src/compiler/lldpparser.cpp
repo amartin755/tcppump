@@ -584,7 +584,7 @@ void cLldpParser::pnAlias ()
     {
         size_t len;
         const uint8_t* alias = aliasPar->asStream (len, 255);
-        m_packet.addPnAlias (alias, len);
+        m_packet.addPnAlias (alias, (uint8_t)len);
     }
 }
 

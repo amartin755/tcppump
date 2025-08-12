@@ -45,21 +45,21 @@ public:
     const cIPv4& getMyIPv4(void) const;
     const cIPv6& getMyIPv6(void) const;
     unsigned getMyMTU (void) const;
-    bool isMacSet (void) const {return hasMAC;}
-    bool isIPSet (void) const {return hasIPv4;}
-    bool isIPv6Set (void) const {return hasIPv6;}
+    bool isMacSet (void) const {return m_hasMAC;}
+    bool isIPSet (void) const {return m_hasIPv4;}
+    bool isIPv6Set (void) const {return m_hasIPv6;}
     void setIfName (const char* ifc);
     const std::string getIfName () const;
 
 private:
-    bool hasMAC;
-    bool hasIPv4;
-    bool hasIPv6;
-    cMacAddress myMAC;
-    cIPv4 myIP;
-    cIPv6 myIPv6;
-    unsigned mtu;
-    std::string ifName;
+    bool m_hasMAC;
+    bool m_hasIPv4;
+    bool m_hasIPv6;
+    cMacAddress m_myMAC;
+    cIPv4 m_myIP;
+    cIPv6 m_myIPv6;
+    unsigned m_mtu;
+    std::string m_ifName;
 };
 
 #endif /* SETTINGS_HPP */

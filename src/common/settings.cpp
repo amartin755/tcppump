@@ -23,7 +23,7 @@
 
 static cSettings globalSettings;
 
-cSettings::cSettings () : hasMAC(false), hasIPv4(false), hasIPv6(false), mtu(cEthernetPacket::MAX_ETHERNET_PAYLOAD)
+cSettings::cSettings () : m_hasMAC(false), m_hasIPv4(false), m_hasIPv6(false), m_mtu(cEthernetPacket::MAX_ETHERNET_PAYLOAD)
 {
 
 }
@@ -35,86 +35,86 @@ cSettings& cSettings::get(void)
 
 bool cSettings::setMyMAC (const char* mac)
 {
-    hasMAC = myMAC.set (mac);
-    return hasMAC;
+    m_hasMAC = m_myMAC.set (mac);
+    return m_hasMAC;
 }
 
 void cSettings::setMyMAC (const cMacAddress& mac)
 {
-    hasMAC = true;
-    myMAC.set (mac);
+    m_hasMAC = true;
+    m_myMAC.set (mac);
 }
 
 bool cSettings::setMyIPv4 (const char* ip)
 {
-    hasIPv4 = myIP.set(ip);
-    return hasIPv4;
+    m_hasIPv4 = m_myIP.set(ip);
+    return m_hasIPv4;
 }
 
 void cSettings::setMyIPv4 (const cIPv4& ip)
 {
-    hasIPv4 = true;
-    myIP.set(ip);
+    m_hasIPv4 = true;
+    m_myIP.set(ip);
 }
 
 bool cSettings::setMyIPv6 (const char* ip)
 {
-    hasIPv6 = myIPv6.set(ip);
-    return hasIPv4;
+    m_hasIPv6 = m_myIPv6.set(ip);
+    return m_hasIPv4;
 }
 
 void cSettings::setMyIPv6 (const cIPv6& ip)
 {
-    hasIPv6 = true;
-    myIPv6.set(ip);
+    m_hasIPv6 = true;
+    m_myIPv6.set(ip);
 }
 
 void cSettings::setMyMTU (unsigned mtu)
 {
-    this->mtu = mtu;
+    m_mtu = mtu;
 }
 
 const cMacAddress& cSettings::getMyMAC(void) const
 {
-    if (!hasMAC)
+    if (!m_hasMAC)
         throw std::runtime_error("Could not determine mac address of interface.\n"
                 "Please assign an MAC address to the network interface or use the parameter --mymac.");
 
-    return myMAC;
+    return m_myMAC;
 }
 
 const cIPv4& cSettings::getMyIPv4(void) const
 {
-    if (!hasIPv4)
+    if (!m_hasIPv4)
         throw std::runtime_error("Could not determine IPv4 address of interface.\n"
                 "Please assign an IP address to the network interface or use the parameter --myip4.");
 
-    return myIP;
+    return m_myIP;
 }
 
 const cIPv6& cSettings::getMyIPv6(void) const
 {
-    if (!hasIPv6)
+    if (!m_hasIPv6)
         throw std::runtime_error("Could not determine IPv4 address of interface.\n"
                 "Please assign an IP address to the network interface or use the parameter --myip6.");
 
-    return myIPv6;
+    return m_myIPv6;
 }
 
 unsigned cSettings::getMyMTU (void) const
 {
-    return mtu;
+    return m_mtu;
 }
 
 void cSettings::setIfName (const char* ifc)
 {
-    ifName = ifc;
+    m_ifName = ifc;
 }
 
 const std::string cSettings::getIfName () const
 {
-    if (!ifName.size())
+    if (!m_ifName.size())
         throw std::runtime_error("Could not determine network interface name.\n"
                 "Please set parameter -i.");
-    return ifName;
+    return m_ifName;
 }

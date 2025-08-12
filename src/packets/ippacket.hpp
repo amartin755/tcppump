@@ -105,8 +105,8 @@ struct ipv4_header_with_router_alert_t : public ipv4_header_t
 {
     ipv4_option_router_alert_t routerAlert;
 
-    void compile (const in_addr &srcIp, const in_addr &dstIp, unsigned ttl,
-        uint8_t proto, unsigned dscp, unsigned ecn, bool df, bool mf, unsigned offset, unsigned hdrLen, uint16_t totalLen, uint16_t ident, bool withRouterAlert)
+    void compile (const in_addr &src, const in_addr &dst, unsigned timeToLive,
+        uint8_t proto, unsigned dscp, unsigned ecn, bool df, bool mf, unsigned offset, unsigned hdrLen, uint16_t totalLen, uint16_t id, bool withRouterAlert)
     {
         BUG_ON (offset % 8);
 
@@ -114,12 +114,12 @@ struct ipv4_header_with_router_alert_t : public ipv4_header_t
         tos               = ((dscp & 0x3F) << 2) | (ecn & 0x03);
         flags_offset      = htons ((df ? 0x4000 : 0) | (mf ? 0x2000 : 0) | ((offset / 8) & 0x1fff));
 
-        this->srcIp       = srcIp;
-        this->dstIp       = dstIp;
-        this->ttl         = (uint8_t)ttl;
+        this->srcIp       = src;
+        this->dstIp       = dst;
+        this->ttl         = (uint8_t)timeToLive;
         this->protocol    = (uint8_t)proto;
         this->totalLength = htons (totalLen);
-        this->ident       = htons (ident);
+        this->ident       = htons (id);
 
         if (withRouterAlert)
         {
@@ -179,10 +179,6 @@ struct ipv6_header_t
     {
         tc_fl = (ecn & 3) << 4 | (tc_fl & 0xcf);
     }
-    void setFlowLabel (unsigned fl)
-    {
-        tc_fl = (uint8_t)((fl & 0x0F0000) >> 16) | (tc_fl & 0xf0);
-    }
     void setPayloadLen (uint16_t len)
     {
         payloadLength = htons (len);
@@ -196,7 +192,7 @@ struct ipv6_header_t
         hopLimit = hl;
     }
 
-    void compile (const in6_addr &srcIp, const in6_addr &dstIp, unsigned ttl,
+    void compile (const in6_addr &src, const in6_addr &dst, unsigned ttl,
         uint8_t proto, unsigned dscp, unsigned ecn, unsigned flowlabel, uint16_t paylodLen)
     {
         vers_tc = (6 << 4) | ((dscp & 0x3f) >> 2);
@@ -205,8 +201,8 @@ struct ipv6_header_t
         payloadLength = htons (paylodLen);
         nextHeader = proto;
         hopLimit = (uint8_t)ttl;
-        std::memcpy ((void*)&this->srcIp, &srcIp, sizeof (this->srcIp));
-        std::memcpy ((void*)&this->dstIp, &dstIp, sizeof (this->dstIp));
+        std::memcpy ((void*)&this->srcIp, &src, sizeof (this->srcIp));
+        std::memcpy ((void*)&this->dstIp, &dst, sizeof (this->dstIp));
     }
 };
 static_assert (sizeof (ipv6_header_t) == 40, "ipv6_header_t is not packed");

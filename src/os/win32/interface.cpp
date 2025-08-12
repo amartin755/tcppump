@@ -403,11 +403,11 @@ bool cInterface::flushSendQueue (void)
     return true;
 }
 
-void cInterface::getSendStatistic (uint64_t& sentPackets, uint64_t& sentBytes, double& duration) const
+void cInterface::getSendStatistic (uint64_t& packets, uint64_t& bytes, double& dur) const
 {
-    sentPackets = this->sentPackets;
-    sentBytes   = this->sentBytes;
-    duration    = this->duration;
+    packets = this->sentPackets;
+    bytes   = this->sentBytes;
+    dur     = this->duration;
 }
 
 bool cInterface::getMAC (cMacAddress& mac)
