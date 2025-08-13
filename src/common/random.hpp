@@ -27,10 +27,13 @@ class cRandom
 public:
     static cRandom* create (void);
     static void destroy (void);
-    static uint64_t rand64 (uint64_t min = 0, uint64_t max = static_cast<int64_t>(0xffffffffffffffff));
-    static uint32_t rand32 (uint32_t min = 0, uint32_t max = 0xffffffff)
+    static uint64_t rand64 (uint64_t min = 0, uint64_t max = static_cast<int64_t>(0xffffffffffffffff))
     {
         return rand (min, max);
+    }
+    static uint32_t rand32 (uint32_t min = 0, uint32_t max = 0xffffffff)
+    {
+        return (uint32_t)rand (min, max);
     }
     static uint16_t rand16 (uint16_t min = 0, uint16_t max = 0xffff)
     {
@@ -49,12 +52,12 @@ public:
 
 private:
     cRandom ();
-    uint32_t pseudoRandom (void);
-    uint32_t sequence (void);
-    static uint32_t rand (uint32_t min = 0, uint32_t max = 0xffffffff);
+    uint64_t pseudoRandom (void);
+    uint64_t sequence (void);
+    static uint64_t rand (uint64_t min = 0, uint64_t max = 0xffffffff);
     static cRandom* instance;
     bool countOnly;
-    uint32_t seq;
+    uint64_t seq;
 };
 
 #endif /* RANDOM_HPP_ */

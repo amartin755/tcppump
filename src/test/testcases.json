@@ -1813,6 +1813,56 @@
             "expected_output": "01\n0002\n00000003\n0000000000000004"
         },
         {
+            "name": "random-val-int-6--ok",
+            "input": [
+                "raw(byte=*[1-5])",
+                "raw(be16=*[1-5])",
+                "raw(be32=*[1-5])",
+                "raw(be64=*[1-5])"
+            ],
+            "expected_output": "01\n0002\n00000003\n0000000000000004"
+        },
+        {
+            "name": "random-val-int-7--ok",
+            "input": [
+                "raw(byte=*[1-4])",
+                "raw(le16=*[1-4])",
+                "raw(le32=*[1-4])",
+                "raw(le64=*[1-4])"
+            ],
+            "expected_output": "01\n0200\n03000000\n0400000000000000"
+        },
+        {
+            "name": "random-val-int-8--ok",
+            "input": [
+                "raw(byte=*[1-5])",
+                "raw(le16=*[1-5])",
+                "raw(le32=*[1-5])",
+                "raw(le64=*[1-5])"
+            ],
+            "expected_output": "01\n0200\n03000000\n0400000000000000"
+        },
+        {
+            "name": "random-val-int-9--ok",
+            "input": [
+                "raw(byte=*[1-3])",
+                "raw(byte=*[1-3])",
+                "raw(byte=*[1-3])",
+                "raw(byte=*[1-3])"
+            ],
+            "expected_output": "01\n02\n03\n01"
+        },
+        {
+            "name": "random-val-int-10--ok",
+            "input": [
+                "raw(be64=*[1-3])",
+                "raw(be64=*[1-3])",
+                "raw(be64=*[1-3])",
+                "raw(be64=*[1-3])"
+            ],
+            "expected_output": "0000000000000001\n0000000000000002\n0000000000000003\n0000000000000001"
+        },
+        {
             "name": "random-val-stream-1--ok",
             "input": [
                 "raw(stream=*)"

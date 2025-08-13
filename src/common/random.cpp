@@ -21,6 +21,7 @@
 #include <ctime>
 #include <cassert>
 #include <cstring>
+#include <random>
 
 #include "bug.hpp"
 #include "random.hpp"
@@ -58,29 +59,14 @@ cRandom::cRandom () : countOnly(false), seq(0)
         std::srand ((unsigned)std::time (NULL));
 }
 
-uint64_t cRandom::rand64 (uint64_t min, uint64_t max)
+uint64_t cRandom::rand (uint64_t min, uint64_t max)
 {
-#if HAVE_BIG_ENDIAN
-    uint64_t r = (uint64_t)rand () << 32 | ((uint64_t)rand ());
-#else
-    uint64_t r = (uint64_t)rand () | ((uint64_t)rand ()) << 32;
-#endif
+    assert (instance);
+    uint64_t r = instance->countOnly ? instance->sequence() : instance->pseudoRandom();
+
     uint64_t range = max - min + 1;
 
     // if min...max spans the entire 64bit area, range becomes zero
-    // In this case we need special handling to avoid division by zero.
-    return (range ? r % range : r) + min;
-}
-
-
-uint32_t cRandom::rand (uint32_t min, uint32_t max)
-{
-    assert (instance);
-    uint32_t r = instance->countOnly ? instance->sequence() : instance->pseudoRandom();
-
-    uint32_t range = max - min + 1;
-
-    // if min...max spans the entire 32bit area, range becomes zero
     // In this case we need special handling to avoid division by zero.
     return (range ? r % range : r) + min;
 }
@@ -117,7 +103,7 @@ void cRandom::rand (void* p, size_t len /*number of bytes*/)
             }
             while (len >= 4)
             {
-                *(uint32_t*)p8 = instance->pseudoRandom ();
+                *(uint32_t*)p8 = (uint32_t)instance->pseudoRandom ();
                 p8 += 4;
                 len -= 4;
             }
@@ -136,21 +122,13 @@ void cRandom::rand (void* p, size_t len /*number of bytes*/)
     }
 }
 
-uint32_t cRandom::pseudoRandom (void)
+uint64_t cRandom::pseudoRandom (void)
 {
-    // TODO use lockless replacement for rand
-    // see https://en.wikipedia.org/wiki/Xorshift#xoroshiro
-    // and https://prng.di.unimi.it/xoroshiro128plus.c
-    #if RAND_MAX < 65535
-        return ((uint8_t)std::rand() << 24 | (uint8_t)std::rand() << 16 | ((uint8_t)std::rand() << 8) | (uint8_t)std::rand());
-    #elif RAND_MAX < 4294967295
-        return ((uint16_t)std::rand() << 16) | (uint16_t)std::rand();
-    #else
-        return (uint32_t)std::rand();
-    #endif
+    static thread_local std::mt19937_64 rng(std::random_device{}());
+    return rng();
 }
 
-uint32_t cRandom::sequence (void)
+uint64_t cRandom::sequence (void)
 {
     return seq++;
 }
