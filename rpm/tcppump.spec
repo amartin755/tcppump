@@ -7,6 +7,7 @@ URL: https://github.com/amartin755/tcppump
 Source: %{name}_%{version}.tar.gz
 BuildRequires: cmake
 BuildRequires: libpcap-devel
+Requires: libpcap
 
 %description
 tcppump is a simple ethernet packet generator that allows users to create and send custom packets over the network.
