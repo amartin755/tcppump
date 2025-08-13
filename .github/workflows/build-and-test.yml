@@ -69,6 +69,7 @@ jobs:
       run: sudo setcap cap_net_raw+eip ./tcppump
 
     - name: Test
+      id: ctest_step
       working-directory: ${{github.workspace}}/build
       shell: bash
       run: ctest -C ${{ matrix.build }}
@@ -81,3 +82,9 @@ jobs:
           ${{github.workspace}}/build/CMakeFiles/CMakeError.log
           ${{github.workspace}}/build/CMakeFiles/CMakeOutput.log
           ${{github.workspace}}/build/Testing/Temporary/LastTest.log
+
+    - uses: actions/upload-artifact@v4
+      if: failure() && steps.ctest_step.outcome == 'failure'
+      with:
+        name: tcppump-exe-${{ matrix.build }}-${{ matrix.os }}
+        path: ${{ github.workspace }}\bin\
