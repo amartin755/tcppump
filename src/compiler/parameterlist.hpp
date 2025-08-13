@@ -99,12 +99,20 @@ public:
     virtual const uint8_t* asStream   (size_t&, size_t)
     {
         BUG ("no raw access for optional parameters");
+#if defined(HAVE_MSVC)
+        __assume(0);
+#else
         return NULL;
+#endif
     }
     virtual const uint8_t* asEmbedded (bool&, size_t&)
     {
         BUG ("no raw access for optional parameters");
+#if defined(HAVE_MSVC)
+        __assume(0);
+#else
         return NULL;
+#endif
     }
     virtual cIPv4  asIPv4  () const {return ip;}
     virtual cUUID  asUUID () {return cUUID::fromZero();}
