@@ -11,7 +11,7 @@ tcppump (0.3.1-1) unstable; urgency=low
     memory corruptions
     undefined behaviour in release builds
     memory leaks
-  * Build support for CLAN
+  * Build support for CLANG
   * Build options for ASAN, UBSAN and valgrind
   * Privileges are no longer needed, when packets are written to pcap files.
 

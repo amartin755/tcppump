@@ -144,7 +144,7 @@ For debugging add:
 
 
 ### Packet Syntax
-For details see [Packet Reference](PACKET_REFERENCE.md)
+For details see [Packet Reference](doc/PACKET_REFERENCE.md)
 ```
 raw                 raw custom packet
  optional
