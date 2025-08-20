@@ -3,6 +3,21 @@
 SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 PROJROOT=$(realpath $SCRIPTPATH/..)
 
+# if no destination path is provided we use the current directoy
+if [ $# -gt 0 ] && [ -d "$1" ]; then
+    DEST=$1
+else
+    DEST=$(pwd)
+fi
+DEST=$(realpath $DEST)
+
+# ensure that the destination directory is outside of the source directory
+if [ "$DEST" = "$PROJROOT" ] || [[ "$DEST" == "$PROJROOT"/* ]]; then
+    echo "Error: Destination directory '$DEST' must not be within/below '$PROJROOT'."
+    exit 1
+fi
+
+# create VERSION file
 cd $PROJROOT
 VERSION=$(awk 'BEGIN{RS=")"} /project[ \t]*\(/ {if (match($0, /VERSION[ \t]*([0-9]+\.[0-9]+\.[0-9]+)/, m)) print m[1]}' CMakeLists.txt)
 
@@ -22,8 +37,8 @@ fi
     echo "TAG     $GIT_TAG"
 } > VERSION
 
-cd $PROJROOT/..
-
+# create TAR ball
+cd $DEST
 TARBALL=tcppump_$VERSION.tar.gz
 tar --transform s/tcppump/tcppump-$VERSION/ \
     --exclude=bin \
@@ -34,7 +49,7 @@ tar --transform s/tcppump/tcppump-$VERSION/ \
     --exclude=.github \
     --exclude=build \
     -czvf $TARBALL \
-    tcppump
+    $PROJROOT/../tcppump
 
 sha256sum $TARBALL > $TARBALL.sha256
-gpg --detach-sig $TARBALL
+gpg --detach-sig --yes $TARBALL
