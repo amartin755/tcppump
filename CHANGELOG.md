@@ -1,5 +1,5 @@
 # 0.4.0
-_UNRELEASED_
+_UNRELEASED_, Andreas Martin <netnag@mailbox.org>
 
 ## Added
 - compiler: IPv6 support with limitations (no fragmentation). Can be used as transport for UDP, GRE and VXLAN.
@@ -28,7 +28,7 @@ _UNRELEASED_
 
 
 # 0.3.1
-_2024-12-29 18:53:01 +0100_
+_2024-12-29 18:53:01 +0100_, Andreas Martin <netnag@mailbox.org>
 
 ## Added
 - build: support for CLANG
@@ -46,7 +46,7 @@ _2024-12-29 18:53:01 +0100_
 
 
 # 0.3.0
-_2021-08-08 13:19:24 +0200_
+_2021-08-08 13:19:24 +0200_, Andreas Martin <netnag@mailbox.org>
 
 ## Added
 - core: Configureable MTU (--mtu option)
@@ -60,7 +60,7 @@ _2021-08-08 13:19:24 +0200_
 
 
 # 0.2.1
-_2021-04-18 12:29:30 +0200_
+_2021-04-18 12:29:30 +0200_, Andreas Martin <netnag@mailbox.org>
 
 ## Added
 - core: Speed of pcap replaying can be controlled via optional parameter --pcap option
@@ -71,7 +71,7 @@ _2021-04-18 12:29:30 +0200_
 
 
 # 0.2.0
-_2021-03-31 11:51:48 +0200_
+_2021-03-31 11:51:48 +0200_, Andreas Martin <netnag@mailbox.org>
 
 ## Added
 - compiler: new protocols STP/RSTP, UDP, TCP, IGMP, ICMPv4
@@ -92,6 +92,7 @@ _2021-03-31 11:51:48 +0200_
 
 
 # 0.1.0
-_2020-09-11 20:17:42 +0200_
+_2020-09-11 20:17:42 +0200_, Andreas Martin <netnag@mailbox.org>
 
+## Added
 - Initial release

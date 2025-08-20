@@ -1,5 +1,5 @@
 Name: tcppump
-Version: 0.4.0
+Version: x.y.z
 Release: 1%{?dist}
 Summary: A simple ethernet packet generator
 License: GPL-3
@@ -32,7 +32,3 @@ fi
 
 %files
 /usr/bin/tcppump
-
-%changelog
-* Sun Jun 29 2025 Andreas Martin <netnag@mailbox.org> - 0.4.0-1
-- Initial RPM package creation.

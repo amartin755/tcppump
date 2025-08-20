@@ -33,8 +33,8 @@ WORKDIR=$(mktemp -d)
 mkdir -p $WORKDIR/SOURCES
 mkdir -p $WORKDIR/SPECS
 cp $TARBALL $WORKDIR/SOURCES
-cp $PROJROOT/rpm/tcppump.spec $WORKDIR/SPECS
 cd $WORKDIR/SPECS
+tar --strip-components=2 -xvzf $WORKDIR/SOURCES/$TARBALL tcppump-$VERSION/rpm/tcppump.spec
 rpmbuild -ba tcppump.spec --define "_topdir $WORKDIR"
 find ../RPMS -type f -name "*.rpm" -exec cp {} "$CURRDIR" \;
 
