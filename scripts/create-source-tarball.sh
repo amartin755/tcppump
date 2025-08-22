@@ -3,7 +3,7 @@
 # usage: $0 [--clean] [<destination>]
 #
 # Options:
-#   --clean       Cleans the working directory to the latest git state
+#   --no-clean   don't clean the working directory to the latest git state
 
 # Arguments:
 #   destination  Destination directory where the created tarball is stored.
@@ -11,7 +11,7 @@
 
 SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 PROJROOT=$(realpath $SCRIPTPATH/..)
-CLEAN_WORKDIR=0
+CLEAN_WORKDIR=1
 DEST=$(pwd)
 
 cleanup()
@@ -24,23 +24,17 @@ trap cleanup EXIT
 
 # parse arguments
 for arg in "$@"; do
-    if [ "$arg" = "--clean" ]; then
-        CLEAN_WORKDIR=1
+    if [ "$arg" = "--no-clean" ]; then
+        CLEAN_WORKDIR=0
     fi
 done
 if [ $# -gt 0 ]; then
-    if [ "${!#}" != "--clean" ]; then
+    if [ "${!#}" != "--no-clean" ]; then
         DEST=${!#}
     fi
 fi
 
 DEST=$(realpath $DEST)
-
-# ensure that the destination directory is outside of the source directory
-if [ "$DEST" = "$PROJROOT" ] || [[ "$DEST" == "$PROJROOT"/* ]]; then
-    echo "Error: Destination directory '$DEST' must not be within/below '$PROJROOT'."
-    exit 1
-fi
 
 # copy current working directory to a temporary directory
 echo "# copy current working dir to tmp dir"

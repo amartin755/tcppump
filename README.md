@@ -56,22 +56,7 @@ Linux
 * libpcap development files (libpcap-devel)
 
 ### How to build
-#### Setup
-
-    cd tcpdump
-    cmake -B build
-
-If you use 'msys' and 'make' add the following cmake parameter:
-
-    -G "MSYS Makefiles"
-
-For debugging add:
-
-    -DCMAKE_BUILD_TYPE=Debug
-
-#### Build
-
-    cmake --build build
+For details see [Build Instructions](doc/BUILD.md)
 
 
 ## How to use
