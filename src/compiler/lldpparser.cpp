@@ -144,24 +144,29 @@ void cLldpParser::portID ()
 
 void cLldpParser::systemCapabilities ()
 {
-    uint16_t c = 0, e = 0;
-    c =  m_params.findParameter (PAR_LLDP_SYSCAP_OTHER.syntax,       (uint32_t)0)->asInt16(0, 1)       |
-        (m_params.findParameter (PAR_LLDP_SYSCAP_REPEATER.syntax,    (uint32_t)0)->asInt16(0, 1) << 1) |
-        (m_params.findParameter (PAR_LLDP_SYSCAP_BRIDGE.syntax,      (uint32_t)0)->asInt16(0, 1) << 2) |
-        (m_params.findParameter (PAR_LLDP_SYSCAP_WLAN.syntax,        (uint32_t)0)->asInt16(0, 1) << 3) |
-        (m_params.findParameter (PAR_LLDP_SYSCAP_ROUTER.syntax,      (uint32_t)0)->asInt16(0, 1) << 4) |
-        (m_params.findParameter (PAR_LLDP_SYSCAP_PHONE.syntax,       (uint32_t)0)->asInt16(0, 1) << 5) |
-        (m_params.findParameter (PAR_LLDP_SYSCAP_DOCSIS.syntax,      (uint32_t)0)->asInt16(0, 1) << 6) |
-        (m_params.findParameter (PAR_LLDP_SYSCAP_STATION.syntax,     (uint32_t)1)->asInt16(0, 1) << 7);
-    e =  m_params.findParameter (PAR_LLDP_SYSCAP_OTHER_EN.syntax,    (uint32_t)0)->asInt16(0, 1)       |
-        (m_params.findParameter (PAR_LLDP_SYSCAP_REPEATER_EN.syntax, (uint32_t)0)->asInt16(0, 1) << 1) |
-        (m_params.findParameter (PAR_LLDP_SYSCAP_BRIDGE_EN.syntax,   (uint32_t)0)->asInt16(0, 1) << 2) |
-        (m_params.findParameter (PAR_LLDP_SYSCAP_WLAN_EN.syntax,     (uint32_t)0)->asInt16(0, 1) << 3) |
-        (m_params.findParameter (PAR_LLDP_SYSCAP_ROUTER_EN.syntax,   (uint32_t)0)->asInt16(0, 1) << 4) |
-        (m_params.findParameter (PAR_LLDP_SYSCAP_PHONE_EN.syntax,    (uint32_t)0)->asInt16(0, 1) << 5) |
-        (m_params.findParameter (PAR_LLDP_SYSCAP_DOCSIS_EN.syntax,   (uint32_t)0)->asInt16(0, 1) << 6) |
-        (m_params.findParameter (PAR_LLDP_SYSCAP_STATION_EN.syntax,  (uint32_t)1)->asInt16(0, 1) << 7);
-    m_packet.addSystemCapabilities (c, e);
+    uint32_t c = 0, e = 0;
+    c =  m_params.findParameter (PAR_LLDP_SYSCAP_OTHER.syntax,       (uint32_t)0x8000)->asInt16(0, 1)       |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_REPEATER.syntax,    (uint32_t)0x8000)->asInt16(0, 1) << 1) |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_BRIDGE.syntax,      (uint32_t)0x8000)->asInt16(0, 1) << 2) |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_WLAN.syntax,        (uint32_t)0x8000)->asInt16(0, 1) << 3) |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_ROUTER.syntax,      (uint32_t)0x8000)->asInt16(0, 1) << 4) |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_PHONE.syntax,       (uint32_t)0x8000)->asInt16(0, 1) << 5) |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_DOCSIS.syntax,      (uint32_t)0x8000)->asInt16(0, 1) << 6) |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_STATION.syntax,     (uint32_t)0x8000)->asInt16(0, 1) << 7);
+    e =  m_params.findParameter (PAR_LLDP_SYSCAP_OTHER_EN.syntax,    (uint32_t)0x8000)->asInt16(0, 1)       |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_REPEATER_EN.syntax, (uint32_t)0x8000)->asInt16(0, 1) << 1) |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_BRIDGE_EN.syntax,   (uint32_t)0x8000)->asInt16(0, 1) << 2) |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_WLAN_EN.syntax,     (uint32_t)0x8000)->asInt16(0, 1) << 3) |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_ROUTER_EN.syntax,   (uint32_t)0x8000)->asInt16(0, 1) << 4) |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_PHONE_EN.syntax,    (uint32_t)0x8000)->asInt16(0, 1) << 5) |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_DOCSIS_EN.syntax,   (uint32_t)0x8000)->asInt16(0, 1) << 6) |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_STATION_EN.syntax,  (uint32_t)0x8000)->asInt16(0, 1) << 7);
+
+    // only add the TLV if at least one capability is set
+    if (c == 0x7F8000 && e == 0x7F8000)
+        return;
+
+    m_packet.addSystemCapabilities (uint16_t(c & 0x7fff), uint16_t(e & 0x7fff));
 }
 
 void cLldpParser::managementAddress ()
@@ -641,7 +646,7 @@ void cLldpParser::pnPTCPStatus ()
         uint32_t orange = m_params.findParameter (PAR_LLDP_PN_PTCP_ORANGE.syntax, uint32_t (0))->asInt32 (0, 0x7fffffff);
         uint32_t green = m_params.findParameter (PAR_LLDP_PN_PTCP_GREEN.syntax, uint32_t (0))->asInt32 (0, 0x7fffffff);
 
-        m_packet.addPnPtcpStatus (mac, uuidDomain.asArray(), uuidIRDATA.asArray(), 
+        m_packet.addPnPtcpStatus (mac, uuidDomain.asArray(), uuidIRDATA.asArray(),
             period, !!period,
             redOrange, !!redOrange,
             orange, !!orange,
