@@ -2780,6 +2780,34 @@
                 "lldp(port-id=\"Hello World\")"
             ],
             "expected_output": "0180c200000e8023456789ab88cc0207048023456789ab040c0748656c6c6f20576f726c64060200780000"
+        },
+        {
+            "name": "lldp-22--ok",
+            "input": [
+                "lldp(ttl=120)"
+            ],
+            "expected_output": "0180c200000e8023456789ab88cc0207048023456789ab0407038023456789ab060200780000"
+        },
+        {
+            "name": "lldp-23--ok",
+            "input": [
+                "lldp(ttl=0)"
+            ],
+            "expected_output": "0180c200000e8023456789ab88cc0207048023456789ab0407038023456789ab060200000000"
+        },
+        {
+            "name": "lldp-24--ok",
+            "input": [
+                "lldp(ttl=0xffff)"
+            ],
+            "expected_output": "0180c200000e8023456789ab88cc0207048023456789ab0407038023456789ab0602ffff0000"
+        },
+        {
+            "name": "lldp-25--nok",
+            "input": [
+                "lldp(ttl=0x10000)"
+            ],
+            "expected_output": "error: Range of parameter violated"
         }
     ]
 }
