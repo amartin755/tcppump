@@ -2633,6 +2633,83 @@
             ],
             "expected_output": "Successfully sent 2 packet.",
             "live": true
+        },
+        {
+            "name": "lldp-01--ok",
+            "input": [
+                "lldp()"
+            ],
+            "expected_output": "0180c200000e8023456789ab88cc0207048023456789ab0407038023456789ab060200780000"
+        },
+        {
+            "name": "lldp-02--nok",
+            "input": [
+                "lldp(chassis-id-type=1)"
+            ],
+            "expected_output": "Missing parameter 'chassis-id'"
+        },
+        {
+            "name": "lldp-03--ok",
+            "input": [
+                "lldp(chassis-id-type=0, chassis-id=303132333435)"
+            ],
+            "expected_output": "0180c200000e8023456789ab88cc0207003031323334350407038023456789ab060200780000"
+        },
+        {
+            "name": "lldp-04--ok",
+            "input": [
+                "lldp(chassis-id-type=1, chassis-id=303132333435)"
+            ],
+            "expected_output": "0180c200000e8023456789ab88cc0207013031323334350407038023456789ab060200780000"
+        },
+        {
+            "name": "lldp-05--ok",
+            "input": [
+                "lldp(chassis-id-type=255, chassis-id=303132333435)"
+            ],
+            "expected_output": "0180c200000e8023456789ab88cc0207ff3031323334350407038023456789ab060200780000"
+        },
+        {
+            "name": "lldp-06--nok",
+            "input": [
+                "lldp(chassis-id-type=256, chassis-id=303132333435)"
+            ],
+            "expected_output": "error: Range of parameter violated"
+        },
+        {
+            "name": "lldp-07--ok",
+            "input": [
+                "lldp(chassis-id=1.2.3.4)"
+            ],
+            "expected_output": "0180c200000e8023456789ab88cc02060501010203040407038023456789ab060200780000"
+        },
+        {
+            "name": "lldp-08--ok",
+            "input": [
+                "lldp(chassis-id=0123::cdef)"
+            ],
+            "expected_output": "0180c200000e8023456789ab88cc021205020123000000000000000000000000cdef0407038023456789ab060200780000"
+        },
+        {
+            "name": "lldp-09--ok",
+            "input": [
+                "lldp(chassis-id=fe:dc:ba:98:76:54)"
+            ],
+            "expected_output": "0180c200000e8023456789ab88cc020704fedcba9876540407038023456789ab060200780000"
+        },
+        {
+            "name": "lldp-10--nok",
+            "input": [
+                "lldp(chassis-id=lksdoe)"
+            ],
+            "expected_output": "error: Invalid parameter value"
+        },
+        {
+            "name": "lldp-11--ok",
+            "input": [
+                "lldp(chassis-id=\"Hello World\")"
+            ],
+            "expected_output": "0180c200000e8023456789ab88cc020c0748656c6c6f20576f726c640407038023456789ab060200780000"
         }
     ]
 }
