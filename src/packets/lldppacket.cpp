@@ -89,7 +89,7 @@ void cLldpPacket::addPortID (const cIPv4& ip)
 void cLldpPacket::addPortID (const cIPv6& ip)
 {
     uint8_t portID[sizeof(ip) + 1];
-    portID[0] = 1; // ipV4(1)
+    portID[0] = 2; // ipV6(2)
     std::memcpy (&portID[1], ip.getAsArray(), sizeof (ip));
 
     addPortID (4, portID, sizeof (portID));

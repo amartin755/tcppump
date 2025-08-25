@@ -2710,6 +2710,76 @@
                 "lldp(chassis-id=\"Hello World\")"
             ],
             "expected_output": "0180c200000e8023456789ab88cc020c0748656c6c6f20576f726c640407038023456789ab060200780000"
+        },
+        {
+            "name": "lldp-12--nok",
+            "input": [
+                "lldp(port-id-type=1)"
+            ],
+            "expected_output": "Missing parameter 'port-id'"
+        },
+        {
+            "name": "lldp-13--ok",
+            "input": [
+                "lldp(port-id-type=0, port-id=303132333435)"
+            ],
+            "expected_output": "0180c200000e8023456789ab88cc0207048023456789ab040700303132333435060200780000"
+        },
+        {
+            "name": "lldp-14--ok",
+            "input": [
+                "lldp(port-id-type=1, port-id=303132333435)"
+            ],
+            "expected_output": "0180c200000e8023456789ab88cc0207048023456789ab040701303132333435060200780000"
+        },
+        {
+            "name": "lldp-15--ok",
+            "input": [
+                "lldp(port-id-type=255, port-id=303132333435)"
+            ],
+            "expected_output": "0180c200000e8023456789ab88cc0207048023456789ab0407ff303132333435060200780000"
+        },
+        {
+            "name": "lldp-16--nok",
+            "input": [
+                "lldp(port-id-type=256, port-id=303132333435)"
+            ],
+            "expected_output": "error: Range of parameter violated"
+        },
+        {
+            "name": "lldp-17--ok",
+            "input": [
+                "lldp(port-id=1.2.3.4)"
+            ],
+            "expected_output": "0180c200000e8023456789ab88cc0207048023456789ab0406040101020304060200780000"
+        },
+        {
+            "name": "lldp-18--ok",
+            "input": [
+                "lldp(port-id=0123::cdef)"
+            ],
+            "expected_output": "0180c200000e8023456789ab88cc0207048023456789ab041204020123000000000000000000000000cdef060200780000"
+        },
+        {
+            "name": "lldp-19--ok",
+            "input": [
+                "lldp(port-id=fe:dc:ba:98:76:54)"
+            ],
+            "expected_output": "0180c200000e8023456789ab88cc0207048023456789ab040703fedcba987654060200780000"
+        },
+        {
+            "name": "lldp-20--nok",
+            "input": [
+                "lldp(port-id=lksdoe)"
+            ],
+            "expected_output": "error: Invalid parameter value"
+        },
+        {
+            "name": "lldp-21--ok",
+            "input": [
+                "lldp(port-id=\"Hello World\")"
+            ],
+            "expected_output": "0180c200000e8023456789ab88cc0207048023456789ab040c0748656c6c6f20576f726c64060200780000"
         }
     ]
 }
