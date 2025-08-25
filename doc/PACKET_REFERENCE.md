@@ -1125,3 +1125,71 @@ Optionally all vlan tag parameters and all optional ipv4 parameters (see above) 
     # full blown GRE packet with random payload and wrong checksum
     gre(dmac=12:23:34:34:44:44, dip=1.2.3.4, protocol=1234, key=1, seq=10, chksum=44444, payload=*);
 
+### Link Layer Discovery Protocol (LLDP)
+IEEE 802.1AB-2016, IEEE802.1Q-2022, IEEE802.3-2023, IEC61158-6-10
+#### Protocol Specifier
+
+    lldp
+
+#### Parameters
+Destination EUI-48 MAC address.
+
+    dmac (optional, default 01:80:C2:00:00:0E)
+
+Source EUI-48 MAC address. If ommited, address of the network interface is used
+
+    smac (optional)
+
+__Chassis ID TLV__ (IEEE 802.1AB-2016)
+
+Chassis ID (EUI-48 MAC, IPv4/6 address, bytestream; default: interface MAC address)
+
+    chassis-id (optional if parameter `chassis-id-type` is not set)
+
+Chassis ID Subtype (integer: range 0-255; automatically set, if parameter `chassis-id` is provided)
+
+    chassis-id-type (optional)
+
+__Port ID TLV__ (IEEE 802.1AB-2016)
+
+Port ID (EUI-48 MAC, IPv4/6 address, bytestream; default: interface MAC address)
+
+    port-id (optional if parameter `port-id-type` is not set)
+
+Port ID Subtype (integer: range 0-255; automatically set, if parameter `port-id` is provided)
+
+    port-id-type (optional)
+
+__Time To Live TLV__ (IEEE 802.1AB-2016)
+
+Time to live (integer: range 0-65535; default 120)
+
+    ttl (optional)
+
+__Port Description TLV__ (IEEE 802.1AB-2016)
+
+Port description (string/stream). If not set, the TLV will be omitted.
+
+    port-desc (optional)
+
+__System Name TLV__ (IEEE 802.1AB-2016)
+
+System name (string/stream). If not set, the TLV will be omitted.
+
+    sys-name (optional)
+
+__System Description TLV__ (IEEE 802.1AB-2016)
+
+System description (string/stream). If not set, the TLV will be omitted.
+
+    sys-desc (optional)
+
+__System Capabilities TLV__ (IEEE 802.1AB-2016)
+
+
+
+Optionally all vlan tag parameters (see above) are also allowed.
+
+#### Examples
+    # minimal stardard conforming packet with default values
+    lldp()
