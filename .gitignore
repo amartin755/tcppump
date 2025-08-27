@@ -7,3 +7,4 @@ libpcap/
 /Debug/
 .vscode/
 VERSION
+*.exe

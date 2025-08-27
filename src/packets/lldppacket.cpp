@@ -23,7 +23,8 @@
 
 static const uint8_t OID_802_1[3] = {0x00,0x80,0xC2};
 static const uint8_t OID_802_3[3] = {0x00,0x12,0x0F};
-static const uint8_t OID_TIA[3]   = {0x00,0x12,0xBB};
+// for future use
+// avoid clang warning  static const uint8_t OID_TIA[3]   = {0x00,0x12,0xBB};
 static const uint8_t OID_PNO[3]   = {0x00,0x0E,0xCF};
 
 

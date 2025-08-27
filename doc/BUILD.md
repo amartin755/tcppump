@@ -59,9 +59,9 @@ sudo apt install gdb valgrind libasan6 libubsan1 dh-make
 ### Windows
 
 **Required for building:**
-- [Visual Studio](https://visualstudio.microsoft.com/) (2015 or newer, with C++ development tools)  
+- Visual Studio (2015 or newer, with C++ development tools) or MSYS2 (ucrt64, mingw32, mingw64 or clang64)
 - [CMake](https://cmake.org/download/)  
-- [WinPcap](https://www.winpcap.org/) or [Npcap](https://nmap.org/npcap/) (recommended replacement for WinPcap)  
+- [WinPcap](https://www.winpcap.org/) or [Npcap](https://nmap.org/npcap/) (recommended replacement for WinPcap). Note: The [WinPcap development files](https://www.winpcap.org/devel.htm) are automatically downloaded during the build.
 
 ---
 

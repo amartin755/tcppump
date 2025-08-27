@@ -119,12 +119,21 @@ bool cPcapFileIO::read (struct pcap_pkthdr **header, const u_char **data)
             Console::PrintError ("Could not read file %s.\n", m_path);
             printError (pcap_geterr (m_fileHandle));
         }
-        if (m_firstRead)
+        else
         {
-            m_offset = (*header)->ts;
-            m_firstRead = false;
+            if (m_firstRead)
+            {
+                m_offset.set ((*header)->ts);
+                m_firstRead = false;
+                (*header)->ts.tv_sec = 0;
+                (*header)->ts.tv_usec = 0;
+            }
+            else
+            {
+                cTimeval t((*header)->ts);
+                (*header)->ts = t.sub (m_offset).timeval();
+            }
         }
-        (*header)->ts = cTimeval ((*header)->ts).sub(m_offset).timeval();
     }
     return !(m_fileError || m_eof);
 }
@@ -254,6 +263,7 @@ void cPcapFileIO::unitTest (const char* file)
 
     while ((f = obj.read (&t, &len)) != NULL)
     {
+        Console::PrintDebug("%" PRIu64 " %" PRIu64 "\n", t.us(), indata[n].t);
         BUG_IF_NOT (t.us() == indata[n].t);
         BUG_IF_NOT ((size_t)len == indata[n].binlen);
         BUG_IF_NOT (!memcmp (f, indata[n].bin, indata[n].binlen));

@@ -40,22 +40,10 @@ Supported protocols and packet formats
 **Note: This tool is currently in the alpha stage. Interfaces and functionality are subject to change.**
 
 ## Build instructions
-`tcppump` has been successfully compiled on **Ubuntu Linux (x64)** using **GCC** and on **Windows 10/11** using **MinGW32, MinGW64 (MSYS2), and MSVC.**
+`tcppump` has been successfully compiled on **Ubuntu Linux (x64)** using **GCC** or **CLANG** and on **Windows 10/11** using **MinGW32, MinGW64 (MSYS2), and MSVC.**
 In theory, it should also compile with other **C++11-compatible** compilers, though this has not been tested.
 
-### Dependencies
-* cmake >= V3.13
-* C++11 compiler
 
-Windows
-* WinPcap
-* WinPcap Developer' Pack (see http://www.winpcap.org/devel.htm and http://www.winpcap.org/install/bin/WpdPack_4_1_2.zip)
-
-Linux
-* libpcap
-* libpcap development files (libpcap-devel)
-
-### How to build
 For details see [Build Instructions](doc/BUILD.md)
 
 

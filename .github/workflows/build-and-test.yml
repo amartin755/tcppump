@@ -27,8 +27,32 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
-        build: [Debug, Release]
+        os: [ubuntu-latest, windows-latest, ubuntu-22.04]
+#        build: [Release, Debug]
+        build: [Release]
+        toolchain: [default, ucrt64, mingw32, clang64, clang]
+        exclude:
+          # never combine linux with msys2 (windows) toolchains
+          - os: ubuntu-latest
+            toolchain: mingw32
+          - os: ubuntu-latest
+            toolchain: mingw64
+          - os: ubuntu-latest
+            toolchain: ucrt64
+          - os: ubuntu-latest
+            toolchain: clang64
+          - os: ubuntu-22.04
+            toolchain: mingw32
+          - os: ubuntu-22.04
+            toolchain: mingw64
+          - os: ubuntu-22.04
+            toolchain: ucrt64
+          - os: ubuntu-22.04
+            toolchain: clang64
+          # never combine windows with non-msys2 clang toolchain
+          - os: windows-latest
+            toolchain: clang
+    name: ${{ matrix.os }} ${{ matrix.toolchain }} ${{ matrix.build }}
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -36,55 +60,106 @@ jobs:
       with:
         submodules: 'true'
 
-    - name: Get first active Ethernet adapter name (windows)
+    - name: Tweak environment
+      shell: bash
+      run: |
+        isWindows=false
+        isLinux=false
+        case "${{ matrix.os }}" in
+          windows-*) isWindows=true ;;
+          ubuntu-*)  isLinux=true ;;
+        esac
+        echo "isWindows=$isWindows" >> $GITHUB_ENV
+        echo "isLinux=$isLinux" >> $GITHUB_ENV
+        if [ "$isWindows" = "true" ] && [ "${{ matrix.toolchain }}" != "default" ]; then
+          echo "isMSYS2=true" >> $GITHUB_ENV
+        else
+          echo "isMSYS2=false" >> $GITHUB_ENV
+        fi
+        if [ "$isLinux" = "true" ] && [ "${{ matrix.toolchain }}" = "clang" ]; then
+          echo "CC=/usr/bin/clang" >> $GITHUB_ENV
+          echo "CXX=/usr/bin/clang++" >> $GITHUB_ENV
+        fi
+    - name: Get first active Ethernet adapter name (windows-only)
       id: get_adapter
-      shell: pwsh
       if: matrix.os == 'windows-latest'
       run: |
         ipconfig /all
         $name = (Get-NetAdapter | Where-Object {$_.Status -eq "Up" -and $_.InterfaceDescription -like "*Network Adapter*"} | Select-Object -First 1 -ExpandProperty Name)
         echo "adapter_name=$name" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
-    - name: Install Dependencies (linux)
-      if: matrix.os == 'ubuntu-latest'
+    - name: Install Runtime Dependencies (windows-only)
+      if: matrix.os == 'windows-latest'
+      # install winpcap, we use an old version of nmap which offers a silent installer and includes winpcap
+      # TODO: we should cache the downloaded file
+      run: Invoke-WebRequest -Uri "https://nmap.org/dist/nmap-7.12-setup.exe" -OutFile "nmap.exe"; Start-Process -Filepath "nmap.exe" -ArgumentList /S
+
+    - name: Install Build Dependencies (linux-only)
+      if: env.isLinux == 'true'
       # install libpcap and its development files
       run: sudo apt-get --assume-yes install libpcap-dev
 
-    - name: Install Dependencies (windows)
-      if: matrix.os == 'windows-latest'
-      # install winpcap, we use an old version of nmap which offers an silent installer and includes winpcap
-      run: Invoke-WebRequest -Uri "https://nmap.org/dist/nmap-7.12-setup.exe" -OutFile "nmap.exe"; Start-Process -Filepath "nmap.exe" -ArgumentList /S
+    - name: 'Setup MSYS2 (windows-msys-only)'
+      if: env.isMSYS2 == 'true'
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: ${{matrix.toolchain}}
+        update: true
+        install: >-
+          git
+          make
+        pacboy: >-
+          toolchain:p
+          cmake:p
+          ninja:p
 
-    - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{ matrix.build }} -DTEST_NET_ADAPTER="${{ steps.get_adapter.outputs.adapter_name }}"
+    - name: Configure and build (msys2-only)
+      working-directory: ${{github.workspace}}
+      if: env.isMSYS2 == 'true'
+      shell: msys2 {0}
+      run: |
+        cmake -B build -DCMAKE_BUILD_TYPE=${{ matrix.build }} -DTEST_NET_ADAPTER="${{ steps.get_adapter.outputs.adapter_name }}"
+        cmake --build build --target tcppump unittest --config ${{ matrix.build }}
 
-    - name: Build
-      run: cmake --build ${{github.workspace}}/build --target tcppump unittest --config ${{ matrix.build }}
+    - name: Configure and build
+      working-directory: ${{github.workspace}}
+      if: env.isMSYS2 != 'true'
+      run: |
+        cmake -B build -DCMAKE_BUILD_TYPE=${{ matrix.build }} -DTEST_NET_ADAPTER="${{ steps.get_adapter.outputs.adapter_name }}"
+        cmake --build build --target tcppump unittest --config ${{ matrix.build }}
 
-    - name: Assign priviledges (linux)
-      if: matrix.os == 'ubuntu-latest'
+    - name: Assign priviledges (linux-only)
+      if: env.isLinux == 'true'
       working-directory: ${{github.workspace}}/bin
-      shell: bash
       # give raw capabilities to tcppump
       run: sudo setcap cap_net_raw+eip ./tcppump
 
     - name: Test
+      if: env.isMSYS2 != 'true'
       id: ctest_step
       working-directory: ${{github.workspace}}/build
-      shell: bash
       run: ctest -C ${{ matrix.build }}
 
-    - uses: actions/upload-artifact@v4
+    - name: Test (msys2-only)
+      if: env.isMSYS2 == 'true'
+      id: ctest_step2
+      working-directory: ${{github.workspace}}/build
+      shell: msys2 {0}
+      run: ctest -C ${{ matrix.build }}
+
+    - name: Upload logfiles
+      uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: logfiles-${{ matrix.build }}-${{ matrix.os }}
+        name: logfiles-${{ matrix.build }}-${{ matrix.os }}-${{ matrix.toolchain }}
         path: |
           ${{github.workspace}}/build/CMakeFiles/CMakeError.log
           ${{github.workspace}}/build/CMakeFiles/CMakeOutput.log
           ${{github.workspace}}/build/Testing/Temporary/LastTest.log
 
-    - uses: actions/upload-artifact@v4
-      if: failure() && steps.ctest_step.outcome == 'failure'
+    - name: Upload binaries in case of failed test
+      uses: actions/upload-artifact@v4
+      if: failure() && (steps.ctest_step.outcome == 'failure' || steps.ctest_step2.outcome == 'failure')
       with:
-        name: tcppump-exe-${{ matrix.build }}-${{ matrix.os }}
+        name: tcppump-exe-${{ matrix.build }}-${{ matrix.os }}-${{ matrix.toolchain }}
         path: ${{ github.workspace }}\bin\
