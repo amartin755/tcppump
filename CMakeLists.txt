@@ -2,7 +2,7 @@
 ###############################################################################
 #
 # TCPPUMP <https://github.com/amartin755/tcppump>
-# Copyright (C) 2012-2024 Andreas Martin (netnag@mailbox.org)
+# Copyright (C) 2012-2025 Andreas Martin (netnag@mailbox.org)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,12 +24,12 @@ project (tcppump VERSION 0.4.0
                  LANGUAGES CXX)
 ###############################################################################
 
-option(WITH_UNITTESTS "enable/disable generation of unittest binary (default ON)" ON)
-option(WITH_ASAN      "enable/disable address sanitizer (default OFF)" OFF)
-option(WITH_UBSAN     "enable/disable undefined behavior sanitizer (default OFF)" OFF)
-option(WITH_GCOV      "enable/disable code coverage profiling (default OFF)" OFF)
-option(WITH_WERROR    "enable/disable compilation warnings as errors (default OFF)" OFF)
-option(WITH_CPPCHECK  "enable/disable cppcheck (default OFF)" OFF)
+option (WITH_UNITTESTS "enable/disable generation of unittest binary (default ON)" ON)
+option (WITH_ASAN      "enable/disable address sanitizer (default OFF)" OFF)
+option (WITH_UBSAN     "enable/disable undefined behavior sanitizer (default OFF)" OFF)
+option (WITH_GCOV      "enable/disable code coverage profiling (default OFF)" OFF)
+option (WITH_WERROR    "enable/disable compilation warnings as errors (default OFF)" OFF)
+option (WITH_CPPCHECK  "enable/disable cppcheck (default OFF)" OFF)
 
 # set output directories to "bin"
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
@@ -52,8 +52,8 @@ include (utils)
 # compiler settings
 ###############################################################################
 # C++11 is required
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set (CMAKE_CXX_STANDARD 11)
+set (CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # warning level
 if (MSVC)
@@ -89,7 +89,7 @@ if (WITH_GCOV)
 endif ()
 
 if (WITH_CPPCHECK)
-    find_program(CMAKE_CXX_CPPCHECK NAMES cppcheck)
+    find_program (CMAKE_CXX_CPPCHECK NAMES cppcheck)
     if (CMAKE_CXX_CPPCHECK)
         list (APPEND CMAKE_CXX_CPPCHECK "--check-level=exhaustive")
         list (APPEND CMAKE_CXX_CPPCHECK "--enable=warning")
@@ -122,7 +122,7 @@ if (NOT PCAP_INCLUDE_DIR)
     find_path (PCAP_INCLUDE_DIR NAMES pcap/pcap.h pcap.h PATHS ${PCAPDIR})
 endif ()
 if (NOT PCAP_LIBRARY)
-    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    if (CMAKE_SIZEOF_VOID_P EQUAL 8)
         # 64 bits
         set (PCAPDIR ${PROJECT_SOURCE_DIR}/libpcap/lib/x64)
     else ()
@@ -166,9 +166,9 @@ else ()
     check_symbol_exists (inet_ntop "arpa/inet.h" HAVE_NTOP)
 endif ()
 
-check_include_files("sys/time.h" HAVE_SYSTIME_H)
-check_include_files("arpa/inet.h" HAVE_ARPAINET_H)
-check_include_files("byteswap.h" HAVE_BYTESWAP_H)
+check_include_files ("sys/time.h" HAVE_SYSTIME_H)
+check_include_files ("arpa/inet.h" HAVE_ARPAINET_H)
+check_include_files ("byteswap.h" HAVE_BYTESWAP_H)
 set (CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE=1)
 check_symbol_exists (memmem "string.h" HAVE_MEMMEM)
 set (CMAKE_REQUIRED_DEFINITIONS "")
@@ -210,7 +210,7 @@ endif ()
 if (HAVE_BIG_ENDIAN)
     add_compile_definitions (HAVE_BIG_ENDIAN)
 endif ()
-#add_compile_definitions (_FORTIFY_SOURCE=2)
+
 if (WIN32)
     add_compile_definitions (HAVE_WINDOWS)
     # min. supported version is Windows 7
@@ -220,7 +220,6 @@ if (WIN32)
     add_compile_definitions (WIN32_LEAN_AND_MEAN)
     # suppress warnings about unsafe strncpy and friends
     add_compile_definitions (_CRT_SECURE_NO_WARNINGS)
-    # because of the workaround below we explicitly flag usage of ms visual c compiler
     if (MSVC)
         add_compile_definitions (HAVE_MSVC)
     endif ()
@@ -233,8 +232,8 @@ add_compile_definitions (GIT_COMMIT_SHORT="${GIT_COMMIT_SHORT}")
 add_compile_definitions (GIT_TAG="${GIT_TAG}")
 add_compile_definitions (GIT_BRANCH="${GIT_BRANCH}")
 add_compile_definitions (GIT_COMMIT="${GIT_COMMIT}")
-string(TIMESTAMP BUILD_TIME "%Y-%m-%d %H:%M" UTC)
-add_compile_definitions(BUILD_TIME="${BUILD_TIME}")
+string (TIMESTAMP BUILD_TIME "%Y-%m-%d %H:%M" UTC)
+add_compile_definitions (BUILD_TIME="${BUILD_TIME}")
 add_compile_definitions (BUILD_TYPE="${CMAKE_BUILD_TYPE}")
 
 message (STATUS "Build infos:")
