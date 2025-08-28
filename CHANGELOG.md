@@ -9,6 +9,7 @@ _UNRELEASED_, Andreas Martin <netnag@mailbox.org>
 - compiler: basic datatypes for raw protocol. Pakets can be set up via generic building blocks, like integer data types, IP adresses and others.
 - core: new parameter 'help [protocol]' prints available protocols and syntax.
 - build: cppcheck build option (WITH_CPPCHECK)
+- build: official support for clang and msys2 toolchains
 
 ## Changed
 - packaging: native deb and rpm-package creation without CPack.
