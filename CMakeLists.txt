@@ -179,7 +179,9 @@ test_big_endian (HAVE_BIG_ENDIAN)
 # preprocessor definitions
 ###############################################################################
 add_compile_definitions (APP_VERSION="${PROJECT_VERSION}")
-add_compile_definitions ($<$<CONFIG:Release>:_FORTIFY_SOURCE=2>)
+if (NOT WITH_ASAN)
+    add_compile_definitions ($<$<CONFIG:Release>:_FORTIFY_SOURCE=2>)
+endif ()
 
 if (HAVE_WS2)
     add_compile_definitions (HAVE_WS2)
