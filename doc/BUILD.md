@@ -9,7 +9,7 @@ This document provides detailed instructions for compiling and packaging the **t
 | Platform        | Build Dependencies                                                                 | Development/Debugging Tools                         |
 |-----------------|------------------------------------------------------------------------------------|----------------------------------------------------|
 | **Fedora**      | `sudo dnf install gcc g++ cmake libpcap-devel git`                                | `sudo dnf install gdb libasan libubsan valgrind rpm-build` |
-| **Debian/Ubuntu** | `sudo apt update && sudo apt install build-essential cmake libpcap-dev git`      | `sudo apt install gdb valgrind libasan6 libubsan1 dh-make` |
+| **Debian/Ubuntu** | `sudo apt update && sudo apt install build-essential cmake libpcap-dev git`      | `sudo apt install gdb valgrind libasan6 libubsan1 dh-make devscripts` |
 | **Windows**     | Visual Studio (2015+), MinGW, CMake, [WinPcap](https://www.winpcap.org/) or [Npcap](https://nmap.org/npcap/) | – |
 
 ---
@@ -48,7 +48,7 @@ sudo apt install build-essential cmake libpcap-dev git
 
 **Recommended for development/debugging:**
 ```bash
-sudo apt install gdb valgrind libasan6 libubsan1 dh-make
+sudo apt install gdb valgrind libasan6 libubsan1 dh-make devscripts
 ```
 
 > ⚠️ Package names may vary slightly across Debian/Ubuntu versions.  
