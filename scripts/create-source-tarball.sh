@@ -41,8 +41,8 @@ DEST=$(realpath $DEST)
 echo "# copy current working dir to tmp dir"
 TMP_DIR=$(mktemp -d)
 cp -r $PROJROOT $TMP_DIR
-cd $TMP_DIR/tcppump
-echo "$TMP_DIR/tcppump"
+cd $TMP_DIR/$(basename $PROJROOT)
+echo "$TMP_DIR/$(basename $PROJROOT)"
 
 # revert to last commit and remove all untracked files
 if [ "$CLEAN_WORKDIR" -eq 1 ]; then
@@ -75,7 +75,7 @@ echo
 
 # add version to working dir name
 cd $TMP_DIR
-mv $TMP_DIR/tcppump $TMP_DIR/tcppump-$VERSION 
+mv $TMP_DIR/$(basename $PROJROOT) $TMP_DIR/tcppump-$VERSION 
 cd $TMP_DIR/tcppump-$VERSION
 
 set -e
