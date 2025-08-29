@@ -11,7 +11,7 @@ DUMPABLE=$(sysctl -n fs.suid_dumpable)
 
 # clean configure and build
 ###############################################################################
-$SCRIPTPATH/clean-build.sh -t -a -C RelWithDebInfo -T CLANG -B $BUILDDIRNAME
+$SCRIPTPATH/utils/clean-build.sh -t -a -C RelWithDebInfo -T CLANG -B $BUILDDIRNAME
 
 
 # run all ctest cases

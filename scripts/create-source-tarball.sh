@@ -11,6 +11,7 @@
 
 SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 PROJROOT=$(realpath $SCRIPTPATH/..)
+UTILSPATH=$(realpath $SCRIPTPATH/utils)
 CLEAN_WORKDIR=1
 DEST=$(pwd)
 
@@ -52,7 +53,7 @@ fi
 
 # create VERSION file based on project version and git commit and tag
 echo "# collecting version and git infos"
-VERSION=$(awk 'BEGIN{RS=")"} /project[ \t]*\(/ {if (match($0, /VERSION[ \t]*([0-9]+\.[0-9]+\.[0-9]+)/, m)) print m[1]}' CMakeLists.txt)
+VERSION=$($UTILSPATH/get-project-version.py < $PROJROOT/CMakeLists.txt)
 
 if git rev-parse --is-inside-work-tree &> /dev/null; then
     GIT_COMMIT=$(git rev-parse HEAD)
@@ -81,12 +82,12 @@ set -e
 # update version in rpm spec file and add changelog
 echo "# create RPM spec file"
 sed -i -E "s/^(Version:[[:space:]]*).*/\1$VERSION/" "rpm/tcppump.spec"
-$SCRIPTPATH/convert-changelog.py --package tcppump --format rpm < CHANGELOG.md >> rpm/tcppump.spec
+$UTILSPATH/convert-changelog.py --package tcppump --format rpm < CHANGELOG.md >> rpm/tcppump.spec
 echo "rpm/tcppump.spec"
 
 # create debian changelog
 echo "# create Debian changelog"
-$SCRIPTPATH/convert-changelog.py --package tcppump --format debian < CHANGELOG.md > debian/changelog
+$UTILSPATH/convert-changelog.py --package tcppump --format debian < CHANGELOG.md > debian/changelog
 echo "debian/changelog"
 
 # create tarball, hash and signature

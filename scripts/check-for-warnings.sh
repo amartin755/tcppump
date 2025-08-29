@@ -10,14 +10,14 @@ cd $PROJROOT
 
 
 echo "----- GCC Debug ----"
-$SCRIPTPATH/clean-build.sh -t -e -C Debug -T GCC -B $BUILDDIRNAME
+$SCRIPTPATH/utils/clean-build.sh -t -e -C Debug -T GCC -B $BUILDDIRNAME
 
 echo "----- GCC Release ----"
-$SCRIPTPATH/clean-build.sh -t -e -C Release -T GCC -B $BUILDDIRNAME
+$SCRIPTPATH/utils/clean-build.sh -t -e -C Release -T GCC -B $BUILDDIRNAME
 
 echo "----- CLANG Debug ----"
-$SCRIPTPATH/clean-build.sh -t -e -C Debug -T CLANG -B $BUILDDIRNAME
+$SCRIPTPATH/utils/clean-build.sh -t -e -C Debug -T CLANG -B $BUILDDIRNAME
 
 echo "----- CLANG Release ----"
-$SCRIPTPATH/clean-build.sh -t -e -C Release -T CLANG -B $BUILDDIRNAME
+$SCRIPTPATH/utils/clean-build.sh -t -e -C Release -T CLANG -B $BUILDDIRNAME
 

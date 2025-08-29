@@ -4,7 +4,7 @@ set -e
 
 
 SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
-PROJROOT=$(realpath $SCRIPTPATH/..)
+PROJROOT=$(realpath $SCRIPTPATH/../..)
 
 BUILDDIRNAME=build
 BUILD_CONIFG=Debug

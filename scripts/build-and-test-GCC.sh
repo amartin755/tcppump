@@ -10,7 +10,7 @@ PROJROOT=$(realpath $SCRIPTPATH/..)
 
 # clean configure and build
 ###############################################################################
-$SCRIPTPATH/clean-build.sh -t -C RelWithDebInfo -T GCC -B $BUILDDIRNAME
+$SCRIPTPATH/utils/clean-build.sh -t -C RelWithDebInfo -T GCC -B $BUILDDIRNAME
 
 
 # run all ctest cases
