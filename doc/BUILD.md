@@ -34,7 +34,7 @@ sudo dnf install gcc g++ cmake libpcap-devel git
 
 **Recommended for development/debugging:**
 ```bash
-sudo dnf install gdb libasan libubsan valgrind rpm-build
+sudo dnf install gdb libasan libubsan valgrind rpm-build libcap
 ```
 
 
@@ -48,7 +48,7 @@ sudo apt install build-essential cmake libpcap-dev git
 
 **Recommended for development/debugging:**
 ```bash
-sudo apt install gdb valgrind libasan6 libubsan1 dh-make devscripts
+sudo apt install gdb valgrind libasan6 libubsan1 dh-make devscripts libcap2-bin
 ```
 
 > ⚠️ Package names may vary slightly across Debian/Ubuntu versions.  
