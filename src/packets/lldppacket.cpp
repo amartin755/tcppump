@@ -187,7 +187,7 @@ void cLldpPacket::addPortVID (uint16_t pvid)
     const size_t tlvLen = sizeof (pvid) + sizeof (OID_802_1) + 1;
     cFixedByteArray* value = new cFixedByteArray (tlvLen);
     value->append (OID_802_1, sizeof (OID_802_1));
-    *value << TLV_SUBTYPE_802_1::PVID << toBE16(pvid);
+    *value << (uint8_t)TLV_SUBTYPE_802_1::PVID << toBE16(pvid);
 
     m_tlvs.push_back (std::pair<uint8_t, const cFixedByteArray*> (OUI, value));
 }
@@ -197,7 +197,7 @@ void cLldpPacket::addProtocolVID (uint16_t ppvid, bool supported, bool enabled)
     const size_t tlvLen = sizeof (OID_802_1) + 1 + 1 + sizeof (ppvid);
     cFixedByteArray* value = new cFixedByteArray (tlvLen);
     value->append (OID_802_1, sizeof (OID_802_1));
-    *value << TLV_SUBTYPE_802_1::PROTO_VID;
+    *value << (uint8_t)TLV_SUBTYPE_802_1::PROTO_VID;
     *value << (uint8_t)((supported ? 2 : 0) | (enabled ? 4 : 0));
     *value << toBE16 (ppvid);
 
@@ -209,7 +209,7 @@ void cLldpPacket::addVlanName (uint16_t vid, const uint8_t* name, uint8_t nameLe
     const size_t tlvLen = sizeof (OID_802_1) + 1 + sizeof (vid) + sizeof (nameLength) + nameLength;
     cFixedByteArray* value = new cFixedByteArray (tlvLen);
     value->append (OID_802_1, sizeof (OID_802_1));
-    *value << TLV_SUBTYPE_802_1::VLAN_NAME << toBE16 (vid) << nameLength;
+    *value << (uint8_t)TLV_SUBTYPE_802_1::VLAN_NAME << toBE16 (vid) << nameLength;
     value->append (name, nameLength);
 
     m_tlvs.push_back (std::pair<uint8_t, const cFixedByteArray*> (OUI, value));
@@ -220,7 +220,7 @@ void cLldpPacket::addProtocolIdentity (const uint8_t* protocol, uint8_t protocol
     const size_t tlvLen = sizeof (OID_802_1) + 1 + sizeof (protocolLength) + protocolLength;
     cFixedByteArray* value = new cFixedByteArray (tlvLen);
     value->append (OID_802_1, sizeof (OID_802_1));
-    *value << TLV_SUBTYPE_802_1::PROTO_IDENTITY << protocolLength;
+    *value << (uint8_t)TLV_SUBTYPE_802_1::PROTO_IDENTITY << protocolLength;
     value->append (protocol, protocolLength);
 
     m_tlvs.push_back (std::pair<uint8_t, const cFixedByteArray*> (OUI, value));
@@ -231,7 +231,7 @@ void cLldpPacket::addVIDUsageDigest (uint32_t digest)
     const size_t tlvLen = sizeof (OID_802_1) + 1 + sizeof (digest);
     cFixedByteArray* value = new cFixedByteArray (tlvLen);
     value->append (OID_802_1, sizeof (OID_802_1));
-    *value << TLV_SUBTYPE_802_1::VID_USAGE_DIGEST << toBE32(digest);
+    *value << (uint8_t)TLV_SUBTYPE_802_1::VID_USAGE_DIGEST << toBE32(digest);
 
     m_tlvs.push_back (std::pair<uint8_t, const cFixedByteArray*> (OUI, value));
 }
@@ -241,7 +241,7 @@ void cLldpPacket::addManagementVID (uint16_t vid)
     const size_t tlvLen = sizeof (vid) + sizeof (OID_802_1) + 1;
     cFixedByteArray* value = new cFixedByteArray (tlvLen);
     value->append (OID_802_1, sizeof (OID_802_1));
-    *value << TLV_SUBTYPE_802_1::MGT_VID << toBE16(vid);
+    *value << (uint8_t)TLV_SUBTYPE_802_1::MGT_VID << toBE16(vid);
 
     m_tlvs.push_back (std::pair<uint8_t, const cFixedByteArray*> (OUI, value));
 }
@@ -251,7 +251,7 @@ void cLldpPacket::addLinkAggregation (bool capability, bool status, uint8_t port
     const size_t tlvLen = sizeof (status) + sizeof (portID) + sizeof (OID_802_1) + 1;
     cFixedByteArray* value = new cFixedByteArray (tlvLen);
     value->append (OID_802_1, sizeof (OID_802_1));
-    *value << TLV_SUBTYPE_802_1::LINK_AGGR;
+    *value << (uint8_t)TLV_SUBTYPE_802_1::LINK_AGGR;
     *value << (uint8_t)((capability ? 1U : 0U) | (status ? 2U : 0U) | ((portType & 3) << 2));
     *value << toBE32(portID);
 
@@ -263,7 +263,7 @@ void cLldpPacket::addCongestionNotification (uint8_t cnpv, uint8_t ready)
     const size_t tlvLen = sizeof (cnpv) + sizeof (ready) + sizeof (OID_802_1) + 1;
     cFixedByteArray* value = new cFixedByteArray (tlvLen);
     value->append (OID_802_1, sizeof (OID_802_1));
-    *value << TLV_SUBTYPE_802_1::CONGESTION_NOTIFICATION << cnpv << ready;
+    *value << (uint8_t)TLV_SUBTYPE_802_1::CONGESTION_NOTIFICATION << cnpv << ready;
 
     m_tlvs.push_back (std::pair<uint8_t, const cFixedByteArray*> (OUI, value));
 }
@@ -276,7 +276,7 @@ void cLldpPacket::addETSConfig (bool willing, bool cbs, uint8_t maxTCs,
         + sizeof (prioTable) + sizeof (tcBandwidthTabel) + sizeof (tsaAssignmentTable);
     cFixedByteArray* value = new cFixedByteArray (tlvLen);
     value->append (OID_802_1, sizeof (OID_802_1));
-    *value << TLV_SUBTYPE_802_1::ETS_CONFIG;
+    *value << (uint8_t)TLV_SUBTYPE_802_1::ETS_CONFIG;
     *value << (uint8_t)((willing ? 0x80 : 0) | (cbs ? 0x40 : 0) | (maxTCs & 7));
     *value << toBE32 (prioTable) << toBE64 (tcBandwidthTabel) << toBE64 (tsaAssignmentTable);
 
@@ -290,7 +290,7 @@ void cLldpPacket::addETSRecommendation (uint32_t prioTable, uint64_t tcBandwidth
         + sizeof (prioTable) + sizeof (tcBandwidthTabel) + sizeof (tsaAssignmentTable);
     cFixedByteArray* value = new cFixedByteArray (tlvLen);
     value->append (OID_802_1, sizeof (OID_802_1));
-    *value << TLV_SUBTYPE_802_1::ETS_RECOMM;
+    *value << (uint8_t)TLV_SUBTYPE_802_1::ETS_RECOMM;
     *value << (uint8_t)0;
     *value << toBE32 (prioTable) << toBE64 (tcBandwidthTabel) << toBE64 (tsaAssignmentTable);
 
@@ -304,7 +304,7 @@ void cLldpPacket::addPFCCtrlConfig (bool willing, bool mbc, uint8_t pfcCap, uint
         + sizeof (pfcEnable);
     cFixedByteArray* value = new cFixedByteArray (tlvLen);
     value->append (OID_802_1, sizeof (OID_802_1));
-    *value << TLV_SUBTYPE_802_1::PFC_CONFIG;
+    *value << (uint8_t)TLV_SUBTYPE_802_1::PFC_CONFIG;
     *value << (uint8_t)((willing ? 0x80 : 0) | (mbc ? 0x40 : 0) | (pfcCap & 0x0f));
     *value << pfcEnable;
 
@@ -319,7 +319,7 @@ void cLldpPacket::addApplicationPriority (const std::vector<uint8_t>& prio,
     const size_t tlvLen = sizeof (OID_802_1) + 1 + 1 + prio.size() * 3;
     cFixedByteArray* value = new cFixedByteArray (tlvLen);
     value->append (OID_802_1, sizeof (OID_802_1));
-    *value << TLV_SUBTYPE_802_1::APP_PRIO;
+    *value << (uint8_t)TLV_SUBTYPE_802_1::APP_PRIO;
     *value << (uint8_t)0;
     for (size_t n = 0; n < prio.size(); n++)
     {
@@ -335,7 +335,7 @@ void cLldpPacket::addEVB (uint8_t evbBridgeStatus, uint8_t evbStationStatus,
     const size_t tlvLen = sizeof (OID_802_1) + 1 + 5;
     cFixedByteArray* value = new cFixedByteArray (tlvLen);
     value->append (OID_802_1, sizeof (OID_802_1));
-    *value << TLV_SUBTYPE_802_1::EVB;
+    *value << (uint8_t)TLV_SUBTYPE_802_1::EVB;
     *value << evbBridgeStatus;
     *value << evbStationStatus;
     *value << uint8_t(((r & 7) << 5 ) | (rte & 0x1f));
@@ -351,7 +351,7 @@ void cLldpPacket::addCDCP (bool role, bool SComp, uint16_t chnCap,
     const size_t tlvLen = sizeof (OID_802_1) + 1 + 4 + scid_svid.size() * 3;
     cFixedByteArray* value = new cFixedByteArray (tlvLen);
     value->append (OID_802_1, sizeof (OID_802_1));
-    *value << TLV_SUBTYPE_802_1::CDCP;
+    *value << (uint8_t)TLV_SUBTYPE_802_1::CDCP;
     *value << uint8_t((role ? 0x80 : 0) | (SComp ? 8 : 0));
     *value << uint8_t(0);
     *value << uint8_t((chnCap >> 8) & 0xf);
@@ -374,7 +374,7 @@ void cLldpPacket::addApplicationVLAN (const std::vector<uint16_t>& vid,
     const size_t tlvLen = sizeof (OID_802_1) + 1 + vid.size() * 4;
     cFixedByteArray* value = new cFixedByteArray (tlvLen);
     value->append (OID_802_1, sizeof (OID_802_1));
-    *value << TLV_SUBTYPE_802_1::APP_VLAN;
+    *value << (uint8_t)TLV_SUBTYPE_802_1::APP_VLAN;
     for (size_t n = 0; n < vid.size(); n++)
     {
         uint32_t vlan = ((uint32_t)toBE16(vid[n] & 0x03ff) << 20) | (uint32_t(sel[n] & 7) << 16) | toBE16 (proto[n]);
@@ -388,7 +388,7 @@ void cLldpPacket::addMacPhyStatus (bool autonegSup, bool autonegStatus, uint16_t
     const size_t tlvLen = sizeof (OID_802_3) + 1 + 1 + sizeof (autnegAdvCap) + sizeof (mautype);
     cFixedByteArray* value = new cFixedByteArray (tlvLen);
     value->append (OID_802_3, sizeof (OID_802_3));
-    *value << TLV_SUBTYPE_802_3::MAC_PHY;
+    *value << (uint8_t)TLV_SUBTYPE_802_3::MAC_PHY;
     *value << (uint8_t)((autonegSup ? 1 : 0) | (autonegStatus ? 2 : 0));
     *value << toBE16 (autnegAdvCap);
     *value << toBE16 (mautype);
@@ -402,7 +402,7 @@ cFixedByteArray* cLldpPacket::preparePowerViaMDI (size_t tlvLen,
 {
     cFixedByteArray* value = new cFixedByteArray (tlvLen);
     value->append (OID_802_3, sizeof (OID_802_3));
-    *value << TLV_SUBTYPE_802_3::POWER_VIA_MDI;
+    *value << (uint8_t)TLV_SUBTYPE_802_3::POWER_VIA_MDI;
     *value << (uint8_t)(
         (portClassPSE ? 1 : 0)    |
         (pwrSupSupported ? 2 : 0) |
@@ -450,7 +450,7 @@ void cLldpPacket::addMaxFrameSize (uint16_t size)
     const size_t tlvLen = sizeof (OID_802_3) + 1 + sizeof (size);
     cFixedByteArray* value = new cFixedByteArray (tlvLen);
     value->append (OID_802_3, sizeof (OID_802_3));
-    *value << TLV_SUBTYPE_802_3::MAX_FRAME_SIZE;
+    *value << (uint8_t)TLV_SUBTYPE_802_3::MAX_FRAME_SIZE;
     *value << toBE16 (size);
 
     m_tlvs.push_back (std::pair<uint8_t, const cFixedByteArray*> (OUI, value));
@@ -462,7 +462,7 @@ void cLldpPacket::addEEE (uint16_t txTw, uint16_t rxTw, uint16_t fbTw, uint16_t 
     cFixedByteArray* value = new cFixedByteArray (tlvLen);
 
     value->append (OID_802_3, sizeof (OID_802_3));
-    *value << TLV_SUBTYPE_802_3::ENERGY_EFFICIENT_ETH;
+    *value << (uint8_t)TLV_SUBTYPE_802_3::ENERGY_EFFICIENT_ETH;
     *value << toBE16 (txTw);
     *value << toBE16 (rxTw);
     *value << toBE16 (fbTw);
@@ -478,7 +478,7 @@ void cLldpPacket::addEEEFastWake (bool tx, bool rx, bool echoTx, bool echoRx)
     cFixedByteArray* value = new cFixedByteArray (tlvLen);
 
     value->append (OID_802_3, sizeof (OID_802_3));
-    *value << TLV_SUBTYPE_802_3::EEE_FAST_WAKE;
+    *value << (uint8_t)TLV_SUBTYPE_802_3::EEE_FAST_WAKE;
     *value << uint8_t (tx ? 1 : 0);
     *value << uint8_t (rx ? 1 : 0);
     *value << uint8_t (echoTx ? 1 : 0);
@@ -494,7 +494,7 @@ void cLldpPacket::addPnDelay (uint32_t portRxDelayLocal, uint32_t portRxDelayRem
         sizeof (portTxDelayLocal) + sizeof (portTxDelayRemote) + sizeof (cableDelay);
     cFixedByteArray* value = new cFixedByteArray (tlvLen);
     value->append (OID_PNO, sizeof (OID_PNO));
-    *value << TLV_SUBTYPE_PN::PN_DELAY;
+    *value << (uint8_t)TLV_SUBTYPE_PN::PN_DELAY;
     *value << toBE32 (portRxDelayLocal);
     *value << toBE32 (portRxDelayRemote);
     *value << toBE32 (portTxDelayLocal);
@@ -510,7 +510,7 @@ void cLldpPacket::addPnPortStatus (uint16_t rtc2PortStatus, uint8_t rtc3State,
     const size_t tlvLen = sizeof (OID_PNO) + 1 + 2 + 2;
     cFixedByteArray* value = new cFixedByteArray (tlvLen);
     value->append (OID_PNO, sizeof (OID_PNO));
-    *value << TLV_SUBTYPE_PN::PN_PORT_STATUS;
+    *value << (uint8_t)TLV_SUBTYPE_PN::PN_PORT_STATUS;
     *value << toBE16 (rtc2PortStatus);
     uint16_t rtc3portState =
         uint16_t (rtc3State & 7) |
@@ -527,7 +527,7 @@ void cLldpPacket::addPnAlias (const uint8_t* aliasName, uint8_t len)
     const size_t tlvLen = sizeof (OID_PNO) + 1 + len;
     cFixedByteArray* value = new cFixedByteArray (tlvLen);
     value->append (OID_PNO, sizeof (OID_PNO));
-    *value << TLV_SUBTYPE_PN::PN_ALIAS;
+    *value << (uint8_t)TLV_SUBTYPE_PN::PN_ALIAS;
     value->append (aliasName, len);
 
     m_tlvs.push_back (std::pair<uint8_t, const cFixedByteArray*> (OUI, value));
@@ -538,7 +538,7 @@ void cLldpPacket::addPnMrpPortStatus (const uint8_t* domainUUID, uint16_t mrrtPo
     const size_t tlvLen = sizeof (OID_PNO) + 1 + 16 + sizeof (mrrtPortState);
     cFixedByteArray* value = new cFixedByteArray (tlvLen);
     value->append (OID_PNO, sizeof (OID_PNO));
-    *value << TLV_SUBTYPE_PN::PN_MRP_PORT_STATUS;
+    *value << (uint8_t)TLV_SUBTYPE_PN::PN_MRP_PORT_STATUS;
     value->append (domainUUID, 16);
     *value << toBE16 (mrrtPortState & 3);
 
@@ -550,7 +550,7 @@ void cLldpPacket::addPnChassisMac (const cMacAddress& chassisMac)
     const size_t tlvLen = sizeof (OID_PNO) + 1 + chassisMac.size();
     cFixedByteArray* value = new cFixedByteArray (tlvLen);
     value->append (OID_PNO, sizeof (OID_PNO));
-    *value << TLV_SUBTYPE_PN::PN_CHASSIS_MAC;
+    *value << (uint8_t)TLV_SUBTYPE_PN::PN_CHASSIS_MAC;
     value->append (chassisMac.get(), chassisMac.size());
 
     m_tlvs.push_back (std::pair<uint8_t, const cFixedByteArray*> (OUI, value));
@@ -566,7 +566,7 @@ void cLldpPacket::addPnPtcpStatus (
     const size_t tlvLen = sizeof (OID_PNO) + 1 + 6 + 2*16 + 4*4;
     cFixedByteArray* value = new cFixedByteArray (tlvLen);
     value->append (OID_PNO, sizeof (OID_PNO));
-    *value << TLV_SUBTYPE_PN::PN_PTCP_STATUS;
+    *value << (uint8_t)TLV_SUBTYPE_PN::PN_PTCP_STATUS;
     value->append (masterSourceMac.get(), masterSourceMac.size());
     value->append (ptcpSubdomainUUID, 16);
     value->append (irdataUUID, 16);
@@ -583,7 +583,7 @@ void cLldpPacket::addPnMauTypeExtension (uint16_t mauTypeExtension)
     const size_t tlvLen = sizeof (OID_PNO) + 1 + sizeof (mauTypeExtension);
     cFixedByteArray* value = new cFixedByteArray (tlvLen);
     value->append (OID_PNO, sizeof (OID_PNO));
-    *value << TLV_SUBTYPE_PN::PN_MAUTYPE_EXT;
+    *value << (uint8_t)TLV_SUBTYPE_PN::PN_MAUTYPE_EXT;
     *value << toBE16 (mauTypeExtension);
 
     m_tlvs.push_back (std::pair<uint8_t, const cFixedByteArray*> (OUI, value));
@@ -594,7 +594,7 @@ void cLldpPacket::addPnMrpInterconnectPortStatus (uint16_t domainID, uint16_t ro
     const size_t tlvLen = sizeof (OID_PNO) + 1 + sizeof (domainID) + sizeof (role) + sizeof (position);
     cFixedByteArray* value = new cFixedByteArray (tlvLen);
     value->append (OID_PNO, sizeof (OID_PNO));
-    *value << TLV_SUBTYPE_PN::PN_MRPIC_PORT_STATUS;
+    *value << (uint8_t)TLV_SUBTYPE_PN::PN_MRPIC_PORT_STATUS;
     *value << toBE16 (domainID) << toBE16 (role) << toBE16 (position);
 
     m_tlvs.push_back (std::pair<uint8_t, const cFixedByteArray*> (OUI, value));
@@ -605,7 +605,7 @@ void cLldpPacket::addPnNmeDomainUUID (const uint8_t* nmeSubdomainUUID)
     const size_t tlvLen = sizeof (OID_PNO) + 1 + 16;
     cFixedByteArray* value = new cFixedByteArray (tlvLen);
     value->append (OID_PNO, sizeof (OID_PNO));
-    *value << TLV_SUBTYPE_PN::PN_NME_DOMAIN_UUID;
+    *value << (uint8_t)TLV_SUBTYPE_PN::PN_NME_DOMAIN_UUID;
     value->append (nmeSubdomainUUID, 16);
 
     m_tlvs.push_back (std::pair<uint8_t, const cFixedByteArray*> (OUI, value));
@@ -626,7 +626,7 @@ void cLldpPacket::addPnNmeNameUUID (const uint8_t* nmeNameUUID)
     const size_t tlvLen = sizeof (OID_PNO) + 1 + 16;
     cFixedByteArray* value = new cFixedByteArray (tlvLen);
     value->append (OID_PNO, sizeof (OID_PNO));
-    *value << TLV_SUBTYPE_PN::PN_NME_NAME_UUID;
+    *value << (uint8_t)TLV_SUBTYPE_PN::PN_NME_NAME_UUID;
     value->append (nmeNameUUID, 16);
 
     m_tlvs.push_back (std::pair<uint8_t, const cFixedByteArray*> (OUI, value));
@@ -637,7 +637,7 @@ void cLldpPacket::addPnNmeParameterUUID (const uint8_t* nmeParameterUUID)
     const size_t tlvLen = sizeof (OID_PNO) + 1 + 16;
     cFixedByteArray* value = new cFixedByteArray (tlvLen);
     value->append (OID_PNO, sizeof (OID_PNO));
-    *value << TLV_SUBTYPE_PN::PN_NME_PAR_UUID;
+    *value << (uint8_t)TLV_SUBTYPE_PN::PN_NME_PAR_UUID;
     value->append (nmeParameterUUID, 16);
 
     m_tlvs.push_back (std::pair<uint8_t, const cFixedByteArray*> (OUI, value));
