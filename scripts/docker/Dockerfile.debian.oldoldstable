@@ -18,7 +18,8 @@
 #
 ###############################################################################
 
-FROM debian:bookworm-slim
+# bullseye
+FROM debian:oldoldstable-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 

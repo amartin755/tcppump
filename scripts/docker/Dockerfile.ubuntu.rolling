@@ -18,8 +18,8 @@
 #
 ###############################################################################
 
-# latest TLS version
-FROM ubuntu:latest
+# latest release (regardless of LTS status)
+FROM ubuntu:rolling
 
 ENV DEBIAN_FRONTEND=noninteractive
 

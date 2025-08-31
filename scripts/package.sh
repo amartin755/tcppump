@@ -1,34 +1,59 @@
 #!/bin/bash
+set -euo pipefail
 
-SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
-PROJROOT=$(realpath $SCRIPTPATH/..)
-UTILSPATH=$(realpath $SCRIPTPATH/utils)
+# Determine important paths
+SCRIPTPATH="$(cd -- "$(dirname "$0")" >/dev/null 2>&1 && pwd -P)"
+PROJROOT="$(realpath "$SCRIPTPATH/..")"
+UTILSPATH="$(realpath "$SCRIPTPATH/utils")"
+DEST="$PROJROOT/RELEASE"
 
-DEST=$PROJROOT/RELEASE
+# Get version
+VERSION="$("$UTILSPATH/get-project-version.py" < "$PROJROOT/CMakeLists.txt")"
+TARBALL_NAME="tcppump_${VERSION}.tar.gz"
 
-VERSION=$($UTILSPATH/get-project-version.py < $PROJROOT/CMakeLists.txt)
+# Clean and prepare release directory
+rm -rf "$DEST"
+mkdir -p "$DEST"
 
-rm -rf $DEST
-mkdir $DEST
-
-if ! $SCRIPTPATH/create-source-tarball.sh $DEST; then
-    echo "kdkdkdk"
+# Create source tarball
+if ! "$SCRIPTPATH/create-source-tarball.sh" "$DEST"; then
+    echo "error: Failed to create source tarball" >&2
     exit 1
 fi
-TARBALL=$(basename $DEST)/tcppump_$VERSION.tar.gz
-DEST=$(basename $DEST)
-echo $TARBALL $DEST
 
-# TODO some kind of table makes more sense
-mkdir $DEST/debian.trixie
-$SCRIPTPATH/run-container.sh debian.trixie scripts/create-deb.sh $TARBALL $DEST/debian.trixie
-mkdir $DEST/debian.bookworm
-$SCRIPTPATH/run-container.sh debian.bookworm scripts/create-deb.sh $TARBALL $DEST/debian.bookworm
-mkdir $DEST/ubuntu.lts
-$SCRIPTPATH/run-container.sh ubuntu.lts scripts/create-deb.sh $TARBALL $DEST/ubuntu.lts
-mkdir $DEST/ubuntu.latest
-$SCRIPTPATH/run-container.sh ubuntu.latest scripts/create-deb.sh $TARBALL $DEST/ubuntu.latest
-mkdir $DEST/fedora.42
-$SCRIPTPATH/run-container.sh fedora.42 scripts/create-rpm.sh $TARBALL $DEST/fedora.42
-mkdir $DEST/suse-leap.15.6
-$SCRIPTPATH/run-container.sh suse-leap.15.6 scripts/create-rpm.sh $TARBALL $DEST/suse-leap.15.6
+# Compute relative paths for tarball
+TARBALL_PATH="$DEST/$TARBALL_NAME"
+TARBALL_RELATIVE=$(realpath --relative-to="$PROJROOT" "$TARBALL_PATH")
+
+echo "Source tarball created: $TARBALL_RELATIVE"
+
+# Define distros and packaging type
+declare -A DISTROS=(
+    [debian.stable]=deb
+    [debian.oldstable]=deb
+    [debian.oldoldstable]=deb
+    [ubuntu.rolling]=deb
+    [ubuntu.latest]=deb
+    [fedora.42]=rpm
+    [suse-leap.15.6]=rpm
+)
+
+# Loop through distros
+for distro in "${!DISTROS[@]}"; do
+    pkg_type="${DISTROS[$distro]}"
+    out_dir="$DEST/$distro"
+    out_dir_relative=$(realpath --relative-to="$PROJROOT" "$out_dir")
+
+    echo "==============================================================="
+    echo " Building package for $distro ($pkg_type)"
+    echo "==============================================================="
+
+    mkdir -p "$out_dir"
+    if ! "$SCRIPTPATH/run-container.sh" "$distro" "scripts/create-${pkg_type}.sh" "$TARBALL_RELATIVE" "$out_dir_relative"; then
+        echo "error: Failed to create package for $distro" >&2
+        exit 1
+    fi
+done
+
+echo
+echo "All packages built successfully in: $(realpath --relative-to="$PROJROOT" "$DEST")"

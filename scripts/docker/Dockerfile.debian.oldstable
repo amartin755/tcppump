@@ -18,8 +18,8 @@
 #
 ###############################################################################
 
-# latest TLS version
-FROM ubuntu:latest
+#bookworm
+FROM debian:oldstable-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -40,7 +40,6 @@ ARG UID=1000
 ARG GID=1000
 ARG USERNAME=dev
 
-RUN userdel -r ubuntu
 RUN groupadd -g $GID $USERNAME && \
     useradd -m -u $UID -g $GID -s /bin/bash $USERNAME && \
     usermod -aG sudo $USERNAME
