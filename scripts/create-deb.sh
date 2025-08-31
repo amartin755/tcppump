@@ -16,14 +16,19 @@ cleanup()
 trap cleanup EXIT
 
 
-if [ $# -ne 1 ]; then
-    echo "Usage: $0 <source-tarball>"
+if [ $# -ne 2 ]; then
+    echo "Usage: $0 <source-tarball> <destination-dir>"
     exit 1
 fi
 
 TARBALL="$1"
 if [ ! -f "$TARBALL" ]; then
     echo "'$TARBALL' does not exist."
+    exit 1
+fi
+DEST=$(realpath $2)
+if [ ! -d "$DEST" ]; then
+    echo "'$DEST' does not exist."
     exit 1
 fi
 
@@ -38,7 +43,8 @@ if [ -d tcppump-$VERSION ]; then
     cd tcppump-$VERSION
     if grep -xq "VERSION $VERSION" ./VERSION; then
         debuild -us -uc
-        cp ../tcppump_$VERSION*.deb $CURRDIR
+        #cp ../tcppump_$VERSION*.deb $DEST
+        find .. -maxdepth 1 -type f -exec cp {} $DEST \;
     else
         echo "$VERSION doesn't mach content of $TARBALL"
         exit 1

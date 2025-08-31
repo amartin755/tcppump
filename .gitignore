@@ -8,3 +8,4 @@ libpcap/
 .vscode/
 VERSION
 *.exe
+RELEASE/
