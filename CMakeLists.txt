@@ -17,7 +17,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-cmake_minimum_required (VERSION 3.19)
+cmake_minimum_required (VERSION 3.18)
 
 project (tcppump VERSION 0.4.0
                  DESCRIPTION "Ethernet packet generator"

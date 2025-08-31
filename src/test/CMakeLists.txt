@@ -32,6 +32,10 @@
 # - property WILL_FAIL combined with PASS_REGULAR_EXPRESSION:
 #   --> failes, if output == PASS_REGULAR_EXPRESSION
 
+if(CMAKE_VERSION VERSION_LESS "3.19") 
+    message (WARNING "At least cmake version 3.19 needed for ctest (${CMAKE_VERSION}). Build without test is still possible.")
+else ()
+
 if (WIN32)
     set (OUT_IFC "Ethernet") #FIXME we need a reliable way to find a suitable test interface in windows
 endif ()
@@ -203,3 +207,5 @@ endif()
 
 add_test(NAME show-version-output--ok COMMAND tcppump --version)
 set_tests_properties(show-version-output--ok PROPERTIES PASS_REGULAR_EXPRESSION "tcppump ${PROJECT_VERSION}")
+
+endif ()
