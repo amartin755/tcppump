@@ -1,34 +1,40 @@
+
 # tcppump
 
-tcppump ist ein Kommandozeilen-Werkzeuge für die Erzeugung von Ethernet-Netzwerkpaketen. Der Anwender hat dabei die volle Kontrolle über alle Details der erzeugten Pakete. Alle Netzwerkpakete werden direkt von tcppump erzeugt und nicht vom Betriebssystem, was es auch ermöglicht ungültige und fehlerhafte Pakete zu erzeugen. Entwickelt wurde es mit dem Ziel ein einfaches Werkzeug für den Test von Protokoll-Stacks und Firewalls zur Verfügung zu stellen.
+tcppump is a command-line tool for generating Ethernet network packets. The user has full control over every detail of the packets created. All network packets are generated directly by tcppump and not by the operating system, which also makes it possible to create invalid or malformed packets. It was developed with the goal of providing a simple tool for testing protocol stacks and firewalls.
 
-Usage
+**Usage:**
 
-    tcppump -i IFC [OPTIONS] packets
-    tcppump -i IFC [OPTIONS] -s scriptfiles
+```
+tcppump -i IFC [OPTIONS] packets
+tcppump -i IFC [OPTIONS] -s scriptfiles
+```
 
-Die zu versendenden Netwerkpakete können sowohl direkt als Programmparameter, als auch über Skriptfiles definiert werden. Möchte man nur einzelne Packete versenden, ist die erst genannte Methode sicherlich die einfachste Möglichkeit. Skriptfiles bieten sich dann an, wenn man ganze Packet-Sequenzen generieren und/oder Packete zeitgesteuert versenden möchte. Sollen Skriptfiles verwendet werden, muss der Parameter `-s` bzw. `--script` gefolgt vom Dateinamen des Skriptfiles angegeben werden. Es können auch mehrere Dateien übergeben werden.
+The network packets to be sent can be defined either directly as program parameters or via script files. If you only want to send individual packets, the first method is certainly the simplest option. Script files are useful when you want to generate entire packet sequences and/or send packets on a schedule. To use script files, specify the `-s` or `--script` parameter followed by the filename of the script file. You can also provide multiple files.
 
-tcppump benötigt immer ein Netzwerkinterface über das die Packete versendet werden sollen. Deshalb ist der Parameter `-i` bzw. `--interface` gefolgt vom Namen des Netzwerkadapters verpflichtend. Unter Windows kann als Name entweder der sog. "Friendly-Name" (ermittelbar via `ipconfig`), als auch GUID des Netzwerkadapters angegeben werden. Unter Linux ist Name des Netzwerk-Devices anzugeben (siehe output von `ip addr`);
+tcppump always requires a network interface through which packets will be sent. Therefore, the `-i` or `--interface` parameter followed by the name of the network adapter is mandatory. On Windows, you can specify either the so-called "friendly name" (found via `ipconfig`) or the adapter’s GUID. On Linux, specify the name of the network device (see the output of `ip addr`).
 
-Beispiele:
+**Examples:**
 
-    tcppump -i eth0 "arp(dip=11.22.33.44)"
-    tcppump -i "Ethernet 2" "raw(payload=12345678)" "arp(dip=11.22.33.44)"
-    tcppump -i WiFi -s myscript.txt
-    tcppump -i WiFi -s myscript.txt mystript2.txt
+```
+tcppump -i eth0 "arp(dip=11.22.33.44)"
+tcppump -i "Ethernet 2" "raw(payload=12345678)" "arp(dip=11.22.33.44)"
+tcppump -i WiFi -s myscript.txt
+tcppump -i WiFi -s myscript.txt myscript2.txt
+```
 
-Es ist grundsätzlich eine gute Idee die Definitionen der Netzwerkpackete mit Anführungszeichen zu versehen, da die Definition auch Leerzeichen enthalten könnten und somit fälschlicherweise als mehrere Kommandozeilenparameter erkannt werden.
+It’s generally a good idea to enclose packet definitions in quotes, as definitions may contain spaces and could otherwise be mistakenly interpreted as multiple command-line parameters.
 
-Die genaue Syntax der Netzwerkpackete (`packets`) und die verschiedenen unterstützten Protokolle sind [hier](./PACKET_REFERENCE.md) definiert.
+The exact syntax for network packets (`packets`) and the various supported protocols is defined [here](./PACKET_REFERENCE.md).
 
+---
 
-## Packet Source-Adressen (MAC, IPv4)
+## Packet Source Addresses (MAC, IPv4, IPv6)
 
-tcppump bietet mehrere Möglichkeiten die Absendeadressen zu beeinflussen. Sofern im Packet nicht explizit die Absendeadresse angegeben wurde, verwendet tcppump die Adressen des Netzwerkadapters. Das gilt sowohl für die MAC, als auch die IPv4 Adresse. Die Adressen des Netzwerkadapters können wiederum explizit mit den Parameter `--mymac` und `--mymipv4` überschrieben werden. Die Einstellungen der Netzwerkkarten werden natürlich nicht verändert.
+tcppump offers several ways to control source addresses. If a source address is not explicitly specified in the packet definition, tcppump uses the addresses of the network adapter. This applies to both the MAC and IPv4 addresses. The addresses of the network adapter can also be explicitly overridden using the `--mymac` and `--myipv4`/`--myipv6` parameters. The network card’s configuration itself is, of course, not modified.
 
-Dadurch ergibt sich folgendes Vergabestrategie (mit absteigender Priorität)
+This results in the following address selection strategy (in descending priority):
 
-1. Direkt in der Packetdefinition angegebene source adresse(n)
-2. Adressen der Parameter `--mymac` und `--mymipv4`
-3. Source Adressen des Netzwerkadapters
+1. Source address(es) explicitly specified in the packet definition  
+2. Addresses specified via `--mymac` and `--myipv4`/`--myipv6`  
+3. Source addresses of the network adapter  
