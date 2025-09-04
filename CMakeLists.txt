@@ -207,14 +207,14 @@ if (HAVE_BIG_ENDIAN)
     add_compile_definitions (HAVE_BIG_ENDIAN)
 endif ()
 
-# set _FORTIFY_SOURCE for released builds, if not conflicting with ASAN and CXXFLAGS
+# set _FORTIFY_SOURCE for release builds, if not conflicting with ASAN and CXXFLAGS
 if (NOT WITH_ASAN)
     # check if _FORTIFY_SOURCE is already set from outside in CXXFLAGS
-    string(FIND "${CMAKE_CXX_FLAGS}" "-D_FORTIFY_SOURCE" fortify_found)
+    string (FIND "${CMAKE_CXX_FLAGS}" "-D_FORTIFY_SOURCE" fortify_found)
 
     if (NOT fortify_found GREATER -1)
         add_compile_definitions ($<$<CONFIG:Release>:_FORTIFY_SOURCE=2>)
-    endif()
+    endif ()
 endif ()
 
 if (WIN32)

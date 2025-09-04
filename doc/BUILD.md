@@ -142,16 +142,13 @@ If no destination directory is provided the files are written to the current dir
 
 ### 5.1 Fedora – RPM package
 ```bash
-scripts/create-rpm.sh tcppump_x.y.z.tar.gz
+scripts/create-rpm.sh tcppump_x.y.z.tar.gz <destination-dir>
 ```
 
 ### 5.2 Debian/Ubuntu – DEB package
 ```bash
-scripts/create-deb.sh tcppump_x.y.z.tar.gz
+scripts/create-deb.sh tcppump_x.y.z.tar.gz <destination-dir>
 ```
-
-
-All generated packages will appear in the `build/` directory.
 
 ---
 
