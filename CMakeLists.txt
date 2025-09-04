@@ -179,10 +179,6 @@ test_big_endian (HAVE_BIG_ENDIAN)
 # preprocessor definitions
 ###############################################################################
 add_compile_definitions (APP_VERSION="${PROJECT_VERSION}")
-if (NOT WITH_ASAN)
-    add_compile_definitions ($<$<CONFIG:Release>:_FORTIFY_SOURCE=2>)
-endif ()
-
 if (HAVE_WS2)
     add_compile_definitions (HAVE_WS2)
 endif ()
@@ -211,6 +207,16 @@ if (HAVE_BIG_ENDIAN)
     add_compile_definitions (HAVE_BIG_ENDIAN)
 endif ()
 
+# set _FORTIFY_SOURCE for released builds, if not conflicting with ASAN and CXXFLAGS
+if (NOT WITH_ASAN)
+    # check if _FORTIFY_SOURCE is already set from outside in CXXFLAGS
+    string(FIND "${CMAKE_CXX_FLAGS}" "-D_FORTIFY_SOURCE" fortify_found)
+
+    if (NOT fortify_found GREATER -1)
+        add_compile_definitions ($<$<CONFIG:Release>:_FORTIFY_SOURCE=2>)
+    endif()
+endif ()
+
 if (WIN32)
     add_compile_definitions (HAVE_WINDOWS)
     # min. supported version is Windows 7
@@ -237,16 +243,17 @@ add_compile_definitions (BUILD_TIME="${BUILD_TIME}")
 add_compile_definitions (BUILD_TYPE="${CMAKE_BUILD_TYPE}")
 
 message (STATUS "Build infos:")
-message (STATUS "  pointer size = ${CMAKE_SIZEOF_VOID_P}")
-message (STATUS "  unittests    = ${WITH_UNITTESTS}")
-message (STATUS "  ASAN         = ${WITH_ASAN}")
-message (STATUS "  UBSAN        = ${WITH_UBSAN}")
-message (STATUS "  GCOV         = ${WITH_GCOV}")
-message (STATUS "  type         = ${CMAKE_BUILD_TYPE}")
-message (STATUS "  timestamp    = ${BUILD_TIME}")
-message (STATUS "  git tag      = ${GIT_TAG}")
-message (STATUS "  git branch   = ${GIT_BRANCH}")
-message (STATUS "  git commit   = ${GIT_COMMIT}")
+message (STATUS "  CXXFLAGS       = ${CMAKE_CXX_FLAGS}")
+message (STATUS "  pointer size   = ${CMAKE_SIZEOF_VOID_P}")
+message (STATUS "  unittests      = ${WITH_UNITTESTS}")
+message (STATUS "  ASAN           = ${WITH_ASAN}")
+message (STATUS "  UBSAN          = ${WITH_UBSAN}")
+message (STATUS "  GCOV           = ${WITH_GCOV}")
+message (STATUS "  type           = ${CMAKE_BUILD_TYPE}")
+message (STATUS "  timestamp      = ${BUILD_TIME}")
+message (STATUS "  git tag        = ${GIT_TAG}")
+message (STATUS "  git branch     = ${GIT_BRANCH}")
+message (STATUS "  git commit     = ${GIT_COMMIT}")
 
 # source files
 ###############################################################################
