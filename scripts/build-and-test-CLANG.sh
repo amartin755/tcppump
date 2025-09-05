@@ -10,7 +10,7 @@ PROJROOT=$(realpath $SCRIPTPATH/..)
 
 # clean configure and build
 ###############################################################################
-$SCRIPTPATH/utils/clean-build.sh -t -C RelWithDebInfo -T CLANG -B $BUILDDIRNAME
+$SCRIPTPATH/utils/clean-build.sh -t -C Release -T CLANG -B $BUILDDIRNAME
 
 
 # run all ctest cases

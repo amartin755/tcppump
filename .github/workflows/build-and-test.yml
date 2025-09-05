@@ -2,7 +2,7 @@
 ###############################################################################
 #
 # TCPPUMP <https://github.com/amartin755/tcppump>
-# Copyright (C) 2012-2024 Andreas Martin (netnag@mailbox.org)
+# Copyright (C) 2012-2025 Andreas Martin (netnag@mailbox.org)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,44 +23,13 @@ name: build-and-test
 on: [push, workflow_dispatch]
 
 jobs:
-  build:
+  linux:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, ubuntu-22.04, ubuntu-22.04-arm]
-#        build: [Release, Debug]
-        build: [Release]
-        toolchain: [default, ucrt64, mingw32, clang64, clang]
-        exclude:
-          # never combine linux with msys2 (windows) toolchains
-          - os: ubuntu-latest
-            toolchain: mingw32
-          - os: ubuntu-latest
-            toolchain: mingw64
-          - os: ubuntu-latest
-            toolchain: ucrt64
-          - os: ubuntu-latest
-            toolchain: clang64
-          - os: ubuntu-22.04
-            toolchain: mingw32
-          - os: ubuntu-22.04
-            toolchain: mingw64
-          - os: ubuntu-22.04
-            toolchain: ucrt64
-          - os: ubuntu-22.04
-            toolchain: clang64
-          - os: ubuntu-22.04-arm
-            toolchain: mingw32
-          - os: ubuntu-22.04-arm
-            toolchain: mingw64
-          - os: ubuntu-22.04-arm
-            toolchain: ucrt64
-          - os: ubuntu-22.04-arm
-            toolchain: clang64
-         # never combine windows with non-msys2 clang toolchain
-          - os: windows-latest
-            toolchain: clang
-    name: ${{ matrix.os }} ${{ matrix.toolchain }} ${{ matrix.build }}
+        os: [ubuntu-latest, ubuntu-22.04, ubuntu-24.04-arm]
+        toolchain: [GCC, CLANG]
+    name: ${{ matrix.os }}/${{ matrix.toolchain }}
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -68,47 +37,51 @@ jobs:
       with:
         submodules: 'true'
 
-    - name: Tweak environment
-      shell: bash
+    - name: Install Build Dependencies
+      # install libpcap and its development files
+      run: sudo apt-get --assume-yes install libpcap-dev
+
+    - name: Configure, build and test
+      working-directory: ${{github.workspace}}
       run: |
-        isWindows=false
-        isLinux=false
-        case "${{ matrix.os }}" in
-          windows-*) isWindows=true ;;
-          ubuntu-*)  isLinux=true ;;
-        esac
-        echo "isWindows=$isWindows" >> $GITHUB_ENV
-        echo "isLinux=$isLinux" >> $GITHUB_ENV
-        if [ "$isWindows" = "true" ] && [ "${{ matrix.toolchain }}" != "default" ]; then
-          echo "isMSYS2=true" >> $GITHUB_ENV
-        else
-          echo "isMSYS2=false" >> $GITHUB_ENV
-        fi
-        if [ "$isLinux" = "true" ] && [ "${{ matrix.toolchain }}" = "clang" ]; then
-          echo "CC=/usr/bin/clang" >> $GITHUB_ENV
-          echo "CXX=/usr/bin/clang++" >> $GITHUB_ENV
-        fi
-    - name: Get first active Ethernet adapter name (windows-only)
+        scripts/build-and-test-${{ matrix.toolchain }}.sh
+
+    - name: Upload logfiles
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: logfiles-${{ matrix.os }}-${{ matrix.toolchain }}
+        path: |
+          ${{github.workspace}}/build/CMakeFiles/CMakeError.log
+          ${{github.workspace}}/build/CMakeFiles/CMakeOutput.log
+          ${{github.workspace}}/build/Testing/Temporary/LastTest.log
+
+  windows:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+#        build: [Release, Debug]
+        build: [Release]
+        toolchain: [msvc, ucrt64, mingw32, clang64]
+    name: ${{ matrix.os }}/${{ matrix.toolchain }}/${{ matrix.build }}
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'true'
+
+    - name: Setup environment
       id: get_adapter
-      if: matrix.os == 'windows-latest'
       run: |
         ipconfig /all
         $name = (Get-NetAdapter | Where-Object {$_.Status -eq "Up" -and $_.InterfaceDescription -like "*Network Adapter*"} | Select-Object -First 1 -ExpandProperty Name)
         echo "adapter_name=$name" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+        Invoke-WebRequest -Uri "https://nmap.org/dist/nmap-7.12-setup.exe" -OutFile "nmap.exe"; Start-Process -Filepath "nmap.exe" -ArgumentList /S
 
-    - name: Install Runtime Dependencies (windows-only)
-      if: matrix.os == 'windows-latest'
-      # install winpcap, we use an old version of nmap which offers a silent installer and includes winpcap
-      # TODO: we should cache the downloaded file
-      run: Invoke-WebRequest -Uri "https://nmap.org/dist/nmap-7.12-setup.exe" -OutFile "nmap.exe"; Start-Process -Filepath "nmap.exe" -ArgumentList /S
-
-    - name: Install Build Dependencies (linux-only)
-      if: env.isLinux == 'true'
-      # install libpcap and its development files
-      run: sudo apt-get --assume-yes install libpcap-dev
-
-    - name: 'Setup MSYS2 (windows-msys-only)'
-      if: env.isMSYS2 == 'true'
+    - name: 'Setup MSYS2'
+      if: matrix.toolchain != 'msvc'
       uses: msys2/setup-msys2@v2
       with:
         msystem: ${{matrix.toolchain}}
@@ -121,39 +94,26 @@ jobs:
           cmake:p
           ninja:p
 
-    - name: Configure and build (msys2-only)
+    - name: 'msys2: Configure, build and test'
       working-directory: ${{github.workspace}}
-      if: env.isMSYS2 == 'true'
-      shell: msys2 {0}
-      run: |
-        cmake -B build -DCMAKE_BUILD_TYPE=${{ matrix.build }} -DTEST_NET_ADAPTER="${{ steps.get_adapter.outputs.adapter_name }}"
-        cmake --build build --target tcppump unittest --config ${{ matrix.build }}
-
-    - name: Configure and build
-      working-directory: ${{github.workspace}}
-      if: env.isMSYS2 != 'true'
-      run: |
-        cmake -B build -DCMAKE_BUILD_TYPE=${{ matrix.build }} -DTEST_NET_ADAPTER="${{ steps.get_adapter.outputs.adapter_name }}"
-        cmake --build build --target tcppump unittest --config ${{ matrix.build }}
-
-    - name: Assign priviledges (linux-only)
-      if: env.isLinux == 'true'
-      working-directory: ${{github.workspace}}/bin
-      # give raw capabilities to tcppump
-      run: sudo setcap cap_net_raw+eip ./tcppump
-
-    - name: Test
-      if: env.isMSYS2 != 'true'
+      if: matrix.toolchain != 'msvc'
       id: ctest_step
-      working-directory: ${{github.workspace}}/build
-      run: ctest -C ${{ matrix.build }}
-
-    - name: Test (msys2-only)
-      if: env.isMSYS2 == 'true'
-      id: ctest_step2
-      working-directory: ${{github.workspace}}/build
       shell: msys2 {0}
-      run: ctest -C ${{ matrix.build }}
+      run: |
+        cmake -B build -DCMAKE_BUILD_TYPE=${{ matrix.build }} -DTEST_NET_ADAPTER="${{ steps.get_adapter.outputs.adapter_name }}"
+        cmake --build build --target tcppump unittest --config ${{ matrix.build }}
+        cd build
+        ctest -C ${{ matrix.build }}
+
+    - name: 'msvc: Configure, build and test'
+      working-directory: ${{github.workspace}}
+      if: matrix.toolchain == 'msvc'
+      id: ctest_step2
+      run: |
+        cmake -B build -DCMAKE_BUILD_TYPE=${{ matrix.build }} -DTEST_NET_ADAPTER="${{ steps.get_adapter.outputs.adapter_name }}"
+        cmake --build build --target tcppump unittest --config ${{ matrix.build }}
+        cd build
+        ctest -C ${{ matrix.build }}
 
     - name: Upload logfiles
       uses: actions/upload-artifact@v4
