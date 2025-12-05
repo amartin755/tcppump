@@ -335,7 +335,7 @@ bool cInterface::open ()
         Console::PrintError ("pcap error: %s\n", errbuf);
     }
 
-    linkSpeed = getLinkSpeed (adapterInfo->AdapterName);
+    linkSpeed = (uint64_t)adapterInfo->TransmitLinkSpeed;
 
     return ifcHandle != NULL;
 }
@@ -529,42 +529,6 @@ PIP_ADAPTER_ADDRESSES cInterface::getAdapterInfo ()
         pCurr = pCurr->Next;
     }
     return NULL;
-}
-
-uint64_t cInterface::getLinkSpeed (const char* guid)
-{
-    FILE *fp;
-    char speed[16] = {0};
-
-    // wmic NIC where GUID="{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}" get Speed | find /v "Speed"
-    std::string cmd = "wmic NIC where GUID=\"";
-    cmd.append (guid);
-    cmd.append ("\" get Speed");
-
-    fp = _popen(cmd.c_str (), "rt");
-    if (fp == NULL)
-        return 0;
-
-    int c;
-
-    while ((c = std::getc(fp)) != EOF)
-    {
-        if (std::isdigit(c))
-        {
-            unsigned cnt = 0;
-            do
-            {
-                speed[cnt++] = (char)c;
-                if (cnt >= (sizeof (speed) - 1))
-                    break;
-            }
-            while (std::isdigit(c = std::getc(fp)));
-            break;
-        }
-    }
-    _pclose(fp);
-
-    return (uint64_t)std::strtoull(speed, NULL, 10);
 }
 
 const char* cInterface::getName (void) const

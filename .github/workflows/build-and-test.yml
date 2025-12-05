@@ -60,7 +60,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest]
+        os: [windows-latest, windows-2022]
 #        build: [Release, Debug]
         build: [Release]
         toolchain: [msvc, ucrt64, mingw32, clang64]
