@@ -34,8 +34,9 @@ declare -A DISTROS=(
     [debian.oldoldstable]=deb
     [ubuntu.rolling]=deb
     [ubuntu.latest]=deb
-    [fedora.42]=rpm
-    [suse-leap.15.6]=rpm
+    [fedora.latest]=rpm
+    [suse-leap.latest]=rpm
+    [suse-tumbleweed.latest]=rpm
 )
 
 # Loop through distros
@@ -53,6 +54,9 @@ for distro in "${!DISTROS[@]}"; do
         echo "error: Failed to create package for $distro" >&2
         exit 1
     fi
+
+    # store distro version infos
+    "$SCRIPTPATH/run-container.sh" "$distro" cp /etc/os-release "$out_dir_relative"
 done
 
 echo

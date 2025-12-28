@@ -18,10 +18,10 @@
 #
 ###############################################################################
 
-FROM fedora:42
+FROM opensuse/leap:latest
 
-RUN dnf install -y gcc-c++ clang make cmake git libpcap-devel rpm-build libcap sudo && \
-    dnf clean all
+RUN zypper install -y gcc gcc-c++ clang make cmake git libpcap-devel rpm-build libcap-progs sudo && \
+    zypper clean -a
 
 ARG UID=1000
 ARG GID=1000

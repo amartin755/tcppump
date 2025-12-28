@@ -18,15 +18,10 @@
 #
 ###############################################################################
 
-FROM opensuse/leap:15.6
+FROM opensuse/tumbleweed:latest
 
 RUN zypper install -y gcc gcc-c++ clang make cmake git libpcap-devel rpm-build libcap-progs sudo && \
     zypper clean -a
-
-#RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 50 && \
-#    update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 50 && \
-#    update-alternatives --set gcc /usr/bin/gcc-13 && \
-#    update-alternatives --set g++ /usr/bin/g++-13
 
 ARG UID=1000
 ARG GID=1000
