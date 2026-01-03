@@ -57,7 +57,15 @@ for distro in "${!DISTROS[@]}"; do
 
     # store distro version infos
     "$SCRIPTPATH/run-container.sh" "$distro" cp /etc/os-release "$out_dir_relative"
+
+    # sign all created packages
+    for i in $out_dir/*.${pkg_type}; do
+        [ -f "$i" ] || break
+        gpg --verbose --detach-sig --yes $i
+    done
 done
+
+# TODO: collect all logs (*.build *.buildinfo) -> tar.gz -> sign
 
 echo
 echo "All packages built successfully in: $(realpath --relative-to="$PROJROOT" "$DEST")"
