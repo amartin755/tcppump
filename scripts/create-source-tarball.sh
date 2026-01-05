@@ -124,6 +124,10 @@ tar --exclude=bin \
     tcppump-$VERSION > /dev/null
 echo $TARBALL
 
+# avoid absolute paths in signature and hash files
+cd $DEST
+TARBALL=$(basename $TARBALL)
+
 echo "# create sha256"
 sha256sum $TARBALL | tee $TARBALL.sha256
 
