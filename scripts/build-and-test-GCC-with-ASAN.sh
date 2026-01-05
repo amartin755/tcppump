@@ -2,7 +2,7 @@
 
 set -e
 
-BUILDDIRNAME=build
+BUILDDIRNAME="${1:-build}"
 SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 PROJROOT=$(realpath $SCRIPTPATH/..)
 DUMPABLE=$(sysctl -n fs.suid_dumpable)
