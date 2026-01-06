@@ -61,9 +61,17 @@ tar xf $ORIG_TARBALL
 if [ -d tcppump-$VERSION ]; then
     cd tcppump-$VERSION
     if grep -xq "VERSION $VERSION" ./VERSION; then
-        debuild -us -uc
-        #cp ../tcppump_$VERSION*.deb $DEST
-        find .. -maxdepth 1 -type f -exec cp {} $DEST \;
+        # build debian binary package
+        debuild --no-sign --build=binary
+        
+        # determine filename pattern of the resulting deb package
+        FILE_NAME="$(dpkg-parsechangelog -S Source)_$(dpkg-parsechangelog -S Version)_$(dpkg-architecture -qDEB_HOST_ARCH)"
+
+        # copy debian packages and build info to destination
+        find .. -maxdepth 1 -type f -name "$FILE_NAME.deb" -exec cp {} $DEST \;
+        find .. -maxdepth 1 -type f -name "$FILE_NAME.build" -exec cp {} $DEST \;
+        find .. -maxdepth 1 -type f -name "$FILE_NAME.buildinfo" -exec cp {} $DEST \;
+        cp /etc/os-release "$DEST/$FILE_NAME.os-release"
     else
         echo "$VERSION doesn't mach content of $TARBALL"
         exit 1

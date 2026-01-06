@@ -86,15 +86,23 @@ if [[ -z "$CURRENT_DIST" ]]; then
     fi
 fi
 
+# prepare RPM build environment
 WORKDIR=$(mktemp -d)
 mkdir -p $WORKDIR/SOURCES
 mkdir -p $WORKDIR/SPECS
 cp $TARBALL $WORKDIR/SOURCES
 cd $WORKDIR/SPECS
 tar --strip-components=2 -xvzf $WORKDIR/SOURCES/$(basename "$TARBALL") tcppump-$OUR_VERSION/rpm/tcppump.spec
-rpmbuild "${RPMBUILD_DEFINES[@]}" -ba tcppump.spec --define "_topdir $WORKDIR" | tee "$DEST/tcppump-$OUR_VERSION.build"
-find ../RPMS -type f -name "*.rpm" -exec cp {} "$DEST" \;
-find ../SRPMS -type f -name "*.rpm" -exec cp {} "$DEST" \;
-rpm -qa > "$DEST/tcppump-$OUR_VERSION.buildinfo"
+
+# determine filename pattern of the resulting rpm package
+FILE_NAME=$(rpmspec "${RPMBUILD_DEFINES[@]}" --query --qf '%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}' tcppump.spec)
+
+# build RPM package and log output
+rpmbuild "${RPMBUILD_DEFINES[@]}" -bb tcppump.spec --define "_topdir $WORKDIR" | tee "$DEST/$FILE_NAME.build"
+
+# copy RPM package and build infos to destination
+find ../RPMS -type f -name "$FILE_NAME.rpm" -exec cp {} $DEST \;
+rpm -qa > "$DEST/$FILE_NAME.buildinfo"
+cp /etc/os-release "$DEST/$FILE_NAME.os-release"
 
 cd $CURRDIR
