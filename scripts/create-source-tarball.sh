@@ -19,7 +19,7 @@
 #
 ###############################################################################
 
-# usage: $0 [--clean] [<destination>]
+# usage: $0 [--no-clean] [<destination>]
 #
 # Options:
 #   --no-clean   don't clean the working directory to the latest git state
@@ -132,4 +132,4 @@ echo "# create sha256"
 sha256sum $TARBALL | tee $TARBALL.sha256
 
 echo "# sign tarball"
-gpg --verbose --detach-sig --yes $TARBALL
+gpg --verbose --detach-sig --yes -a $TARBALL
