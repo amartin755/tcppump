@@ -16,10 +16,8 @@ tcppump is a simple ethernet packet generator that allows users to create and se
 %setup -q
 
 %build
-mkdir build
-cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DWITH_UNITTESTS=OFF
-make
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DWITH_UNITTESTS=OFF
+cmake --build build --verbose
 
 %install
 mkdir -p %{buildroot}/usr/bin
