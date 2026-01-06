@@ -2,7 +2,7 @@ Name: tcppump
 Version: x.y.z
 Release: 1%{?dist}
 Summary: A simple ethernet packet generator
-License: GPL-3
+License: GPL-3.0-only
 URL: https://github.com/amartin755/tcppump
 Source: %{name}_%{version}.tar.gz
 BuildRequires: cmake
