@@ -90,7 +90,7 @@ void cLldpPacket::addPortID (const cIPv4& ip)
 void cLldpPacket::addPortID (const cIPv6& ip)
 {
     uint8_t portID[sizeof(ip) + 1];
-    portID[0] = 1; // ipV4(1)
+    portID[0] = 2; // ipV6(2)
     std::memcpy (&portID[1], ip.getAsArray(), sizeof (ip));
 
     addPortID (4, portID, sizeof (portID));
@@ -377,8 +377,8 @@ void cLldpPacket::addApplicationVLAN (const std::vector<uint16_t>& vid,
     *value << (uint8_t)TLV_SUBTYPE_802_1::APP_VLAN;
     for (size_t n = 0; n < vid.size(); n++)
     {
-        uint32_t vlan = ((uint32_t)toBE16(vid[n] & 0x03ff) << 20) | (uint32_t(sel[n] & 7) << 16) | toBE16 (proto[n]);
-        *value << vlan;
+        uint32_t vlan = (uint32_t(vid[n] & 0x0fff) << 20) | (uint32_t(sel[n] & 7) << 16) | uint32_t (proto[n]);
+        *value << toBE32(vlan);
     }
     m_tlvs.push_back (std::pair<uint8_t, const cFixedByteArray*> (OUI, value));
 }
@@ -472,17 +472,17 @@ void cLldpPacket::addEEE (uint16_t txTw, uint16_t rxTw, uint16_t fbTw, uint16_t 
     m_tlvs.push_back (std::pair<uint8_t, const cFixedByteArray*> (OUI, value));
 }
 
-void cLldpPacket::addEEEFastWake (bool tx, bool rx, bool echoTx, bool echoRx)
+void cLldpPacket::addEEEFastWake (uint8_t tx, uint8_t rx, uint8_t echoTx, uint8_t echoRx)
 {
     const size_t tlvLen = sizeof (OID_802_3) + 1 + 4;
     cFixedByteArray* value = new cFixedByteArray (tlvLen);
 
     value->append (OID_802_3, sizeof (OID_802_3));
     *value << (uint8_t)TLV_SUBTYPE_802_3::EEE_FAST_WAKE;
-    *value << uint8_t (tx ? 1 : 0);
-    *value << uint8_t (rx ? 1 : 0);
-    *value << uint8_t (echoTx ? 1 : 0);
-    *value << uint8_t (echoRx ? 1 : 0);
+    *value << uint8_t (tx);
+    *value << uint8_t (rx);
+    *value << uint8_t (echoTx);
+    *value << uint8_t (echoRx);
 
     m_tlvs.push_back (std::pair<uint8_t, const cFixedByteArray*> (OUI, value));
 }

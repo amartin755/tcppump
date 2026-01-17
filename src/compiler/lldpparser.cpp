@@ -144,24 +144,35 @@ void cLldpParser::portID ()
 
 void cLldpParser::systemCapabilities ()
 {
-    uint16_t c = 0, e = 0;
-    c =  m_params.findParameter (PAR_LLDP_SYSCAP_OTHER.syntax,       (uint32_t)0)->asInt16(0, 1)       |
-        (m_params.findParameter (PAR_LLDP_SYSCAP_REPEATER.syntax,    (uint32_t)0)->asInt16(0, 1) << 1) |
-        (m_params.findParameter (PAR_LLDP_SYSCAP_BRIDGE.syntax,      (uint32_t)0)->asInt16(0, 1) << 2) |
-        (m_params.findParameter (PAR_LLDP_SYSCAP_WLAN.syntax,        (uint32_t)0)->asInt16(0, 1) << 3) |
-        (m_params.findParameter (PAR_LLDP_SYSCAP_ROUTER.syntax,      (uint32_t)0)->asInt16(0, 1) << 4) |
-        (m_params.findParameter (PAR_LLDP_SYSCAP_PHONE.syntax,       (uint32_t)0)->asInt16(0, 1) << 5) |
-        (m_params.findParameter (PAR_LLDP_SYSCAP_DOCSIS.syntax,      (uint32_t)0)->asInt16(0, 1) << 6) |
-        (m_params.findParameter (PAR_LLDP_SYSCAP_STATION.syntax,     (uint32_t)1)->asInt16(0, 1) << 7);
-    e =  m_params.findParameter (PAR_LLDP_SYSCAP_OTHER_EN.syntax,    (uint32_t)0)->asInt16(0, 1)       |
-        (m_params.findParameter (PAR_LLDP_SYSCAP_REPEATER_EN.syntax, (uint32_t)0)->asInt16(0, 1) << 1) |
-        (m_params.findParameter (PAR_LLDP_SYSCAP_BRIDGE_EN.syntax,   (uint32_t)0)->asInt16(0, 1) << 2) |
-        (m_params.findParameter (PAR_LLDP_SYSCAP_WLAN_EN.syntax,     (uint32_t)0)->asInt16(0, 1) << 3) |
-        (m_params.findParameter (PAR_LLDP_SYSCAP_ROUTER_EN.syntax,   (uint32_t)0)->asInt16(0, 1) << 4) |
-        (m_params.findParameter (PAR_LLDP_SYSCAP_PHONE_EN.syntax,    (uint32_t)0)->asInt16(0, 1) << 5) |
-        (m_params.findParameter (PAR_LLDP_SYSCAP_DOCSIS_EN.syntax,   (uint32_t)0)->asInt16(0, 1) << 6) |
-        (m_params.findParameter (PAR_LLDP_SYSCAP_STATION_EN.syntax,  (uint32_t)1)->asInt16(0, 1) << 7);
-    m_packet.addSystemCapabilities (c, e);
+    uint32_t c = 0, e = 0;
+    c =  m_params.findParameter (PAR_LLDP_SYSCAP_OTHER.syntax,       (uint32_t)0x10000)->asInt32(0, 1)       |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_REPEATER.syntax,    (uint32_t)0x10000)->asInt32(0, 1) << 1) |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_BRIDGE.syntax,      (uint32_t)0x10000)->asInt32(0, 1) << 2) |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_WLAN.syntax,        (uint32_t)0x10000)->asInt32(0, 1) << 3) |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_ROUTER.syntax,      (uint32_t)0x10000)->asInt32(0, 1) << 4) |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_PHONE.syntax,       (uint32_t)0x10000)->asInt32(0, 1) << 5) |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_DOCSIS.syntax,      (uint32_t)0x10000)->asInt32(0, 1) << 6) |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_STATION.syntax,     (uint32_t)0x10000)->asInt32(0, 1) << 7) |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_CVLAN.syntax,       (uint32_t)0x10000)->asInt32(0, 1) << 8) |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_SVLAN.syntax,       (uint32_t)0x10000)->asInt32(0, 1) << 9) |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_2P_RELAY.syntax,    (uint32_t)0x10000)->asInt32(0, 1) << 10);
+    e =  m_params.findParameter (PAR_LLDP_SYSCAP_OTHER_EN.syntax,    (uint32_t)0x10000)->asInt32(0, 1)       |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_REPEATER_EN.syntax, (uint32_t)0x10000)->asInt32(0, 1) << 1) |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_BRIDGE_EN.syntax,   (uint32_t)0x10000)->asInt32(0, 1) << 2) |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_WLAN_EN.syntax,     (uint32_t)0x10000)->asInt32(0, 1) << 3) |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_ROUTER_EN.syntax,   (uint32_t)0x10000)->asInt32(0, 1) << 4) |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_PHONE_EN.syntax,    (uint32_t)0x10000)->asInt32(0, 1) << 5) |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_DOCSIS_EN.syntax,   (uint32_t)0x10000)->asInt32(0, 1) << 6) |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_STATION_EN.syntax,  (uint32_t)0x10000)->asInt32(0, 1) << 7) |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_CVLAN_EN.syntax,    (uint32_t)0x10000)->asInt32(0, 1) << 8) |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_SVLAN_EN.syntax,    (uint32_t)0x10000)->asInt32(0, 1) << 9) |
+        (m_params.findParameter (PAR_LLDP_SYSCAP_2P_RELAY_EN.syntax, (uint32_t)0x10000)->asInt32(0, 1) << 10);
+
+    // only add the TLV if at least one capability is set
+    if (c == 0x7FF0000 && e == 0x7FF0000)
+        return;
+
+    m_packet.addSystemCapabilities (uint16_t(c & 0xffff), uint16_t(e & 0xffff));
 }
 
 void cLldpParser::managementAddress ()
@@ -194,7 +205,7 @@ void cLldpParser::managementAddress ()
         optionalPar = m_params.findParameter (PAR_LLDP_MGT_ADDR.syntax, true);
         if (optionalPar)
         {
-            // we accept IPv4, IPv6, MAC and bytestream.
+            // we accept IPv4, IPv6 and MAC.
             // try to find out the type the user provided
             try
             {
@@ -250,7 +261,7 @@ void cLldpParser::systemDescription ()
     {
         size_t len;
         const uint8_t* sysDescr = optionalPar->asStream (len, 255);
-        m_packet.addSystemName (sysDescr, (uint8_t)len);
+        m_packet.addSystemDescription (sysDescr, (uint8_t)len);
     }
 }
 
@@ -314,9 +325,8 @@ void cLldpParser::vidUsageDigest ()
 
 void cLldpParser::managementVID ()
 {
-    cParameter* mgtVidPar = nullptr;
-    // loop throught all PAR_LLDP_MGT_VID
-    while ((mgtVidPar = m_params.findParameter(mgtVidPar, nullptr, PAR_LLDP_MGT_VID.syntax, true)) != nullptr)
+    cParameter* mgtVidPar = m_params.findParameter(PAR_LLDP_MGT_VID.syntax, true);
+    if (mgtVidPar)
     {
         uint16_t vid = mgtVidPar->asInt16 ();
         m_packet.addManagementVID (vid);
@@ -329,9 +339,9 @@ void cLldpParser::linkAggregation ()
     if (optionalPar)
     {
         bool cap      = !!optionalPar->asInt8 (0, 1);
-        bool stat     = !!m_params.findParameter (PAR_LLDP_LAG_STATUS.syntax)->asInt8 (0, 1);
-        uint8_t  type = m_params.findParameter (PAR_LLDP_LAG_PORT_TYPE.syntax)->asInt8 (0, 3);
-        uint32_t id   = m_params.findParameter (PAR_LLDP_LAG_PORT_ID.syntax)->asInt32 ();
+        bool stat     = !!m_params.findParameter (PAR_LLDP_LAG_STATUS.syntax, (uint32_t)0)->asInt8 (0, 1);
+        uint8_t  type = m_params.findParameter (PAR_LLDP_LAG_PORT_TYPE.syntax, (uint32_t)0)->asInt8 (0, 3);
+        uint32_t id   = m_params.findParameter (PAR_LLDP_LAG_PORT_ID.syntax, (uint32_t)0)->asInt32 ();
         m_packet.addLinkAggregation (cap, stat, type, id);
     }
 }
@@ -453,7 +463,7 @@ void cLldpParser::applicationVLAN ()
     // loop throught all PAR_LLDP_APPL_VLAN_VID / PAR_LLDP_APPL_VLAN_SEL / PAR_LLDP_APPL_VLAN_PROTO tuples
     while ((prioPar = m_params.findParameter(prioPar, nullptr, PAR_LLDP_APPL_VLAN_VID.syntax, true)) != nullptr)
     {
-        vid.push_back (prioPar->asInt16 (0, 0x03FF));
+        vid.push_back (prioPar->asInt16 (0, 4095));
         sel.push_back (m_params.findParameter (prioPar, PAR_LLDP_APPL_VLAN_VID.syntax, PAR_LLDP_APPL_VLAN_SEL.syntax)->asInt8 (0, 7));
         proto.push_back (m_params.findParameter (prioPar, PAR_LLDP_APPL_VLAN_VID.syntax, PAR_LLDP_APPL_VLAN_PROTO.syntax)->asInt16 ());
     }
@@ -469,7 +479,7 @@ void cLldpParser::macPhyConfigStatus ()
         bool supported   = !!m_params.findParameter (PAR_LLDP_MACPHY_ANEG_SUP.syntax, (uint32_t)0)->asInt8 (0, 1);
         bool enabled     = !!m_params.findParameter (PAR_LLDP_MACPHY_ANEG_ENA.syntax, (uint32_t)0)->asInt8 (0, 1);
         uint16_t caps    = m_params.findParameter (PAR_LLDP_MACPHY_ANEG_CAPS.syntax)->asInt16();
-        uint16_t mautype = m_params.findParameter (PAR_LLDP_MACPHY_MAU_TYPE.syntax)->asInt16();
+        uint16_t mautype = optionalPar->asInt16();
 
         m_packet.addMacPhyStatus (supported, enabled, caps, mautype);
     }
@@ -495,13 +505,13 @@ void cLldpParser::powerViaMDI ()
         // if power type is provided, we expect ALL DLL classification extension fields to be present
         if (optionalPar)
         {
-            uint8_t powerType   = optionalPar->asInt8 ();
-            uint8_t powerSource = m_params.findParameter (PAR_LLDP_POE_DLL_POWER_SOURCE.syntax)->asInt8 ();
-            uint8_t pd4pid      = m_params.findParameter (PAR_LLDP_POE_DLL_PD_4PID.syntax)->asInt8 ();
-            uint8_t powerPrio   = m_params.findParameter (PAR_LLDP_POE_DLL_POWER_PRIO.syntax)->asInt8 ();
+            uint8_t powerType   = optionalPar->asInt8 (0, 3);
+            uint8_t powerSource = m_params.findParameter (PAR_LLDP_POE_DLL_POWER_SOURCE.syntax)->asInt8 (0, 3);
+            uint8_t pd4pid      = m_params.findParameter (PAR_LLDP_POE_DLL_PD_4PID.syntax)->asInt8 (0, 1);
+            uint8_t powerPrio   = m_params.findParameter (PAR_LLDP_POE_DLL_POWER_PRIO.syntax)->asInt8 (0, 3);
 
-            double pdRequestedPower  = m_params.findParameter (PAR_LLDP_POE_DLL_PD_REQ_POWER.syntax)->asDouble (0, 99.0);
-            double pseRequestedPower = m_params.findParameter (PAR_LLDP_POE_DLL_PD_ALLOC_POWER.syntax)->asDouble (0, 99.0);
+            double pdRequestedPower  = m_params.findParameter (PAR_LLDP_POE_DLL_PD_REQ_POWER.syntax)->asDouble (0, 6553.5);
+            double pseRequestedPower = m_params.findParameter (PAR_LLDP_POE_DLL_PD_ALLOC_POWER.syntax)->asDouble (0, 6553.5);
 
             m_packet.addDllExtPowerViaMDI (portClassPSE, pwrSupSupported, pwrSupState, pwrSupPairsCtrl, psePowerPair, powerClass,
                 powerType, powerSource, pd4pid, powerPrio, pdRequestedPower, pseRequestedPower);
@@ -541,10 +551,10 @@ void cLldpParser::eeeFastWake ()
     cParameter* optionalPar = m_params.findParameter (PAR_LLDP_EEE_FW_TX.syntax, true);
     if (optionalPar)
     {
-        bool tx     = !!optionalPar->asInt8 (0, 1);
-        bool rx     = !!m_params.findParameter (PAR_LLDP_EEE_FW_RX.syntax)->asInt8 (0, 1);
-        bool echoTx = !!m_params.findParameter (PAR_LLDP_EEE_FW_ECHO_TX.syntax)->asInt8 (0, 1);
-        bool echoRx = !!m_params.findParameter (PAR_LLDP_EEE_FW_ECHO_RX.syntax)->asInt8 (0, 1);
+        uint8_t tx     = optionalPar->asInt8 ();
+        uint8_t rx     = m_params.findParameter (PAR_LLDP_EEE_FW_RX.syntax)->asInt8 ();
+        uint8_t echoTx = m_params.findParameter (PAR_LLDP_EEE_FW_ECHO_TX.syntax)->asInt8 ();
+        uint8_t echoRx = m_params.findParameter (PAR_LLDP_EEE_FW_ECHO_RX.syntax)->asInt8 ();
         m_packet.addEEEFastWake (tx, rx, echoTx, echoRx);
     }
 }
@@ -554,11 +564,12 @@ void cLldpParser::pnDelay ()
     cParameter* optionalPar = m_params.findParameter (PAR_LLDP_PN_DELAY_PORT_RX_LOC.syntax, true);
     if (optionalPar)
     {
-        m_packet.addPnDelay (optionalPar->asInt32(),
-            m_params.findParameter (PAR_LLDP_PN_DELAY_PORT_RX_REM.syntax)->asInt32 (),
-            m_params.findParameter (PAR_LLDP_PN_DELAY_PORT_TX_LOC.syntax)->asInt32 (),
-            m_params.findParameter (PAR_LLDP_PN_DELAY_PORT_TX_REM.syntax)->asInt32 (),
-            m_params.findParameter (PAR_LLDP_PN_DELAY_LINE.syntax)->asInt32 ());
+        uint32_t portRxDelayLocal  = optionalPar->asInt32();
+        uint32_t portRxDelayRemote = m_params.findParameter (PAR_LLDP_PN_DELAY_PORT_RX_REM.syntax)->asInt32 ();
+        uint32_t portTxDelayLocal  = m_params.findParameter (PAR_LLDP_PN_DELAY_PORT_TX_LOC.syntax)->asInt32 ();
+        uint32_t portTxDelayRemote = m_params.findParameter (PAR_LLDP_PN_DELAY_PORT_TX_REM.syntax)->asInt32 ();
+        uint32_t cableDelay        = m_params.findParameter (PAR_LLDP_PN_DELAY_LINE.syntax)->asInt32 ();
+        m_packet.addPnDelay (portRxDelayLocal, portRxDelayRemote, portTxDelayLocal, portTxDelayRemote, cableDelay);
     }
 }
 
@@ -583,7 +594,10 @@ void cLldpParser::pnAlias ()
     if (aliasPar)
     {
         size_t len;
-        const uint8_t* alias = aliasPar->asStream (len, 255);
+        // AliasNameValue = NameOfPort + ”.” + NameOfStation
+        // max. len of NameOfPort = strlen("port-001-00000") = 14
+        // max. len of NameOfStation = 240
+        const uint8_t* alias = aliasPar->asStream (len, 14 + 1 + 240);
         m_packet.addPnAlias (alias, (uint8_t)len);
     }
 }
@@ -599,10 +613,17 @@ void cLldpParser::pnMrpPortState ()
     if (optionalPar)
     {
         const uint8_t* domain = optionalPar->asStream (len);
-        cMD5 md5;
-        cUUID uuid = cUUID::fromMD5 (md5.calc (domain, len));
-        m_packet.addPnMrpPortStatus (uuid.asArray(), portState);
-
+        if (len > 0)
+        {
+            cMD5 md5;
+            cUUID uuid = cUUID::fromMD5 (md5.calc (domain, len));
+            m_packet.addPnMrpPortStatus (uuid.asArray(), portState);
+        }
+        else
+        {
+            const uint8_t defaultUUID[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+            m_packet.addPnMrpPortStatus (defaultUUID, portState);
+        }
     }
     else
     {
@@ -641,7 +662,7 @@ void cLldpParser::pnPTCPStatus ()
         uint32_t orange = m_params.findParameter (PAR_LLDP_PN_PTCP_ORANGE.syntax, uint32_t (0))->asInt32 (0, 0x7fffffff);
         uint32_t green = m_params.findParameter (PAR_LLDP_PN_PTCP_GREEN.syntax, uint32_t (0))->asInt32 (0, 0x7fffffff);
 
-        m_packet.addPnPtcpStatus (mac, uuidDomain.asArray(), uuidIRDATA.asArray(), 
+        m_packet.addPnPtcpStatus (mac, uuidDomain.asArray(), uuidIRDATA.asArray(),
             period, !!period,
             redOrange, !!redOrange,
             orange, !!orange,
@@ -691,6 +712,8 @@ void cLldpParser::allOidTLVs ()
     while ((optionalPar = m_params.findParameter(optionalPar, nullptr, PAR_LLDP_OUI_TLV_OUI.syntax, true)) != nullptr)
     {
         const uint8_t*   oui = optionalPar->asStream (len, 3);
+        if (len != 3)
+            optionalPar->throwValueException ();
         uint8_t      subtype = m_params.findParameter (optionalPar, PAR_LLDP_OUI_TLV_OUI.syntax, PAR_LLDP_OUI_TLV_TYPE.syntax)->asInt8 ();
         const uint8_t* value = m_params.findParameter (optionalPar, PAR_LLDP_OUI_TLV_OUI.syntax, PAR_LLDP_OUI_TLV_VALUE.syntax)->asStream (len, 507);
         m_packet.addOuiTLV (oui, subtype, value, (uint16_t)len);

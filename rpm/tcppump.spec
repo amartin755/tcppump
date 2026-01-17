@@ -21,7 +21,7 @@ cmake --build build --verbose
 
 %install
 mkdir -p %{buildroot}/usr/bin
-install -m 0755 bin/tcppump %{buildroot}/usr/bin/
+install -m 0755 build/tcppump %{buildroot}/usr/bin/
 
 %post
 if [ -x /usr/sbin/setcap ]; then

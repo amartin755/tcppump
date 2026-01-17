@@ -1178,7 +1178,7 @@ cLinkable* cInstructionParser::compileLLDP (bool noEthHeader, cParameterList& pa
          - leave away mandatory TLVs (including End Of LLDPDU TLV)
          - inject End Of LLDPDU TLV between regular TLVs
        TODO
-        - lldp-raw: same parameter, no defaults, compile only tvls where user provided parameters, tlv-order==order of parameters
+        - lldp-raw: same parameter, no defaults, compile only tlvs where user provided parameters, tlv-order==order of parameters
           --> lldp-raw() will create an empty lldp-packet (no tlvs, no End TLV)
         - 802.3 TLVs (Poe type 3/4, additional caps, poe measurement)
         - lldp-med TLVs (all)

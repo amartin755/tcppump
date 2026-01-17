@@ -84,7 +84,7 @@ public:
         uint8_t powerType, uint8_t powerSource, uint8_t pd4pid, uint8_t powerPrio, double pdRequestedPower, double pseRequestedPower);
     void addMaxFrameSize (uint16_t size);
     void addEEE (uint16_t txTw, uint16_t rxTw, uint16_t fbTw, uint16_t echoTxTw, uint16_t echoRxTw);
-    void addEEEFastWake (bool tx, bool rx, bool echoTx, bool echoRx);
+    void addEEEFastWake (uint8_t tx, uint8_t rx, uint8_t echoTx, uint8_t echoRx);
 
     void addPnDelay (uint32_t portRxDelayLocal, uint32_t portRxDelayRemote,
         uint32_t portTxDelayLocal, uint32_t portTxDelayRemote, uint32_t cableDelay);

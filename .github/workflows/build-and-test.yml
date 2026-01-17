@@ -93,6 +93,7 @@ jobs:
           toolchain:p
           cmake:p
           ninja:p
+          python-yaml:p
 
     - name: 'msys2: Configure, build and test'
       working-directory: ${{github.workspace}}
@@ -130,4 +131,6 @@ jobs:
       if: failure() && (steps.ctest_step.outcome == 'failure' || steps.ctest_step2.outcome == 'failure')
       with:
         name: tcppump-exe-${{ matrix.build }}-${{ matrix.os }}-${{ matrix.toolchain }}
-        path: ${{ github.workspace }}\bin\
+        path: |
+          ${{github.workspace}}/build/tcppump.exe
+          ${{github.workspace}}/build/unittest.exe

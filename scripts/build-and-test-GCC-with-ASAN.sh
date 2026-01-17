@@ -38,7 +38,7 @@ $SCRIPTPATH/utils/clean-build.sh -t -a -C RelWithDebInfo -T GCC -B $BUILDDIRNAME
 
 # set raw capabilities
 echo "NOTE: need sudo for setting of raw-capabilities for tcppump binary"
-sudo setcap cap_net_raw+eip $PROJROOT/bin/tcppump
+cmake --build $BUILDDIRNAME --target setcap
 
 # disable coredumps for priviledged processes (otherwise ASAN will refuse to run)
 if [ $DUMPABLE -gt 1 ]
@@ -51,7 +51,7 @@ fi
 set +e
 
 # execute ctest
-cd $PROJROOT/$BUILDDIRNAME
+cd $BUILDDIRNAME
 ctest
 
 # restore suid coredump settings

@@ -2,7 +2,7 @@
 ###############################################################################
 #
 # TCPPUMP <https://github.com/amartin755/tcppump>
-# Copyright (C) 2012-2021 Andreas Martin (netnag@mailbox.org)
+# Copyright (C) 2012-2026 Andreas Martin (netnag@mailbox.org)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ if (NOT "${GIT_COMMIT_SHORT}" STREQUAL "")
         )
 
     if (${GIT_HAS_LOCAL_CHANGES} EQUAL 1)
-        set (GIT_HAS_LOCAL_CHANGES "+")
+        set (GIT_HAS_LOCAL_CHANGES "(modified)")
     endif ()
 
     string (STRIP "${GIT_COMMIT_SHORT}" GIT_COMMIT_SHORT)
@@ -40,11 +40,23 @@ if (NOT "${GIT_COMMIT_SHORT}" STREQUAL "")
     string (STRIP "${GIT_TAG}" GIT_TAG)
     string (STRIP "${GIT_BRANCH}" GIT_BRANCH)
 
-    set (GIT_COMMIT_SHORT ${GIT_COMMIT_SHORT}${GIT_HAS_LOCAL_CHANGES} PARENT_SCOPE)
     set (GIT_COMMIT ${GIT_COMMIT}${GIT_HAS_LOCAL_CHANGES} PARENT_SCOPE)
     set (GIT_TAG "${GIT_TAG}" PARENT_SCOPE)
     set (GIT_BRANCH "${GIT_BRANCH}" PARENT_SCOPE)
+else ()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/VERSION")
 
+        file(READ "${CMAKE_SOURCE_DIR}/VERSION" _content)
+
+        string(REGEX MATCH "COMMIT[ \t]+([^\n\r]+)" _ ${_content})
+        set(COMMIT_VALUE "${CMAKE_MATCH_1}")
+
+        string(REGEX MATCH "TAG[ \t]+([^\n\r]+)" _ ${_content})
+        set(TAG_VALUE "${CMAKE_MATCH_1}")
+
+        set (GIT_COMMIT ${COMMIT_VALUE} PARENT_SCOPE)
+        set (GIT_TAG "${TAG_VALUE}" PARENT_SCOPE)
+    endif()
 endif()
 
 endfunction()

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
  * TCPPUMP <https://github.com/amartin755/tcppump>
- * Copyright (C) 2012-2021 Andreas Martin (netnag@mailbox.org)
+ * Copyright (C) 2012-2026 Andreas Martin (netnag@mailbox.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
 
 
 #include <cstdio>
+#include <string>
 
 #include "libpcap.h"
 
@@ -196,9 +197,12 @@ void cPcapFileIO::printError (const char* err)
 #include <cstring>
 #include <cstdlib>
 #include "parsehelper.hpp"
-void cPcapFileIO::unitTest (const char* file)
+void cPcapFileIO::unitTest (const char* path)
 {
     Console::PrintDebug("-- " __FILE__ " --\n");
+
+    std::string file (path);
+    file += "/readtest.pcap";
 
     cPcapFileIO obj;
 
@@ -252,7 +256,7 @@ void cPcapFileIO::unitTest (const char* file)
     cTimeval t;
     int n = 0;
 
-    BUG_IF_NOT (obj.open(file, false));
+    BUG_IF_NOT (obj.open(file.c_str(), false));
     BUG_IF_NOT (!obj.m_modeWrite);
     BUG_IF_NOT (obj.m_fileHandle);
     BUG_IF_NOT (!obj.m_dumper);

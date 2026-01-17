@@ -1121,83 +1121,113 @@ static const Parameter PAR_LLDP_SYSDESC = {
     Bytestream
 };
 static const Parameter PAR_LLDP_SYSCAP_OTHER = {
-    "O",
+    "cap-other",
     "System Capability 'Other'",
     Bit
 };
 static const Parameter PAR_LLDP_SYSCAP_REPEATER = {
-    "P",
+    "cap-repeater",
     "System Capability 'Repeater'",
     Bit
 };
 static const Parameter PAR_LLDP_SYSCAP_BRIDGE = {
-    "B",
+    "cap-bridge",
     "System Capability 'Bridge'",
     Bit
 };
 static const Parameter PAR_LLDP_SYSCAP_WLAN = {
-    "W",
+    "cap-wlan-ap",
     "System Capability 'WLAN AP'",
     Bit
 };
 static const Parameter PAR_LLDP_SYSCAP_ROUTER = {
-    "R",
+    "cap-router",
     "System Capability 'Router'",
     Bit
 };
 static const Parameter PAR_LLDP_SYSCAP_PHONE = {
-    "T",
+    "cap-phone",
     "System Capability 'Telephone'",
     Bit
 };
 static const Parameter PAR_LLDP_SYSCAP_DOCSIS = {
-    "C",
+    "cap-docsis",
     "System Capability 'DOCSIS cable device'",
     Bit
 };
 static const Parameter PAR_LLDP_SYSCAP_STATION = {
-    "S",
+    "cap-station",
     "System Capability 'Station only'",
     Bit
 };
+static const Parameter PAR_LLDP_SYSCAP_CVLAN = {
+    "cap-cvlan",
+    "System Capability 'C-VLAN component'",
+    Bit
+};
+static const Parameter PAR_LLDP_SYSCAP_SVLAN = {
+    "cap-svlan",
+    "System Capability 'S-VLAN component'",
+    Bit
+};
+static const Parameter PAR_LLDP_SYSCAP_2P_RELAY = {
+    "cap-tpmr",
+    "System Capability 'Two-port MAC Relay component'",
+    Bit
+};
 static const Parameter PAR_LLDP_SYSCAP_OTHER_EN = {
-    "O-EN",
+    "encap-other",
     "Enabled System Capability 'Other'",
     Bit
 };
 static const Parameter PAR_LLDP_SYSCAP_REPEATER_EN = {
-    "P-EN",
+    "encap-repeater",
     "Enabled System Capability 'Repeater'",
     Bit
 };
 static const Parameter PAR_LLDP_SYSCAP_BRIDGE_EN = {
-    "B-EN",
+    "encap-bridge",
     "Enabled System Capability 'Bridge'",
     Bit
 };
 static const Parameter PAR_LLDP_SYSCAP_WLAN_EN = {
-    "W-EN",
+    "encap-wlan-ap",
     "Enabled System Capability 'WLAN AP'",
     Bit
 };
 static const Parameter PAR_LLDP_SYSCAP_ROUTER_EN = {
-    "R-EN",
+    "encap-router",
     "Enabled System Capability 'Router'",
     Bit
 };
 static const Parameter PAR_LLDP_SYSCAP_PHONE_EN = {
-    "T-EN",
+    "encap-phone",
     "Enabled System Capability 'Telephone'",
     Bit
 };
 static const Parameter PAR_LLDP_SYSCAP_DOCSIS_EN = {
-    "C-EN",
+    "encap-docsis",
     "Enabled System Capability 'DOCSIS cable device'",
     Bit
 };
 static const Parameter PAR_LLDP_SYSCAP_STATION_EN = {
-    "S-EN",
+    "encap-station",
     "Enabled System Capability 'Station only'",
+    Bit
+};
+static const Parameter PAR_LLDP_SYSCAP_CVLAN_EN = {
+    "encap-cvlan",
+    "Enabled System Capability 'C-VLAN component'",
+    Bit
+};
+static const Parameter PAR_LLDP_SYSCAP_SVLAN_EN = {
+    "encap-svlan",
+    "Enabled System Capability 'S-VLAN component'",
+    Bit
+};
+static const Parameter PAR_LLDP_SYSCAP_2P_RELAY_EN = {
+    "encap-tpmr",
+    "Enabled System Capability 'Two-port MAC Relay component'",
     Bit
 };
 static const Parameter PAR_LLDP_MGT_ADDR = {
@@ -1225,11 +1255,13 @@ static const Parameter PAR_LLDP_MGT_OID = {
     "Management Object Identifier",
     Bytestream
 };
+// Port VLAN ID TLV (IEEE 802.1Q-2022 D.2.1)
 static const Parameter PAR_LLDP_PVID = {
     "pvid",
     "Port VLAN ID",
     Integer
 };
+// Port And Protocol VLAN TLV (IEEE 802.1Q-2022 D.2.2)
 static const Parameter PAR_LLDP_PPVID = {
     "ppvid",
     "Port and Protocol VLAN ID",
@@ -1245,6 +1277,7 @@ static const Parameter PAR_LLDP_PPVID_EN = {
     "Port and Protocol VLAN enabled",
     Bit
 };
+// VLAN Name TLV (IEEE 802.1Q-2022 D.2.3)
 static const Parameter PAR_LLDP_VLAN_NAME = {
     "vlan-name",
     "VLAN name",
@@ -1255,6 +1288,7 @@ static const Parameter PAR_LLDP_VLAN_NAME_VID = {
     "VLAN ID of given name",
     Integer
 };
+// Protocol Identity TLV (IEEE 802.1Q-2022 D.2.4)
 static const Parameter PAR_LLDP_PROTO_ID = {
     "proto-id",
     "Protocol Identity",
@@ -1272,7 +1306,7 @@ static const Parameter PAR_LLDP_MGT_VID = {
     "Management VID associated with the system",
     Integer
 };
-// Link Aggregation TLV (IEEE 802.1AX)
+// Link Aggregation TLV (IEEE 802.1AX- F.2)
 static const Parameter PAR_LLDP_LAG_CAP = {
     "lag-cap",
     "Link aggregation capability (0 = not capable, 1 = capable)",
@@ -1304,7 +1338,7 @@ static const Parameter PAR_LLDP_CONG_NOTE_READY = {
     "Per-priority Ready indicators",
     Integer
 };
-// ETS Notification TLV (IEEE 802.1Q-2022 D.2.8)
+// ETS Configuration TLV (IEEE 802.1Q-2022 D.2.8)
 static const Parameter PAR_LLDP_ETS_CFG_W = {
     "ets-cfg-willing",
     "Willing bit, if set, station accepts configurations",
@@ -1388,7 +1422,7 @@ static const Parameter PAR_LLDP_APPL_PROTO = {
     "Protocol ID",
     Integer
 };
-// Application Priority TLV (IEEE 802.1Q-2022 D.2.12)
+// EVB TLV (IEEE 802.1Q-2022 D.2.12)
 static const Parameter PAR_LLDP_EVB_BRIDGE_STATUS = {
     "evb-bridge-status",
     "EVB capabilities that are supported by the EVB bridge",
@@ -1544,7 +1578,7 @@ static const Parameter PAR_LLDP_POE_DLL_POWER_SOURCE = {
 static const Parameter PAR_LLDP_POE_DLL_PD_4PID = {
     "poe-pd-4pid",
     "PD 4PID (1 = PD supports powering of both Modes simultaneously, 0 = PD does not support...)",
-    Integer
+    Bit
 };
 static const Parameter PAR_LLDP_POE_DLL_POWER_PRIO = {
     "poe-power-prio",
@@ -1577,7 +1611,7 @@ static const Parameter PAR_LLDP_EEE_TX_TW = {
 };
 static const Parameter PAR_LLDP_EEE_RX_TW = {
     "eee-rx-tw",
-    "EEE recieve Tw",
+    "EEE receive Tw",
     Integer
 };
 static const Parameter PAR_LLDP_EEE_FB_RX_TW = {
@@ -1599,22 +1633,22 @@ static const Parameter PAR_LLDP_EEE_ECHO_RX_TW = {
 static const Parameter PAR_LLDP_EEE_FW_TX = {
     "eee-fw-tx",
     "Transmit fast wake",
-    Bit
+    Integer
 };
 static const Parameter PAR_LLDP_EEE_FW_RX = {
     "eee-fw-rx",
     "Receive fast wake",
-    Bit
+    Integer
 };
 static const Parameter PAR_LLDP_EEE_FW_ECHO_TX = {
     "eee-fw-echo-tx",
     "Echo transmit fast wake",
-    Bit
+    Integer
 };
 static const Parameter PAR_LLDP_EEE_FW_ECHO_RX = {
     "eee-fw-echo-rx",
     "Echo receive fast wake",
-    Bit
+    Integer
 };
 
 // Profinet TLV LLDP_PNIO_DELAY
@@ -1730,7 +1764,7 @@ static const Parameter PAR_LLDP_PN_PTCP_ORANGE = {
 };
 static const Parameter PAR_LLDP_PN_PTCP_GREEN = {
     "pn-ptcp-green",
-    "Frame offset of gree period (nanoseconds)",
+    "Frame offset of green period (nanoseconds)",
     Integer
 };
 // Profinet TLV LLDP_PNIO_MAUTypeExtension
@@ -1752,7 +1786,7 @@ static const Parameter PAR_LLDP_PN_MRP_IC_ROLE = {
 };
 static const Parameter PAR_LLDP_PN_MRP_IC_MIC_POS = {
     "pn-mrp-ic-mic-pos",
-    "MRP interconnection mic position",
+    "MRP interconnection mic position (0 = Primary, 1 = Secondary)",
     Integer
 };
 

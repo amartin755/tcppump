@@ -1,48 +1,75 @@
-name: build-release-binary-windows
+# SPDX-License-Identifier: GPL-3.0-only
+###############################################################################
+#
+# TCPPUMP <https://github.com/amartin755/tcppump>
+# Copyright (C) 2012-2025 Andreas Martin (netnag@mailbox.org)
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 3.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
 
-# TODO: should be merged with linux workflow as matrix build
+name: build-release-binary-windows
 
 on: [workflow_dispatch]
 
 env:
-  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
 
 jobs:
   build-and-test:
-    # The CMake configure and build commands are platform agnostic and should work equally
-    # well on Windows or Mac.  You can convert this to a matrix build if you need
-    # cross-platform coverage.
-    # See: https://docs.github.com/en/actions/configuring-and-managing-workflows/configuring-a-workflow#configuring-a-build-matrix
-    runs-on: windows-2019
-    timeout-minutes: 15
+    runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v4
       with:
         submodules: 'true'
 
-    - name: ipconfig
-      run: ipconfig /all
+    - name: Setup environment
+      id: get_adapter
+      run: |
+        ipconfig /all
+        $name = (Get-NetAdapter | Where-Object {$_.Status -eq "Up" -and $_.InterfaceDescription -like "*Network Adapter*"} | Select-Object -First 1 -ExpandProperty Name)
+        echo "adapter_name=$name" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+        Invoke-WebRequest -Uri "https://nmap.org/dist/nmap-7.12-setup.exe" -OutFile "nmap.exe"; Start-Process -Filepath "nmap.exe" -ArgumentList /S
 
-    - name: Install Dependencies
-      # install winpcap, we use an old version of nmap which offers an silent installer and includes winpcap
-      run: Invoke-WebRequest -Uri "https://nmap.org/dist/nmap-7.12-setup.exe" -OutFile "nmap.exe"; Start-Process -Filepath "nmap.exe" -ArgumentList /S
+    - name: Set SOURCE_DATE_EPOCH from current git tag
+      shell: pwsh
+      run: |
+        $timestamp = git log -1 --format=%ct
+        Write-Host "SOURCE_DATE_EPOCH=$timestamp"
+        "SOURCE_DATE_EPOCH=$timestamp" | Out-File -FilePath $env:GITHUB_ENV -Append
 
-    - name: Configure CMake
-      # Use a bash shell so we can use the same syntax for environment variable
-      # access regardless of the host operating system
-      shell: bash
-      working-directory: ${{runner.workspace}}/tcppump
-      run: cmake -B build -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+    - name: 'Configure, build and test'
+      working-directory: ${{github.workspace}}
+      id: ctest_step2
+      run: |
+        cmake -B build -DCMAKE_BUILD_TYPE=Release -DTEST_NET_ADAPTER="${{ steps.get_adapter.outputs.adapter_name }}"
+        cmake --build build --target tcppump unittest --config Release --verbose
+        cd build
+        ctest -C Release
 
-    - name: Build
-      working-directory: ${{runner.workspace}}/tcppump
-      shell: bash
-      # Execute the build.  You can specify a specific target with "--target <NAME>"
-      run: cmake --build build --config $BUILD_TYPE
+    - name: Upload logfiles
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: logfiles
+        path: |
+          ${{github.workspace}}/build/CMakeFiles/CMakeError.log
+          ${{github.workspace}}/build/CMakeFiles/CMakeOutput.log
+          ${{github.workspace}}/build/Testing/Temporary/LastTest.log
 
-    - uses: actions/upload-artifact@v4
+    - name: Upload release executable
+      uses: actions/upload-artifact@v4
       with:
         name: release-windows-x64
-        path: ${{runner.workspace}}/tcppump/bin/
+        path: ${{github.workspace}}/build/Release/tcppump.exe

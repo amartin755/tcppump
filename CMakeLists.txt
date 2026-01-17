@@ -2,7 +2,7 @@
 ###############################################################################
 #
 # TCPPUMP <https://github.com/amartin755/tcppump>
-# Copyright (C) 2012-2025 Andreas Martin (netnag@mailbox.org)
+# Copyright (C) 2012-2026 Andreas Martin (netnag@mailbox.org)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,11 +30,6 @@ option (WITH_UBSAN     "enable/disable undefined behavior sanitizer (default OFF
 option (WITH_GCOV      "enable/disable code coverage profiling (default OFF)" OFF)
 option (WITH_WERROR    "enable/disable compilation warnings as errors (default OFF)" OFF)
 option (WITH_CPPCHECK  "enable/disable cppcheck (default OFF)" OFF)
-
-# set output directories to "bin"
-set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
-set (CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/../bin)
-set (CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/../bin)
 
 # cmake includes
 ###############################################################################
@@ -234,7 +229,6 @@ endif ()
 # generate build numbers
 ###############################################################################
 git_info ()
-add_compile_definitions (GIT_COMMIT_SHORT="${GIT_COMMIT_SHORT}")
 add_compile_definitions (GIT_TAG="${GIT_TAG}")
 add_compile_definitions (GIT_BRANCH="${GIT_BRANCH}")
 add_compile_definitions (GIT_COMMIT="${GIT_COMMIT}")

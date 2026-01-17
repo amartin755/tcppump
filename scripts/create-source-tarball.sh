@@ -86,8 +86,8 @@ fi
 
 {
     echo "VERSION $VERSION"
-    echo "COMMIT  $GIT_COMMIT $MODIFIED"
-    echo "TAG     $GIT_TAG"
+    echo "COMMIT $GIT_COMMIT$MODIFIED"
+    echo "TAG $GIT_TAG"
 } > VERSION
 echo -n $(cat VERSION)
 echo

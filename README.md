@@ -40,8 +40,8 @@ Supported protocols and packet formats
 **Note: This tool is currently in the alpha stage. Interfaces and functionality are subject to change.**
 
 ## Build instructions
-`tcppump` has been successfully compiled on **Ubuntu Linux (x64)** using **GCC** or **CLANG** and on **Windows 10/11** using **MinGW32, MinGW64 (MSYS2), and MSVC.**
-In theory, it should also compile with other **C++11-compatible** compilers, though this has not been tested.
+`tcppump` has been successfully compiled on Linux (x64, ARM64) using GCC or CLANG and on Windows 10/11 using MinGW32, MinGW64 (MSYS2), and MSVC.
+In theory, it should also compile with other C++11-compatible compilers, though this has not been tested.
 
 
 For details see [Build Instructions](doc/BUILD.md)
@@ -49,74 +49,80 @@ For details see [Build Instructions](doc/BUILD.md)
 
 ## How to use
 ### Command-line interface
-        Usage: tcppump -i IFC [OPTIONS] packets|infiles
-        tcppump -w OUTFILE [OPTIONS] packets|infiles
 
-        -h, --help
-                                Display this text
-        --version
-                                Show detailed version information
-        -v, --verbose
-                                Produce verbose output when parsing and printing. This option can be
-                                supplied multiple times (up to 4 times, e.g., -vvvv) for even more debug
-                                output.
-        -i <IFC>, --interface <IFC>
-                                Specify the name of the network interface through which packets are sent.
-        --myip4 <IPV4>
-                                Use the specified IPv4 address as the source IP address instead of the
-                                network interface's IP address.
-        --myip6 <IPV6>
-                                Use the specified IPv6 address as the source IP address instead of the
-                                network interface's IP address.
-        --mymac <MAC>
-                                Use the specified MAC address as the source MAC address instead of the
-                                network interface's MAC address.
-        --mtu <MTU>
-                                Use the specified MTU instead of the network interface's MTU.
-        --rand-smac
-                                Use a random source MAC address. This overwrites --mymac and any explicitly
-                                defined addresses in the packets.
-        --rand-dmac
-                                Use a random destination MAC address. This overwrites all explicitly
-                                defined destination MAC addresses in the packets.
-        --overwrite-dmac <MAC>
-                                Overwrite the destination MAC address of all packets with the specified MAC
-                                address.
-        -s, --script
-                                Read packets from script file instead of command-line.
-        --pcap [SCALE]
-                                Replay PCAP files of captured packets (e.g via Wireshark or tcpdump). The
-                                transmission time can be scaled using the optional SCALE parameter. The
-                                default value for SCALE is 1.0, meaning the file is played in real-time. A
-                                value of 2.0 slows playback to half speed, while 0.5 plays it at twice the
-                                speed. A value of 0 plays the file as quickly as possible.
-        -l <N>, --loop <N>
-                                Send all files/packets N times. Default: N = 1. If N = 0, packets will be
-                                sent infinitely until Ctrl+c is pressed.
-        -d <TIME>, --delay <TIME>
-                                Delay the packet transmission by TIME. Resolution depends on the -t
-                                parameter. By default, no delay is applied.
-        -t <RESOLUTION>, --resolution <RESOLUTION>
-                                Set the time resolution for packet transmission. This affects -d parameter
-                                as well as all timestamps in script files. Possible values are 'u'=
-                                microseconds, 'm'= milliseconds(default), 'c'= centiseconds and 's'=
-                                seconds
-        -w <OUTFILE>
-                                Write raw packet data to OUTFILE, or to the standard output if OUTFILE is
-                                set to '-'.
-        -F <FORMAT>
-                                Set the file format of the output capture file written using the -w option.
-                                Supported formats are: 'pcap' (default), 'text', 'hexstream', 'hexdump'
-        -a, --arp
-                                Resolve the destination MAC address for IPv4 packets using ARP. If the
-                                destination MAC address is omitted in IPv4 packets, it will be
-                                automatically determined via ARP.
-        --predictable-random
-                                Use a simple sequence instead of random numbers to generate predictable
-                                values.
+```
+Usage: tcppump -i IFC [OPTIONS] packets|infiles
+       tcppump -w OUTFILE [OPTIONS] packets|infiles
+
+ -h, --help
+                         Display this text
+ --version
+                         Show detailed version information
+ -v, --verbose
+                         Produce verbose output when parsing and printing. This option can be
+                         supplied multiple times (up to 4 times, e.g., -vvvv) for even more debug
+                         output.
+ -i <IFC>, --interface <IFC>
+                         Specify the name of the network interface through which packets are sent.
+ --myip4 <IPV4>
+                         Use the specified IPv4 address as the source IP address instead of the
+                         network interface's IP address.
+ --myip6 <IPV6>
+                         Use the specified IPv6 address as the source IP address instead of the
+                         network interface's IP address.
+ --mymac <MAC>
+                         Use the specified MAC address as the source MAC address instead of the
+                         network interface's MAC address.
+ --mtu <MTU>
+                         Use the specified MTU instead of the network interface's MTU.
+ --rand-smac
+                         Use a random source MAC address. This overwrites --mymac and any explicitly
+                         defined addresses in the packets.
+ --rand-dmac
+                         Use a random destination MAC address. This overwrites all explicitly
+                         defined destination MAC addresses in the packets.
+ --overwrite-dmac <MAC>
+                         Overwrite the destination MAC address of all packets with the specified MAC
+                         address.
+ -s, --script
+                         Read packets from script file instead of command-line.
+ --pcap [SCALE]
+                         Replay PCAP files of captured packets (e.g via Wireshark or tcpdump). The
+                         transmission time can be scaled using the optional SCALE parameter. The
+                         default value for SCALE is 1.0, meaning the file is played in real-time. A
+                         value of 2.0 slows playback to half speed, while 0.5 plays it at twice the
+                         speed. A value of 0 plays the file as quickly as possible.
+ -l <N>, --loop <N>
+                         Send all files/packets N times. Default: N = 1. If N = 0, packets will be
+                         sent infinitely until Ctrl+c is pressed.
+ -d <TIME>, --delay <TIME>
+                         Delay the packet transmission by TIME. Resolution depends on the -t
+                         parameter. By default, no delay is applied.
+ -t <RESOLUTION>, --resolution <RESOLUTION>
+                         Set the time resolution for packet transmission. This affects -d parameter
+                         as well as all timestamps in script files. Possible values are 'u'=
+                         microseconds, 'm'= milliseconds(default), 'c'= centiseconds and 's'=
+                         seconds
+ -w <OUTFILE>
+                         Write raw packet data to OUTFILE, or to the standard output if OUTFILE is
+                         set to '-'.
+ -F <FORMAT>
+                         Set the file format of the output capture file written using the -w option.
+                         Supported formats are: 'pcap' (default), 'text', 'hexstream', 'hexdump'
+ -a, --arp
+                         Resolve the destination MAC address for IPv4 packets using ARP. If the
+                         destination MAC address is omitted in IPv4 packets, it will be
+                         automatically determined via ARP.
+ --predictable-random
+                         Use a simple sequence instead of random numbers to generate predictable
+                         values.
+
+'tcppump help' lists all available network protocol types. Use 'tcppump help <protocol type>' to
+show the detailed syntax of the specified protocol.
+```
 
 
-### Packet Syntax
+### Packet Syntax Overview
 For details see [Packet Reference](doc/PACKET_REFERENCE.md)
 ```
 raw                 raw custom packet
@@ -333,6 +339,7 @@ rstp                Rapid Spanning Tree Protocol
    dei              Drop Eligible Indicator
 
 stp-tcn             STP Topology Change Notification
+ optional
 
 igmp                Raw IGMP V1/V2 packet
    dmac             Destination EUI-48 Mac address
@@ -679,22 +686,22 @@ lldp                Link Layer Discovery Protocol
    port-desc        Port Description
    sys-name         System Name
    sys-desc         System Description
-   O                System Capability 'Other'
-   P                System Capability 'Repeater'
-   B                System Capability 'Bridge'
-   W                System Capability 'WLAN AP'
-   R                System Capability 'Router'
-   T                System Capability 'Telephone'
-   C                System Capability 'DOCSIS cable device'
-   S                System Capability 'Station only'
-   O-EN             Enabled System Capability 'Other'
-   P-EN             Enabled System Capability 'Repeater'
-   B-EN             Enabled System Capability 'Bridge'
-   W-EN             Enabled System Capability 'WLAN AP'
-   R-EN             Enabled System Capability 'Router'
-   T-EN             Enabled System Capability 'Telephone'
-   C-EN             Enabled System Capability 'DOCSIS cable device'
-   S-EN             Enabled System Capability 'Station only'
+   cap-other        System Capability 'Other'
+   cap-repeater     System Capability 'Repeater'
+   cap-bridge       System Capability 'Bridge'
+   cap-wlan-ap      System Capability 'WLAN AP'
+   cap-router       System Capability 'Router'
+   cap-phone        System Capability 'Telephone'
+   cap-docsis       System Capability 'DOCSIS cable device'
+   cap-station      System Capability 'Station only'
+   encap-other      Enabled System Capability 'Other'
+   encap-repeater   Enabled System Capability 'Repeater'
+   encap-bridge     Enabled System Capability 'Bridge'
+   encap-wlan-ap    Enabled System Capability 'WLAN AP'
+   encap-router     Enabled System Capability 'Router'
+   encap-phone      Enabled System Capability 'Telephone'
+   encap-docsis     Enabled System Capability 'DOCSIS cable device'
+   encap-station    Enabled System Capability 'Station only'
    mgt-addr         Management Address
    mgt-addr-type    Management Address Subtype (see ianaAddressFamilyNumbers of RFC 3232 )
    if-number        Interface Number
@@ -805,7 +812,6 @@ lldp                Link Layer Discovery Protocol
    oui              Organizationally Specific TLV OUI
    oui-type         Organizationally Specific TLV Subtype Number
    oui-value        Organizationally Specific TLV Value as bytestream
-
 ```
 
 

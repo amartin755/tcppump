@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
  * TCPPUMP <https://github.com/amartin755/tcppump>
- * Copyright (C) 2012-2025 Andreas Martin (netnag@mailbox.org)
+ * Copyright (C) 2012-2026 Andreas Martin (netnag@mailbox.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -425,6 +425,6 @@ int main(int argc, char* argv[])
             "'tcppump help' lists all available network protocol types. "
             "Use 'tcppump help <protocol type>' to show the detailed syntax of the specified protocol. "
             "</br> </br> Homepage: <https://github.com/amartin755/tcppump>",
-            APP_VERSION, BUILD_TIME,  GIT_BRANCH GIT_COMMIT BUILD_TYPE);
+            APP_VERSION, BUILD_TIME,  BUILD_TYPE "-" GIT_TAG "-" GIT_COMMIT);
     return app.main (argc, argv);
 }

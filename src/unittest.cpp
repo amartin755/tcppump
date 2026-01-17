@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
  * TCPPUMP <https://github.com/amartin755/tcppump>
- * Copyright (C) 2012-2021 Andreas Martin (netnag@mailbox.org)
+ * Copyright (C) 2012-2026 Andreas Martin (netnag@mailbox.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@
 #endif
 
 
-int main (void)
+int main (int argc, char* argv[])
 {
 #if HAVE_MSVC
         if(!IsDebuggerPresent())
@@ -53,7 +53,11 @@ int main (void)
             _CrtSetReportMode( _CRT_ERROR, _CRTDBG_MODE_DEBUG );
         }
 #endif
-
+    if (argc != 2)
+    {
+        fprintf (stderr, "usage: %s <testfile-path>\n", argv[0]);
+        return 1;
+    }
     Console::SetPrintLevel(Console::Debug);
     cRandom::create();
     try
@@ -77,7 +81,7 @@ int main (void)
         cInstructionParser::unitTest ();
 
 #if HAVE_PCAP
-        cPcapFileIO::unitTest ("../src/test/readtest.pcap");
+        cPcapFileIO::unitTest (argv[1]);
 #endif
     }
     catch (...)

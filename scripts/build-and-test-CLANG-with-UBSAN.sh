@@ -37,8 +37,8 @@ $SCRIPTPATH/utils/clean-build.sh -t -u -C RelWithDebInfo -T CLANG -B $BUILDDIRNA
 
 # set raw capabilities
 echo "NOTE: need sudo for setting of raw-capabilities for tcppump binary"
-sudo setcap cap_net_raw+eip $PROJROOT/bin/tcppump
+cmake --build $BUILDDIRNAME --target setcap
 
 # execute ctest
-cd $PROJROOT/$BUILDDIRNAME
+cd $BUILDDIRNAME
 ctest
