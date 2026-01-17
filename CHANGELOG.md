@@ -1,5 +1,5 @@
 # 0.4.0
-_UNRELEASED_, Andreas Martin <netnag@mailbox.org>
+_2026-01-17 20:02:02 +0100_, Andreas Martin <netnag@mailbox.org>
 
 ## Added
 - compiler: IPv6 support with limitations (no fragmentation). Can be used as transport for UDP, GRE and VXLAN.
