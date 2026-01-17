@@ -92,8 +92,14 @@ if (( SKIP_TEST )); then
 else
     # trigger github workflow to build and test
     RUN_ID=$($UTILSPATH/trigger-github-workflow.sh --workflow .github/workflows/build-and-test.yml --ref "$GIT_BRANCH")
-    # run build and test inside all docker containers as well
+
+    # run build and test inside all docker containers
     $SCRIPTPATH/build-and-test-inside-container.sh > /dev/null
+
+    # run build and test with address sanitizer and memcheck
+    $SCRIPTPATH/build-and-test-GCC-with-ASAN.sh > /dev/null
+    $SCRIPTPATH/build-and-test-GCC-with-memcheck.sh > /dev/null
+
     # await github workflow result
     $UTILSPATH/await-github-workflow-result.sh --id "$RUN_ID"
 fi
@@ -120,8 +126,13 @@ fi
 # finally create source-tarball and release packages
 #
 echo "-- create packages"
+if [[ -z "$DRY_RUN" ]]; then
+    GIT_REF="$GIT_TAG"
+else
+    GIT_REF="$GIT_BRANCH"
+fi
 # trigger github workflow to build windows release binary
-RUN_ID=$($UTILSPATH/trigger-github-workflow.sh --workflow .github/workflows/build-release-binary-windows.yml --ref "$GIT_TAG")
+RUN_ID=$($UTILSPATH/trigger-github-workflow.sh --workflow .github/workflows/build-release-binary-windows.yml --ref "$GIT_REF")
 # use the time to locally create deb and rpm packages as well
 $SCRIPTPATH/package.sh debian.oldstable fedora.latest
 # await github workflow result and download artifacts
