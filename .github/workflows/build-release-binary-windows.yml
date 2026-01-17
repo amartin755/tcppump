@@ -58,6 +58,12 @@ jobs:
         cd build
         ctest -C Release
 
+    - name: Create ZIP with binary and SHA256
+      run: |
+        $hash = Get-FileHash -Algorithm SHA256 "${{github.workspace}}/build/Release/tcppump.exe" | Select-Object -ExpandProperty Hash
+        $hash | Out-File -FilePath "${{github.workspace}}/build/Release/tcppump.exe.sha256"
+        Compress-Archive -Path "${{github.workspace}}/build/Release/tcppump.exe", "${{github.workspace}}/build/Release/tcppump.exe.sha256" -DestinationPath "${{github.workspace}}/build/Release/tcppump-windows-x64.zip"
+
     - name: Upload logfiles
       uses: actions/upload-artifact@v4
       if: always()
@@ -72,4 +78,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: release-windows-x64
-        path: ${{github.workspace}}/build/Release/tcppump.exe
+        path: ${{github.workspace}}/build/Release/tcppump-windows-x64.zip
