@@ -1,3 +1,18 @@
+# 0.4.1
+_UNRELEASED_, Andreas Martin <netnag@mailbox.org>
+
+## Added
+- 
+
+## Changed
+- 
+
+## Fixed
+- 
+
+## Removed
+- 
+
 # 0.4.0
 _2026-01-17 20:02:02 +0100_, Andreas Martin <netnag@mailbox.org>
 
