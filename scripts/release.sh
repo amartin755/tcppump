@@ -45,6 +45,9 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+#
+# check git working environment
+#
 # ensure we are inside a git repository
 if ! git rev-parse --is-inside-work-tree &>/dev/null; then
     echo "error: Not inside a git repository" >&2
@@ -84,23 +87,28 @@ if [ $(git tag -l "$GIT_TAG") ]; then
 fi
 
 #
-# now let's do a test build
+# before we create the release, we build and test everything
 #
 echo "-- build and test"
 if (( SKIP_TEST )); then
   echo "skipped"
 else
     # trigger github workflow to build and test
+    echo "   starting github workflow"
     RUN_ID=$($UTILSPATH/trigger-github-workflow.sh --workflow .github/workflows/build-and-test.yml --ref "$GIT_BRANCH")
 
     # run build and test inside all docker containers
+    echo "   running inside docker containers"
     $SCRIPTPATH/build-and-test-inside-container.sh > /dev/null
 
     # run build and test with address sanitizer and memcheck
+    echo "   running local ASAN test"
     $SCRIPTPATH/build-and-test-GCC-with-ASAN.sh > /dev/null
+    echo "   running local valgrind test"
     $SCRIPTPATH/build-and-test-GCC-with-memcheck.sh > /dev/null
 
     # await github workflow result
+    echo "   awaiting github workflow result"
     $UTILSPATH/await-github-workflow-result.sh --id "$RUN_ID"
 fi
 
@@ -136,4 +144,41 @@ RUN_ID=$($UTILSPATH/trigger-github-workflow.sh --workflow .github/workflows/buil
 # use the time to locally create deb and rpm packages as well
 $SCRIPTPATH/package.sh debian.oldstable fedora.latest
 # await github workflow result and download artifacts
-$UTILSPATH/await-github-workflow-result.sh --id "$RUN_ID" --out "$PROJROOT/RELEASE/windows"
+WIN_RELEASE_DIR="$PROJROOT/RELEASE/windows"
+$UTILSPATH/await-github-workflow-result.sh --id "$RUN_ID" --out "$WIN_RELEASE_DIR"
+
+
+#
+# windows artifacts build on github need some additional checks and preparation
+#
+echo "-- check and prepare windows release artifacts"
+# verify windows executable
+unzip -q "$WIN_RELEASE_DIR/release-windows-x64/tcppump-windows-x64.zip" -d "$WIN_RELEASE_DIR"
+EXE="$WIN_RELEASE_DIR/tcppump.exe"
+HASHFILE="$WIN_RELEASE_DIR/tcppump.exe.sha256"
+FINAL_WIN_ZIP="$WIN_RELEASE_DIR/tcppump-$VERSION-windows-x64.zip"
+
+if [[ ! -f "$EXE" || ! -f "$HASHFILE" ]]; then
+  echo "Error: executable or hashfile not found!" >&2
+  exit 1
+fi
+
+EXPECTED_HASH=$(tr -d '\r\n' < "$HASHFILE")
+CALCULATED_HASH=$(sha256sum "$EXE" | awk '{print toupper($1)}')
+
+if [[ "$EXPECTED_HASH" != "$CALCULATED_HASH" ]]; then
+  echo "Error: hash mismatch for downloaded windows executable!" >&2
+  exit 2
+fi
+
+rm "$EXE" "$HASHFILE"
+
+mv "$WIN_RELEASE_DIR/release-windows-x64/tcppump-windows-x64.zip" "$FINAL_WIN_ZIP"
+rm -r "$WIN_RELEASE_DIR/release-windows-x64"
+# everything looks good, sign and create checksum for final windows zip
+cd "$WIN_RELEASE_DIR"
+gpg --verbose --detach-sig --yes -a "$FINAL_WIN_ZIP"
+sha256sum "$FINAL_WIN_ZIP" | tee "$FINAL_WIN_ZIP.sha256"
+
+
+echo "-- that's all folks, $VERSION released --"
