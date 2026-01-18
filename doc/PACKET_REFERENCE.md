@@ -125,6 +125,7 @@ The following protocols are supported.
 | `udp`              | [UDP with IPv4 transport](udp.md) |
 | `udp6`             | [UDP with IPv6 transport](udp.md) |
 | `tcp`              | [TCP with IPv4 transport](tcp.md) |
+| `tcp6`             | [TCP with IPv6 transport](tcp.md) |
 | `icmp`</br>`icmp-unreachable`</br>`icmp-src-quench`</br>`icmp-time-exceeded`</br>`icmp-redirect`</br>`icmp-echo`</br>`icmp-echo-reply`             | [ICMPv4](icmpv4.md) |
 | `vrrp`             | [VRRPv2 with IPv4 transport](vrrp.md) |
 | `vrrp3`            | [VRRPv3 with IPv4 transport](vrrp.md) |
