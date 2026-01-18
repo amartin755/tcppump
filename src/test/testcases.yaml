@@ -1057,14 +1057,27 @@ testcases:
       - >-
         udp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=1, dport=2, payload =
         FE)
-    expected_output: 'file://udp-25.pcap'
+    expected_output: >-
+      1122334455668023456789ab08004500001d0000000040114e8f010203040a141e28000100020009d596fe
 
   - name: udp-26--ok
     input:
       - 'udp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=0, dport=0xffff, hchksum=0x1234)'
     expected_output: >-
       1122334455668023456789ab08004500001c0000000040111234010203040a141e280000ffff0008d39c
-    
+
+  - name: udp6-1--nok
+    input:
+      - 'udp6(dip=10:20:30:40::1, dmac=11:22:33:44:55:66, fl=0x12345, ttl=65, dscp=0x12, ecn=1, sport=1, dport=2, hchksum=0x1234)'
+    expected_output: >-
+      error: Unexpected parameter
+
+  - name: udp6-2--nok
+    input:
+      - 'udp6(dip=10:20:30:40::1, dmac=11:22:33:44:55:66, fl=0x12345, ttl=65, dscp=0x12, ecn=1, sport=1, dport=2)'
+    expected_output: >-
+      1122334455668023456789ab86dd64912345000811411234000000000000000000000000000100100020003000400000000000000001000100020008ed05
+
   - name: tcp-1--nok
     input:
       - tcp()
@@ -1407,6 +1420,14 @@ testcases:
         ack=0, payload=*)
     expected_output: >-
       1122334455668023456789ab0800450000480000000040064e6f010203040a141e28000000000000000000000000500004008e820000000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f
+
+  - name: tcp6-1--ok
+    input:
+      - >-
+        tcp6(dip=10:20:30:40::1, dmac=11:22:33:44:55:66, fl=0x12345, ttl=65, dscp=0x12, ecn=1, sport=0, dport=0, seq=0,
+        ack=0, FIN, SYN, RESET, PUSH, ACK, ECN, CWR, NONCE)
+    expected_output: >-
+      1122334455668023456789ab86dd6491234500140641123400000000000000000000000000010010002000300040000000000000000100000000000000000000000051df040097300000
 
   - name: vrrp-1--nok
     input:

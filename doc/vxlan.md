@@ -34,7 +34,7 @@ Note: Optionally all [VLAN tag parameters](doc/ethernet.md) and optional [IPv4](
 
 - Name: `dip`
     - Meaning: Destination IPv4 address
-    - Type: IPv4 address
+    - Type: IPv4 or IPv6 (`vxlan6`) address
     - Example: `dip=1.2.3.4`
 
 - Name: `smac`
@@ -45,7 +45,7 @@ Note: Optionally all [VLAN tag parameters](doc/ethernet.md) and optional [IPv4](
 
 - Name: `sip`
     - Meaning: Source IPv4 address
-    - Type: IPv4 address
+    - Type: IPv4 or IPv6 (`vxlan6`) address
     - Optional: yes — Default: local interface IP (if available)
     - Example: `sip=192.168.0.1`
 

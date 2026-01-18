@@ -10,11 +10,11 @@ The specification uses a **descriptive, quasi-formal notation** intended for doc
 It is not a grammar definition.
 See [Notation and Conventions](doc/PACKET_REFERENCE.md)
 ```
-udp(
+udp | udp6(
     dmac          : MAC        [optional]
-    dip           : IP
+    dip           : IP4 | IP6
     smac          : MAC        [optional]
-    sip           : IP         [optional]
+    sip           : IP4 | IP6  [optional]
     sport         : INT16
     dport         : INT16
     chksum        : INT16      [optional]
@@ -33,8 +33,9 @@ Note: Optionally all [VLAN tag parameters](doc/ethernet.md) and optional [IPv4](
 
 - Name: `dip`
     - Meaning: Destination IPv4 address
-    - Type: IPv4 address
+    - Type: IPv4 or IPv6 (`udp6`) address
     - Example: `dip=1.2.3.4`
+    - Example: `dip=2001:db8::1`
 
 - Name: `smac`
     - Meaning: Source EUI-48 MAC address
@@ -44,7 +45,7 @@ Note: Optionally all [VLAN tag parameters](doc/ethernet.md) and optional [IPv4](
 
 - Name: `sip`
     - Meaning: Source IPv4 address
-    - Type: IPv4 address
+    - Type: IPv4 or IPv6 (`udp6`) address
     - Optional: yes — Default: local interface IP (if available)
     - Example: `sip=192.168.0.1`
 

@@ -599,15 +599,21 @@ add_test(NAME "udp-24--nok" COMMAND "tcppump" "--predictable-random" "--myip4=1.
 set_tests_properties("udp-24--nok" PROPERTIES FIXTURES_REQUIRED setup)
 set_tests_properties("udp-24--nok" PROPERTIES WILL_FAIL TRUE)
 
-add_test(NAME "udp-25--ok" COMMAND "tcppump" "--predictable-random" "--myip4=1.2.3.4" "--myip6=1234::1" "--mymac=80:23:45:67:89:AB" "--mtu=1500" "-F" "pcap" "-w" "${TEST_TMP_DIR}/udp-25--ok.pcap" "udp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=1, dport=2, payload = FE)")
+add_test(NAME "udp-25--ok" COMMAND "tcppump" "--predictable-random" "--myip4=1.2.3.4" "--myip6=1234::1" "--mymac=80:23:45:67:89:AB" "--mtu=1500" "-F" "hexstream" "-w" "-" "udp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=1, dport=2, payload = FE)")
 set_tests_properties("udp-25--ok" PROPERTIES FIXTURES_REQUIRED setup)
-add_test(NAME "udp-25--ok-diff" COMMAND cmake -E compare_files "${TEST_TMP_DIR}/udp-25--ok.pcap" "${REF_FILES_DIR}/udp-25.pcap")
-set_tests_properties("udp-25--ok" PROPERTIES FIXTURES_SETUP "udp-25--ok-setup")
-set_tests_properties("udp-25--ok-diff" PROPERTIES FIXTURES_REQUIRED "udp-25--ok-setup")
+set_tests_properties("udp-25--ok" PROPERTIES PASS_REGULAR_EXPRESSION "1122334455668023456789ab08004500001d0000000040114e8f010203040a141e28000100020009d596fe")
 
 add_test(NAME "udp-26--ok" COMMAND "tcppump" "--predictable-random" "--myip4=1.2.3.4" "--myip6=1234::1" "--mymac=80:23:45:67:89:AB" "--mtu=1500" "-F" "hexstream" "-w" "-" "udp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=0, dport=0xffff, hchksum=0x1234)")
 set_tests_properties("udp-26--ok" PROPERTIES FIXTURES_REQUIRED setup)
 set_tests_properties("udp-26--ok" PROPERTIES PASS_REGULAR_EXPRESSION "1122334455668023456789ab08004500001c0000000040111234010203040a141e280000ffff0008d39c")
+
+add_test(NAME "udp6-1--nok" COMMAND "tcppump" "--predictable-random" "--myip4=1.2.3.4" "--myip6=1234::1" "--mymac=80:23:45:67:89:AB" "--mtu=1500" "-F" "hexstream" "-w" "-" "udp6(dip=10:20:30:40::1, dmac=11:22:33:44:55:66, fl=0x12345, ttl=65, dscp=0x12, ecn=1, sport=1, dport=2, hchksum=0x1234)")
+set_tests_properties("udp6-1--nok" PROPERTIES FIXTURES_REQUIRED setup)
+set_tests_properties("udp6-1--nok" PROPERTIES PASS_REGULAR_EXPRESSION "error: Unexpected parameter")
+
+add_test(NAME "udp6-2--nok" COMMAND "tcppump" "--predictable-random" "--myip4=1.2.3.4" "--myip6=1234::1" "--mymac=80:23:45:67:89:AB" "--mtu=1500" "-F" "hexstream" "-w" "-" "udp6(dip=10:20:30:40::1, dmac=11:22:33:44:55:66, fl=0x12345, ttl=65, dscp=0x12, ecn=1, sport=1, dport=2)")
+set_tests_properties("udp6-2--nok" PROPERTIES FIXTURES_REQUIRED setup)
+set_tests_properties("udp6-2--nok" PROPERTIES PASS_REGULAR_EXPRESSION "1122334455668023456789ab86dd64912345000811411234000000000000000000000000000100100020003000400000000000000001000100020008ed05")
 
 add_test(NAME "tcp-1--nok" COMMAND "tcppump" "--predictable-random" "--myip4=1.2.3.4" "--myip6=1234::1" "--mymac=80:23:45:67:89:AB" "--mtu=1500" "-F" "hexstream" "-w" "-" "tcp()")
 set_tests_properties("tcp-1--nok" PROPERTIES FIXTURES_REQUIRED setup)
@@ -792,6 +798,10 @@ set_tests_properties("tcp-44--nok" PROPERTIES WILL_FAIL TRUE)
 add_test(NAME "tcp-45--ok" COMMAND "tcppump" "--predictable-random" "--myip4=1.2.3.4" "--myip6=1234::1" "--mymac=80:23:45:67:89:AB" "--mtu=1500" "-F" "hexstream" "-w" "-" "tcp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=0, dport=0, seq=0, ack=0, payload=*)")
 set_tests_properties("tcp-45--ok" PROPERTIES FIXTURES_REQUIRED setup)
 set_tests_properties("tcp-45--ok" PROPERTIES PASS_REGULAR_EXPRESSION "1122334455668023456789ab0800450000480000000040064e6f010203040a141e28000000000000000000000000500004008e820000000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")
+
+add_test(NAME "tcp6-1--ok" COMMAND "tcppump" "--predictable-random" "--myip4=1.2.3.4" "--myip6=1234::1" "--mymac=80:23:45:67:89:AB" "--mtu=1500" "-F" "hexstream" "-w" "-" "tcp6(dip=10:20:30:40::1, dmac=11:22:33:44:55:66, fl=0x12345, ttl=65, dscp=0x12, ecn=1, sport=0, dport=0, seq=0, ack=0, FIN, SYN, RESET, PUSH, ACK, ECN, CWR, NONCE)")
+set_tests_properties("tcp6-1--ok" PROPERTIES FIXTURES_REQUIRED setup)
+set_tests_properties("tcp6-1--ok" PROPERTIES PASS_REGULAR_EXPRESSION "1122334455668023456789ab86dd6491234500140641123400000000000000000000000000010010002000300040000000000000000100000000000000000000000051df040097300000")
 
 add_test(NAME "vrrp-1--nok" COMMAND "tcppump" "--predictable-random" "--myip4=1.2.3.4" "--myip6=1234::1" "--mymac=80:23:45:67:89:AB" "--mtu=1500" "-F" "hexstream" "-w" "-" "vrrp()")
 set_tests_properties("vrrp-1--nok" PROPERTIES FIXTURES_REQUIRED setup)

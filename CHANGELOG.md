@@ -3,6 +3,7 @@ _UNRELEASED_, Andreas Martin <netnag@mailbox.org>
 
 ## Added
 - compiler: The IPv4 header checksum can be set manually using the new 'hchksum' parameter.
+- compiler: TCP via IPv6
 
 ## Changed
 - 

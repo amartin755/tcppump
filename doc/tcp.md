@@ -10,11 +10,11 @@ The specification uses a **descriptive, quasi-formal notation** intended for doc
 It is not a grammar definition.
 See [Notation and Conventions](doc/PACKET_REFERENCE.md)
 ```
-tcp(
+tcp | tcp6(
     dmac          : MAC        [optional]
-    dip           : IP4
+    dip           : IP4 | IP6
     smac          : MAC        [optional]
-    sip           : IP4         [optional]
+    sip           : IP4 | IP6  [optional]
     sport         : INT16
     dport         : INT16
     seq           : INT32
@@ -34,7 +34,7 @@ tcp(
     payload       : BYTESTREAM [optional]
 )
 ```
-Note: Optionally all [VLAN tag parameters](doc/ethernet.md) and optional [IPv4](doc/ipv4.md) parameters are allowed.
+Note: Optionally all [VLAN tag parameters](doc/ethernet.md) and optional [IPv4](doc/ipv4.md) or [IPv6](doc/ipv6.md) parameters are allowed.
 
 ## Parameter reference
 
@@ -46,8 +46,9 @@ Note: Optionally all [VLAN tag parameters](doc/ethernet.md) and optional [IPv4](
 
 - Name: `dip`
     - Meaning: Destination IPv4 address
-    - Type: IPv4 address
+    - Type: IPv4 or IPv6 (`tcp6`) address
     - Example: `dip=1.2.3.4`
+    - Example: `dip=2001:db8::1`
 
 - Name: `smac`
     - Meaning: Source EUI-48 MAC address
@@ -57,7 +58,7 @@ Note: Optionally all [VLAN tag parameters](doc/ethernet.md) and optional [IPv4](
 
 - Name: `sip`
     - Meaning: Source IPv4 address
-    - Type: IPv4 address
+    - Type: IPv4 or IPv6 (`tcp6`) address
     - Optional: yes — Default: local interface IP (if available)
     - Example: `sip=192.168.0.1`
 
@@ -137,4 +138,9 @@ tcp(dip=192.0.2.10, sport=12345, dport=80, seq=1000, ack=2000, ACK=1, payload="G
 TCP packet with random payload and explicit checksum
 ```
 tcp(dmac=12:23:34:34:44:44, dip=1.2.3.4, sport=54321, dport=80, seq=1, ack=0, SYN=1, chksum=0, payload=*)
+```
+
+IPv6 SYN packet
+```
+tcp6(dip=2001:db8::1, sport=12345, dport=80, seq=0, ack=0, SYN=1)
 ```

@@ -27,14 +27,14 @@ Supported protocols and packet formats
 * ARP
 * Raw IPv4
 * Raw IPv6 (fragmentation not yet supported)
-* UDP
-* TCP
+* UDP (IPv4 and IPv6)
+* TCP (IPv4 and IPv6)
 * VRRP
 * STP/RSTP
 * IGMP (v1/v2 only, v3 partially)
-* ICMP
-* VXLAN
-* GRE
+* ICMPv4
+* VXLAN (IPv4 and IPv6)
+* GRE (IPv4 and IPv6)
 * LLDP
 
 **Note: This tool is currently in the alpha stage. Interfaces and functionality are subject to change.**
@@ -573,7 +573,7 @@ icmp-echo-reply         ICMPv4 Echo Reply
    prio                 VLAN Priority
    dei                  Drop Eligible Indicator
 
-tcp                     Raw TCP packet
+tcp                     Raw TCPv4 packet
    dmac                 Destination EUI-48 Mac address
    dip                  Destination IP address
    sport                Source TCP port
@@ -589,6 +589,38 @@ tcp                     Raw TCP packet
    sip                  Source IP address
    id                   IPv4 packet identifier
    hchksum              IPv4 header checksum
+   win                  TCP window size
+   urgptr               TCP urgent pointer
+   FIN                  TCP FIN flag
+   SYN                  TCP SYN flag
+   RESET                TCP RESET flag
+   PUSH                 TCP PUSH flag
+   ACK                  TCP ACK flag
+   URGENT               TCP URGENT flag
+   ECN                  TCP ECN flag
+   CWR                  TCP CWR flag
+   NONCE                TCP nonce
+   payload              TCP packet payload
+   chksum               TCP checksum
+   vid                  VLAN Identifier
+   vtype                VLAN Type
+   prio                 VLAN Priority
+   dei                  Drop Eligible Indicator
+
+tcp6                    Raw TCPv6 packet
+   dmac                 Destination EUI-48 Mac address
+   dip                  Destination IP address
+   sport                Source TCP port
+   dport                Destination TCP port
+   seq                  TCP sequence number
+   ack                  TCP acknowledgment number
+ optional
+   smac                 Source EUI-48 Mac address
+   dscp                 Differentiated Services Code Point
+   ecn                  Explicit Congestion Notification
+   ttl                  Time To Live
+   sip                  Source IP address
+   fl                   IPv6 Flow Label
    win                  TCP window size
    urgptr               TCP urgent pointer
    FIN                  TCP FIN flag

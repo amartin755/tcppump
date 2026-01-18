@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
  * TCPPUMP <https://github.com/amartin755/tcppump>
- * Copyright (C) 2012-2025 Andreas Martin (netnag@mailbox.org)
+ * Copyright (C) 2012-2026 Andreas Martin (netnag@mailbox.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -87,7 +87,7 @@ private:
     cLinkable* compileICMPWithEmbedded (bool noEthHeader, cParameterList& params, uint8_t type);
     cLinkable* compileICMPRedirect (bool noEthHeader, cParameterList& params);
     cLinkable* compileICMPPing (bool noEthHeader, cParameterList& params, bool reply);
-    cLinkable* compileTCP  (bool noEthHeader, cParameterList& params);
+    cLinkable* compileTCP  (bool noEthHeader, cParameterList& params, bool isIPv6);
     cLinkable* compileGRE (bool noEthHeader, cParameterList& params, bool isIPv6);
     cLinkable* compileLLDP (bool noEthHeader, cParameterList& params);
 

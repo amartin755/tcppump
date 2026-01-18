@@ -952,7 +952,7 @@ static const Parameter PAR_TCP_CHKSUM = {
 };
 static const Protocol PR_TCP4 = {
     "tcp",
-    "Raw TCP packet",
+    "Raw TCPv4 packet",
     {
         &PAR_ETH_DMAC,
         PAR_IP4,
@@ -964,6 +964,36 @@ static const Protocol PR_TCP4 = {
     {
         &PAR_ETH_SMAC,
         PAR_IP4_OPT,
+        &PAR_TCP_WIN,
+        &PAR_TCP_URGPTR,
+        &PAR_TCP_FIN,
+        &PAR_TCP_SYN,
+        &PAR_TCP_RESET,
+        &PAR_TCP_PUSH,
+        &PAR_TCP_ACKFLAG,
+        &PAR_TCP_URGENT,
+        &PAR_TCP_ECN,
+        &PAR_TCP_CWR,
+        &PAR_TCP_NONCE,
+        &PAR_TCP_PAYLOAD,
+        &PAR_TCP_CHKSUM,
+        PAR_VLAN
+    }
+};
+static const Protocol PR_TCP6 = {
+    "tcp6",
+    "Raw TCPv6 packet",
+    {
+        &PAR_ETH_DMAC,
+        PAR_IP6,
+        &PAR_TCP_SPORT,
+        &PAR_TCP_DPORT,
+        &PAR_TCP_SEQ,
+        &PAR_TCP_ACK
+    },
+    {
+        &PAR_ETH_SMAC,
+        PAR_IP6_OPT,
         &PAR_TCP_WIN,
         &PAR_TCP_URGPTR,
         &PAR_TCP_FIN,
@@ -2002,6 +2032,7 @@ static const std::vector<const Protocol*> all_protos
     &PR_ICMP4_ECHO,
     &PR_ICMP4_ECHOR,
     &PR_TCP4,
+    &PR_TCP6,
     &PR_VXLAN4,
     &PR_VXLAN6,
     &PR_GRE4,

@@ -137,7 +137,9 @@ void cInstructionParser::parse (const char* instruction, cResult& result, bool i
         else if (!strncmp (PR_ICMP4_ECHOR.syntax, keyword, keywordLen))
             result.packets = compileICMPPing (noEthHeader, params, true);
         else if (!strncmp (PR_TCP4.syntax, keyword, keywordLen))
-            result.packets = compileTCP (noEthHeader, params);
+            result.packets = compileTCP (noEthHeader, params, false);
+        else if (!strncmp (PR_TCP6.syntax, keyword, keywordLen))
+            result.packets = compileTCP (noEthHeader, params, true);
         else if (!strncmp (PR_VXLAN4.syntax, keyword, keywordLen))
             result.packets = compileVXLAN (noEthHeader, params, false);
         else if (!strncmp (PR_VXLAN6.syntax, keyword, keywordLen))
@@ -712,13 +714,13 @@ cLinkable* cInstructionParser::compileVXLAN (bool noEthHeader, cParameterList& p
 }
 
 
-cLinkable* cInstructionParser::compileTCP (bool noEthHeader, cParameterList& params)
+cLinkable* cInstructionParser::compileTCP (bool noEthHeader, cParameterList& params, bool isIPv6)
 {
-    cTcpPacket* tcppacket = new cTcpPacket;
+    cTcpPacket* tcppacket = new cTcpPacket (isIPv6);
     try
     {
         cEthernetPacket& eth = tcppacket->getFirstEthernetPacket();
-        bool destIsMulticast = parseIPv4Params (params, tcppacket);
+        bool destIsMulticast = isIPv6 ? parseIPv6Params (params, tcppacket) : parseIPv4Params (params, tcppacket);
         bool userDefinedChecksum = false;
         cParameter* optionalPar;
 

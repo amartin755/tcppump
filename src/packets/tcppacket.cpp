@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
  * TCPPUMP <https://github.com/amartin755/tcppump>
- * Copyright (C) 2012-2021 Andreas Martin (netnag@mailbox.org)
+ * Copyright (C) 2012-2026 Andreas Martin (netnag@mailbox.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
 
 uint32_t cTcpPacket::sequence = 42;
 
-cTcpPacket::cTcpPacket ()
+cTcpPacket::cTcpPacket (bool isIPv6) : cIPPacket (isIPv6)
 {
     header.init();
     setSeqNumber (sequence);
@@ -128,18 +128,38 @@ void cTcpPacket::setFlagNON (bool flag)
 
 uint16_t cTcpPacket::calcChecksum (const uint8_t* payload, size_t len) const
 {
-    ipv4_pseudo_header_t ipPseudoHeader;
-    cIPv4 src, dst;
-    getSource (src);
-    getDestination (dst);
+    uint16_t chksum;
+    if (!isIPv6())
+    {
+        cIPv4 src, dst;
+        getSource (src);
+        getDestination (dst);
+        const ipv4_pseudo_header_t ipPseudoHeader = {
+            src.get(),
+            dst.get(),
+            0,
+            PROTO_TCP,
+            htons((uint16_t)cIPPacket::getPayloadLength())
+        };
 
-    ipPseudoHeader.srcIp    = src.get();
-    ipPseudoHeader.dstIp    = dst.get();
-    ipPseudoHeader.nix      = 0;
-    ipPseudoHeader.protocol = PROTO_TCP;
-    ipPseudoHeader.len      = htons((uint16_t)cIPPacket::getPayloadLength());
-    uint16_t ret = cInetChecksum::rfc1071 ((const void*)&ipPseudoHeader, sizeof (ipPseudoHeader), &header, sizeof(header), payload, len);
-    return ret ? ret : 0xffff;
+        chksum = cInetChecksum::rfc1071 ((const void*)&ipPseudoHeader, sizeof (ipPseudoHeader), &header, sizeof(header), payload, len);
+    }
+    else
+    {
+        cIPv6 src, dst;
+        getSource (src);
+        getDestination (dst);
+        const ipv6_pseudo_header_t ipPseudoHeader = {
+            src.get(),
+            dst.get(),
+            htonl((uint32_t)cIPPacket::getPayloadLength()),
+            {0, 0, 0},
+            PROTO_TCP,
+        };
+
+        chksum = cInetChecksum::rfc1071 ((const void*)&ipPseudoHeader, sizeof (ipPseudoHeader), &header, sizeof(header), payload, len);
+    }
+    return chksum ? chksum : 0xffff;
 }
 
 #ifdef WITH_UNITTESTS
