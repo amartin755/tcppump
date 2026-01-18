@@ -317,7 +317,10 @@ bool cInterface::getIPv6 (cIPv6 &ip)
                 Console::PrintDebug("getnameinfo: %s\n", strerror(errno));
                 return false;
             }
-            strchr (host, '%')[0] = '\0'; // remove zone index if present
+            // remove zone index if present
+            char* p = strchr (host, '%');
+            if (p)
+                *p = '\0';
             ip.set(host);
             myIPv6.set(ip);
             success = true;
