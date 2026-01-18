@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
  * TCPPUMP <https://github.com/amartin755/tcppump>
- * Copyright (C) 2012-2021 Andreas Martin (netnag@mailbox.org)
+ * Copyright (C) 2012-2026 Andreas Martin (netnag@mailbox.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@ void cSettings::setMyIPv4 (const cIPv4& ip)
 bool cSettings::setMyIPv6 (const char* ip)
 {
     m_hasIPv6 = m_myIPv6.set(ip);
-    return m_hasIPv4;
+    return m_hasIPv6;
 }
 
 void cSettings::setMyIPv6 (const cIPv6& ip)
@@ -95,7 +95,7 @@ const cIPv4& cSettings::getMyIPv4(void) const
 const cIPv6& cSettings::getMyIPv6(void) const
 {
     if (!m_hasIPv6)
-        throw std::runtime_error("Could not determine IPv4 address of interface.\n"
+        throw std::runtime_error("Could not determine IPv6 address of interface.\n"
                 "Please assign an IP address to the network interface or use the parameter --myip6.");
 
     return m_myIPv6;

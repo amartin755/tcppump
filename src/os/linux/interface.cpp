@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
  * TCPPUMP <https://github.com/amartin755/tcppump>
- * Copyright (C) 2012-2021 Andreas Martin (netnag@mailbox.org)
+ * Copyright (C) 2012-2026 Andreas Martin (netnag@mailbox.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -110,8 +110,6 @@ bool cInterface::open ()
     setsockopt (ifcHandle, SOL_SOCKET, SO_RCVBUF, &opt, sizeof (opt));
 
     getMAC (myMac);
-    getIPv4 (myIP);
-    getIPv6 (myIPv6);
     mtu       = getMTU ();
     linkSpeed = getLinkSpeed ();
 
@@ -273,7 +271,7 @@ bool cInterface::getIPv4 (cIPv4 &ip)
         }
 
         ip.set(((struct sockaddr_in *)&(ifr.ifr_addr))->sin_addr);
-
+        myIP.set(ip);
         ::close (s);
     }
     else
@@ -319,7 +317,9 @@ bool cInterface::getIPv6 (cIPv6 &ip)
                 Console::PrintDebug("getnameinfo: %s\n", strerror(errno));
                 return false;
             }
+            strchr (host, '%')[0] = '\0'; // remove zone index if present
             ip.set(host);
+            myIPv6.set(ip);
             success = true;
             break;
         }

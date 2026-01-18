@@ -8,7 +8,7 @@ _UNRELEASED_, Andreas Martin <netnag@mailbox.org>
 - 
 
 ## Fixed
-- 
+- IPv6: Fixed IPv6 source address handling. The --myip6 flag is now used reliably as the source address. Link-local IPv6 addresses are now correctly applied as the source address.
 
 ## Removed
 - 
