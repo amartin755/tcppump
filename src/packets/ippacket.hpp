@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
  * TCPPUMP <https://github.com/amartin755/tcppump>
- * Copyright (C) 2012-2025 Andreas Martin (netnag@mailbox.org)
+ * Copyright (C) 2012-2026 Andreas Martin (netnag@mailbox.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -106,7 +106,8 @@ struct ipv4_header_with_router_alert_t : public ipv4_header_t
     ipv4_option_router_alert_t routerAlert;
 
     void compile (const in_addr &src, const in_addr &dst, unsigned timeToLive,
-        uint8_t proto, unsigned dscp, unsigned ecn, bool df, bool mf, unsigned offset, unsigned hdrLen, uint16_t totalLen, uint16_t id, bool withRouterAlert)
+        uint8_t proto, unsigned dscp, unsigned ecn, bool df, bool mf, unsigned offset, 
+        unsigned hdrLen, uint16_t totalLen, uint16_t id, bool withRouterAlert, bool manualChksum = false, uint16_t chksum = 0)
     {
         BUG_ON (offset % 8);
 
@@ -127,8 +128,15 @@ struct ipv4_header_with_router_alert_t : public ipv4_header_t
             routerAlert.length = 4;
             routerAlert.value  = 0;
         }
-        this->chksum = 0;
-        this->chksum = cInetChecksum::rfc1071 ((const void*)this, hdrLen);
+        if (manualChksum)
+        {
+            this->chksum = htons(chksum);
+        }
+        else
+        {
+            this->chksum = 0;
+            this->chksum = cInetChecksum::rfc1071 ((const void*)this, hdrLen);
+        }
     }
 };
 static_assert (sizeof (ipv4_header_with_router_alert_t) == 24, "ipv4_header_with_router_alert_t is not packed");
@@ -232,6 +240,7 @@ public:
     void setIdentification (uint16_t id);
     void setSource (const cIPv4& ip);
     void setDestination (const cIPv4& ip);
+    void setHeaderChksum (uint16_t cksum);
     void getSource (cIPv4& ip) const;
     void getDestination (cIPv4& ip) const;
 
@@ -296,6 +305,8 @@ private:
         static uint16_t nextIdentification;
         bool            hasId;
         bool            hasRouterAlertOption;
+        bool            hasChksum;
+        uint16_t        chksum;
     } m_v4;
 
     //  IPv6 specific

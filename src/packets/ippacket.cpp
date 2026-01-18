@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
  * TCPPUMP <https://github.com/amartin755/tcppump>
- * Copyright (C) 2012-2025 Andreas Martin (netnag@mailbox.org)
+ * Copyright (C) 2012-2026 Andreas Martin (netnag@mailbox.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,6 +44,8 @@ cIPPacket::cIPPacket (bool isIPv6) : m_isIPv6 (isIPv6), m_mtu (cSettings::get().
     m_v4.dontFragment = false;
     m_v4.identification = 0;
     m_v4.hasRouterAlertOption = false;
+    m_v4.hasChksum = false;
+    m_v4.chksum = 0;
 
     m_v6.flowlabel = 0;
 }
@@ -92,6 +94,13 @@ void cIPPacket::setDontFragment (bool df)
 {
     BUG_ON (m_isIPv6);
     m_v4.dontFragment = df;
+}
+
+void cIPPacket::setHeaderChksum (uint16_t cksum)
+{
+    BUG_ON (m_isIPv6);
+    m_v4.hasChksum = true;
+    m_v4.chksum = cksum;
 }
 
 void cIPPacket::setSource (const cIPv4& ip)
@@ -223,7 +232,10 @@ void cIPPacket::v4compile (uint8_t protocol, const uint8_t* l4header, size_t l4h
             (unsigned)ipHeaderLen,
             uint16_t(ipHeaderLen + fragLen),
             id,
-            m_v4.hasRouterAlertOption);
+            m_v4.hasRouterAlertOption,
+            m_v4.hasChksum,
+            m_v4.chksum
+        );
         p.setPayload ((uint8_t*)&header, ipHeaderLen);
 
         if (n == 0)

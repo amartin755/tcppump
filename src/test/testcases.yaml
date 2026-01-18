@@ -2,7 +2,7 @@
 ###############################################################################
 #
 # TCPPUMP <https://github.com/amartin755/tcppump>
-# Copyright (C) 2012-2025 Andreas Martin (netnag@mailbox.org)
+# Copyright (C) 2012-2026 Andreas Martin (netnag@mailbox.org)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -688,6 +688,37 @@ testcases:
     expected_output: >-
       1122334455668023456789ab08004503002400004000ffff4e96010203040a141e280123456789abcdef0123456789abcdef
 
+  - name: ipv4-34--ok
+    input:
+      - >-
+        ipv4(dip=10.20.30.40, dmac=11:22:33:44:55:66, df, ttl=255, dscp=0x0,
+        ecn=3, protocol=255, hchksum=0, payload = 0123456789abcdef0123456789abcdef)
+    expected_output: >-
+      1122334455668023456789ab08004503002400004000ffff0000010203040a141e280123456789abcdef0123456789abcdef
+
+  - name: ipv4-35--ok
+    input:
+      - >-
+        ipv4(dip=10.20.30.40, dmac=11:22:33:44:55:66, df, ttl=255, dscp=0x0,
+        ecn=3, protocol=255, hchksum=0x1234, payload = 0123456789abcdef0123456789abcdef)
+    expected_output: >-
+      1122334455668023456789ab08004503002400004000ffff1234010203040a141e280123456789abcdef0123456789abcdef
+
+  - name: ipv4-36--ok
+    input:
+      - >-
+        ipv4(dip=10.20.30.40, dmac=11:22:33:44:55:66, df, ttl=255, dscp=0x0,
+        ecn=3, protocol=255, hchksum=0xffff, payload = 0123456789abcdef0123456789abcdef)
+    expected_output: >-
+      1122334455668023456789ab08004503002400004000ffffffff010203040a141e280123456789abcdef0123456789abcdef
+
+  - name: ipv4-37--nok
+    input:
+      - >-
+        ipv4(dip=10.20.30.40, dmac=11:22:33:44:55:66, df, ttl=255, dscp=0x0,
+        ecn=3, protocol=255, hchksum=0x10000, payload = 0123456789abcdef0123456789abcdef)
+    expected_output:  'error: Range of parameter violated'
+
   - name: ipv6-1--nok
     input:
       - 'ipv6(dip=10:20:30:40::1)'
@@ -1028,6 +1059,12 @@ testcases:
         FE)
     expected_output: 'file://udp-25.pcap'
 
+  - name: udp-26--ok
+    input:
+      - 'udp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=0, dport=0xffff, hchksum=0x1234)'
+    expected_output: >-
+      1122334455668023456789ab08004500001c0000000040111234010203040a141e280000ffff0008d39c
+    
   - name: tcp-1--nok
     input:
       - tcp()

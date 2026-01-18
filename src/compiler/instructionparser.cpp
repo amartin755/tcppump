@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
  * TCPPUMP <https://github.com/amartin755/tcppump>
- * Copyright (C) 2012-2025 Andreas Martin (netnag@mailbox.org)
+ * Copyright (C) 2012-2026 Andreas Martin (netnag@mailbox.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -575,7 +575,9 @@ bool cInstructionParser::parseIPv4Params (cParameterList& params, cIPPacket* pac
     cParameter* optionalPar = params.findParameter (PAR_IP4_ID.syntax, true);
     if (optionalPar)
         packet->setIdentification(optionalPar->asInt16());
-
+    optionalPar = params.findParameter (PAR_IP4_CHKSUM.syntax, true);
+    if (optionalPar)
+        packet->setHeaderChksum (optionalPar->asInt16());
     return isMulticast;
 }
 
@@ -1273,25 +1275,27 @@ void cInstructionParser::throwParseException (const char* msg, const char* val, 
 
 void cInstructionParser::printProtocolList (const char* proto)
 {
+    bool all = proto && !std::strcmp ("all", proto);
     for (const auto& p : all_protos)
     {
-        if (!proto || !std::strcmp (p->syntax, proto))
+        if (!proto || !std::strcmp (p->syntax, proto) || all)
         {
-            Console::Print ("%-20s%s\n", p->syntax, p->descr);
+            Console::Print ("%-24s%s\n", p->syntax, p->descr);
 
             if (proto)
             {
                 for (const auto& m: p->mandatory)
                 {
-                    Console::Print ("   %-17s%s\n", m->syntax, m->descr);
+                    Console::Print ("   %-21s%s\n", m->syntax, m->descr);
                 }
                 Console::Print (" optional\n");
                 for (const auto& o: p->optional)
                 {
-                    Console::Print ("   %-17s%s\n", o->syntax, o->descr);
+                    Console::Print ("   %-21s%s\n", o->syntax, o->descr);
                 }
                 Console::Print ("\n");
-                return;
+                if (!all)
+                    return;
             }
         }
     }

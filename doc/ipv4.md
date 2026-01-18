@@ -21,6 +21,7 @@ ipv4(
     df          : BIT        [optional]
     id          : INT16      [optional]
     protocol    : INT8
+    hchksum     : INT16      [optional]
     payload     : BYTESTREAM
 )
 ```
@@ -90,6 +91,13 @@ Note: [VLAN tag parameters](doc/ethernet.md) may be specified optionally.
     - Type: Integer
     - Range: 0..255
     - Example: `protocol=254`
+
+- Name: `hchksum`
+    - Meaning: IPv4 header checksum
+    - Type: Integer
+    - Range: 0..0xffff
+    - Optional: yes — Behavior: If omitted checksum is calculated automatically; setting a value allows crafting malformed packets.
+    - Example: `hchksum=42`
 
 - Name: `payload`
     - Meaning: Encapsulated payload (transport header + data) or raw bytestream

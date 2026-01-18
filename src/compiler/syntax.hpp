@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
  * TCPPUMP <https://github.com/amartin755/tcppump>
- * Copyright (C) 2012-2025 Andreas Martin (netnag@mailbox.org)
+ * Copyright (C) 2012-2026 Andreas Martin (netnag@mailbox.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -251,13 +251,18 @@ static const Parameter PAR_IP4_DF = {
     "IPv4 Don't Fragment flag",
     Bit
 };
+static const Parameter PAR_IP4_CHKSUM = {
+    "hchksum",
+    "IPv4 header checksum",
+    Integer
+};
 static const Parameter PAR_IP6_FL = {
     "fl",
     "IPv6 Flow Label",
     Integer
 };
 // shortcuts for IP header parameters
-#define PAR_IP4_OPT &PAR_IP_DSCP, &PAR_IP_ECN, &PAR_IP_TTL, &PAR_IP4_DF, &PAR_IP_SIP, &PAR_IP4_ID
+#define PAR_IP4_OPT &PAR_IP_DSCP, &PAR_IP_ECN, &PAR_IP_TTL, &PAR_IP4_DF, &PAR_IP_SIP, &PAR_IP4_ID, &PAR_IP4_CHKSUM
 #define PAR_IP4 &PAR_IP_DIP
 #define PAR_IP6_OPT &PAR_IP_DSCP, &PAR_IP_ECN, &PAR_IP_TTL, &PAR_IP_SIP, &PAR_IP6_FL
 #define PAR_IP6 &PAR_IP_DIP

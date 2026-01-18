@@ -387,6 +387,22 @@ add_test(NAME "ipv4-33--ok" COMMAND "tcppump" "--predictable-random" "--myip4=1.
 set_tests_properties("ipv4-33--ok" PROPERTIES FIXTURES_REQUIRED setup)
 set_tests_properties("ipv4-33--ok" PROPERTIES PASS_REGULAR_EXPRESSION "1122334455668023456789ab08004503002400004000ffff4e96010203040a141e280123456789abcdef0123456789abcdef")
 
+add_test(NAME "ipv4-34--ok" COMMAND "tcppump" "--predictable-random" "--myip4=1.2.3.4" "--myip6=1234::1" "--mymac=80:23:45:67:89:AB" "--mtu=1500" "-F" "hexstream" "-w" "-" "ipv4(dip=10.20.30.40, dmac=11:22:33:44:55:66, df, ttl=255, dscp=0x0, ecn=3, protocol=255, hchksum=0, payload = 0123456789abcdef0123456789abcdef)")
+set_tests_properties("ipv4-34--ok" PROPERTIES FIXTURES_REQUIRED setup)
+set_tests_properties("ipv4-34--ok" PROPERTIES PASS_REGULAR_EXPRESSION "1122334455668023456789ab08004503002400004000ffff0000010203040a141e280123456789abcdef0123456789abcdef")
+
+add_test(NAME "ipv4-35--ok" COMMAND "tcppump" "--predictable-random" "--myip4=1.2.3.4" "--myip6=1234::1" "--mymac=80:23:45:67:89:AB" "--mtu=1500" "-F" "hexstream" "-w" "-" "ipv4(dip=10.20.30.40, dmac=11:22:33:44:55:66, df, ttl=255, dscp=0x0, ecn=3, protocol=255, hchksum=0x1234, payload = 0123456789abcdef0123456789abcdef)")
+set_tests_properties("ipv4-35--ok" PROPERTIES FIXTURES_REQUIRED setup)
+set_tests_properties("ipv4-35--ok" PROPERTIES PASS_REGULAR_EXPRESSION "1122334455668023456789ab08004503002400004000ffff1234010203040a141e280123456789abcdef0123456789abcdef")
+
+add_test(NAME "ipv4-36--ok" COMMAND "tcppump" "--predictable-random" "--myip4=1.2.3.4" "--myip6=1234::1" "--mymac=80:23:45:67:89:AB" "--mtu=1500" "-F" "hexstream" "-w" "-" "ipv4(dip=10.20.30.40, dmac=11:22:33:44:55:66, df, ttl=255, dscp=0x0, ecn=3, protocol=255, hchksum=0xffff, payload = 0123456789abcdef0123456789abcdef)")
+set_tests_properties("ipv4-36--ok" PROPERTIES FIXTURES_REQUIRED setup)
+set_tests_properties("ipv4-36--ok" PROPERTIES PASS_REGULAR_EXPRESSION "1122334455668023456789ab08004503002400004000ffffffff010203040a141e280123456789abcdef0123456789abcdef")
+
+add_test(NAME "ipv4-37--nok" COMMAND "tcppump" "--predictable-random" "--myip4=1.2.3.4" "--myip6=1234::1" "--mymac=80:23:45:67:89:AB" "--mtu=1500" "-F" "hexstream" "-w" "-" "ipv4(dip=10.20.30.40, dmac=11:22:33:44:55:66, df, ttl=255, dscp=0x0, ecn=3, protocol=255, hchksum=0x10000, payload = 0123456789abcdef0123456789abcdef)")
+set_tests_properties("ipv4-37--nok" PROPERTIES FIXTURES_REQUIRED setup)
+set_tests_properties("ipv4-37--nok" PROPERTIES PASS_REGULAR_EXPRESSION "error: Range of parameter violated")
+
 add_test(NAME "ipv6-1--nok" COMMAND "tcppump" "--predictable-random" "--myip4=1.2.3.4" "--myip6=1234::1" "--mymac=80:23:45:67:89:AB" "--mtu=1500" "-F" "hexstream" "-w" "-" "ipv6(dip=10:20:30:40::1)")
 set_tests_properties("ipv6-1--nok" PROPERTIES FIXTURES_REQUIRED setup)
 set_tests_properties("ipv6-1--nok" PROPERTIES WILL_FAIL TRUE)
@@ -588,6 +604,10 @@ set_tests_properties("udp-25--ok" PROPERTIES FIXTURES_REQUIRED setup)
 add_test(NAME "udp-25--ok-diff" COMMAND cmake -E compare_files "${TEST_TMP_DIR}/udp-25--ok.pcap" "${REF_FILES_DIR}/udp-25.pcap")
 set_tests_properties("udp-25--ok" PROPERTIES FIXTURES_SETUP "udp-25--ok-setup")
 set_tests_properties("udp-25--ok-diff" PROPERTIES FIXTURES_REQUIRED "udp-25--ok-setup")
+
+add_test(NAME "udp-26--ok" COMMAND "tcppump" "--predictable-random" "--myip4=1.2.3.4" "--myip6=1234::1" "--mymac=80:23:45:67:89:AB" "--mtu=1500" "-F" "hexstream" "-w" "-" "udp(dip=10.20.30.40, dmac=11:22:33:44:55:66, sport=0, dport=0xffff, hchksum=0x1234)")
+set_tests_properties("udp-26--ok" PROPERTIES FIXTURES_REQUIRED setup)
+set_tests_properties("udp-26--ok" PROPERTIES PASS_REGULAR_EXPRESSION "1122334455668023456789ab08004500001c0000000040111234010203040a141e280000ffff0008d39c")
 
 add_test(NAME "tcp-1--nok" COMMAND "tcppump" "--predictable-random" "--myip4=1.2.3.4" "--myip6=1234::1" "--mymac=80:23:45:67:89:AB" "--mtu=1500" "-F" "hexstream" "-w" "-" "tcp()")
 set_tests_properties("tcp-1--nok" PROPERTIES FIXTURES_REQUIRED setup)
