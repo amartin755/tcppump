@@ -127,7 +127,7 @@ if [[ -z "$DRY_RUN" ]]; then
     git commit $DRY_RUN -m "tcppump release $VERSION" "$PROJROOT/CHANGELOG.md"
     git tag -s -a $GIT_TAG -m "tcppump release $VERSION"
 
-    git push && git push origin tag $GIT_TAG
+    git push origin HEAD tag $GIT_TAG
 fi
 
 #
