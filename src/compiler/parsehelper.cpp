@@ -83,36 +83,24 @@ uint8_t* cParseHelper::hexStringToBin (const char* hexString, size_t hexStringLe
 
     size_t length = hexStringLen ? hexStringLen : std::strlen (hexString);
 
-    if (!length)
-    {
-//        Console::PrintError ("Zero length of hex string of frame payload\n");
+    if (!length || (length & 1))
         return nullptr;
-    }
-    if (length & 1)
-    {
-//        Console::PrintError ("Uneven length of hex string of frame payload\n");
-        return nullptr;
-    }
-
-    for (size_t n = 0; n < length; n++)
-    {
-        if (!isxdigit (hexString[n]))
-        {
-//            Console::PrintError ("Invalid character in hex string of frame payload\n");
-            return nullptr;
-        }
-    }
 
     uint8_t* bin = new uint8_t[length / 2];
 
-
-    for (size_t n = 0; n < length; n += 2)
+    try
     {
-        char b[3] = {0};
-        b[0] = hexString[n];
-        b[1] = hexString[n + 1];
-        bin[n/2] = (uint8_t)std::strtoul (b, NULL, 16);
+        for (size_t n = 0; n < length; n += 2)
+        {
+            bin[n/2] = hexCharToInt (hexString[n]) << 4 | hexCharToInt (hexString[n + 1]);
+        }
     }
+    catch (...)
+    {
+        delete[] bin;
+        return nullptr;
+    }
+
     binLength = length / 2;
 
     return bin;
@@ -462,6 +450,41 @@ void cParseHelper::unitTest ()
         else
             BUG_ON (begin != 0 || end != 0);
         Console::PrintDebug("\r");
+    }
+
+    BUG_ON (hexCharToInt ('0') != 0);
+    BUG_ON (hexCharToInt ('1') != 1);
+    BUG_ON (hexCharToInt ('2') != 2);
+    BUG_ON (hexCharToInt ('3') != 3);
+    BUG_ON (hexCharToInt ('4') != 4);
+    BUG_ON (hexCharToInt ('5') != 5);
+    BUG_ON (hexCharToInt ('6') != 6);
+    BUG_ON (hexCharToInt ('7') != 7);
+    BUG_ON (hexCharToInt ('8') != 8);
+    BUG_ON (hexCharToInt ('9') != 9);
+    BUG_ON (hexCharToInt ('a') != 10);
+    BUG_ON (hexCharToInt ('b') != 11);
+    BUG_ON (hexCharToInt ('c') != 12);
+    BUG_ON (hexCharToInt ('d') != 13);
+    BUG_ON (hexCharToInt ('e') != 14);
+    BUG_ON (hexCharToInt ('f') != 15);
+    BUG_ON (hexCharToInt ('A') != 10);
+    BUG_ON (hexCharToInt ('B') != 11);
+    BUG_ON (hexCharToInt ('C') != 12);
+    BUG_ON (hexCharToInt ('D') != 13);
+    BUG_ON (hexCharToInt ('E') != 14);
+    BUG_ON (hexCharToInt ('F') != 15);
+    try
+    {
+        BUG_ON (hexCharToInt ('0'-1) != (unsigned)-1);
+        BUG_ON (hexCharToInt ('9'+1) != (unsigned)-1);
+        BUG_ON (hexCharToInt ('a'-1) != (unsigned)-1);
+        BUG_ON (hexCharToInt ('f'+1) != (unsigned)-1);
+        BUG_ON (hexCharToInt ('A'-1) != (unsigned)-1);
+        BUG_ON (hexCharToInt ('F'+1) != (unsigned)-1);
+    }
+    catch(...)
+    {
     }
 
     // TODO much more detailed tests
