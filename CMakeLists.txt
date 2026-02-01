@@ -30,6 +30,7 @@ option (WITH_UBSAN     "enable/disable undefined behavior sanitizer (default OFF
 option (WITH_GCOV      "enable/disable code coverage profiling (default OFF)" OFF)
 option (WITH_WERROR    "enable/disable compilation warnings as errors (default OFF)" OFF)
 option (WITH_CPPCHECK  "enable/disable cppcheck (default OFF)" OFF)
+option (WITH_PROFILE   "enable/disable code performance profiling (default OFF)" OFF)
 
 # cmake includes
 ###############################################################################
@@ -81,6 +82,11 @@ endif ()
 if (WITH_GCOV)
     add_compile_options (--coverage)
     add_link_options (--coverage)
+endif ()
+
+if (WITH_PROFILE)
+    add_compile_options (-pg)
+    add_link_options (-pg)
 endif ()
 
 if (WITH_CPPCHECK)
@@ -242,7 +248,8 @@ message (STATUS "  pointer size   = ${CMAKE_SIZEOF_VOID_P}")
 message (STATUS "  unittests      = ${WITH_UNITTESTS}")
 message (STATUS "  ASAN           = ${WITH_ASAN}")
 message (STATUS "  UBSAN          = ${WITH_UBSAN}")
-message (STATUS "  GCOV           = ${WITH_GCOV}")
+message (STATUS "  coverage       = ${WITH_GCOV}")
+message (STATUS "  profiling      = ${WITH_PROFILE}")
 message (STATUS "  type           = ${CMAKE_BUILD_TYPE}")
 message (STATUS "  timestamp      = ${BUILD_TIME}")
 message (STATUS "  git tag        = ${GIT_TAG}")

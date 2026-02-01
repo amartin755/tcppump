@@ -95,8 +95,12 @@ When running `cmake -B ...`, you can pass additional options via `-D` switch:
   - Example: `-DWITH_UBSAN=ON`
 
 - **`WITH_GCOV`**  
-  - Enable/Disable coverage analysis (Linux only)  
+  - Enable/Disable code coverage analysis (Linux only)  
   - Example: `-DWITH_GCOV=ON`
+
+- **`WITH_PROFILE`**  
+  - Enable/Disable code performance profiling (Linux only)  
+  - Example: `-WITH_PROFILE=ON`
 
 - **`WITH_WERROR`**  
   - Treat all compiler warnings as errors (default: `OFF`)  
