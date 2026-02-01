@@ -26,6 +26,7 @@
 #include <cerrno>
 #include <stdexcept>
 
+#include "bug.hpp"
 
 class cParseHelper
 {
@@ -57,22 +58,19 @@ public:
     static int isOneOf (char c, const char* accept);
     static uint8_t* hexStringToBin (const char* hexString, size_t hexStringLen, size_t& binLength);
     static bool range (const char* p, size_t len, int base, uint64_t& begin, uint64_t& end);
-    static uint8_t strToUint8 (const char* p, size_t len, int base)
+    static uint8_t decCharToInt (char c)
     {
-        if (len > 4) // max val: 255 or 0xff --> 4
-            throw std::out_of_range ("string too long");
+        if (likely(c >= '0' && c <= '9'))
+            return c - '0'; 
 
-        char str[5];
-        std::memcpy (str, p, len);
-        str[len] = '\0';
-
-        char* end;
-        unsigned long val = strtoul (str, &end, base);
-        if (end != &str[len] || errno == ERANGE || val > 255)
-            throw std::out_of_range ("value > 255");
-
-        return (uint8_t)val;
+        throw std::out_of_range ("invalid decimal character");
+#if defined(HAVE_MSVC)
+        __assume(0);
+#else
+        return 255;
+#endif
     }
+
     static uint8_t hexCharToInt (char c)
     {
         switch (c)
@@ -122,6 +120,25 @@ public:
 #else
         return 255;
 #endif
+    }
+    static uint8_t strToUint8 (const char* p, size_t len, int base)
+    {
+        if (unlikely((base == 16 && len > 2) || (base == 10 && len > 3)))
+            throw std::out_of_range ("string too long");
+
+        if (base == 16)
+        {
+            return ((len == 2) ? (hexCharToInt(p[0]) << 4) | hexCharToInt(p[1]) : hexCharToInt(p[0]));
+        }
+        else
+        {
+            unsigned val = ((len == 3) ? (decCharToInt(p[0]) * 100 + decCharToInt(p[1]) * 10 + decCharToInt(p[2]))
+                          : (len == 2) ? (decCharToInt(p[0]) * 10 + decCharToInt(p[1]))
+                          : decCharToInt(p[0]));
+            if (unlikely(val > 255))
+                throw std::out_of_range ("value > 255");
+            return (uint8_t)val;
+        }       
     }
 
 #ifdef WITH_UNITTESTS

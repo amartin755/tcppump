@@ -487,6 +487,27 @@ void cParseHelper::unitTest ()
     {
     }
 
+    BUG_ON (decCharToInt ('0') != 0);
+    BUG_ON (decCharToInt ('1') != 1);
+    BUG_ON (decCharToInt ('2') != 2);
+    BUG_ON (decCharToInt ('3') != 3);
+    BUG_ON (decCharToInt ('4') != 4);
+    BUG_ON (decCharToInt ('5') != 5);
+    BUG_ON (decCharToInt ('6') != 6);
+    BUG_ON (decCharToInt ('7') != 7);
+    BUG_ON (decCharToInt ('8') != 8);
+    BUG_ON (decCharToInt ('9') != 9);
+
+    try
+    {
+        BUG_ON (decCharToInt ('0'-1) != (uint8_t)255);
+        BUG_ON (decCharToInt ('9'+1) != (uint8_t)255);
+    }
+    catch(...)
+    {
+    }
+    
+
     // TODO much more detailed tests
 }
 #endif
