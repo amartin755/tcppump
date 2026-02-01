@@ -117,7 +117,11 @@ public:
                 return 15;
         }
         throw std::out_of_range ("invalid hex character");
+#if defined(HAVE_MSVC)
+        __assume(0);
+#else
         return 255;
+#endif
     }
 
 #ifdef WITH_UNITTESTS
