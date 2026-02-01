@@ -657,7 +657,7 @@ cLinkable* cInstructionParser::compileUDP (bool noEthHeader, cParameterList& par
         const uint8_t* payload = nullptr;
         cParameter* optionalPar = params.findParameter (PAR_UDP_PAYLOAD.syntax, true);
         if (optionalPar)
-            payload = optionalPar->asStream(len);
+            payload = compileEmbedded (optionalPar, false, len);
         udppacket->compile (payload, len);
 
         optionalPar = params.findParameter (PAR_UDP_CHKSUM.syntax, true);
@@ -754,7 +754,7 @@ cLinkable* cInstructionParser::compileTCP (bool noEthHeader, cParameterList& par
         const uint8_t* payload = nullptr;
         optionalPar = params.findParameter (PAR_TCP_PAYLOAD.syntax, true);
         if (optionalPar)
-            payload = optionalPar->asStream(len);
+            payload = compileEmbedded (optionalPar, false, len);
 
         optionalPar = params.findParameter (PAR_TCP_CHKSUM.syntax, true);
         if (optionalPar)
