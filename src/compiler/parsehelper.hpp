@@ -73,7 +73,7 @@ public:
 
         return (uint8_t)val;
     }
-    static unsigned hexCharToInt (char c)
+    static uint8_t hexCharToInt (char c)
     {
         switch (c)
         {
@@ -117,7 +117,7 @@ public:
                 return 15;
         }
         throw std::out_of_range ("invalid hex character");
-        return -1;
+        return 255;
     }
 
 #ifdef WITH_UNITTESTS

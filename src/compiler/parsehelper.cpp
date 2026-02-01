@@ -476,12 +476,12 @@ void cParseHelper::unitTest ()
     BUG_ON (hexCharToInt ('F') != 15);
     try
     {
-        BUG_ON (hexCharToInt ('0'-1) != (unsigned)-1);
-        BUG_ON (hexCharToInt ('9'+1) != (unsigned)-1);
-        BUG_ON (hexCharToInt ('a'-1) != (unsigned)-1);
-        BUG_ON (hexCharToInt ('f'+1) != (unsigned)-1);
-        BUG_ON (hexCharToInt ('A'-1) != (unsigned)-1);
-        BUG_ON (hexCharToInt ('F'+1) != (unsigned)-1);
+        BUG_ON (hexCharToInt ('0'-1) != (uint8_t)255);
+        BUG_ON (hexCharToInt ('9'+1) != (uint8_t)255);
+        BUG_ON (hexCharToInt ('a'-1) != (uint8_t)255);
+        BUG_ON (hexCharToInt ('f'+1) != (uint8_t)255);
+        BUG_ON (hexCharToInt ('A'-1) != (uint8_t)255);
+        BUG_ON (hexCharToInt ('F'+1) != (uint8_t)255);
     }
     catch(...)
     {

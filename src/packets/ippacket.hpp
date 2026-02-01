@@ -107,7 +107,7 @@ struct ipv4_header_with_router_alert_t : public ipv4_header_t
 
     void compile (const in_addr &src, const in_addr &dst, unsigned timeToLive,
         uint8_t proto, unsigned dscp, unsigned ecn, bool df, bool mf, unsigned offset, 
-        unsigned hdrLen, uint16_t totalLen, uint16_t id, bool withRouterAlert, bool manualChksum = false, uint16_t chksum = 0)
+        unsigned hdrLen, uint16_t totalLen, uint16_t id, bool withRouterAlert, bool manualChksum = false, uint16_t manualChksumVal = 0)
     {
         BUG_ON (offset % 8);
 
@@ -130,7 +130,7 @@ struct ipv4_header_with_router_alert_t : public ipv4_header_t
         }
         if (manualChksum)
         {
-            this->chksum = htons(chksum);
+            this->chksum = htons(manualChksumVal);
         }
         else
         {
