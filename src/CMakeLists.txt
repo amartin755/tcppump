@@ -32,13 +32,17 @@ set (MAIN_SOURCES
      PARENT_SCOPE
     )
 
-if (WITH_UNITTESTS)
-    set (UTEST_SOURCES
-         ${SOURCES}
-         ${CMAKE_CURRENT_SOURCE_DIR}/unittest.cpp
-         PARENT_SCOPE
-    )
-endif ()
+set (UTEST_SOURCES
+     ${SOURCES}
+     ${CMAKE_CURRENT_SOURCE_DIR}/unittest.cpp
+     PARENT_SCOPE
+)
+
+set (PTEST_SOURCES
+     ${SOURCES}
+     ${CMAKE_CURRENT_SOURCE_DIR}/perftest.cpp
+     PARENT_SCOPE
+)
 
 set (INCLUDES
      ${INCLUDES}

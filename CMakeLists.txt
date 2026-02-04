@@ -307,6 +307,12 @@ if (WITH_UNITTESTS)
     target_include_directories (unittest PRIVATE ${INCLUDES})
 endif ()
 
+# target perftest (performance test code)
+###############################################################################
+add_executable (perftest EXCLUDE_FROM_ALL)
+target_link_libraries (perftest PRIVATE ${LIBS} cmdline)
+target_sources (perftest PRIVATE src/perftest.cpp ${PTEST_SOURCES})
+target_include_directories (perftest PRIVATE ${INCLUDES})
 
 # install & package
 ###############################################################################
