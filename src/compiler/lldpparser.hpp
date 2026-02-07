@@ -47,7 +47,7 @@ public:
     void pfcControlConfig ();
     void applicationPriority ();
     void evb ();
-    void cdcb ();
+    void cdcp ();
     void applicationVLAN ();
 
     // IEEE802.3 TLVs

@@ -433,7 +433,7 @@ void cLldpParser::evb ()
     }
 }
 
-void cLldpParser::cdcb ()
+void cLldpParser::cdcp ()
 {
     cParameter* optionalPar = m_params.findParameter(PAR_LLDP_CDCP_ROLE.syntax, true);
     if (optionalPar)

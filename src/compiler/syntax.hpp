@@ -25,24 +25,25 @@
 
 enum Type
 {
-    Integer = 1,    // generic integer with explicit min and max values
-    Int8 = 2,       // 8-bit integer, implicit range 0 ... 255
-    Int16 = 4,      // 16-bit integer, implicit range 0 ... 65535
-    Int32 = 8,      // 32-bit integer, implicit range 0 ... 4294967295
-    Int64 = 16,     // 64-bit integer, implicit range 0 ... 18446744073709551615
-    Bit = 32,       // single bit, implicit range 0 ... 1
-    Float = 64,     // floating point number with explicit range
-    Mac = 128,       // EUI-48 MAC address
-    IP4 = 256,       // IPv4 address
-    IP6 = 512,       // IPv6 address
-    Bytestream = 1024, // arbitrary bytestream with optional max length
+    Integer    = 1,       // generic integer with explicit range
+    Int8       = 2,       // 8-bit integer, implicit range 0 ... 255
+    Int16      = 4,       // 16-bit integer, implicit range 0 ... 65535
+    Int32      = 8,       // 32-bit integer, implicit range 0 ... 4294967295
+    Int64      = 16,      // 64-bit integer, implicit range 0 ... 18446744073709551615
+    Bit        = 32,      // single bit, implicit range 0 ... 1
+    Float      = 64,      // floating point number with explicit range
+    Mac        = 128,     // EUI-48 MAC address
+    IP4        = 256,     // IPv4 address
+    IP6        = 512,     // IPv6 address
+    UUID       = 1024,    // UUID value
+    Bytestream = 2048,    // arbitrary bytestream with optional max length
 };
 
 struct Parameter
 {
     const char* syntax;
     const char* descr;
-    const Type type;
+    const int   type;
     const char* min = nullptr;
     const char* max = nullptr;
 };
@@ -245,15 +246,25 @@ static const Parameter PAR_IP_TTL = {
     "Time To Live",
     Int8
 };
-static const Parameter PAR_IP_DIP = {
+static const Parameter PAR_IP4_DIP = {
     "dip",
-    "Destination IP address",
-    IP
+    "Destination IPv4 address",
+    IP4
 };
-static const Parameter PAR_IP_SIP = {
+static const Parameter PAR_IP4_SIP = {
     "sip",
-    "Source IP address",
-    IP
+    "Source IPv4 address",
+    IP4
+};
+static const Parameter PAR_IP6_DIP = {
+    "dip",
+    "Destination IPv6 address",
+    IP6
+};
+static const Parameter PAR_IP6_SIP = {
+    "sip",
+    "Source IPv6 address",
+    IP6
 };
 static const Parameter PAR_IP_PROTOCOL = {
     "protocol",
@@ -288,10 +299,10 @@ static const Parameter PAR_IP6_FL = {
     "1048575"
 };
 // shortcuts for IP header parameters
-#define PAR_IP4_OPT &PAR_IP_DSCP, &PAR_IP_ECN, &PAR_IP_TTL, &PAR_IP4_DF, &PAR_IP_SIP, &PAR_IP4_ID, &PAR_IP4_CHKSUM
-#define PAR_IP4 &PAR_IP_DIP
-#define PAR_IP6_OPT &PAR_IP_DSCP, &PAR_IP_ECN, &PAR_IP_TTL, &PAR_IP_SIP, &PAR_IP6_FL
-#define PAR_IP6 &PAR_IP_DIP
+#define PAR_IP4_OPT &PAR_IP_DSCP, &PAR_IP_ECN, &PAR_IP_TTL, &PAR_IP4_DF, &PAR_IP4_SIP, &PAR_IP4_ID, &PAR_IP4_CHKSUM
+#define PAR_IP4 &PAR_IP4_DIP
+#define PAR_IP6_OPT &PAR_IP_DSCP, &PAR_IP_ECN, &PAR_IP_TTL, &PAR_IP6_SIP, &PAR_IP6_FL
+#define PAR_IP6 &PAR_IP6_DIP
 static const Protocol PR_IPV4 = {
     "ipv4",
     "Raw IPv4 packet",
@@ -391,33 +402,33 @@ static const Protocol PR_ARP = {
     "Raw ARP packet",
     {
         &PAR_ARP_OP,
-        &PAR_IP_DIP,
+        &PAR_IP4_DIP,
     },
     {
         &PAR_ETH_SMAC,
         &PAR_ETH_DMAC,
-        &PAR_IP_SIP,
+        &PAR_IP4_SIP,
         PAR_VLAN,
     }
 };
 static const Protocol PR_ARP_PROBE = {
     "arp-probe",
     "ARP probe packet",
-    { &PAR_IP_DIP },
+    { &PAR_IP4_DIP },
     { PAR_VLAN }
 };
 static const Protocol PR_ARP_ANNOUNCE = {
     "arp-announce",
     "ARP announce packet",
     { },
-    { &PAR_IP_DIP, PAR_VLAN }
+    { &PAR_IP4_DIP, PAR_VLAN }
 };
 
 
 static const Parameter PAR_VRRP_VRIP = {
     "vrip",
     "Virtual Router IP address",
-    IP
+    IP4
 };
 static const Parameter PAR_VRRP_VRID = {
     "vrid",
@@ -464,7 +475,7 @@ static const Protocol PR_VRRP = {
     },
     {
         &PAR_ETH_SMAC,
-        &PAR_IP_SIP,
+        &PAR_IP4_SIP,
         &PAR_VRRP_VRPRIO,
         &PAR_VRRP_TYPE,
         &PAR_VRRP_AINT2,
@@ -481,7 +492,7 @@ static const Protocol PR_VRRP3 = {
     },
     {
         &PAR_ETH_SMAC,
-        &PAR_IP_SIP,
+        &PAR_IP4_SIP,
         &PAR_VRRP_VRPRIO,
         &PAR_VRRP_TYPE,
         &PAR_VRRP_AINT3,
@@ -494,12 +505,16 @@ static const Protocol PR_VRRP3 = {
 static const Parameter PAR_STP_RBPRIO = {
     "rbprio",
     "Root Bridge Priority",
-    Integer
+    Integer,
+    "0",
+    "15"
 };
 static const Parameter PAR_STP_RBIDEXT = {
     "rbidext",
     "Root Bridge ID Extension",
-    Integer
+    Integer,
+    "0",
+    "4095"
 };
 static const Parameter PAR_STP_RBMAC = {
     "rbmac",
@@ -509,12 +524,16 @@ static const Parameter PAR_STP_RBMAC = {
 static const Parameter PAR_STP_BPRIO = {
     "bprio",
     "Bridge Priority",
-    Integer
+    Integer,
+    "0",
+    "15"
 };
 static const Parameter PAR_STP_BIDEXT = {
     "bidext",
     "Bridge ID Extension",
-    Integer
+    Integer,
+    "0",
+    "4095"
 };
 static const Parameter PAR_STP_BMAC = {
     "bmac",
@@ -524,32 +543,44 @@ static const Parameter PAR_STP_BMAC = {
 static const Parameter PAR_STP_PPRIO = {
     "pprio",
     "Port Priority",
-    Integer
+    Integer,
+    "0",
+    "15"
 };
 static const Parameter PAR_STP_PNUM = {
     "pnum",
     "Port Number",
-    Integer
+    Integer,
+    "1",
+    "4095"
 };
 static const Parameter PAR_STP_MSGAGE = {
     "msgage",
     "Message Age",
-    Integer
+    Float,
+    "0.0",
+    "255.996"
 };
 static const Parameter PAR_STP_MAXAGE = {
     "maxage",
     "Max Age",
-    Integer
+    Float,
+    "0.0",
+    "255.996"
 };
 static const Parameter PAR_STP_HELLO = {
     "hello",
     "Hello Time",
-    Integer
+    Float,
+    "0.0",
+    "255.996"
 };
 static const Parameter PAR_STP_DELAY = {
     "delay",
     "Forward Delay",
-    Integer
+    Float,
+    "0.0",
+    "255.996"
 };
 static const Parameter PAR_STP_TOPOCHANGE = {
     "topochange",
@@ -561,15 +592,26 @@ static const Parameter PAR_STP_TOPOCHANGEACK = {
     "Topology Change Acknowledgement",
     Bit
 };
+static const Parameter PAR_RSTP_RPATHCOST = {
+    "rpathcost",
+    "Root Path Cost",
+    Integer,
+    "1",
+    "4294967295"
+};
 static const Parameter PAR_STP_RPATHCOST = {
     "rpathcost",
     "Root Path Cost",
-    Integer
+    Integer,
+    "1",
+    "65535"
 };
 static const Parameter PAR_STP_PORTROLE = {
     "portrole",
     "Port Role",
-    Integer
+    Integer,
+    "1",
+    "3"
 };
 static const Parameter PAR_STP_PROPOSAL = {
     "proposal",
@@ -635,7 +677,7 @@ static const Protocol PR_RSTP = {
         &PAR_STP_DELAY,
         &PAR_STP_TOPOCHANGE,
         &PAR_STP_TOPOCHANGEACK,
-        &PAR_STP_RPATHCOST,
+        &PAR_RSTP_RPATHCOST,
         &PAR_STP_PORTROLE,
         &PAR_STP_PROPOSAL,
         &PAR_STP_LEARNING,
@@ -660,32 +702,50 @@ static const Parameter PAR_IGMP_S = {
 static const Parameter PAR_IGMP_QRV = {
     "qrv",
     "Query Response Interval",
-    Integer
+    Integer,
+    "0",
+    "7"
 };
 static const Parameter PAR_IGMP_QQIC = {
     "qqic",
     "Querier's Query Interval Count",
-    Float
+    Float,
+    "0.0",
+    "31744.0"
 };
 static const Parameter PAR_IGMP_TIME = {
     "time",
     "IGMP Time",
-    Float
+    Int8
+};
+static const Parameter PAR_IGMP_QUERY_TIME = {
+    "time",
+    "IGMP Time",
+    Float,
+    "0.0",
+    "25.5"
+};
+static const Parameter PAR_IGMP3_QUERY_TIME = {
+    "time",
+    "IGMP Time",
+    Float,
+    "0.0",
+    "3174.0"
 };
 static const Parameter PAR_IGMP_RSIP = {
     "rsip",
     "Router Source IP address",
-    IP
+    IP4
 };
 static const Parameter PAR_IGMP_GROUP = {
     "group",
     "Multicast group address",
-    IP
+    IP4
 };
 static const Parameter PAR_IGMP_TYPE = {
     "type",
     "IGMP message type",
-    Integer
+    Int8
 };
 static const Protocol PR_IGMP = {
     "igmp",
@@ -708,7 +768,7 @@ static const Protocol PR_IGMP_QUERY = {
     "IGMP V1/V2 Query",
     {},
     {
-        &PAR_IGMP_TIME,
+        &PAR_IGMP_QUERY_TIME,
         &PAR_IGMP_GROUP,
         PAR_IP4_OPT,
         PAR_VLAN
@@ -719,7 +779,7 @@ static const Protocol PR_IGMP3_QUERY = {
     "IGMP V3 Query",
     {},
     {
-        &PAR_IGMP_TIME,
+        &PAR_IGMP3_QUERY_TIME,
         &PAR_IGMP_GROUP,
         &PAR_IGMP_S,
         &PAR_IGMP_QRV,
@@ -752,12 +812,12 @@ static const Protocol PR_IGMP_LEAVE = {
 static const Parameter PAR_ICMP4_TYPE = {
     "type",
     "ICMPv4 message type",
-    Integer
+    Int8
 };
 static const Parameter PAR_ICMP4_CODE = {
     "code",
     "ICMPv4 message code",
-    Integer
+    Int8
 };
 static const Parameter PAR_ICMP4_PAYLOAD = {
     "payload",
@@ -767,22 +827,22 @@ static const Parameter PAR_ICMP4_PAYLOAD = {
 static const Parameter PAR_ICMP4_CHKSUM = {
     "chksum",
     "ICMPv4 checksum",
-    Integer
+    Int16
 };
 static const Parameter PAR_ICMP4_GW = {
     "gw",
     "Gateway address",
-    IP
+    IP4
 };
 static const Parameter PAR_ICMP4_ID = {
     "id",
     "ICMPv4 identifier",
-    Integer
+    Int16
 };
 static const Parameter PAR_ICMP4_SEQ = {
     "seq",
     "ICMPv4 sequence number",
-    Integer
+    Int16
 };
 static const Protocol PR_ICMP4 = {
     "icmp",
@@ -905,32 +965,32 @@ static const Protocol PR_ICMP4_ECHOR = {
 static const Parameter PAR_TCP_SPORT = {
     "sport",
     "Source TCP port",
-    Integer
+    Int16
 };
 static const Parameter PAR_TCP_DPORT = {
     "dport",
     "Destination TCP port",
-    Integer
+    Int16
 };
 static const Parameter PAR_TCP_SEQ = {
     "seq",
     "TCP sequence number",
-    Integer
+    Int32
 };
 static const Parameter PAR_TCP_ACK = {
     "ack",
     "TCP acknowledgment number",
-    Integer
+    Int32
 };
 static const Parameter PAR_TCP_WIN = {
     "win",
     "TCP window size",
-    Integer
+    Int16
 };
 static const Parameter PAR_TCP_URGPTR = {
     "urgptr",
     "TCP urgent pointer",
-    Integer
+    Int16
 };
 static const Parameter PAR_TCP_FIN = {
     "FIN",
@@ -985,7 +1045,7 @@ static const Parameter PAR_TCP_PAYLOAD = {
 static const Parameter PAR_TCP_CHKSUM = {
     "chksum",
     "TCP checksum",
-    Integer
+    Int16
 };
 static const Protocol PR_TCP4 = {
     "tcp",
@@ -1052,7 +1112,9 @@ static const Protocol PR_TCP6 = {
 static const Parameter PAR_VXLAN_VNI = {
     "vni",
     "VXLAN Network Identifier",
-    Integer
+    Integer,
+    "0",
+    "16777215"
 };
 static const Parameter PAR_VXLAN_PAYLOAD = {
     "payload",
@@ -1099,17 +1161,17 @@ static const Parameter PAR_GRE_PROTOCOL = PAR_IP_PROTOCOL;
 static const Parameter PAR_GRE_KEY = {
     "key",
     "GRE key",
-    Integer
+    Int32
 };
 static const Parameter PAR_GRE_SEQ = {
     "seq",
     "GRE sequence number",
-    Integer
+    Int32
 };
 static const Parameter PAR_GRE_CHKSUM = {
     "chksum",
     "GRE checksum",
-    Integer
+    Int16
 };
 static const Parameter PAR_GRE_PAYLOAD = {
     "payload",
@@ -1155,42 +1217,52 @@ static const Protocol PR_GRE6 = {
 static const Parameter PAR_LLDP_CHASSIS_ID = {
     "chassis-id",
     "Chassis ID",
-    Bytestream
+    Bytestream | IP4 | IP6 | Mac,
+    "0",
+    "255"
 };
 static const Parameter PAR_LLDP_CHASSIS_ID_T = {
     "chassis-id-type",
     "Chassis ID Subtype: 1 = chassis component, 2 = interface alias, 3 = port component, 4 = MAC, 5 = network address, 6 = interface name, 7 = local",
-    Integer
+    Int8
 };
 static const Parameter PAR_LLDP_PORT_ID = {
     "port-id",
     "Port ID",
-    Bytestream
+    Bytestream | IP4 | IP6 | Mac,
+    "0",
+    "255"
 };
 static const Parameter PAR_LLDP_PORT_ID_T = {
     "port-id-type",
     "Port ID Subtype: 1 = interface alias, 2 = port component, 3 = MAC, 4 = network address, 5 = interface name, 6 = agent circuit ID, 7 = local",
-    Integer
+    Int8
 };
 static const Parameter PAR_LLDP_TTL = {
     "ttl",
     "Time To Live",
-    Integer
+    Int16
 };
 static const Parameter PAR_LLDP_PORT_DESC = {
     "port-desc",
     "Port Description",
-    Bytestream
+    Bytestream,
+    "0",
+    "255"
 };
 static const Parameter PAR_LLDP_SYSNAME = {
     "sys-name",
     "System Name",
-    Bytestream
+    Bytestream,
+    "0",
+    "255"
 };
 static const Parameter PAR_LLDP_SYSDESC = {
     "sys-desc",
     "System Description",
-    Bytestream
+    Bytestream,
+    "0",
+    "255"
 };
 static const Parameter PAR_LLDP_SYSCAP_OTHER = {
     "cap-other",
@@ -1305,39 +1377,43 @@ static const Parameter PAR_LLDP_SYSCAP_2P_RELAY_EN = {
 static const Parameter PAR_LLDP_MGT_ADDR = {
     "mgt-addr",
     "Management Address",
-    Bytestream
+    Bytestream | IP4 | IP6 | Mac,
+    "0",
+    "31"
 };
 static const Parameter PAR_LLDP_MGT_ADDR_T = {
     "mgt-addr-type",
     "Management Address Subtype (see ianaAddressFamilyNumbers of RFC 3232 )",
-    Integer
+    Int8
 };
 static const Parameter PAR_LLDP_IF_NUMBER = {
     "if-number",
     "Interface Number",
-    Integer
+    Int32
 };
 static const Parameter PAR_LLDP_IF_NUMBER_T = {
     "if-number-type",
     "Interface Number Subtype: 1 = unknown, 2 = ifIndex, 3 = system port number",
-    Integer
+    Int8
 };
 static const Parameter PAR_LLDP_MGT_OID = {
     "mgt-oid",
     "Management Object Identifier",
-    Bytestream
+    Bytestream,
+    "0",
+    "128"
 };
 // Port VLAN ID TLV (IEEE 802.1Q-2022 D.2.1)
 static const Parameter PAR_LLDP_PVID = {
     "pvid",
     "Port VLAN ID",
-    Integer
+    Int16
 };
 // Port And Protocol VLAN TLV (IEEE 802.1Q-2022 D.2.2)
 static const Parameter PAR_LLDP_PPVID = {
     "ppvid",
     "Port and Protocol VLAN ID",
-    Integer
+    Int16
 };
 static const Parameter PAR_LLDP_PPVID_SUP = {
     "PPVID-SUP",
@@ -1353,30 +1429,34 @@ static const Parameter PAR_LLDP_PPVID_EN = {
 static const Parameter PAR_LLDP_VLAN_NAME = {
     "vlan-name",
     "VLAN name",
-    Bytestream
+    Bytestream,
+    "0",
+    "32"
 };
 static const Parameter PAR_LLDP_VLAN_NAME_VID = {
     "vlan-name-id",
     "VLAN ID of given name",
-    Integer
+    Int16
 };
 // Protocol Identity TLV (IEEE 802.1Q-2022 D.2.4)
 static const Parameter PAR_LLDP_PROTO_ID = {
     "proto-id",
     "Protocol Identity",
-    Bytestream
+    Bytestream,
+    "0",
+    "255"
 };
 // VID Usage Digest TLV (IEEE 802.1Q-2022 D.2.5)
 static const Parameter PAR_LLDP_VID_USAGE_DIGEST = {
     "vid-usage-digest",
     "VID usage digest",
-    Integer
+    Int32
 };
 // Management VID TLV (IEEE 802.1Q-2022 D.2.6)
 static const Parameter PAR_LLDP_MGT_VID = {
     "mgt-vid",
     "Management VID associated with the system",
-    Integer
+    Int16
 };
 // Link Aggregation TLV (IEEE 802.1AX- F.2)
 static const Parameter PAR_LLDP_LAG_CAP = {
@@ -1392,23 +1472,25 @@ static const Parameter PAR_LLDP_LAG_STATUS = {
 static const Parameter PAR_LLDP_LAG_PORT_TYPE = {
     "lag-port-type",
     "Aggregation Port Type (0 = no port type, 1 = Aggregation Port, 2 = Aggregator, 3 = Aggregator with single port)",
-    Integer
+    Integer,
+    "0",
+    "3"
 };
 static const Parameter PAR_LLDP_LAG_PORT_ID = {
     "lag-port-id",
     "Aggregated Port ID",
-    Integer
+    Int32
 };
 // Congestion Notification TLV (IEEE 802.1Q-2022 D.2.7)
 static const Parameter PAR_LLDP_CONG_NOTE_CNPV = {
     "cong-cnpv",
     "Per-priority CNPV indicators",
-    Integer
+    Int8
 };
 static const Parameter PAR_LLDP_CONG_NOTE_READY = {
     "cong-ready",
     "Per-priority Ready indicators",
-    Integer
+    Int8
 };
 // ETS Configuration TLV (IEEE 802.1Q-2022 D.2.8)
 static const Parameter PAR_LLDP_ETS_CFG_W = {
@@ -1424,38 +1506,40 @@ static const Parameter PAR_LLDP_ETS_CFG_CBS = {
 static const Parameter PAR_LLDP_ETS_CFG_MAX_TC = {
     "ets-cfg-max-tc",
     "Maximum number of traffic classes supported (0 = 8 TCs)",
-    Integer
+    Integer,
+    "0",
+    "7"
 };
 static const Parameter PAR_LLDP_ETS_CFG_PRIO = {
     "ets-cfg-prio",
     "Priority Assignment Table",
-    Integer
+    Int32
 };
 static const Parameter PAR_LLDP_ETS_CFG_BW = {
     "ets-cfg-bw",
     "TC Bandwidth Table",
-    Integer
+    Int64
 };
 static const Parameter PAR_LLDP_ETS_CFG_TSA = {
     "ets-cfg-tsa",
     "TSA Assignment Table",
-    Integer
+    Int64
 };
 // ETS Recommendation TLV (IEEE 802.1Q-2022 D.2.9)
 static const Parameter PAR_LLDP_ETS_REC_PRIO = {
     "ets-rec-prio",
     "Priority Assignment Table",
-    Integer
+    Int32
 };
 static const Parameter PAR_LLDP_ETS_REC_BW = {
     "ets-rec-bw",
     "TC Bandwidth Table",
-    Integer
+    Int64
 };
 static const Parameter PAR_LLDP_ETS_REC_TSA = {
     "ets-rec-tsa",
     "TSA Assignment Table",
-    Integer
+    Int64
 };
 // Priority-based Flow Control Configuration TLV (IEEE 802.1Q-2022 D.2.10)
 static const Parameter PAR_LLDP_PFC_W = {
@@ -1471,54 +1555,66 @@ static const Parameter PAR_LLDP_PFC_MBC = {
 static const Parameter PAR_LLDP_PFC_CAP = {
     "pfc-cap",
     "PFC Capability",
-    Integer
+    Integer,
+    "0",
+    "15"
 };
 static const Parameter PAR_LLDP_PFC_ENABLE = {
     "pfc-enable",
     "PFC Enable bit vector",
-    Integer
+    Int8
 };
 // Application Priority TLV (IEEE 802.1Q-2022 D.2.11)
 static const Parameter PAR_LLDP_APPL_PRIO = {
     "appl-prio",
     "Priority",
-    Integer
+    Integer,
+    "0",
+    "7"
 };
 static const Parameter PAR_LLDP_APPL_SEL = {
     "appl-prio-sel",
     "Meaning of the protocol ID (1 = Ethertype, 2 = TCP/SCTP port, 3 = UDP port, 4 = UDP/TCP/SCTP/DCCP port, 5 = DSCP)",
-    Integer
+    Integer,
+    "0",
+    "7"
 };
 static const Parameter PAR_LLDP_APPL_PROTO = {
     "appl-prio-proto",
     "Protocol ID",
-    Integer
+    Int16
 };
 // EVB TLV (IEEE 802.1Q-2022 D.2.12)
 static const Parameter PAR_LLDP_EVB_BRIDGE_STATUS = {
     "evb-bridge-status",
     "EVB capabilities that are supported by the EVB bridge",
-    Integer
+    Int8
 };
 static const Parameter PAR_LLDP_EVB_STATION_STATUS = {
     "evb-station-status",
     "EVB capabilities that are supported by the EVB station",
-    Integer
+    Int8
 };
 static const Parameter PAR_LLDP_EVB_RETRIES = {
     "evb-max-retries",
     "maxRetries value for the ECP state machine",
-    Integer
+    Integer,
+    "0",
+    "7"
 };
 static const Parameter PAR_LLDP_EVB_RTE = {
     "evb-rte",
     "Retransmission exponent",
-    Integer
+    Integer,
+    "0",
+    "31"
 };
 static const Parameter PAR_LLDP_EVB_MODE = {
     "evb-mode",
     "EVB mode",
-    Integer
+    Integer,
+    "0",
+    "3"
 };
 static const Parameter PAR_LLDP_EVB_ROL_RWD = {
     "evb-rol-rwd",
@@ -1528,7 +1624,9 @@ static const Parameter PAR_LLDP_EVB_ROL_RWD = {
 static const Parameter PAR_LLDP_EVB_RWD = {
     "evb-rwd",
     "RWD value transmitted by the EVB bridge",
-    Integer
+    Integer,
+    "0",
+    "31"
 };
 static const Parameter PAR_LLDP_EVB_ROL_RKA = {
     "evb-rol-rka",
@@ -1538,7 +1636,9 @@ static const Parameter PAR_LLDP_EVB_ROL_RKA = {
 static const Parameter PAR_LLDP_EVB_RKA = {
     "evb-rka",
     "RKA value transmitted by the EVB station",
-    Integer
+    Integer,
+    "0",
+    "31"
 };
 // CDCP TLV (IEEE 802.1Q-2022 D.2.13)
 static const Parameter PAR_LLDP_CDCP_ROLE = {
@@ -1554,33 +1654,43 @@ static const Parameter PAR_LLDP_CDCP_SCOMP = {
 static const Parameter PAR_LLDP_CDCP_CHN_CAP = {
     "cdcp-ch-cap",
     "Channel capacity",
-    Integer
+    Integer,
+    "0",
+    "4095"
 };
 static const Parameter PAR_LLDP_CDCP_SCID = {
     "cdcp-scid",
     "Index number of S-channel",
-    Integer
+    Integer,
+    "0",
+    "4095"
 };
 static const Parameter PAR_LLDP_CDCP_SVID = {
     "cdcp-svid",
     "VID assigned to the S-channel",
-    Integer
+    Integer,
+    "0",
+    "4095"
 };
 // Application VLAN TLV (IEEE 802.1Q-2022 D.2.14)
 static const Parameter PAR_LLDP_APPL_VLAN_VID = {
     "appl-vlan-vid",
     "VLAN ID",
-    Integer
+    Integer,
+    "0",
+    "4095"
 };
 static const Parameter PAR_LLDP_APPL_VLAN_SEL = {
     "appl-vlan-sel",
     "Meaning of the protocol ID (1 = Ethertype, 2 = TCP/SCTP port, 3 = UDP port, 4 = UDP/TCP/SCTP/DCCP port, 5 = DSCP)",
-    Integer
+    Integer,
+    "0",
+    "7"
 };
 static const Parameter PAR_LLDP_APPL_VLAN_PROTO = {
     "appl-vlan-proto",
     "Protocol ID",
-    Integer
+    Int16
 };
 
 // MAC/PHY Configuration/Status TLV (IEEE802.3-2022 clause 79.3.1)
@@ -1597,12 +1707,12 @@ static const Parameter PAR_LLDP_MACPHY_ANEG_ENA = {
 static const Parameter PAR_LLDP_MACPHY_ANEG_CAPS = {
     "autoneg-caps",
     "PMD auto-negotiation advertised capability",
-    Integer
+    Int16
 };
 static const Parameter PAR_LLDP_MACPHY_MAU_TYPE = {
     "mautype",
     "operational MAU type",
-    Integer
+    Int16
 };
 // Power Via MDI TLV (IEEE802.3-2022 clause 79.3.2)
 //  basic fields
@@ -1629,23 +1739,27 @@ static const Parameter PAR_LLDP_POE_MDI_POWER_SUP_PSE_PAIR_CTRL = {
 static const Parameter PAR_LLDP_POE_PSE_POWER_PAIR = {
     "poe-power-pair",
     "PSE power pair field (1 = signal, 2 = spare)",
-    Integer
+    Int8
 };
 static const Parameter PAR_LLDP_POE_POWER_CLASS = {
     "poe-power-class",
     "Power class (1 = Class 0 PD, 2 = Class 1 PD, ... , 5 = Class 4 and above PD)",
-    Integer
+    Int8
 };
 //  DLL classification extension
 static const Parameter PAR_LLDP_POE_DLL_POWER_TYPE = {
     "poe-power-type",
     "DLL power type (0 = Type 2 PSE, 1 = Type 2 PD, 2 = Type 1 PSE, 3 = Type 1 PD)",
-    Integer
+    Integer,
+    "0",
+    "3"
 };
 static const Parameter PAR_LLDP_POE_DLL_POWER_SOURCE = {
     "poe-power-src",
     "DLL power source (Power type = PSE: 0 = unknown, 1 = primary, 2 = backup | Power type = PD: 0 = unknown, 1 = PSE, 3 = PSE and local)",
-    Integer
+    Integer,
+    "0",
+    "3"
 };
 static const Parameter PAR_LLDP_POE_DLL_PD_4PID = {
     "poe-pd-4pid",
@@ -1655,17 +1769,23 @@ static const Parameter PAR_LLDP_POE_DLL_PD_4PID = {
 static const Parameter PAR_LLDP_POE_DLL_POWER_PRIO = {
     "poe-power-prio",
     "DLL power priority (0 = unknown, 1 = critical, 2 = high, 3 = low)",
-    Integer
+    Integer,
+    "0",
+    "3"
 };
 static const Parameter PAR_LLDP_POE_DLL_PD_REQ_POWER = {
     "poe-req-power",
     "PD requested power value",
-    Float
+    Float,
+    "0.0",
+    "6553.5"
 };
 static const Parameter PAR_LLDP_POE_DLL_PD_ALLOC_POWER = {
     "poe-alloc-power",
     "PSE allocated power value",
-    Float
+    Float,
+    "0.0",
+    "6553.5"
 };
 // TODO Type 3 and Type 4 extension (~14 parameters!!!)
 
@@ -1673,92 +1793,96 @@ static const Parameter PAR_LLDP_POE_DLL_PD_ALLOC_POWER = {
 static const Parameter PAR_LLDP_MAX_FRAME_SIZE = {
     "max-frame-size",
     "Maximum 802.3 frame size",
-    Integer
+    Int16
 };
 // EEE TLV (IEEE802.3-2022 clause 79.3.5)
 static const Parameter PAR_LLDP_EEE_TX_TW = {
     "eee-tx-tw",
     "EEE transmit Tw",
-    Integer
+    Int16
 };
 static const Parameter PAR_LLDP_EEE_RX_TW = {
     "eee-rx-tw",
     "EEE receive Tw",
-    Integer
+    Int16
 };
 static const Parameter PAR_LLDP_EEE_FB_RX_TW = {
     "eee-fb-rx-tw",
     "EEE fallback receive Tw",
-    Integer
+    Int16
 };
 static const Parameter PAR_LLDP_EEE_ECHO_TX_TW = {
     "eee-echo-tx-tw",
     "EEE echo transmit Tw",
-    Integer
+    Int16
 };
 static const Parameter PAR_LLDP_EEE_ECHO_RX_TW = {
     "eee-echo-rx-tw",
     "EEE echo receive  Tw",
-    Integer
+    Int16
 };
 // EEE Fast Wake TLV (IEEE802.3-2022 clause 79.3.6)
 static const Parameter PAR_LLDP_EEE_FW_TX = {
     "eee-fw-tx",
     "Transmit fast wake",
-    Integer
+    Int8
 };
 static const Parameter PAR_LLDP_EEE_FW_RX = {
     "eee-fw-rx",
     "Receive fast wake",
-    Integer
+    Int8
 };
 static const Parameter PAR_LLDP_EEE_FW_ECHO_TX = {
     "eee-fw-echo-tx",
     "Echo transmit fast wake",
-    Integer
+    Int8
 };
 static const Parameter PAR_LLDP_EEE_FW_ECHO_RX = {
     "eee-fw-echo-rx",
     "Echo receive fast wake",
-    Integer
+    Int8
 };
 
 // Profinet TLV LLDP_PNIO_DELAY
 static const Parameter PAR_LLDP_PN_DELAY_PORT_RX_LOC = {
     "pn-port-delay-rx",
     "PTCP_PortRxDelayLocal (nanoseconds)",
-    Integer
+    Int32
 };
 static const Parameter PAR_LLDP_PN_DELAY_PORT_RX_REM = {
     "pn-port-delay-rx-rem",
     "PTCP_PortRxDelayRemote (nanoseconds)",
-    Integer
+    Int32
 };
 static const Parameter PAR_LLDP_PN_DELAY_PORT_TX_LOC = {
     "pn-port-delay-tx",
     "PTCP_PortTxDelayLocal (nanoseconds)",
-    Integer
+    Int32
 };
 static const Parameter PAR_LLDP_PN_DELAY_PORT_TX_REM = {
     "pn-port-delay-tx-rem",
     "PTCP_PortTxDelayRemote (nanoseconds)",
-    Integer
+    Int32
 };
 static const Parameter PAR_LLDP_PN_DELAY_LINE = {
     "pn-cable-delay",
     "Measured cable delay (nanoseconds)",
-    Integer
+    Int32
 };
 // Profinet TLV LLDP_PNIO_PORTSTATUS
 static const Parameter PAR_LLDP_PN_RTC2_STATE = {
     "pn-rtc2-state",
     "RTClass2_PortStatus.State (0 = OFF, 1 = SYNC-DATA-LOADED, 2 = UP)",
-    Integer
+    Integer,
+    "0",
+    "3"
 };
 static const Parameter PAR_LLDP_PN_RTC3_STATE = {
     "pn-rtc3-state",
     "RTClass3_PortStatus.State (0 = OFF, 2 = UP, 4 = RUN)",
-    Integer
+    Integer,
+    "0",
+    "7"
 };
 static const Parameter PAR_LLDP_PN_RTC3_FRAG = {
     "pn-rtc3-frag",
@@ -1779,7 +1903,9 @@ static const Parameter PAR_LLDP_PN_RTC3_OPTIMIZED = {
 static const Parameter PAR_LLDP_PN_ALIAS = {
     "pn-alias",
     "Alias name value",
-    Bytestream
+    Bytestream,
+    "0",
+    "255"
 };
 // Profinet TLV LLDP_PNIO_MRPPORTSTATUS
 static const Parameter PAR_LLDP_PN_MRP_DOMAIN = {
@@ -1790,12 +1916,14 @@ static const Parameter PAR_LLDP_PN_MRP_DOMAIN = {
 static const Parameter PAR_LLDP_PN_MRP_DOMAIN_UUID = {
     "pn-mrp-domain-uuid",
     "MRP domain uuid",
-    Bytestream
+    UUID
 };
 static const Parameter PAR_LLDP_PN_MRP_MRRT_STATE = {
     "pn-mrp-mrrt-state",
     "MRRT port status (0 = OFF, 1 = CONFIGURED, 2 = UP)",
-    Integer
+    Integer,
+    "0",
+    "3"
 };
 // Profinet TLV LLDP_PNIO_CHASSIS_MAC
 static const Parameter PAR_LLDP_PN_CHASSIS_MAC = {
@@ -1812,82 +1940,98 @@ static const Parameter PAR_LLDP_PN_PTCP_MAST_SRC_MAC = {
 static const Parameter PAR_LLDP_PN_PTCP_DOMAIN_UUID = {
     "pn-ptcp-domain-uuid",
     "PTCP domain UUID",
-    Bytestream
+    UUID
 };
 static const Parameter PAR_LLDP_PN_PTCP_IRDATA_UUID = {
     "pn-ptcp-irdata-uuid",
     "IRDATA UUID",
-    Bytestream
+    UUID
 };
 static const Parameter PAR_LLDP_PN_PTCP_PERIOD_LEN = {
     "pn-ptcp-period-len",
     "Length of period (nanoseconds)",
-    Integer
+    Integer,
+    "0",
+    "2147483647"
 };
 static const Parameter PAR_LLDP_PN_PTCP_RED_ORANGE = {
     "pn-ptcp-red-orange",
     "Frame offset of red/orange period (nanoseconds)",
-    Integer
+    Integer,
+    "0",
+    "2147483647"
 };
 static const Parameter PAR_LLDP_PN_PTCP_ORANGE = {
     "pn-ptcp-orange",
     "Frame offset of orange period (nanoseconds)",
-    Integer
+    Integer,
+    "0",
+    "2147483647"
 };
 static const Parameter PAR_LLDP_PN_PTCP_GREEN = {
     "pn-ptcp-green",
     "Frame offset of green period (nanoseconds)",
-    Integer
+    Integer,
+    "0",
+    "2147483647"
 };
 // Profinet TLV LLDP_PNIO_MAUTypeExtension
 static const Parameter PAR_LLDP_PN_MAU_TYPE_EXT = {
     "pn-mautype-ext",
     "MAUTYPE extension",
-    Integer
+    Int16
 };
 // Profinet TLV LLDP_PNIO_MRPICPORT_STATUS
 static const Parameter PAR_LLDP_PN_MRP_IC_DOMAIN_ID = {
     "pn-mrp-ic-domain-id",
     "MRP interconnection domain identifier",
-    Integer
+    Int16
 };
 static const Parameter PAR_LLDP_PN_MRP_IC_ROLE = {
     "pn-mrp-ic-role",
     "MRP interconnection role (0 = none, 1 = client, 2 = manager)",
-    Integer
+    Int16
 };
 static const Parameter PAR_LLDP_PN_MRP_IC_MIC_POS = {
     "pn-mrp-ic-mic-pos",
     "MRP interconnection mic position (0 = Primary, 1 = Secondary)",
-    Integer
+    Int16
 };
 
 // Raw user defined TLV
 static const Parameter PAR_LLDP_TLV_TYPE = {
     "type",
     "Raw TLV Type Number",
-    Integer
+    Integer,
+    "0",
+    "127"
 };
 static const Parameter PAR_LLDP_TLV_VALUE = {
     "value",
     "Raw TLV Value as bytestream",
-    Bytestream
+    Bytestream,
+    "0",
+    "511"
 };
 // Raw user defined organizationally specific TLV
 static const Parameter PAR_LLDP_OUI_TLV_OUI = {
     "oui",
     "Organizationally Specific TLV OUI",
-    Bytestream
+    Bytestream,
+    "3",
+    "3"
 };
 static const Parameter PAR_LLDP_OUI_TLV_TYPE = {
     "oui-type",
     "Organizationally Specific TLV Subtype Number",
-    Integer
+    Int8
 };
 static const Parameter PAR_LLDP_OUI_TLV_VALUE = {
     "oui-value",
     "Organizationally Specific TLV Value as bytestream",
-    Bytestream
+    Bytestream,
+    "0",
+    "507"
 };
 static const Protocol PR_LLDP = {
     "lldp",

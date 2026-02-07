@@ -526,11 +526,11 @@ cLinkable* cInstructionParser::compileARP (cParameterList& params, bool isProbe,
 
         if (isProbe)
         {
-            arp->probe (cSettings::get().getMyMAC(), params.findParameter (PAR_IP_DIP.syntax)->asIPv4());
+            arp->probe (cSettings::get().getMyMAC(), params.findParameter (PAR_IP4_DIP.syntax)->asIPv4());
         }
         else if (isGratuitous)
         {
-            arp->announce (cSettings::get().getMyMAC(), getParameterOrOwnIPv4 (params, PAR_IP_DIP.syntax));
+            arp->announce (cSettings::get().getMyMAC(), getParameterOrOwnIPv4 (params, PAR_IP4_DIP.syntax));
         }
         else
         {
@@ -538,9 +538,9 @@ cLinkable* cInstructionParser::compileARP (cParameterList& params, bool isProbe,
 
             arp->setAll (params.findParameter (PAR_ARP_OP.syntax, (uint32_t)1)->asInt16(),
                          getParameterOrOwnMac (params, PAR_ETH_SMAC.syntax),
-                         getParameterOrOwnIPv4 (params, PAR_IP_SIP.syntax),
+                         getParameterOrOwnIPv4 (params, PAR_IP4_SIP.syntax),
                          targetMac,
-                         params.findParameter (PAR_IP_DIP.syntax)->asIPv4()
+                         params.findParameter (PAR_IP4_DIP.syntax)->asIPv4()
                         );
         }
 
@@ -569,11 +569,11 @@ bool cInstructionParser::parseIPv4Params (cParameterList& params, cIPPacket* pac
     packet->setDontFragment (params.findParameter (PAR_IP4_DF.syntax, (uint32_t)0)->asInt8(0, 1));
     if (!noDestinationIP)
     {
-        const cIPv4 destIP = params.findParameter (PAR_IP_DIP.syntax)->asIPv4();
+        const cIPv4 destIP = params.findParameter (PAR_IP4_DIP.syntax)->asIPv4();
         packet->setDestination (destIP);
         isMulticast = destIP.isMulticast();
     }
-    packet->setSource (getParameterOrOwnIPv4 (params, PAR_IP_SIP.syntax));
+    packet->setSource (getParameterOrOwnIPv4 (params, PAR_IP4_SIP.syntax));
     cParameter* optionalPar = params.findParameter (PAR_IP4_ID.syntax, true);
     if (optionalPar)
         packet->setIdentification(optionalPar->asInt16());
@@ -595,11 +595,11 @@ bool cInstructionParser::parseIPv6Params (cParameterList& params, cIPPacket* pac
 
     if (!noDestinationIP)
     {
-        const cIPv6 destIP = params.findParameter (PAR_IP_DIP.syntax)->asIPv6();
+        const cIPv6 destIP = params.findParameter (PAR_IP6_DIP.syntax)->asIPv6();
         packet->setDestination (destIP);
         isMulticast = destIP.isMulticast();
     }
-    packet->setSource (getParameterOrOwnIPv6 (params, PAR_IP_SIP.syntax));
+    packet->setSource (getParameterOrOwnIPv6 (params, PAR_IP6_SIP.syntax));
     cParameter* optionalPar = params.findParameter (PAR_IP6_FL.syntax, true);
     if (optionalPar)
         packet->setFlowLabel (optionalPar->asInt32(0, 0xfffff));
@@ -798,9 +798,9 @@ cLinkable* cInstructionParser::compileVRRP (bool noEthHeader, cParameterList& pa
         vrrp->setPrio(params.findParameter (PAR_VRRP_VRPRIO.syntax, (uint32_t)100)->asInt8());
         vrrp->setType(params.findParameter (PAR_VRRP_TYPE.syntax, (uint32_t)1)->asInt8(0, 15));
         if (version == 2)
-            vrrp->setInterval(params.findParameter (PAR_VRRP_AINT.syntax, (uint32_t)1)->asInt8());
+            vrrp->setInterval(params.findParameter (PAR_VRRP_AINT2.syntax, (uint32_t)1)->asInt8());
         else
-            vrrp->setInterval(params.findParameter (PAR_VRRP_AINT.syntax, (uint32_t)100)->asInt16(0, 4095));
+            vrrp->setInterval(params.findParameter (PAR_VRRP_AINT3.syntax, (uint32_t)100)->asInt16(0, 4095));
         const cParameter* optionalPar = params.findParameter (PAR_VRRP_CHKSUM.syntax, true);
         if (optionalPar)
         {
@@ -863,7 +863,7 @@ cLinkable* cInstructionParser::compileSTP (bool noEthHeader, cParameterList& par
 
             if (isRSTP)
             {
-                pathCost      = params.findParameter (PAR_STP_RPATHCOST.syntax, (uint32_t)20000)->asInt32 (1, 4294967295);
+                pathCost      = params.findParameter (PAR_RSTP_RPATHCOST.syntax, (uint32_t)20000)->asInt32 (1, 4294967295);
                 unsigned role = params.findParameter (PAR_STP_PORTROLE.syntax,  (uint32_t)3)->asInt8 (1, 3);
 
                 flags |= params.findParameter (PAR_STP_PROPOSAL.syntax,   (uint32_t)0)->asInt8 (0, 1) ? cStpPacket::PROPOSAL   : 0;
@@ -924,7 +924,7 @@ cLinkable* cInstructionParser::compileIGMP  (bool noEthHeader, cParameterList& p
                 s    = !!params.findParameter (PAR_IGMP_S.syntax, (uint32_t)0)->asInt8 (0, 1);
                 qrv  =   params.findParameter (PAR_IGMP_QRV.syntax, (uint32_t)2)->asInt8 (0, 7);
                 qqic =   params.findParameter (PAR_IGMP_QQIC.syntax, 125.0)->asDouble (0, 31744.0);
-                time =   params.findParameter (PAR_IGMP_TIME.syntax, 10.0)->asDouble (0, 3174.4);
+                time =   params.findParameter (PAR_IGMP3_QUERY_TIME.syntax, 10.0)->asDouble (0, 3174.4);
 
                 int sources = 0;
                 while ((++sources <= 366 ) &&
@@ -935,7 +935,7 @@ cLinkable* cInstructionParser::compileIGMP  (bool noEthHeader, cParameterList& p
             }
             else
             {
-                time = params.findParameter (PAR_IGMP_TIME.syntax, 10.0)->asDouble (0, 25.5);
+                time = params.findParameter (PAR_IGMP_QUERY_TIME.syntax, 10.0)->asDouble (0, 25.5);
             }
             cParameter* optionalPar = params.findParameter (PAR_IGMP_GROUP.syntax, true);
             if (optionalPar)
@@ -1227,7 +1227,7 @@ cLinkable* cInstructionParser::compileLLDP (bool noEthHeader, cParameterList& pa
         parser.pfcControlConfig ();
         parser.applicationPriority ();
         parser.evb ();
-        parser.cdcb ();
+        parser.cdcp ();
         parser.applicationVLAN ();
 
         // IEEE802.3 TLVs
