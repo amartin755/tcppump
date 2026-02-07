@@ -23,16 +23,28 @@
 #include <vector>
 
 
-// TODO maybe it makes sense to think about a bitwise encoding
-//      because there a parameters LLDP chassis-ID that can be
-//      multiple types (IP, MAC, Bytestream)
-enum Type {Integer, Float, Mac, IP, Bytestream, Bit};
+enum Type
+{
+    Integer = 1,    // generic integer with explicit min and max values
+    Int8 = 2,       // 8-bit integer, implicit range 0 ... 255
+    Int16 = 4,      // 16-bit integer, implicit range 0 ... 65535
+    Int32 = 8,      // 32-bit integer, implicit range 0 ... 4294967295
+    Int64 = 16,     // 64-bit integer, implicit range 0 ... 18446744073709551615
+    Bit = 32,       // single bit, implicit range 0 ... 1
+    Float = 64,     // floating point number with explicit range
+    Mac = 128,       // EUI-48 MAC address
+    IP4 = 256,       // IPv4 address
+    IP6 = 512,       // IPv6 address
+    Bytestream = 1024, // arbitrary bytestream with optional max length
+};
 
 struct Parameter
 {
     const char* syntax;
     const char* descr;
     const Type type;
+    const char* min = nullptr;
+    const char* max = nullptr;
 };
 
 struct Protocol
@@ -47,47 +59,47 @@ struct Protocol
 static const Parameter PAR_RAW_BYTE = {
     "byte",
     "Raw byte value",
-    Integer
+    Int8
 };
 static const Parameter PAR_RAW_BE16 = {
     "be16",
     "Big-endian 16-bit value",
-    Integer
+    Int16
 };
 static const Parameter PAR_RAW_BE32 = {
     "be32",
     "Big-endian 32-bit value",
-    Integer
+    Int32
 };
 static const Parameter PAR_RAW_BE64 = {
     "be64",
     "Big-endian 64-bit value",
-    Integer
+    Int64
 };
 static const Parameter PAR_RAW_LE16 = {
     "le16",
     "Little-endian 16-bit value",
-    Integer
+    Int16
 };
 static const Parameter PAR_RAW_LE32 = {
     "le32",
     "Little-endian 32-bit value",
-    Integer
+    Int32
 };
 static const Parameter PAR_RAW_LE64 = {
     "le64",
     "Little-endian 64-bit value",
-    Integer
+    Int64
 };
 static const Parameter PAR_RAW_IP4 = {
     "ip4",
     "IPv4 address",
-    IP
+    IP4
 };
 static const Parameter PAR_RAW_IP6 = {
     "ip6",
     "IPv6 address",
-    IP
+    IP6
 };
 static const Parameter PAR_RAW_MAC = {
     "mac",
@@ -132,27 +144,29 @@ static const Parameter PAR_ETH_DMAC = {
 static const Parameter PAR_ETH_DSAP = {
     "dsap",
     "IEEE 802.2 DSAP field",
-    Integer
+    Int8
 };
 static const Parameter PAR_ETH_SSAP = {
     "ssap",
     "IEEE 802.2 SSAP field",
-    Integer
+    Int8
 };
 static const Parameter PAR_ETH_CONTROL = {
     "control",
     "Control field",
-    Integer
+    Int16
 };
 static const Parameter PAR_ETH_OUI = {
     "oui",
     "Organizationally Unique Identifier",
-    Integer
+    Integer,
+    "0",
+    "16777215"
 };
 static const Parameter PAR_ETH_PROTOCOL = {
     "protocol",
     "Protocol identifier",
-    Integer
+    Int16
 };
 static const Parameter PAR_ETH_PAYLOAD = {
     "payload",
@@ -162,22 +176,28 @@ static const Parameter PAR_ETH_PAYLOAD = {
 static const Parameter PAR_ETH_ETHERTYPE = {
     "ethertype",
     "EtherType field",
-    Integer
+    Int16
 };
 static const Parameter PAR_ETH_VID = {
     "vid",
     "VLAN Identifier",
-    Integer
+    Integer,
+    "0",
+    "4095"
 };
 static const Parameter PAR_ETH_VTYPE = {
     "vtype",
     "VLAN Type",
-    Integer
+    Integer,
+    "1",
+    "2"
 };
 static const Parameter PAR_ETH_PRIO = {
     "prio",
     "VLAN Priority",
-    Integer
+    Integer,
+    "0",
+    "7"
 };
 static const Parameter PAR_ETH_DEI = {
     "dei",
@@ -209,17 +229,21 @@ static const Protocol PR_ETH = {
 static const Parameter PAR_IP_DSCP = {
     "dscp",
     "Differentiated Services Code Point",
-    Integer
+    Integer,
+    "0",
+    "63"
 };
 static const Parameter PAR_IP_ECN = {
     "ecn",
     "Explicit Congestion Notification",
-    Integer
+    Integer,
+    "0",
+    "3"
 };
 static const Parameter PAR_IP_TTL = {
     "ttl",
     "Time To Live",
-    Integer
+    Int8
 };
 static const Parameter PAR_IP_DIP = {
     "dip",
@@ -234,7 +258,7 @@ static const Parameter PAR_IP_SIP = {
 static const Parameter PAR_IP_PROTOCOL = {
     "protocol",
     "Transport layer protocol",
-    Integer
+    Int8
 };
 static const Parameter PAR_IP_PAYLOAD = {
     "payload",
@@ -244,7 +268,7 @@ static const Parameter PAR_IP_PAYLOAD = {
 static const Parameter PAR_IP4_ID = {
     "id",
     "IPv4 packet identifier",
-    Integer
+    Int16
 };
 static const Parameter PAR_IP4_DF = {
     "df",
@@ -254,12 +278,14 @@ static const Parameter PAR_IP4_DF = {
 static const Parameter PAR_IP4_CHKSUM = {
     "hchksum",
     "IPv4 header checksum",
-    Integer
+    Int16
 };
 static const Parameter PAR_IP6_FL = {
     "fl",
     "IPv6 Flow Label",
-    Integer
+    Integer,
+    "0",
+    "1048575"
 };
 // shortcuts for IP header parameters
 #define PAR_IP4_OPT &PAR_IP_DSCP, &PAR_IP_ECN, &PAR_IP_TTL, &PAR_IP4_DF, &PAR_IP_SIP, &PAR_IP4_ID, &PAR_IP4_CHKSUM
@@ -301,12 +327,12 @@ static const Protocol PR_IPV6 = {
 static const Parameter PAR_UDP_SPORT = {
     "sport",
     "Source UDP port",
-    Integer
+    Int16
 };
 static const Parameter PAR_UDP_DPORT = {
     "dport",
     "Destination UDP port",
-    Integer
+    Int16
 };
 static const Parameter PAR_UDP_PAYLOAD = {
     "payload",
@@ -316,7 +342,7 @@ static const Parameter PAR_UDP_PAYLOAD = {
 static const Parameter PAR_UDP_CHKSUM = {
     "chksum",
     "UDP checksum",
-    Integer
+    Int16
 };
 static const Protocol PR_UDP4 = {
     "udp",
@@ -358,7 +384,7 @@ static const Protocol PR_UDP6 = {
 static const Parameter PAR_ARP_OP = {
     "op",
     "Opcode, 1 = request, 2 = reply",
-    Integer
+    Int16
 };
 static const Protocol PR_ARP = {
     "arp",
@@ -396,27 +422,38 @@ static const Parameter PAR_VRRP_VRIP = {
 static const Parameter PAR_VRRP_VRID = {
     "vrid",
     "Virtual Router ID",
-    Integer
+    Integer,
+    "1",
+    "255"
 };
 static const Parameter PAR_VRRP_VRPRIO = {
     "vrprio",
     "Virtual Router Priority",
-    Integer
+    Int8
 };
 static const Parameter PAR_VRRP_TYPE = {
     "type",
     "VRRP message type",
-    Integer
+    Integer,
+    "0",
+    "15"
 };
-static const Parameter PAR_VRRP_AINT = {
+static const Parameter PAR_VRRP_AINT2 = {
     "aint",
     "Advertisement Interval",
-    Integer
+    Int8
+};
+static const Parameter PAR_VRRP_AINT3 = {
+    "aint",
+    "Advertisement Interval",
+    Integer,
+    "0",
+    "4095"
 };
 static const Parameter PAR_VRRP_CHKSUM = {
     "chksum",
     "VRRP checksum",
-    Integer
+    Int16
 };
 static const Protocol PR_VRRP = {
     "vrrp",
@@ -430,7 +467,7 @@ static const Protocol PR_VRRP = {
         &PAR_IP_SIP,
         &PAR_VRRP_VRPRIO,
         &PAR_VRRP_TYPE,
-        &PAR_VRRP_AINT,
+        &PAR_VRRP_AINT2,
         &PAR_VRRP_CHKSUM,
         PAR_VLAN,
     }
@@ -447,7 +484,7 @@ static const Protocol PR_VRRP3 = {
         &PAR_IP_SIP,
         &PAR_VRRP_VRPRIO,
         &PAR_VRRP_TYPE,
-        &PAR_VRRP_AINT,
+        &PAR_VRRP_AINT3,
         &PAR_VRRP_CHKSUM,
         PAR_VLAN,
     }
