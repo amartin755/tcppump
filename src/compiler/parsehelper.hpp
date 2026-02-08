@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
  * TCPPUMP <https://github.com/amartin755/tcppump>
- * Copyright (C) 2012-2021 Andreas Martin (netnag@mailbox.org)
+ * Copyright (C) 2012-2026 Andreas Martin (netnag@mailbox.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 #include <stdexcept>
 #include <cerrno>
 #include <stdexcept>
+#include <vector>
 
 #include "bug.hpp"
 
@@ -57,6 +58,8 @@ public:
     static const char* nextCharIgnoreWhitspaces (const char* p, char c);
     static int isOneOf (char c, const char* accept);
     static uint8_t* hexStringToBin (const char* hexString, size_t hexStringLen, size_t& binLength);
+    static std::vector<uint8_t>* hexStringToBin(const char* hexString, size_t hexStringLen);
+
     static bool range (const char* p, size_t len, int base, uint64_t& begin, uint64_t& end);
     static uint8_t decCharToInt (char c)
     {

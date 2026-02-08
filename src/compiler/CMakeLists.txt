@@ -20,6 +20,7 @@
 
 set (SOURCES
      ${SOURCES}
+     ${CMAKE_CURRENT_SOURCE_DIR}/parser.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/compiler.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/instructionparser.cpp
      ${CMAKE_CURRENT_SOURCE_DIR}/fileparser.cpp

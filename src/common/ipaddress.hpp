@@ -52,6 +52,10 @@ public:
     {
         set (ip);
     }
+    cIPv4 (const char* ip, size_t len)
+    {
+        set (ip, len);
+    }
     void set (const cIPv4& i)
     {
         ipv4 = i.ipv4;
@@ -389,6 +393,10 @@ public:
     cIPv6 (const char* ip)
     {
         set (ip);
+    }
+    cIPv6 (const char* ip, size_t len)
+    {
+        set (ip, len);
     }
     void set (const cIPv6& i)
     {

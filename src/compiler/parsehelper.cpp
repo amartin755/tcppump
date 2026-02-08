@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
  * TCPPUMP <https://github.com/amartin755/tcppump>
- * Copyright (C) 2012-2021 Andreas Martin (netnag@mailbox.org)
+ * Copyright (C) 2012-2026 Andreas Martin (netnag@mailbox.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -74,7 +74,31 @@ int cParseHelper::isOneOf (char c, const char* accept)
     return 0;
 }
 
-// the function will alloc a buffer. The caller has to free this buffer!
+/**
+ * @brief Converts a hexadecimal string to a binary array.
+ *
+ * Converts a hex string representation into a array of bytes. Each pair of
+ * hexadecimal characters is converted to a single byte value.
+ *
+ * @param hexString Pointer to a null-terminated hexadecimal string.
+ *                  Must not be nullptr.
+ * @param hexStringLen Optional length of the hex string. If 0, the length is
+ *                     determined using std::strlen(). Default is 0.
+ * @param binLength Output parameter that will contain the length of the 
+ *                  binary data on successful conversion.
+ *
+ * @return A pointer to a dynamically allocated uint8_t array containing
+ *         the binary data, or nullptr if:
+ *         - The hex string length is 0
+ *         - The hex string length is odd (not divisible by 2)
+ *         - An exception occurs during conversion
+ *
+ * @note The caller is responsible for freeing the returned array with delete[].
+ * @note Each pair of hex characters must be valid hexadecimal digits,
+ *       otherwise the behavior depends on hexCharToInt() implementation.
+ *
+ * @see hexCharToInt()
+ */
 uint8_t* cParseHelper::hexStringToBin (const char* hexString, size_t hexStringLen, size_t& binLength)
 {
     BUG_ON (!hexString);
@@ -102,6 +126,57 @@ uint8_t* cParseHelper::hexStringToBin (const char* hexString, size_t hexStringLe
     }
 
     binLength = length / 2;
+
+    return bin;
+}
+
+/**
+ * @brief Converts a hexadecimal string to a binary vector.
+ *
+ * Converts a hex string representation into a vector of bytes. Each pair of
+ * hexadecimal characters is converted to a single byte value.
+ *
+ * @param hexString Pointer to a null-terminated hexadecimal string.
+ *                  Must not be nullptr.
+ * @param hexStringLen Optional length of the hex string. If 0, the length is
+ *                     determined using std::strlen(). Default is 0.
+ *
+ * @return A pointer to a dynamically allocated std::vector<uint8_t> containing
+ *         the binary data, or nullptr if:
+ *         - The hex string length is 0
+ *         - The hex string length is odd (not divisible by 2)
+ *         - An exception occurs during conversion
+ *
+ * @note The caller is responsible for freeing the returned vector with delete.
+ * @note Each pair of hex characters must be valid hexadecimal digits,
+ *       otherwise the behavior depends on hexCharToInt() implementation.
+ *
+ * @see hexCharToInt()
+ */
+std::vector<uint8_t>* cParseHelper::hexStringToBin (const char* hexString, size_t hexStringLen)
+{
+    BUG_ON(!hexString);
+
+    size_t length = hexStringLen ? hexStringLen : std::strlen(hexString);
+
+    if (!length || (length & 1))
+        return nullptr;
+
+    auto* bin = new std::vector<uint8_t>(length / 2);
+
+    try
+    {
+        uint8_t* binData = bin->data();
+        for (size_t n = 0; n < length; n += 2)
+        {
+            *binData++ = (hexCharToInt(hexString[n]) << 4) | hexCharToInt(hexString[n + 1]);
+        }
+    }
+    catch (...)
+    {
+        delete bin;
+        return nullptr;
+    }
 
     return bin;
 }
@@ -168,6 +243,18 @@ void cParseHelper::unitTest ()
     binLen = (size_t)-1;
     delete[] bin;
 
+    BUG_IF_NOT (!hexStringToBin ("", 0));
+    BUG_IF_NOT (!hexStringToBin ("1abcdef", 0));
+    BUG_IF_NOT (!hexStringToBin ("abcdefg", 0));
+    BUG_IF_NOT (!hexStringToBin ("1abcdefg", 0));
+    std::vector<uint8_t>* binVec;
+    BUG_IF_NOT ((binVec = hexStringToBin ("0123456789abcdef", 0)));
+    BUG_IF_NOT (binVec->size() == 8);
+    BUG_IF_NOT (!memcmp (binVec->data(), "\x01\x23\x45\x67\x89\xab\xcd\xef", binVec->size()));
+    BUG_IF_NOT ((binVec = hexStringToBin ("0123456789abcdef", 8)));
+    BUG_IF_NOT (binVec->size() == 4);
+    BUG_IF_NOT (!memcmp (binVec->data(), "\x01\x23\x45\x67", binVec->size()));
+    delete binVec;
 
     BUG_IF_NOT (isOneOf ('a', "abcdef"));
     BUG_IF_NOT (isOneOf ('c', "abcdef"));
