@@ -227,6 +227,8 @@ if (WIN32)
     add_compile_definitions (WIN32_LEAN_AND_MEAN)
     # suppress warnings about unsafe strncpy and friends
     add_compile_definitions (_CRT_SECURE_NO_WARNINGS)
+    # avoid conflicts with std::min and std::max
+    add_compile_definitions (NOMINMAX)
     if (MSVC)
         add_compile_definitions (HAVE_MSVC)
     endif ()
