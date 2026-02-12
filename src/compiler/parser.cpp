@@ -60,6 +60,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
         }
     }
 
+    // unknown parameter
     if (!m_syntax)
         throw FormatException (exParUnused, name, nameLen);
 
@@ -68,6 +69,8 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
 
     if (m_syntax->type & Type::Integer)
     {
+        typeCnt--;
+
         // a generic integer must have an explicit range
         BUG_ON (!m_syntax->min || !m_syntax->max);
 
@@ -83,12 +86,13 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
         }
         catch (...)
         {
-            // only throw if there is no other types to try
-            if (typeCnt-- == 1) throw;
+            // only throw if there are no other types to try
+            if (typeCnt == 0) throw;
         }
     }
     else if (m_syntax->type & Type::Bit)
     {
+        typeCnt--;
         try
         {
             m_value = getAndCheckIntegerValue (0, 1);
@@ -96,12 +100,13 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
         }
         catch (...)
         {
-            // only throw if there is no other types to try
-            if (typeCnt-- == 1) throw;
+            // only throw if there are no other types to try
+            if (typeCnt == 0) throw;
         }
     }
     else if (m_syntax->type & Type::Int8)
     {
+        typeCnt--;
         try
         {
             m_value = getAndCheckIntegerValue (0, std::numeric_limits<uint8_t>::max());
@@ -109,12 +114,13 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
         }
         catch (...)
         {
-            // only throw if there is no other types to try
-            if (typeCnt-- == 1) throw;
+            // only throw if there are no other types to try
+            if (typeCnt == 0) throw;
         }
     }
     else if (m_syntax->type & Type::Int16)
     {
+        typeCnt--;
         try
         {
             m_value = getAndCheckIntegerValue (0, std::numeric_limits<uint16_t>::max());
@@ -122,12 +128,13 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
         }
         catch (...)
         {
-            // only throw if there is no other types to try
-            if (typeCnt-- == 1) throw;
+            // only throw if there are no other types to try
+            if (typeCnt == 0) throw;
         }
     }
     else if (m_syntax->type & Type::Int32)
     {
+        typeCnt--;
         try
         {
             m_value = getAndCheckIntegerValue (0, std::numeric_limits<uint32_t>::max());
@@ -135,12 +142,13 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
         }
         catch (...)
         {
-            // only throw if there is no other types to try
-            if (typeCnt-- == 1) throw;
+            // only throw if there are no other types to try
+            if (typeCnt == 0) throw;
         }
     }
     else if (m_syntax->type & Type::Int64)
     {
+        typeCnt--;
         try
         {
             m_value = getAndCheckIntegerValue (0, std::numeric_limits<uint64_t>::max());
@@ -148,12 +156,13 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
         }
         catch (...)
         {
-            // only throw if there is no other types to try
-            if (typeCnt-- == 1) throw;
+            // only throw if there are no other types to try
+            if (typeCnt == 0) throw;
         }
     }
-    else if (m_syntax->type & Type::Float)
+    if (m_syntax->type & Type::Float)
     {
+        typeCnt--;
         double min, max;
         // a generic float must have an explicit range
         BUG_ON (!m_syntax->min || !m_syntax->max);
@@ -164,21 +173,25 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
 
         // read user provided value and convert to double and check syntax and range
         char* end;
-        errno = 0;
         double v = std::strtod (m_strValue, &end);
-        if (end != (m_strValue + m_strValueLen))
+        // only throw if there are no other types to try
+        if (typeCnt == 0)
         {
-            throw FormatException (exParFormat, m_strValue, (int)m_strValueLen);
+            if (end != (m_strValue + m_strValueLen))
+            {
+                throw FormatException (exParFormat, m_strValue, (int)m_strValueLen);
+            }
+            else if (errno == ERANGE || v < min || v > max)
+            {
+                throw FormatException (exParRange, m_strValue, (int)m_strValueLen);
+            }
+            m_value = v;
+            m_type = Type::Float;
         }
-        else if (errno == ERANGE || v < min || v > max)
-        {
-            throw FormatException (exParRange, m_strValue, (int)m_strValueLen);
-        }
-        m_value = v;
-        m_type = Type::Float;
     }
-    else if (m_syntax->type & Type::Mac)
+    if (m_syntax->type & Type::Mac)
     {
+        typeCnt--;
         try
         {
             m_value.emplace<cMacAddress> (m_strValue, m_strValueLen);
@@ -186,11 +199,14 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
         }
         catch(const std::exception&)
         {
-            throw FormatException (exParFormat, m_strValue, (int)m_strValueLen);
+            // only throw if there are no other types to try
+            if (typeCnt == 0)
+                throw FormatException (exParFormat, m_strValue, (int)m_strValueLen);
         }
     }
-    else if (m_syntax->type & Type::IP4)
+    if (m_syntax->type & Type::IP4)
     {
+        typeCnt--;
         try
         {
             m_value.emplace<cIPv4> (m_strValue, m_strValueLen);
@@ -198,11 +214,14 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
         }
         catch(const std::exception&)
         {
-            throw FormatException (exParFormat, m_strValue, (int)m_strValueLen);
+            // only throw if there are no other types to try
+            if (typeCnt == 0)
+                throw FormatException (exParFormat, m_strValue, (int)m_strValueLen);
         }
     }
-    else if (m_syntax->type & Type::IP6)
+    if (m_syntax->type & Type::IP6)
     {
+        typeCnt--;
         try
         {
             m_value.emplace<cIPv6> (m_strValue, m_strValueLen);
@@ -210,11 +229,14 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
         }
         catch(const std::exception&)
         {
-            throw FormatException (exParFormat, m_strValue, (int)m_strValueLen);
+            // only throw if there are no other types to try
+            if (typeCnt == 0)
+                throw FormatException (exParFormat, m_strValue, (int)m_strValueLen);
         }
     }
-    else if (m_syntax->type & Type::UUID)
+    if (m_syntax->type & Type::UUID)
     {
+        typeCnt--;
         if (isQuotedString ())
         {
             std::string uuidAsString (m_strValue + 1, m_strValueLen - 2);
@@ -223,19 +245,23 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
         }
         else
         {
-            throw FormatException (exParFormat, m_strValue, (int)m_strValueLen);
+            // only throw if there are no other types to try
+            if (typeCnt == 0)
+                throw FormatException (exParFormat, m_strValue, (int)m_strValueLen);
         }
     }
-    else if (m_syntax->type & Type::Nested)
+    if (m_syntax->type & Type::Nested)
     {
+        typeCnt--;
         if (*m_strValue != '<')
             throw FormatException (exParFormat, m_strValue, (int)m_strValueLen);
 
-        m_value = std::make_unique<const Protocol> ();         //TODO 
+        m_value = std::make_unique<const Protocol> ();         //TODO
         m_type = Type::Nested;
     }
-    else if (m_syntax->type & Type::Bytestream)
+    if (m_syntax->type & Type::Bytestream)
     {
+        typeCnt--;
         size_t len = 0;
         size_t min = static_cast<size_t>(m_syntax->min ? std::strtoull (m_syntax->min, nullptr, 0) : 0);
         size_t max = static_cast<size_t>(m_syntax->max ? std::strtoull (m_syntax->max, nullptr, 0) : 1024*1024); // 1MiB should be enough
@@ -273,18 +299,18 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
 }
 
 int ProtocolParameter::isRandomInteger (uint64_t& min, uint64_t& max) const
-    {
-        if (!m_strValueLen || *m_strValue != '*')
-            return -1;
+{
+    if (!m_strValueLen || *m_strValue != '*')
+        return -1;
 
-        if (m_strValueLen == 1)
-            return 0;
+    if (m_strValueLen == 1)
+        return 0;
 
-        if (!cParseHelper::range (m_strValue + 1, m_strValueLen - 1, 0, min, max))
-            throw FormatException (exParFormat, m_strValue+1, (int)m_strValueLen-1);
+    if (!cParseHelper::range (m_strValue + 1, m_strValueLen - 1, 0, min, max))
+        throw FormatException (exParFormat, m_strValue+1, (int)m_strValueLen-1);
 
-        return 1;
-    }
+    return 1;
+}
 
 uint64_t ProtocolParameter::getAndCheckIntegerValue (uint64_t min, uint64_t max) const
 {
@@ -302,3 +328,40 @@ uint64_t ProtocolParameter::getAndCheckIntegerValue (uint64_t min, uint64_t max)
     return (uint64_t)v;
 }
 
+/*
+
+Random values:
+Integer:
+"*"
+"*[min-max]"
+min, max: range of the integer type
+--> 2-16 bytes
+
+MAC:
+"*"
+"*:*:*:*:*:*"
+"*[min-max]:*[min-max]:*[min-max]:*[min-max]:*[min-max]:*[min-max]"
+min, max: 0-ff
+--> 12 bytes
+
+IPv4
+"*"
+"*.*.*.*"
+"*[min-max].*[min-max].*[min-max].*[min-max]"
+min, max: 0-255
+--> 8 bytes
+
+IPv6
+"*"
+"*:*:*:*:*:*:*:*"
+"*[min-max]:*[min-max]:*[min-max]:*[min-max]:*[min-max]:*[min-max]:*[min-max]:*[min-max]"
+min, max: 0-ffff
+--> 32 bytes
+
+Stream:
+"*"
+"*len" == shortcut for "*[minlen-maxlen]"
+min, max: 0-1MiB
+--> 8 bytes
+
+*/

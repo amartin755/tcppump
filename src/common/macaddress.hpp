@@ -122,7 +122,7 @@ public:
         uint8_t newMac[sizeof (mac_t)];
         for (int n = 0; n < t; n++)
         {
-            // only the first three tokens end with '.'
+            // only the first five tokens end with ':'
             size_t tokLen = n == t-1 ? tokens[n+1] - tokens[n] : tokens[n+1] - tokens[n] - 1;
 
             if (tokLen == 0)

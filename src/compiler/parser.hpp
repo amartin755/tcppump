@@ -149,7 +149,7 @@ private:
 
     const struct ParameterSyntax *m_syntax;
     bool m_isRandom;
-    Type m_type; // normalerweise == m_syntax->type, bei mutli types nur der tatsächlich ermittelte Typ
+    Type m_type;
 
     std::variant<
         uint64_t,
