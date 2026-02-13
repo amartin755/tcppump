@@ -132,7 +132,7 @@ public:
             if (*tokens[n] == '*')
             {
                 if (tokLen == 1)
-                    newMac[n] = cRandom::rand8 ();
+                    newMac[n] = cRandom::rand<uint8_t> ();
                 else
                 {
                     // random number with specified range?
@@ -141,7 +141,7 @@ public:
                         return false;
                     if (min > 255 || max > 255)
                         return false;
-                    newMac[n] = cRandom::rand8 ((uint8_t)min, (uint8_t)max);
+                    newMac[n] = cRandom::rand<uint8_t> ((uint8_t)min, (uint8_t)max);
                 }
             }
             else
@@ -196,12 +196,12 @@ public:
     {
         BUG_ON (!unicast && !multicast);
 
-        m_mac[0] = cRandom::rand8 ();
-        m_mac[1] = cRandom::rand8 ();
-        m_mac[2] = cRandom::rand8 ();
-        m_mac[3] = cRandom::rand8 ();
-        m_mac[4] = cRandom::rand8 ();
-        m_mac[5] = cRandom::rand8 ();
+        m_mac[0] = cRandom::rand<uint8_t> ();
+        m_mac[1] = cRandom::rand<uint8_t> ();
+        m_mac[2] = cRandom::rand<uint8_t> ();
+        m_mac[3] = cRandom::rand<uint8_t> ();
+        m_mac[4] = cRandom::rand<uint8_t> ();
+        m_mac[5] = cRandom::rand<uint8_t> ();
 
         if (unicast && !multicast)
             m_mac[0] &= 0xfe;

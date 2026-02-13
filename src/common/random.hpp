@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /*
  * TCPPUMP <https://github.com/amartin755/tcppump>
- * Copyright (C) 2012-2021 Andreas Martin (netnag@mailbox.org)
+ * Copyright (C) 2012-2026 Andreas Martin (netnag@mailbox.org)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,28 +21,31 @@
 #define RANDOM_HPP_
 
 #include <cstdint>
+#include <cfloat>
+#include <limits>
+#include <type_traits>
 
 class cRandom
 {
 public:
     static cRandom* create (void);
     static void destroy (void);
-    static uint64_t rand64 (uint64_t min = 0, uint64_t max = static_cast<int64_t>(0xffffffffffffffff))
+    
+    // Generic template for integral types
+    template<typename T>
+    static typename std::enable_if<std::is_integral<T>::value, T>::type
+    rand (T min = 0, T max = std::numeric_limits<T>::max())
     {
-        return rand (min, max);
+        return (T)rand(static_cast<uint64_t>(min), static_cast<uint64_t>(max));
     }
-    static uint32_t rand32 (uint32_t min = 0, uint32_t max = 0xffffffff)
+
+    template<typename T>
+    static typename std::enable_if<std::is_floating_point<T>::value, T>::type
+    rand (T min = 0, T max = std::numeric_limits<T>::max())
     {
-        return (uint32_t)rand (min, max);
+        return min + (max - min) * ((T)rand<uint64_t>() / (T)0xffffffffffffffff);
     }
-    static uint16_t rand16 (uint16_t min = 0, uint16_t max = 0xffff)
-    {
-        return (uint16_t)rand (min, max);
-    }
-    static uint8_t  rand8 (uint8_t min = 0, uint8_t max = 0xff)
-    {
-        return (uint8_t)rand (min, max);
-    }
+    
     static void rand (void* p, size_t len);
     static void setCounterMode (unsigned startValue);
 

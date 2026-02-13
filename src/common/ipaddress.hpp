@@ -102,7 +102,7 @@ public:
             if (*tokens[n] == '*')
             {
                 if (tokLen == 1)
-                    ipBin[n] = cRandom::rand8 ();
+                    ipBin[n] = cRandom::rand<uint8_t> ();
                 else
                 {
                     // random number with specified range?
@@ -111,7 +111,7 @@ public:
                         return false;
                     if (min > 255 || max > 255)
                         return false;
-                    ipBin[n] = cRandom::rand8 ((uint8_t)min, (uint8_t)max);
+                    ipBin[n] = cRandom::rand<uint8_t> ((uint8_t)min, (uint8_t)max);
                 }
             }
             else
@@ -134,9 +134,17 @@ public:
     {
         return set (ip, std::strlen (ip));
     }
+    void setAt (int offset, uint8_t value)
+    {
+        if (likely(offset <= 3))
+        {
+            uint8_t* ip = (uint8_t*)&ipv4.s_addr;
+            ip[offset] = value;
+        }
+    }
     const cIPv4& setRandom ()
     {
-        uint32_t ip = cRandom::rand32 ();
+        uint32_t ip = cRandom::rand<uint32_t> ();
 
         // if random value is multicast, convert it to unicast by clearing the MSB
         if ((ip & 0xF0000000) == 0xE0000000)
@@ -364,6 +372,30 @@ public:
         BUG_ON (a.getAsArray()[0] != 10 && a.getAsArray()[0] != 11);
         BUG_ON (a.getAsArray()[1] != 10 && a.getAsArray()[1] != 11);
         BUG_ON (a.getAsArray()[2] != 10 && a.getAsArray()[2] != 11);
+
+        {
+            cIPv4 x ("1.2.3.4");
+            x.setAt (0, 10);
+            BUG_ON (x.getAsArray()[0] != 10);
+            BUG_ON (x.getAsArray()[1] != 2);
+            BUG_ON (x.getAsArray()[2] != 3);
+            BUG_ON (x.getAsArray()[3] != 4);
+            x.setAt (2, 30);
+            BUG_ON (x.getAsArray()[0] != 10);
+            BUG_ON (x.getAsArray()[1] != 2);
+            BUG_ON (x.getAsArray()[2] != 30);
+            BUG_ON (x.getAsArray()[3] != 4);
+            x.setAt (1, 20);
+            BUG_ON (x.getAsArray()[0] != 10);
+            BUG_ON (x.getAsArray()[1] != 20);
+            BUG_ON (x.getAsArray()[2] != 30);
+            BUG_ON (x.getAsArray()[3] != 4);
+            x.setAt (3, 40);
+            BUG_ON (x.getAsArray()[0] != 10);
+            BUG_ON (x.getAsArray()[1] != 20);
+            BUG_ON (x.getAsArray()[2] != 30);
+            BUG_ON (x.getAsArray()[3] != 40);
+        }
     }
 #endif
 
@@ -415,6 +447,14 @@ public:
         ipAsString[len] = '\0';
         return set (ipAsString);
     }
+    void setAt (int offset, uint16_t value)
+    {
+        if (likely(offset <= 15))
+        {
+            uint16_t* ip = (uint16_t*)&ipv6.s6_addr[0];
+            ip[offset] = value;
+        }
+    }
     bool set (const char* ip)
     {
 #if HAVE_PTON
@@ -425,22 +465,22 @@ public:
     }
     const cIPv6& setRandom ()
     {
-        uint32_t r = cRandom::rand32 ();
+        uint32_t r = cRandom::rand<uint32_t> ();
         ipv6.s6_addr[0]  = (uint8_t)r;
         ipv6.s6_addr[1]  = (uint8_t)(r >> 8);
         ipv6.s6_addr[2]  = (uint8_t)(r >> 16);
         ipv6.s6_addr[3]  = (uint8_t)(r >> 24);
-        r = cRandom::rand32 ();
+        r = cRandom::rand<uint32_t> ();
         ipv6.s6_addr[4]  = (uint8_t)r;
         ipv6.s6_addr[5]  = (uint8_t)(r >> 8);
         ipv6.s6_addr[6]  = (uint8_t)(r >> 16);
         ipv6.s6_addr[7]  = (uint8_t)(r >> 24);
-        r = cRandom::rand32 ();
+        r = cRandom::rand<uint32_t> ();
         ipv6.s6_addr[8]  = (uint8_t)r;
         ipv6.s6_addr[9]  = (uint8_t)(r >> 8);
         ipv6.s6_addr[10] = (uint8_t)(r >> 16);
         ipv6.s6_addr[11] = (uint8_t)(r >> 24);
-        r = cRandom::rand32 ();
+        r = cRandom::rand<uint32_t> ();
         ipv6.s6_addr[12] = (uint8_t)r;
         ipv6.s6_addr[13] = (uint8_t)(r >> 8);
         ipv6.s6_addr[14] = (uint8_t)(r >> 16);
@@ -555,6 +595,83 @@ public:
         {
             BUG_IF_NOT (cIPv6().setRandom() != cIPv6().setRandom());
         }
+
+                {
+            cIPv6 x ("1000:2000:3000:4000:5000:6000:7000:8000");
+            x.setAt (0, 1001);
+            BUG_ON (((uint16_t*)&x.ipv6)[0] != 1001);
+            BUG_ON (((uint16_t*)&x.ipv6)[1] != 2000);
+            BUG_ON (((uint16_t*)&x.ipv6)[2] != 3000);
+            BUG_ON (((uint16_t*)&x.ipv6)[3] != 4000);
+            BUG_ON (((uint16_t*)&x.ipv6)[4] != 5000);
+            BUG_ON (((uint16_t*)&x.ipv6)[5] != 6000);
+            BUG_ON (((uint16_t*)&x.ipv6)[6] != 7000);
+            BUG_ON (((uint16_t*)&x.ipv6)[7] != 8000);
+            x.setAt (2, 3003);
+            BUG_ON (((uint16_t*)&x.ipv6)[0] != 1001);
+            BUG_ON (((uint16_t*)&x.ipv6)[1] != 2000);
+            BUG_ON (((uint16_t*)&x.ipv6)[2] != 3003);
+            BUG_ON (((uint16_t*)&x.ipv6)[3] != 4000);
+            BUG_ON (((uint16_t*)&x.ipv6)[4] != 5000);
+            BUG_ON (((uint16_t*)&x.ipv6)[5] != 6000);
+            BUG_ON (((uint16_t*)&x.ipv6)[6] != 7000);
+            BUG_ON (((uint16_t*)&x.ipv6)[7] != 8000);
+            x.setAt (1, 2002);
+            BUG_ON (((uint16_t*)&x.ipv6)[0] != 1001);
+            BUG_ON (((uint16_t*)&x.ipv6)[1] != 2002);
+            BUG_ON (((uint16_t*)&x.ipv6)[2] != 3003);
+            BUG_ON (((uint16_t*)&x.ipv6)[3] != 4000);
+            BUG_ON (((uint16_t*)&x.ipv6)[4] != 5000);
+            BUG_ON (((uint16_t*)&x.ipv6)[5] != 6000);
+            BUG_ON (((uint16_t*)&x.ipv6)[6] != 7000);
+            BUG_ON (((uint16_t*)&x.ipv6)[7] != 8000);
+            x.setAt (3, 4004);
+            BUG_ON (((uint16_t*)&x.ipv6)[0] != 1001);
+            BUG_ON (((uint16_t*)&x.ipv6)[1] != 2002);
+            BUG_ON (((uint16_t*)&x.ipv6)[2] != 3003);
+            BUG_ON (((uint16_t*)&x.ipv6)[3] != 4004);
+            BUG_ON (((uint16_t*)&x.ipv6)[4] != 5000);
+            BUG_ON (((uint16_t*)&x.ipv6)[5] != 6000);
+            BUG_ON (((uint16_t*)&x.ipv6)[6] != 7000);
+            BUG_ON (((uint16_t*)&x.ipv6)[7] != 8000);
+            x.setAt (4, 5005);
+            BUG_ON (((uint16_t*)&x.ipv6)[0] != 1001);
+            BUG_ON (((uint16_t*)&x.ipv6)[1] != 2002);
+            BUG_ON (((uint16_t*)&x.ipv6)[2] != 3003);
+            BUG_ON (((uint16_t*)&x.ipv6)[3] != 4004);
+            BUG_ON (((uint16_t*)&x.ipv6)[4] != 5005);
+            BUG_ON (((uint16_t*)&x.ipv6)[5] != 6000);
+            BUG_ON (((uint16_t*)&x.ipv6)[6] != 7000);
+            BUG_ON (((uint16_t*)&x.ipv6)[7] != 8000);
+            x.setAt (5, 6006);
+            BUG_ON (((uint16_t*)&x.ipv6)[0] != 1001);
+            BUG_ON (((uint16_t*)&x.ipv6)[1] != 2002);
+            BUG_ON (((uint16_t*)&x.ipv6)[2] != 3003);
+            BUG_ON (((uint16_t*)&x.ipv6)[3] != 4004);
+            BUG_ON (((uint16_t*)&x.ipv6)[4] != 5005);
+            BUG_ON (((uint16_t*)&x.ipv6)[5] != 6006);
+            BUG_ON (((uint16_t*)&x.ipv6)[6] != 7000);
+            BUG_ON (((uint16_t*)&x.ipv6)[7] != 8000);
+            x.setAt (6, 7007);
+            BUG_ON (((uint16_t*)&x.ipv6)[0] != 1001);
+            BUG_ON (((uint16_t*)&x.ipv6)[1] != 2002);
+            BUG_ON (((uint16_t*)&x.ipv6)[2] != 3003);
+            BUG_ON (((uint16_t*)&x.ipv6)[3] != 4004);
+            BUG_ON (((uint16_t*)&x.ipv6)[4] != 5005);
+            BUG_ON (((uint16_t*)&x.ipv6)[5] != 6006);
+            BUG_ON (((uint16_t*)&x.ipv6)[6] != 7007);
+            BUG_ON (((uint16_t*)&x.ipv6)[7] != 8000);
+            x.setAt (7, 8008);
+            BUG_ON (((uint16_t*)&x.ipv6)[0] != 1001);
+            BUG_ON (((uint16_t*)&x.ipv6)[1] != 2002);
+            BUG_ON (((uint16_t*)&x.ipv6)[2] != 3003);
+            BUG_ON (((uint16_t*)&x.ipv6)[3] != 4004);
+            BUG_ON (((uint16_t*)&x.ipv6)[4] != 5005);
+            BUG_ON (((uint16_t*)&x.ipv6)[5] != 6006);
+            BUG_ON (((uint16_t*)&x.ipv6)[6] != 7007);
+            BUG_ON (((uint16_t*)&x.ipv6)[7] != 8008);
+        }
+
     }
 #endif
 

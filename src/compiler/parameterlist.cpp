@@ -139,7 +139,7 @@ uint32_t cParameter::asInt32 (uint32_t rangeBegin, uint32_t rangeEnd) const
             rangeBegin = (uint32_t)min;
             rangeEnd   = (uint32_t)max;
         }
-        v = cRandom::rand32 (rangeBegin, rangeEnd);
+        v = cRandom::rand<uint32_t> (rangeBegin, rangeEnd);
     }
     else
     {
@@ -178,7 +178,7 @@ uint64_t cParameter::asInt64 (uint64_t rangeBegin, uint64_t rangeEnd) const
             rangeBegin = min;
             rangeEnd   = max;
         }
-        v = cRandom::rand64 (rangeBegin, rangeEnd);
+        v = cRandom::rand<uint64_t> (rangeBegin, rangeEnd);
     }
     else
     {
