@@ -214,6 +214,54 @@ bool cParseHelper::range (const char* p, size_t len, int base, uint64_t& begin, 
 }
 
 
+/**
+ * @brief Split a buffer into tokens using a single-character delimiter.
+ *
+ * Tokenize a non-null buffer of known length and return a vector of
+ * std::string_view referencing each token. The input buffer is not
+ * required to be NUL-terminated; the function uses the explicit
+ * `length` parameter.
+ *
+ * @param data Pointer to the input buffer. Must not be nullptr.
+ * @param length Number of bytes in `data` to process.
+ * @param delimiter Character used to separate tokens.
+ * @return std::vector<std::string_view> where each element is a view
+ *         into the corresponding token inside `data`.
+ *
+ * @note Empty tokens are produced for consecutive delimiters or when a
+ *       delimiter appears at the beginning or end of the buffer.
+ * @note The returned string_views reference the original `data` buffer;
+ *       the caller must ensure `data` remains valid for the lifetime of
+ *       the returned views.
+ */
+std::vector<std::string_view> cParseHelper::tokenize(const char* data, std::size_t length, char delimiter)
+{
+    std::vector<std::string_view> tokens;
+
+    std::size_t token_start = 0;
+
+    for (std::size_t i = 0; i < length; ++i)
+    {
+        if (data[i] == delimiter)
+        {
+            tokens.emplace_back(data + token_start,
+                                i - token_start);
+            token_start = i + 1;
+        }
+    }
+
+    // letztes Token (auch wenn kein delimiter am Ende)
+    if (token_start <= length)
+    {
+        tokens.emplace_back(data + token_start,
+                            length - token_start);
+    }
+
+    return tokens;
+}
+
+
+
 #ifdef WITH_UNITTESTS
 
 #include "console.hpp"
@@ -593,8 +641,44 @@ void cParseHelper::unitTest ()
     catch(...)
     {
     }
-    
 
+    {
+        const char s[] = "1.2.3.4";
+        size_t len = sizeof (s)-1;
+        auto tokens = tokenize (s, len, '.');
+        BUG_ON (tokens.size() != 4);
+        BUG_ON (tokens[0] != "1");
+        BUG_ON (tokens[1] != "2");
+        BUG_ON (tokens[2] != "3");
+        BUG_ON (tokens[3] != "4");
+    }
+    {
+        const char s[] = "10.2.300.4";
+        size_t len = sizeof (s)-1;
+        auto tokens = tokenize (s, len, '.');
+        BUG_ON (tokens.size() != 4);
+        BUG_ON (tokens[0] != "10");
+        BUG_ON (tokens[1] != "2");
+        BUG_ON (tokens[2] != "300");
+        BUG_ON (tokens[3] != "4");
+    }
+    {
+        const char s[] = "10:2:300:";
+        size_t len = sizeof (s)-1;
+        auto tokens = tokenize (s, len, ':');
+        BUG_ON (tokens.size() != 4);
+        BUG_ON (tokens[0] != "10");
+        BUG_ON (tokens[1] != "2");
+        BUG_ON (tokens[2] != "300");
+        BUG_ON (tokens[3] != "");
+    }
+    {
+        const char s[] = "10:2:300:";
+        size_t len = sizeof (s)-1;
+        auto tokens = tokenize (s, len, '-');
+        BUG_ON (tokens.size() != 1);
+        BUG_ON (tokens[0] != "10:2:300:");
+    }
     // TODO much more detailed tests
 }
 #endif

@@ -26,6 +26,7 @@
 #include <cerrno>
 #include <stdexcept>
 #include <vector>
+#include <string_view>
 
 #include "bug.hpp"
 
@@ -143,6 +144,8 @@ public:
             return (uint8_t)val;
         }       
     }
+
+    static std::vector<std::string_view> tokenize(const char* data, std::size_t length, char delimiter);
 
 #ifdef WITH_UNITTESTS
         static void unitTest ();
