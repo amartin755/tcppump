@@ -25,6 +25,8 @@
 
 #include "parser.hpp"
 #include "formatexception.hpp"
+#include "parsehelper.hpp"
+
 /*
 class Protocol
 {
@@ -283,6 +285,8 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
                 throw FormatException (exParFormat, m_strValue, (int)m_strValueLen);
             m_value = std::move(ptr);
             len = ptr->size();
+
+            // TODO in case of random we must create an empty vector
         }
 
         if (len < min || len > max)
@@ -328,7 +332,18 @@ uint64_t ProtocolParameter::getAndCheckIntegerValue (uint64_t min, uint64_t max)
     return (uint64_t)v;
 }
 
+
 /*
+zwei Möglichkeiten:
+1. value String manipulieren.
+- alle Random Tokes einsammeln und in range liste abspeichern
+- Ranges müssten geprüft werden --> Zahlensystem+Breite muss bekannt sein
+- Random Tokens durch "0" ersetzen --> Speicherplatz für neuen String notwendig (neuer String ist nie länger, als Original)
+
+2. Template funktion die alles macht und richtiges Objekt zurückliefert
+- alle Random Tokes einsammeln und in range liste abspeichern
+- Ranges müssten geprüft werden --> Zahlensystem+Breite muss bekannt sein
+- Objekt muss erzeugt werden, mit 0 für Random Tokens --> vollständiges Stringparsing, was eigentlich das Objekt machen sollte
 
 Random values:
 Integer:

@@ -244,17 +244,14 @@ std::vector<std::string_view> cParseHelper::tokenize(const char* data, std::size
     {
         if (data[i] == delimiter)
         {
-            tokens.emplace_back(data + token_start,
-                                i - token_start);
+            tokens.emplace_back(data + token_start, i - token_start);
             token_start = i + 1;
         }
     }
 
-    // letztes Token (auch wenn kein delimiter am Ende)
     if (token_start <= length)
     {
-        tokens.emplace_back(data + token_start,
-                            length - token_start);
+        tokens.emplace_back(data + token_start, length - token_start);
     }
 
     return tokens;
@@ -671,6 +668,17 @@ void cParseHelper::unitTest ()
         BUG_ON (tokens[1] != "2");
         BUG_ON (tokens[2] != "300");
         BUG_ON (tokens[3] != "");
+    }
+    {
+        const char s[] = "10:2::300:";
+        size_t len = sizeof (s)-1;
+        auto tokens = tokenize (s, len, ':');
+        BUG_ON (tokens.size() != 5);
+        BUG_ON (tokens[0] != "10");
+        BUG_ON (tokens[1] != "2");
+        BUG_ON (tokens[2] != "");
+        BUG_ON (tokens[3] != "300");
+        BUG_ON (tokens[4] != "");
     }
     {
         const char s[] = "10:2:300:";

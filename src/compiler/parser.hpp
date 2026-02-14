@@ -130,6 +130,7 @@ public:
 private:
     int isRandomInteger (uint64_t& min, uint64_t& max) const;
     uint64_t getAndCheckIntegerValue (uint64_t min, uint64_t max) const;
+    bool isRandom (uint64_t min, uint64_t max);
 
     bool isQuotedString () const
     {
@@ -167,7 +168,82 @@ private:
             val.setRandom();
         }
     }
-    void calcNextRandomStream ();
+    void calcNextRandomStream ()
+    {
+        const auto* range = std::get_if<std::vector <std::tuple<int, uint32_t, uint32_t>>> (&m_randRanges);
+        uint32_t minLen = 32;
+        uint32_t maxLen = 32;
+        if (range)
+        {
+            const auto& [index, min, max] = range->at(0);
+            minLen = min;
+            maxLen = max;
+        }
+        // calc length of our random stream
+        uint32_t nextLen = minLen == maxLen ? maxLen : cRandom::rand<uint32_t> (minLen, maxLen);
+
+        // fill the array with random values
+        // TODO this could be improved. 
+        //      resize() unnecessarily copies and initializes the vector, but we will overwrite all values anyway.
+        auto val = std::get <std::unique_ptr <std::vector<uint8_t>>>(m_value).get ();
+        val->resize (nextLen);
+        cRandom::rand (
+            reinterpret_cast<void*>(val->data()), 
+            static_cast<size_t> (nextLen));
+    }
+
+    // applies only for MAC and IP addresses
+    template<typename T>
+    std::string xxxx (char delimiter)
+    {
+        std::string newValString; newValString.reserve (m_strValueLen); // the new string is never bigger then the original
+        std::vector<std::string_view> tokens = cParseHelper::tokenize (m_strValue, m_strValueLen, delimiter);
+        int index = 0;
+        T max = std::numeric_limits<T>::max();
+
+        m_randRanges.emplace(std::vector <std::tuple<int, T, T>>());
+        for (const auto& token : tokens)
+        {
+            uint64_t randMin = 0, randMax = static_cast<uint64_t>(max);
+            bool valid = false;
+            if (token.size() && token[0] == '*')
+            {
+                // range restricted random value
+                if (token.size() != 1)
+                {
+                    uint64_t rangeMin, rangeMax;
+                    if (cParseHelper::range (token.data(), token.size(), 0, rangeMin, rangeMax) &&
+                        (rangeMin <= max && rangeMax <= max) )
+                    {
+                        randMin = rangeMin;
+                        randMax = rangeMax;
+                        valid = true;
+                    }
+                }
+                else
+                {
+                    valid = true;
+                }
+
+            }
+            
+            if (valid)
+            {
+                newValString += "0";
+                // create entry in m_randRanges
+                auto& val = std::get<std::vector <std::tuple<int, T, T>>()> (m_randRanges);
+                val.emplace (index, randMin, randMax);
+            }
+            else
+            {
+                newValString += token;
+            }
+
+            // TODO add delimiter if not last token
+            index++;
+        }
+        return newValString;
+    }
 
     const char* m_name;
     size_t      m_nameLen;
