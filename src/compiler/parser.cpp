@@ -336,75 +336,27 @@ uint64_t ProtocolParameter::getAndCheckIntegerValue (uint64_t min, uint64_t max)
 }
 
 #ifdef WITH_UNITTESTS
+
 void ProtocolParameter::unitTest ()
 {
-    bool catched;
-#if 0
-
-    try
+    static const std::vector<testcase_t<cMacAddress>> tests = 
     {
-        char name[] = "mac";
-        char value[] = "*";
-
-        catched = false;
-        ProtocolParameter obj (name, sizeof(name)-1, value, sizeof(value)-1, PR_RAW.mandatory, PR_RAW.optional);
-    }
-    catch (...)
-    {
-        catched = true;
-    }
-    try
-    {
-        char name[] = "mac";
-        char value[] = "11:*[1-2]:33:44:*[10-20]:66";
-
-        catched = false;
-        ProtocolParameter obj (name, sizeof(name)-1, value, sizeof(value)-1, PR_RAW.mandatory, PR_RAW.optional);
-    }
-    catch (...)
-    {
-        catched = true;
-    }
-    try
-    {
-        char name[] = "ip4";
-        char value[] = "1.2.3.4";
-
-        catched = false;
-        ProtocolParameter obj (name, sizeof(name)-1, value, sizeof(value)-1, PR_RAW.mandatory, PR_RAW.optional);
-    }
-    catch (...)
-    {
-        catched = true;
-    }
-    try
-    {
-        char name[] = "ip4";
-        char value[] = "*.*.3.*[50-60]";
-
-        catched = false;
-        ProtocolParameter obj (name, sizeof(name)-1, value, sizeof(value)-1, PR_RAW.mandatory, PR_RAW.optional);
-    }
-    catch (...)
-    {
-        catched = true;
-    }
-#endif
-
-    struct testcase_t
-    {
-        const std::string name;
-        const std::string value;
-        bool willThrow;
-        cMacAddress expInternalValue;
-        std::vector<cMacAddress> expExternalValues;
-    };
-
-    static const std::vector<testcase_t> tests = {
+        {
+            "mac",
+            "12:34:56:78:9a:bc",
+            false,
+            false,
+            "12:34:56:78:9a:bc",
+            {
+                "12:34:56:78:9a:bc",
+                "12:34:56:78:9a:bc"
+            }
+        },
         {
             "mac",
             "*",
             false,
+            true,
             "0:0:0:0:0:0",
             {
                 "00:01:02:03:04:05",
@@ -415,6 +367,7 @@ void ProtocolParameter::unitTest ()
             "mac",
             "11:*:33:44:*[10-12]:66",
             false,
+            true,
             "11:0:33:44:0:66",
             {
                 "11:0:33:44:11:66",
@@ -422,8 +375,100 @@ void ProtocolParameter::unitTest ()
                 "11:4:33:44:12:66",
                 "11:6:33:44:11:66"
             }
+        },
+        {
+            "mac",
+            "11:22:33:44:*[13-12]:66",
+            true,
+            false,
+            cMacAddress(),
+            {}
+        },
+        {
+            "mac",
+            "11:22:33:44:*[13-100]:66",
+            true,
+            false,
+            cMacAddress(),
+            {}
+        },
+        {
+            "mac",
+            "11:22:33:44:*[0-ff]:66",
+            false,
+            true,
+            "11:22:33:44:00:66",
+            {
+                "11:22:33:44:00:66"
+            }
+        },
+        {
+            "mac",
+            "*[0-f]:*[10-1f]:*[20-2f]:*[30-3f]:*[40-4f]:*[50-5f]",
+            false,
+            true,
+            "0:0:0:0:0:0",
+            {
+                "00:11:22:33:44:55"
+            }
         }
     };
+    runTestCase<cMacAddress> (tests);
+
+    static const std::vector<testcase_t<cIPv4>> ipv4tests = 
+    {
+        {
+            "ip4",
+            "1.2.3.4",
+            false,
+            false,
+            "1.2.3.4",
+            {
+                "1.2.3.4",
+                "1.2.3.4"
+            }
+        },
+        {
+            "ip4",
+            "*.*.3.*[50-60]",
+            false,
+            true,
+            "0.0.3.0",
+            {
+                "0.1.3.52",
+                "3.4.3.55"
+            }
+        },
+        {
+            "ip4",
+            "*.*.*.*",
+            false,
+            true,
+            "0.0.0.0",
+            {
+                "0.1.2.3",
+                "4.5.6.7"
+            }
+        },
+        {
+            "ip4",
+            "*",
+            false,
+            true,
+            "0.0.0.0",
+            {
+                "0.0.0.0",
+                "0.0.0.1"
+            }
+        }
+    };
+    runTestCase<cIPv4> (ipv4tests);
+}
+
+template<typename T>
+void ProtocolParameter::runTestCase(const std::vector<testcase_t<T>>& tests)
+{
+    bool catched;
     size_t n = 0;
     for (const auto& t : tests)
     {
@@ -432,12 +477,24 @@ void ProtocolParameter::unitTest ()
             cRandom::setCounterMode (0);
             catched = false;
             ProtocolParameter obj (t.name.c_str(), t.name.size(), t.value.c_str(), t.value.size(), PR_RAW.mandatory, PR_RAW.optional);
-            BUG_ON (std::memcmp (t.expInternalValue.get(), std::get<cMacAddress> (obj.m_value).get(), t.expInternalValue.size()));
+            if (t.willThrow)
+                BUG ("expected to throw");
+            BUG_ON (t.isRandom != obj.m_isRandom);
+            BUG_ON (std::memcmp (t.expInternalValue.getAsArray(), std::get<T> (obj.m_value).getAsArray(), t.expInternalValue.size()));
 
             for (const auto& expValue : t.expExternalValues)
             {
-                const auto& value = obj.asMac();
-                BUG_ON (std::memcmp(expValue.get(), value.get(), expValue.size()));
+                const uint8_t *value;
+                if constexpr (std::is_same_v<T, cMacAddress>)
+                    value = obj.asMac().getAsArray();
+                else if constexpr (std::is_same_v<T, cIPv4>)
+                    value = obj.asIPv4().getAsArray();
+                else if constexpr (std::is_same_v<T, cIPv6>)
+                    value = obj.asIPv6().getAsArray();
+                else
+                    static_assert(sizeof(T) == 0, "Unsupported type");
+
+                BUG_ON (std::memcmp(expValue.getAsArray(), value, t.expInternalValue.size()));
             }
         }
         catch(...)
@@ -448,8 +505,8 @@ void ProtocolParameter::unitTest ()
         
         n++;
     }
-
 }
+
 #endif
 
 /*

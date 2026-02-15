@@ -95,6 +95,10 @@ public:
             ip[offset] = value;
         }
     }
+    static size_t size ()
+    {
+        return sizeof(ipv4);
+    }
     const cIPv4& setRandom ()
     {
         uint32_t ip = cRandom::rand<uint32_t> ();
@@ -134,7 +138,6 @@ public:
     {
         return (const uint8_t*)&ipv4.s_addr;
     }
-
     bool isNull (void) const
     {
         return !ipv4.s_addr;
@@ -420,6 +423,10 @@ public:
 #else
         return (ipv6.s_addr = inet_addr (ip)) != INADDR_NONE;
 #endif
+    }
+    static size_t size ()
+    {
+        return sizeof(ipv6);
     }
     const cIPv6& setRandom ()
     {

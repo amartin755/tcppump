@@ -135,6 +135,10 @@ public:
     {
         return m_mac;
     }
+    const uint8_t* getAsArray () const
+    {
+        return m_mac;
+    }
     void get (char* s, size_t len) const
     {
         BUG_ON (len <= MACSTRLEN);

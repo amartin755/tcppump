@@ -126,10 +126,6 @@ public:
         }
     }
 
-#ifdef WITH_UNITTESTS
-    static void unitTest ();
-#endif
-
 private:
     int isRandomInteger (uint64_t& min, uint64_t& max) const;
     uint64_t getAndCheckIntegerValue (uint64_t min, uint64_t max) const;
@@ -292,18 +288,27 @@ private:
         std::vector <std::tuple<int, uint64_t, uint64_t>>,
         std::vector <std::tuple<int, double, double>>
     > m_randRanges;
-#if 0
-    union abc
-    {
-        uint8_t  i8;
-        uint16_t i16;
-        uint32_t i32;
-        uint64_t i64;
-        double dbl;
-    };
-    std::vector <std::tuple<int, abc, abc>> m_randRanges2;
-#endif    
+
     // TODO do we need unique id that it can be part of a map?
 
 
+#ifdef WITH_UNITTESTS
+public:
+    static void unitTest ();
+    template<typename T>
+    struct testcase_t
+    {
+        const std::string name;
+        const std::string value;
+        bool willThrow;
+        bool isRandom;
+        T expInternalValue;
+        std::vector<T> expExternalValues;
+    };
+private:
+    template<typename T>
+    static void runTestCase (const std::vector<testcase_t<T>>& testcases);
+#endif
+
 };
+
