@@ -266,6 +266,7 @@ std::vector<std::string_view> cParseHelper::tokenize(const char* data, std::size
 void cParseHelper::unitTest ()
 {
     Console::PrintDebug("-- " __FILE__ " --\n");
+    bool catched;
 
     size_t binLen;
     uint8_t* bin;
@@ -687,6 +688,128 @@ void cParseHelper::unitTest ()
         BUG_ON (tokens.size() != 1);
         BUG_ON (tokens[0] != "10:2:300:");
     }
+
+    {
+        char str[4];
+
+        for (int n = 0; n < 256; n++)
+        {
+            sprintf (str, "%d", n);
+            BUG_ON (strToUint8 (str, std::strlen(str), 10) != n);
+        }
+        for (int n = 0; n < 256; n++)
+        {
+            sprintf (str, "%01d", n);
+            BUG_ON (strToUint8 (str, std::strlen(str), 10) != n);
+        }
+        for (int n = 0; n < 256; n++)
+        {
+            sprintf (str, "%02d", n);
+            BUG_ON (strToUint8 (str, std::strlen(str), 10) != n);
+        }
+        for (int n = 0; n < 256; n++)
+        {
+            sprintf (str, "%x", n);
+            BUG_ON (strToUint8 (str, std::strlen(str), 16) != n);
+        }
+        for (int n = 0; n < 256; n++)
+        {
+            sprintf (str, "%02x", n);
+            BUG_ON (strToUint8 (str, std::strlen(str), 16) != n);
+        }
+    }
+
+    try
+    {
+        catched = false;
+        strToUint8 ("256", 3, 10);
+    }
+    catch(...)
+    {
+        catched = true;
+    }
+    BUG_ON (!catched);
+    try
+    {
+        catched = false;
+        strToUint8 ("256", 3, 16);
+    }
+    catch(...)
+    {
+        catched = true;
+    }
+    BUG_ON (!catched);
+    try
+    {
+        catched = false;
+        strToUint8 ("1000", 4, 10);
+    }
+    catch(...)
+    {
+        catched = true;
+    }
+    BUG_ON (!catched);
+    try
+    {
+        catched = false;
+        strToUint8 ("", 0, 10);
+    }
+    catch(...)
+    {
+        catched = true;
+    }
+    BUG_ON (!catched);
+    try
+    {
+        catched = false;
+        strToUint8 ("", 0, 16);
+    }
+    catch(...)
+    {
+        catched = true;
+    }
+    BUG_ON (!catched);
+    try
+    {
+        catched = false;
+        strToUint8 ("1255", 4, 10);
+    }
+    catch(...)
+    {
+        catched = true;
+    }
+    BUG_ON (!catched);
+    try
+    {
+        catched = false;
+        strToUint8 ("1ff", 3, 16);
+    }
+    catch(...)
+    {
+        catched = true;
+    }
+    BUG_ON (!catched);
+    try
+    {
+        catched = false;
+        strToUint8 ("1x", 2, 10);
+    }
+    catch(...)
+    {
+        catched = true;
+    }
+    BUG_ON (!catched);
+    try
+    {
+        catched = false;
+        strToUint8 ("1x", 2, 16);
+    }
+    catch(...)
+    {
+        catched = true;
+    }
+    BUG_ON (!catched);
+
     // TODO much more detailed tests
 }
 #endif

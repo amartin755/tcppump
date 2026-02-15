@@ -39,6 +39,7 @@
 #include "bytearray.hpp"
 #include "uuid.hpp"
 #include "md5.hpp"
+#include "parser.hpp"
 #if HAVE_MSVC
 #include <crtdbg.h>
 #endif
@@ -64,10 +65,11 @@ int main (int argc, char* argv[])
     {
         tcppump::SleepInit ();
         tcppump::SleepUnitTest ();
+        cRandom::unitTest ();
         cByteArray::unitTest ();
+        cParseHelper::unitTest ();
         cUUID::unitTest ();
         cMD5::unitTest ();
-        cRandom::unitTest ();
         cIPv4::unitTest ();
         cIPv6::unitTest ();
         cMacAddress::unitTest ();
@@ -76,13 +78,18 @@ int main (int argc, char* argv[])
         cEthernetPacket::unitTest ();
         cArpPacket::unitTest ();
         cIPPacket::unitTest ();
-        cParseHelper::unitTest ();
         cParameterList::unitTest ();
         cInstructionParser::unitTest ();
+        ProtocolParameter::unitTest ();
 
 #if HAVE_PCAP
         cPcapFileIO::unitTest (argv[1]);
 #endif
+    }
+    catch (std::exception& e)
+    {
+        fprintf (stderr, "EXCEPTION: %s\n", e.what());
+        BUG ("unhandled exception");
     }
     catch (...)
     {

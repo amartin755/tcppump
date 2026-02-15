@@ -23,6 +23,7 @@
 #include <cstdlib>
 #include <limits>
 
+#include "bug.hpp"
 #include "parser.hpp"
 #include "formatexception.hpp"
 #include "parsehelper.hpp"
@@ -67,7 +68,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
         throw FormatException (exParUnused, name, nameLen);
 
     // determine number of possible types for the current value
-    size_t typeCnt = std::bitset<sizeof(m_syntax->type)> (m_syntax->type).count();
+    size_t typeCnt = std::bitset<sizeof(m_syntax->type)*8> (m_syntax->type).count();
 
     if (m_syntax->type & Type::Integer)
     {
@@ -196,7 +197,8 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
         typeCnt--;
         try
         {
-            m_value.emplace<cMacAddress> (m_strValue, m_strValueLen);
+            std::string s = checkForRandom<uint8_t> (':', 16, 6);
+            m_value.emplace<cMacAddress> (s);
             m_type = Type::Mac;
         }
         catch(const std::exception&)
@@ -211,7 +213,8 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
         typeCnt--;
         try
         {
-            m_value.emplace<cIPv4> (m_strValue, m_strValueLen);
+            std::string s = checkForRandom<uint8_t> ('.', 10, 4);
+            m_value.emplace<cIPv4> (s);
             m_type = Type::IP4;
         }
         catch(const std::exception&)
@@ -226,6 +229,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
         typeCnt--;
         try
         {
+            std::string s = checkForRandom<uint16_t> (':', 16, 8);
             m_value.emplace<cIPv6> (m_strValue, m_strValueLen);
             m_type = Type::IP6;
         }
@@ -319,7 +323,6 @@ int ProtocolParameter::isRandomInteger (uint64_t& min, uint64_t& max) const
 uint64_t ProtocolParameter::getAndCheckIntegerValue (uint64_t min, uint64_t max) const
 {
     char* end;
-    errno = 0;
     unsigned long long v = std::strtoull (m_strValue, &end, 0);
     if (end != (m_strValue + m_strValueLen))
     {
@@ -332,18 +335,124 @@ uint64_t ProtocolParameter::getAndCheckIntegerValue (uint64_t min, uint64_t max)
     return (uint64_t)v;
 }
 
+#ifdef WITH_UNITTESTS
+void ProtocolParameter::unitTest ()
+{
+    bool catched;
+#if 0
+
+    try
+    {
+        char name[] = "mac";
+        char value[] = "*";
+
+        catched = false;
+        ProtocolParameter obj (name, sizeof(name)-1, value, sizeof(value)-1, PR_RAW.mandatory, PR_RAW.optional);
+    }
+    catch (...)
+    {
+        catched = true;
+    }
+    try
+    {
+        char name[] = "mac";
+        char value[] = "11:*[1-2]:33:44:*[10-20]:66";
+
+        catched = false;
+        ProtocolParameter obj (name, sizeof(name)-1, value, sizeof(value)-1, PR_RAW.mandatory, PR_RAW.optional);
+    }
+    catch (...)
+    {
+        catched = true;
+    }
+    try
+    {
+        char name[] = "ip4";
+        char value[] = "1.2.3.4";
+
+        catched = false;
+        ProtocolParameter obj (name, sizeof(name)-1, value, sizeof(value)-1, PR_RAW.mandatory, PR_RAW.optional);
+    }
+    catch (...)
+    {
+        catched = true;
+    }
+    try
+    {
+        char name[] = "ip4";
+        char value[] = "*.*.3.*[50-60]";
+
+        catched = false;
+        ProtocolParameter obj (name, sizeof(name)-1, value, sizeof(value)-1, PR_RAW.mandatory, PR_RAW.optional);
+    }
+    catch (...)
+    {
+        catched = true;
+    }
+#endif
+
+    struct testcase_t
+    {
+        const std::string name;
+        const std::string value;
+        bool willThrow;
+        cMacAddress expInternalValue;
+        std::vector<cMacAddress> expExternalValues;
+    };
+
+    static const std::vector<testcase_t> tests = {
+        {
+            "mac",
+            "*",
+            false,
+            "0:0:0:0:0:0",
+            {
+                "00:01:02:03:04:05",
+                "06:07:08:09:0a:0b"
+            }
+        },
+        {
+            "mac",
+            "11:*:33:44:*[10-12]:66",
+            false,
+            "11:0:33:44:0:66",
+            {
+                "11:0:33:44:11:66",
+                "11:2:33:44:10:66",
+                "11:4:33:44:12:66",
+                "11:6:33:44:11:66"
+            }
+        }
+    };
+    size_t n = 0;
+    for (const auto& t : tests)
+    {
+        try
+        {
+            cRandom::setCounterMode (0);
+            catched = false;
+            ProtocolParameter obj (t.name.c_str(), t.name.size(), t.value.c_str(), t.value.size(), PR_RAW.mandatory, PR_RAW.optional);
+            BUG_ON (std::memcmp (t.expInternalValue.get(), std::get<cMacAddress> (obj.m_value).get(), t.expInternalValue.size()));
+
+            for (const auto& expValue : t.expExternalValues)
+            {
+                const auto& value = obj.asMac();
+                BUG_ON (std::memcmp(expValue.get(), value.get(), expValue.size()));
+            }
+        }
+        catch(...)
+        {
+            catched = true;
+        }
+        BUG_ON (t.willThrow != catched);
+        
+        n++;
+    }
+
+}
+#endif
 
 /*
-zwei Möglichkeiten:
-1. value String manipulieren.
-- alle Random Tokes einsammeln und in range liste abspeichern
-- Ranges müssten geprüft werden --> Zahlensystem+Breite muss bekannt sein
-- Random Tokens durch "0" ersetzen --> Speicherplatz für neuen String notwendig (neuer String ist nie länger, als Original)
-
-2. Template funktion die alles macht und richtiges Objekt zurückliefert
-- alle Random Tokes einsammeln und in range liste abspeichern
-- Ranges müssten geprüft werden --> Zahlensystem+Breite muss bekannt sein
-- Objekt muss erzeugt werden, mit 0 für Random Tokens --> vollständiges Stringparsing, was eigentlich das Objekt machen sollte
 
 Random values:
 Integer:

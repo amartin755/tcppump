@@ -126,6 +126,9 @@ public:
         }
     }
 
+#ifdef WITH_UNITTESTS
+    static void unitTest ();
+#endif
 
 private:
     int isRandomInteger (uint64_t& min, uint64_t& max) const;
@@ -156,7 +159,7 @@ private:
     {
         auto& val = std::get<T> (m_value);
         const auto* randRanges = std::get_if<std::vector <std::tuple<int, W, W>>> (&m_randRanges);
-        if (randRanges)
+        if (randRanges && randRanges->size())
         {
             for (const auto& [offset, min, max] : *randRanges)
             {
@@ -194,53 +197,69 @@ private:
 
     // applies only for MAC and IP addresses
     template<typename T>
-    std::string xxxx (char delimiter)
+    std::string checkForRandom (char delimiter, int base, int maxTokenCnt)
     {
         std::string newValString; newValString.reserve (m_strValueLen); // the new string is never bigger then the original
         std::vector<std::string_view> tokens = cParseHelper::tokenize (m_strValue, m_strValueLen, delimiter);
-        int index = 0;
+        size_t index = 0;
         T max = std::numeric_limits<T>::max();
 
-        m_randRanges.emplace(std::vector <std::tuple<int, T, T>>());
-        for (const auto& token : tokens)
+        // shortcut for "*"
+        if (tokens.size() == 1 && tokens[0].size() == 1 && tokens[0][0] == '*')
         {
-            uint64_t randMin = 0, randMax = static_cast<uint64_t>(max);
-            bool valid = false;
-            if (token.size() && token[0] == '*')
+            m_isRandom = true;
+            newValString = "0";
+            for (int n = 1; n < maxTokenCnt; n++)
             {
-                // range restricted random value
-                if (token.size() != 1)
+                newValString += delimiter;
+                newValString += "0";
+            }
+        }
+        else
+        {
+            m_randRanges.emplace<std::vector <std::tuple<int, T, T>>>();
+            for (const auto& token : tokens)
+            {
+                uint64_t randMin = 0, randMax = static_cast<uint64_t>(max);
+                bool valid = false;
+                if (token.size() && token[0] == '*')
                 {
-                    uint64_t rangeMin, rangeMax;
-                    if (cParseHelper::range (token.data(), token.size(), 0, rangeMin, rangeMax) &&
-                        (rangeMin <= max && rangeMax <= max) )
+                    // range restricted random value
+                    if (token.size() != 1)
                     {
-                        randMin = rangeMin;
-                        randMax = rangeMax;
+                        uint64_t rangeMin, rangeMax;
+                        if (cParseHelper::range (token.data() + 1, token.size() - 1, base, rangeMin, rangeMax) &&
+                            (rangeMin <= max && rangeMax <= max) )
+                        {
+                            randMin = rangeMin;
+                            randMax = rangeMax;
+                            valid = true;
+                        }
+                    }
+                    else
+                    {
                         valid = true;
                     }
+
+                }
+                if (valid)
+                {
+                    newValString += "0";
+                    // create entry in m_randRanges
+                    auto& val = std::get<std::vector <std::tuple<int, T, T>>> (m_randRanges);
+                    val.emplace_back (index, static_cast<T>(randMin), static_cast<T>(randMax));
+                    m_isRandom = true;
                 }
                 else
                 {
-                    valid = true;
+                    newValString += token;
                 }
-
+                // add delimiter if not last token
+                if (++index < tokens.size())
+                {
+                    newValString += delimiter;
+                }
             }
-            
-            if (valid)
-            {
-                newValString += "0";
-                // create entry in m_randRanges
-                auto& val = std::get<std::vector <std::tuple<int, T, T>>()> (m_randRanges);
-                val.emplace (index, randMin, randMax);
-            }
-            else
-            {
-                newValString += token;
-            }
-
-            // TODO add delimiter if not last token
-            index++;
         }
         return newValString;
     }
@@ -273,8 +292,17 @@ private:
         std::vector <std::tuple<int, uint64_t, uint64_t>>,
         std::vector <std::tuple<int, double, double>>
     > m_randRanges;
-
-
+#if 0
+    union abc
+    {
+        uint8_t  i8;
+        uint16_t i16;
+        uint32_t i32;
+        uint64_t i64;
+        double dbl;
+    };
+    std::vector <std::tuple<int, abc, abc>> m_randRanges2;
+#endif    
     // TODO do we need unique id that it can be part of a map?
 
 
