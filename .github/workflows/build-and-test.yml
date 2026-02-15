@@ -72,13 +72,27 @@ jobs:
       with:
         submodules: 'true'
 
+    - name: Cache nmap installer
+      uses: actions/cache@v4
+      id: cache_nmap
+      with:
+        path: ${{ runner.temp }}/nmap-cache
+        key: nmap-7.12-setup-exe
+
     - name: Setup environment
       id: get_adapter
       run: |
         ipconfig /all
         $name = (Get-NetAdapter | Where-Object {$_.Status -eq "Up" -and $_.InterfaceDescription -like "*Network Adapter*"} | Select-Object -First 1 -ExpandProperty Name)
         echo "adapter_name=$name" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-        Invoke-WebRequest -Uri "https://nmap.org/dist/nmap-7.12-setup.exe" -OutFile "nmap.exe"; Start-Process -Filepath "nmap.exe" -ArgumentList /S
+        
+        # Download nmap only if not cached
+        if (-Not (Test-Path "${{ runner.temp }}/nmap-cache/nmap.exe")) {
+          New-Item -ItemType Directory -Force -Path "${{ runner.temp }}/nmap-cache" | Out-Null
+          Invoke-WebRequest -Uri "https://nmap.org/dist/nmap-7.12-setup.exe" -OutFile "${{ runner.temp }}/nmap-cache/nmap.exe"
+        }
+        
+        Start-Process -Filepath "${{ runner.temp }}/nmap-cache/nmap.exe" -ArgumentList /S -Wait
 
     - name: 'Setup MSYS2'
       if: matrix.toolchain != 'msvc'
