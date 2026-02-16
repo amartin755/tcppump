@@ -230,7 +230,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
         try
         {
             std::string s = checkForRandom<uint16_t> (':', 16, 8);
-            m_value.emplace<cIPv6> (m_strValue, m_strValueLen);
+            m_value.emplace<cIPv6> (s);
             m_type = Type::IP6;
         }
         catch(const std::exception&)
@@ -463,6 +463,54 @@ void ProtocolParameter::unitTest ()
         }
     };
     runTestCase<cIPv4> (ipv4tests);
+
+    static const std::vector<testcase_t<cIPv6>> ipv6tests = 
+    {
+        {
+            "ip6",
+            "fe80::1ff:fe23:4577:890a",
+            false,
+            false,
+            "fe80::1ff:fe23:4577:890a",
+            {
+                "fe80::1ff:fe23:4577:890a",
+                "fe80::1ff:fe23:4577:890a"
+            }
+        },
+        {
+            "ip6",
+            "fe80::1ff:*:4577:890a",
+            false,
+            true,
+            "fe80::1ff:0:4577:890a",
+            {
+                "fe80::1ff:0000:4577:890a",
+                "fe80::1ff:0001:4577:890a"
+            }
+        },
+        {
+            "ip6",
+            "*::1ff:fe23:4577:*[1000-2000]",
+            false,
+            true,
+            "0::1ff:fe23:4577:0",
+            {
+                "0000::1ff:fe23:4577:1001",
+                "0002::1ff:fe23:4577:1003"
+            }
+        },
+        {
+            "ip6",
+            "*",
+            false,
+            true,
+            "0:0:0:0:0:0:0:0",
+            {
+                "0000:0001:0002:0003:0004:0005:0006:0007"
+            }
+        }
+    };
+    runTestCase<cIPv6> (ipv6tests);
 }
 
 template<typename T>

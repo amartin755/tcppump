@@ -381,12 +381,12 @@ public:
     cIPv6 (const char* ip)
     {
         if (!set (ip))
-            throw std::out_of_range ("invalid ipv4 address string");
+            throw std::out_of_range ("invalid ipv6 address string");
     }
     cIPv6 (const char* ip, size_t len)
     {
         if (!set (ip, len))
-            throw std::out_of_range ("invalid ipv4 address string");
+            throw std::out_of_range ("invalid ipv6 address string");
     }
     cIPv6 (const std::string& s) : cIPv6 (s.c_str())
     {        
@@ -410,7 +410,7 @@ public:
     }
     void setAt (int offset, uint16_t value)
     {
-        if (likely(offset <= 15))
+        if (likely(offset <= 7))
         {
             uint16_t* ip = (uint16_t*)&ipv6.s6_addr[0];
             ip[offset] = htons(value);
@@ -430,26 +430,23 @@ public:
     }
     const cIPv6& setRandom ()
     {
-        uint32_t r = cRandom::rand<uint32_t> ();
-        ipv6.s6_addr[0]  = (uint8_t)r;
-        ipv6.s6_addr[1]  = (uint8_t)(r >> 8);
-        ipv6.s6_addr[2]  = (uint8_t)(r >> 16);
-        ipv6.s6_addr[3]  = (uint8_t)(r >> 24);
-        r = cRandom::rand<uint32_t> ();
-        ipv6.s6_addr[4]  = (uint8_t)r;
-        ipv6.s6_addr[5]  = (uint8_t)(r >> 8);
-        ipv6.s6_addr[6]  = (uint8_t)(r >> 16);
-        ipv6.s6_addr[7]  = (uint8_t)(r >> 24);
-        r = cRandom::rand<uint32_t> ();
-        ipv6.s6_addr[8]  = (uint8_t)r;
-        ipv6.s6_addr[9]  = (uint8_t)(r >> 8);
-        ipv6.s6_addr[10] = (uint8_t)(r >> 16);
-        ipv6.s6_addr[11] = (uint8_t)(r >> 24);
-        r = cRandom::rand<uint32_t> ();
-        ipv6.s6_addr[12] = (uint8_t)r;
-        ipv6.s6_addr[13] = (uint8_t)(r >> 8);
-        ipv6.s6_addr[14] = (uint8_t)(r >> 16);
-        ipv6.s6_addr[15] = (uint8_t)(r >> 24);
+        // FIXME this is very inefficient and makes only sense for predictable randoms
+        uint16_t r = cRandom::rand<uint16_t> ();
+        setAt (0, r);
+        r = cRandom::rand<uint16_t> ();
+        setAt (1, r);
+        r = cRandom::rand<uint16_t> ();
+        setAt (2, r);
+        r = cRandom::rand<uint16_t> ();
+        setAt (3, r);
+        r = cRandom::rand<uint16_t> ();
+        setAt (4, r);
+        r = cRandom::rand<uint16_t> ();
+        setAt (5, r);
+        r = cRandom::rand<uint16_t> ();
+        setAt (6, r);
+        r = cRandom::rand<uint16_t> ();
+        setAt (7, r);
 
         // if random value is multicast, convert it to unicast
         if (ipv6.s6_addr[0] == 0xff)

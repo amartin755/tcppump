@@ -190,25 +190,35 @@ private:
             reinterpret_cast<void*>(val->data()), 
             static_cast<size_t> (nextLen));
     }
-
+#if 0
+    template<typename T>
+    constexpr std::string_view emptyToken ()
+    {
+        if constexpr (std::is_same_v<T, uint16_t>)
+            return "0000";
+        else
+            return "0";
+    }
+#endif
     // applies only for MAC and IP addresses
     template<typename T>
-    std::string checkForRandom (char delimiter, int base, int maxTokenCnt)
+    std::string checkForRandom (char delimiter, int base, size_t maxTokenCnt)
     {
         std::string newValString; newValString.reserve (m_strValueLen); // the new string is never bigger then the original
         std::vector<std::string_view> tokens = cParseHelper::tokenize (m_strValue, m_strValueLen, delimiter);
-        size_t index = 0;
-        T max = std::numeric_limits<T>::max();
+        size_t index = 0, offset = 0;
+        constexpr T max = std::numeric_limits<T>::max();
+        constexpr std::string_view emptyToken = "0";
 
         // shortcut for "*"
         if (tokens.size() == 1 && tokens[0].size() == 1 && tokens[0][0] == '*')
         {
             m_isRandom = true;
-            newValString = "0";
-            for (int n = 1; n < maxTokenCnt; n++)
+            newValString = emptyToken;
+            for (size_t n = 1; n < maxTokenCnt; n++)
             {
                 newValString += delimiter;
-                newValString += "0";
+                newValString += emptyToken;
             }
         }
         else
@@ -238,12 +248,14 @@ private:
                     }
 
                 }
+                if (!token.size())
+                    offset = maxTokenCnt - tokens.size();
                 if (valid)
                 {
-                    newValString += "0";
+                    newValString += emptyToken;
                     // create entry in m_randRanges
                     auto& val = std::get<std::vector <std::tuple<int, T, T>>> (m_randRanges);
-                    val.emplace_back (index, static_cast<T>(randMin), static_cast<T>(randMax));
+                    val.emplace_back (index + offset, static_cast<T>(randMin), static_cast<T>(randMax));
                     m_isRandom = true;
                 }
                 else
