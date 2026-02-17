@@ -40,6 +40,36 @@ class Protocol
     std::vector<ProtocolParameter> m_parameters;
 };
 
+template<typename T>
+struct checkForRandomTraits;
+
+template<>
+struct checkForRandomTraits<cIPv4> {
+    using value_type = uint8_t;
+
+    static constexpr char   delimiter   = '.';
+    static constexpr int    base        = 10;
+    static constexpr size_t maxTokenCnt = 4;
+};
+
+template<>
+struct checkForRandomTraits<cIPv6> {
+    using value_type = uint16_t;
+
+    static constexpr char   delimiter   = ':';
+    static constexpr int    base        = 16;
+    static constexpr size_t maxTokenCnt = 8;
+};
+
+template<>
+struct checkForRandomTraits<cMacAddress> {
+    using value_type = uint8_t;
+
+    static constexpr char   delimiter   = ':';
+    static constexpr int    base        = 16;
+    static constexpr size_t maxTokenCnt = 6;
+};
+
 class ProtocolParameter
 {
 public:
@@ -139,10 +169,10 @@ private:
     template<typename T>
     void calcNextRandom ()
     {
-        const auto* p = std::get_if<std::vector <std::tuple<int, T, T>>> (&m_randRanges);
+        const auto* p = std::get_if<std::pair<T, T>> (&m_randRanges);
         if (p)
         {
-            const auto& [index, min, max] = p->at(0);
+            const auto& [min, max] = *p;
             m_value = cRandom::rand<T> (min, max);
         }
         else
@@ -169,12 +199,12 @@ private:
     }
     void calcNextRandomStream ()
     {
-        const auto* range = std::get_if<std::vector <std::tuple<int, uint32_t, uint32_t>>> (&m_randRanges);
+        const auto* range = std::get_if<std::pair<uint32_t, uint32_t>> (&m_randRanges);
         uint32_t minLen = 32;
         uint32_t maxLen = 32;
         if (range)
         {
-            const auto& [index, min, max] = range->at(0);
+            const auto& [min, max] = *range;
             minLen = min;
             maxLen = max;
         }
@@ -202,12 +232,18 @@ private:
 #endif
     // applies only for MAC and IP addresses
     template<typename T>
-    std::string checkForRandom (char delimiter, int base, size_t maxTokenCnt)
+    std::string checkForRandom ()
     {
+        using traits     = checkForRandomTraits<T>;
+        using value_type = typename traits::value_type;
+        constexpr char   delimiter   = traits::delimiter;
+        constexpr int    base        = traits::base;
+        constexpr size_t maxTokenCnt = traits::maxTokenCnt;
+
         std::string newValString; newValString.reserve (m_strValueLen); // the new string is never bigger then the original
         std::vector<std::string_view> tokens = cParseHelper::tokenize (m_strValue, m_strValueLen, delimiter);
         size_t index = 0, offset = 0;
-        constexpr T max = std::numeric_limits<T>::max();
+        constexpr value_type max = std::numeric_limits<value_type>::max();
         constexpr std::string_view emptyToken = "0";
 
         // shortcut for "*"
@@ -223,7 +259,7 @@ private:
         }
         else
         {
-            m_randRanges.emplace<std::vector <std::tuple<int, T, T>>>();
+            m_randRanges.emplace<std::vector <std::tuple<int, value_type, value_type>>>();
             for (const auto& token : tokens)
             {
                 uint64_t randMin = 0, randMax = static_cast<uint64_t>(max);
@@ -254,8 +290,8 @@ private:
                 {
                     newValString += emptyToken;
                     // create entry in m_randRanges
-                    auto& val = std::get<std::vector <std::tuple<int, T, T>>> (m_randRanges);
-                    val.emplace_back (index + offset, static_cast<T>(randMin), static_cast<T>(randMax));
+                    auto& val = std::get<std::vector <std::tuple<int, value_type, value_type>>> (m_randRanges);
+                    val.emplace_back (index + offset, static_cast<value_type>(randMin), static_cast<value_type>(randMax));
                     m_isRandom = true;
                 }
                 else
@@ -294,11 +330,13 @@ private:
     > m_value;
 
     std::variant<
-        std::vector <std::tuple<int, uint8_t, uint8_t>>,
-        std::vector <std::tuple<int, uint16_t, uint16_t>>,
-        std::vector <std::tuple<int, uint32_t, uint32_t>>,
-        std::vector <std::tuple<int, uint64_t, uint64_t>>,
-        std::vector <std::tuple<int, double, double>>
+        std::pair <uint8_t, uint8_t>,
+        std::pair <uint16_t, uint16_t>,
+        std::pair <uint32_t, uint32_t>,
+        std::pair <uint64_t, uint64_t>,
+        std::pair <double, double>,
+        std::vector <std::tuple<int, uint8_t, uint8_t>>,    // ipv4, mac
+        std::vector <std::tuple<int, uint16_t, uint16_t>>   // ipv6
     > m_randRanges;
 
     // TODO do we need unique id that it can be part of a map?

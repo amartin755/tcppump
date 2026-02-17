@@ -197,7 +197,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
         typeCnt--;
         try
         {
-            std::string s = checkForRandom<uint8_t> (':', 16, 6);
+            std::string s = checkForRandom<cMacAddress> ();
             m_value.emplace<cMacAddress> (s);
             m_type = Type::Mac;
         }
@@ -213,7 +213,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
         typeCnt--;
         try
         {
-            std::string s = checkForRandom<uint8_t> ('.', 10, 4);
+            std::string s = checkForRandom<cIPv4> ();
             m_value.emplace<cIPv4> (s);
             m_type = Type::IP4;
         }
@@ -229,7 +229,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
         typeCnt--;
         try
         {
-            std::string s = checkForRandom<uint16_t> (':', 16, 8);
+            std::string s = checkForRandom<cIPv6> ();
             m_value.emplace<cIPv6> (s);
             m_type = Type::IP6;
         }
