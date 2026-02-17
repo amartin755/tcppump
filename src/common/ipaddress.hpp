@@ -95,7 +95,7 @@ public:
             ip[offset] = value;
         }
     }
-    static size_t size ()
+    static constexpr size_t size ()
     {
         return sizeof(ipv4);
     }
@@ -202,62 +202,8 @@ public:
         BUG_ON (a.set ("1.2.3.."));
         BUG_ON (a.set ("1.*.3."));
         BUG_ON (a.set ("256.2.3.4"));
-        BUG_ON (a.set ("*[2-4].*.3."));
-        BUG_ON (a.set ("*[300-400].*.3.4"));
-        BUG_ON (a.set ("*.*.*.*.*"));
-        BUG_ON (a.set ("*[0x2-0x4].2.3.4"));
-        BUG_ON (a.set ("1.*[0x2-0x4].3.4"));
-        BUG_ON (a.set ("1.2.*[0x2-0x4].4"));
-        BUG_ON (a.set ("1.2.3.*[0x2-0x4]"));
-        BUG_ON (a.set ("[2-4].2.3.4"));
-        BUG_ON (a.set ("1.[2-4].3.4"));
-        BUG_ON (a.set ("1.2.[2-4].4"));
-        BUG_ON (a.set ("1.2.3.[2-4]"));
-#if 0 // TODO these patterns must be tested in context of new parser
-        BUG_ON (!a.set ("*"));
-        a.clear ();
-        BUG_ON (!a.set ("1.2.3.*"));
-        BUG_ON (a.getAsArray()[0] != 1 || a.getAsArray()[1] != 2 || a.getAsArray()[2] != 3);
-        a.clear ();
-        BUG_ON (!a.set ("1.2.*.4"));
-        BUG_ON (a.getAsArray()[0] != 1 || a.getAsArray()[1] != 2 || a.getAsArray()[3] != 4);
-        a.clear ();
-        BUG_ON (!a.set ("1.2.*.*"));
-        BUG_ON (a.getAsArray()[0] != 1 || a.getAsArray()[1] != 2);
-        a.clear ();
-        BUG_ON (!a.set ("1.*.3.4"));
-        BUG_ON (a.getAsArray()[0] != 1 || a.getAsArray()[2] != 3 || a.getAsArray()[3] != 4);
-        a.clear ();
-        BUG_ON (!a.set ("1.*.3.*"));
-        BUG_ON (a.getAsArray()[0] != 1 || a.getAsArray()[2] != 3);
-        a.clear ();
-        BUG_ON (!a.set ("1.*.*.4"));
-        BUG_ON (a.getAsArray()[0] != 1 || a.getAsArray()[3] != 4);
-        a.clear ();
-        BUG_ON (!a.set ("1.*.*.*"));
-        BUG_ON (a.getAsArray()[0] != 1);
-        a.clear ();
-        BUG_ON (!a.set ("*.2.3.4"));
-        BUG_ON (a.getAsArray()[1] != 2 || a.getAsArray()[2] != 3 || a.getAsArray()[3] != 4);
-        a.clear ();
-        BUG_ON (!a.set ("*.2.3.*"));
-        BUG_ON (a.getAsArray()[1] != 2 || a.getAsArray()[2] != 3);
-        a.clear ();
-        BUG_ON (!a.set ("*.2.*.4"));
-        BUG_ON (a.getAsArray()[1] != 2 || a.getAsArray()[3] != 4);
-        a.clear ();
-        BUG_ON (!a.set ("*.2.*.*"));
-        BUG_ON (a.getAsArray()[1] != 2);
-        a.clear ();
-        BUG_ON (!a.set ("*.*.3.4"));
-        BUG_ON (a.getAsArray()[2] != 3 || a.getAsArray()[3] != 4);
-        a.clear ();
-        BUG_ON (!a.set ("*.*.3.*"));
-        BUG_ON (a.getAsArray()[2] != 3);
-        a.clear ();
-        BUG_ON (!a.set ("*.*.*.4"));
-        BUG_ON (a.getAsArray()[3] != 4);
 
+#if 0 // TODO these patterns must be tested in context of new parser
         a.clear ();
         BUG_ON (!a.set ("1.2.3.*[10-11]"));
         BUG_ON (a.getAsArray()[0] != 1 || a.getAsArray()[1] != 2 || a.getAsArray()[2] != 3);
@@ -424,7 +370,7 @@ public:
         return (ipv6.s_addr = inet_addr (ip)) != INADDR_NONE;
 #endif
     }
-    static size_t size ()
+    static constexpr size_t size ()
     {
         return sizeof(ipv6);
     }

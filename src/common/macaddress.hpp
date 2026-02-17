@@ -170,7 +170,7 @@ public:
         else if (!unicast && multicast)
             m_mac[0] |= 1;
     }
-    static size_t size ()
+    static constexpr size_t size ()
     {
         return sizeof(m_mac);
     }
