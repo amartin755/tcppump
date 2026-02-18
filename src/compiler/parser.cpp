@@ -648,8 +648,19 @@ void ProtocolParameter::unitTest ()
     };
     runTestCase<uint64_t> (i64tests);
 
+    static const std::vector<testcase_t<double>> dbltests = 
+    {
+        {"float", "0.0", true, false, 0, {0}},
+        {"float", "1", false, false, 1.0, {1.0}},
+        {"float", "1.0", false, false, 1.0, {1.0}},
+        {"float", "3.14", false, false, 3.14, {3.14}},
+        {"float", "3.15", true, false, 0, {}},
+        {"float", "*", false, true, 1, {1}}
+    };
+    runTestCase<double> (dbltests);
+
+
     // TODO generic integer
-    // TODO double
     // TODO stream
     // TODO UUID
 }
@@ -673,7 +684,6 @@ void ProtocolParameter::runTestCase(const std::vector<testcase_t<T>>& tests)
                 BUG_ON (t.expInternalValue != static_cast<T>(std::get<uint64_t> (obj.m_value)));
             else
                 BUG_ON (t.expInternalValue != std::get<T> (obj.m_value));
-//            BUG_ON (std::memcmp (t.expInternalValue.getAsArray(), std::get<T> (obj.m_value).getAsArray(), t.expInternalValue.size()));
 
             for (const auto& expValue : t.expExternalValues)
             {
@@ -684,6 +694,8 @@ void ProtocolParameter::runTestCase(const std::vector<testcase_t<T>>& tests)
                     value.set(obj.asIPv4());
                 else if constexpr (std::is_same_v<T, cIPv6>)
                     value.set(obj.asIPv6());
+                else if constexpr (std::is_same_v<T, double>)
+                    value = obj.get<T,T>();
                 else
                     value = obj.get<T>();
 
