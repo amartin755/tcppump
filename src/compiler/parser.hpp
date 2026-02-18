@@ -31,6 +31,8 @@
 #include "macaddress.hpp"
 #include "uuid.hpp"
 #include "random.hpp"
+#include "formatexception.hpp"
+
 
 class ProtocolParameter;
 
@@ -81,35 +83,33 @@ public:
         return m_type & Nested;
     }
 
-    uint8_t asInt8 ()
+    template<typename T, typename INTERNAL_TYPE = uint64_t>
+    inline T get()
     {
         if (m_isRandom)
-            calcNextRandom<uint8_t> ();
-        return static_cast<uint8_t> (std::get<uint64_t> (m_value));
+            calcNextRandom<T> ();
+        return static_cast<T> (std::get<INTERNAL_TYPE> (m_value));
+    }
+
+    uint8_t asInt8 ()
+    {
+        return get<uint8_t>();
     }
     uint16_t asInt16 ()
     {
-        if (m_isRandom)
-            calcNextRandom<uint16_t> ();
-        return static_cast<uint16_t> (std::get<uint64_t> (m_value));
+        return get<uint16_t>();
     }
     uint32_t asInt32 ()
     {
-        if (m_isRandom)
-            calcNextRandom<uint32_t> ();
-        return static_cast<uint32_t> (std::get<uint64_t> (m_value));
+        return get<uint32_t>();
     }
     uint64_t asInt64 ()
     {
-        if (m_isRandom)
-            calcNextRandom<uint64_t> ();
-        return static_cast<uint64_t> (std::get<uint64_t> (m_value));
+        return get<uint64_t>();
     }
     double asDouble ()
     {
-        if (m_isRandom)
-            calcNextRandom<double> ();
-        return std::get<double> (m_value);
+        return get<double, double>();
     }
     const cMacAddress& asMac ()
     {
@@ -157,8 +157,8 @@ public:
     }
 
 private:
-    int isRandomInteger (uint64_t& min, uint64_t& max) const;
     uint64_t getAndCheckIntegerValue (uint64_t min, uint64_t max) const;
+    double getAndCheckDoubleValue (double min, double max) const;
     bool isRandom (uint64_t min, uint64_t max);
 
     bool isQuotedString () const
@@ -220,6 +220,36 @@ private:
             reinterpret_cast<void*>(val->data()), 
             static_cast<size_t> (nextLen));
     }
+
+    template<typename T>
+    bool checkForRandom (T rangeMin, T rangeMax)
+    {
+        // no random value
+        if (!m_strValueLen || *m_strValue != '*')
+            return false;
+
+        if (m_strValueLen == 1)
+        {
+            // random value without range restrictions
+            m_randRanges.emplace<std::pair <T, T>> (rangeMin, rangeMax);
+        }
+        else
+        {
+            // random value with range e.g. *[12-42]
+            uint64_t min, max;
+            if (!cParseHelper::range (m_strValue + 1, m_strValueLen - 1, 0, min, max))
+                throw FormatException (exParFormat, m_strValue+1, (int)m_strValueLen-1);
+
+            // if there is a random range specified, it must not violate the values range
+            if (static_cast<uint64_t>(min) < rangeMin || static_cast<uint64_t>(max) > rangeMax)
+                throw FormatException (exParRange, m_strValue, (int)m_strValueLen);
+            m_randRanges.emplace<std::pair <T, T>> (static_cast<T>(min), static_cast<T>(max));
+        }
+        m_value = T(rangeMin);
+        m_isRandom = true;
+        return true;
+    }
+
 #if 0
     template<typename T>
     constexpr std::string_view emptyToken ()

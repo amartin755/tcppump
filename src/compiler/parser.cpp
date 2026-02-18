@@ -25,7 +25,6 @@
 
 #include "bug.hpp"
 #include "parser.hpp"
-#include "formatexception.hpp"
 #include "parsehelper.hpp"
 
 /*
@@ -84,7 +83,8 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
         try
         {
             // read user provided value and convert to integer and check syntax and range
-            m_value = getAndCheckIntegerValue (min, max);
+            if (!checkForRandom<uint64_t>(min, max))
+                m_value = getAndCheckIntegerValue (min, max);
             m_type = Type::Integer;
         }
         catch (...)
@@ -98,7 +98,8 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
         typeCnt--;
         try
         {
-            m_value = getAndCheckIntegerValue (0, 1);
+            if (!checkForRandom<uint8_t>(0, 1))
+                m_value = getAndCheckIntegerValue (0, 1);
             m_type = Type::Bit;
         }
         catch (...)
@@ -112,7 +113,10 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
         typeCnt--;
         try
         {
-            m_value = getAndCheckIntegerValue (0, std::numeric_limits<uint8_t>::max());
+            constexpr uint8_t min = std::numeric_limits<uint8_t>::min();
+            constexpr uint8_t max = std::numeric_limits<uint8_t>::max();
+            if (!checkForRandom<uint8_t>(min, max))
+                m_value = getAndCheckIntegerValue (min, max);
             m_type = Type::Int8;
         }
         catch (...)
@@ -126,7 +130,10 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
         typeCnt--;
         try
         {
-            m_value = getAndCheckIntegerValue (0, std::numeric_limits<uint16_t>::max());
+            constexpr uint16_t min = std::numeric_limits<uint16_t>::min();
+            constexpr uint16_t max = std::numeric_limits<uint16_t>::max();
+            if (!checkForRandom<uint16_t>(min, max))
+                m_value = getAndCheckIntegerValue (min, max);
             m_type = Type::Int16;
         }
         catch (...)
@@ -140,7 +147,10 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
         typeCnt--;
         try
         {
-            m_value = getAndCheckIntegerValue (0, std::numeric_limits<uint32_t>::max());
+            constexpr uint32_t min = std::numeric_limits<uint32_t>::min();
+            constexpr uint32_t max = std::numeric_limits<uint32_t>::max();
+            if (!checkForRandom<uint32_t>(min, max))
+                m_value = getAndCheckIntegerValue (min, max);
             m_type = Type::Int32;
         }
         catch (...)
@@ -154,7 +164,10 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
         typeCnt--;
         try
         {
-            m_value = getAndCheckIntegerValue (0, std::numeric_limits<uint64_t>::max());
+            constexpr uint64_t min = std::numeric_limits<uint64_t>::min();
+            constexpr uint64_t max = std::numeric_limits<uint64_t>::max();
+            if (!checkForRandom<uint64_t>(min, max))
+                m_value = getAndCheckIntegerValue (min, max);
             m_type = Type::Int64;
         }
         catch (...)
@@ -166,30 +179,25 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
     if (m_syntax->type & Type::Float)
     {
         typeCnt--;
-        double min, max;
+
         // a generic float must have an explicit range
         BUG_ON (!m_syntax->min || !m_syntax->max);
 
         // get range from syntax and convert to double
-        min = std::strtod (m_syntax->min, nullptr);
-        max = std::strtod (m_syntax->max, nullptr);
+        const double min = std::strtod (m_syntax->min, nullptr);
+        const double max = std::strtod (m_syntax->max, nullptr);
 
-        // read user provided value and convert to double and check syntax and range
-        char* end;
-        double v = std::strtod (m_strValue, &end);
-        // only throw if there are no other types to try
-        if (typeCnt == 0)
+        try
         {
-            if (end != (m_strValue + m_strValueLen))
-            {
-                throw FormatException (exParFormat, m_strValue, (int)m_strValueLen);
-            }
-            else if (errno == ERANGE || v < min || v > max)
-            {
-                throw FormatException (exParRange, m_strValue, (int)m_strValueLen);
-            }
-            m_value = v;
+            // read user provided value and convert to integer and check syntax and range
+            if (!checkForRandom<double>(min, max))
+                m_value = getAndCheckDoubleValue (min, max);
             m_type = Type::Float;
+        }
+        catch (...)
+        {
+            // only throw if there are no other types to try
+            if (typeCnt == 0) throw;
         }
     }
     if (m_syntax->type & Type::Mac)
@@ -269,8 +277,8 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
     {
         typeCnt--;
         size_t len = 0;
-        size_t min = static_cast<size_t>(m_syntax->min ? std::strtoull (m_syntax->min, nullptr, 0) : 0);
-        size_t max = static_cast<size_t>(m_syntax->max ? std::strtoull (m_syntax->max, nullptr, 0) : 1024*1024); // 1MiB should be enough
+        const size_t min = static_cast<size_t>(m_syntax->min ? std::strtoull (m_syntax->min, nullptr, 0) : 0);
+        const size_t max = static_cast<size_t>(m_syntax->max ? std::strtoull (m_syntax->max, nullptr, 0) : 1024*1024); // 1MiB should be enough
 
         if (isQuotedString ())
         {
@@ -306,23 +314,10 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
     BUG_ON (m_value.index() == std::variant_npos);
 }
 
-int ProtocolParameter::isRandomInteger (uint64_t& min, uint64_t& max) const
-{
-    if (!m_strValueLen || *m_strValue != '*')
-        return -1;
-
-    if (m_strValueLen == 1)
-        return 0;
-
-    if (!cParseHelper::range (m_strValue + 1, m_strValueLen - 1, 0, min, max))
-        throw FormatException (exParFormat, m_strValue+1, (int)m_strValueLen-1);
-
-    return 1;
-}
-
 uint64_t ProtocolParameter::getAndCheckIntegerValue (uint64_t min, uint64_t max) const
 {
     char* end;
+    errno = 0;
     unsigned long long v = std::strtoull (m_strValue, &end, 0);
     if (end != (m_strValue + m_strValueLen))
     {
@@ -335,7 +330,54 @@ uint64_t ProtocolParameter::getAndCheckIntegerValue (uint64_t min, uint64_t max)
     return (uint64_t)v;
 }
 
+double ProtocolParameter::getAndCheckDoubleValue (double min, double max) const
+{
+    char* end;
+    errno = 0;
+    double v = std::strtod (m_strValue, &end);
+    if (end != (m_strValue + m_strValueLen))
+    {
+        throw FormatException (exParFormat, m_strValue, (int)m_strValueLen);
+    }
+    else if (errno == ERANGE || v < min || v > max)
+    {
+        throw FormatException (exParRange, m_strValue, (int)m_strValueLen);
+    }
+    return v;
+}
+
 #ifdef WITH_UNITTESTS
+
+
+static constexpr ParameterSyntax PAR_UNIT_I8   = {"i8",   "", Int8};
+static constexpr ParameterSyntax PAR_UNIT_I16  = {"i16",  "", Int16};
+static constexpr ParameterSyntax PAR_UNIT_I32  = {"i32",  "", Int32};
+static constexpr ParameterSyntax PAR_UNIT_I64  = {"i64",  "", Int64};
+static constexpr ParameterSyntax PAR_UNIT_STR  = {"str",  "", Bytestream};
+static constexpr ParameterSyntax PAR_UNIT_IP4  = {"ip4",  "", IP4};
+static constexpr ParameterSyntax PAR_UNIT_IP6  = {"ip6",  "", IP6};
+static constexpr ParameterSyntax PAR_UNIT_MAC  = {"mac",  "", Mac};
+static constexpr ParameterSyntax PAR_UNIT_FLT  = {"float", "", Float, "1.0", "3.14"};
+static constexpr ParameterSyntax PAR_UNIT_INT  = {"int",   "", Integer, "100", "200"};
+static constexpr ParameterSyntax PAR_UNIT_STRR = {"str_range", "", Bytestream, "32", "100"};
+static ProtocolSyntax PR_UNIT = {
+    "unit",
+    "",
+    {},
+    {
+        &PAR_UNIT_I8,
+        &PAR_UNIT_I16,
+        &PAR_UNIT_I32,
+        &PAR_UNIT_I64,
+        &PAR_UNIT_STR,
+        &PAR_UNIT_IP4,
+        &PAR_UNIT_IP6,
+        &PAR_UNIT_MAC,
+        &PAR_UNIT_FLT,
+        &PAR_UNIT_INT,
+        &PAR_UNIT_STRR
+    }
+};
 
 void ProtocolParameter::unitTest ()
 {
@@ -513,6 +555,103 @@ void ProtocolParameter::unitTest ()
         }
     };
     runTestCase<cIPv6> (ipv6tests);
+
+    static const std::vector<testcase_t<uint8_t>> i8tests = 
+    {
+        {"i8", "0", false, false, 0, {0}},
+        {"i8", "255", false, false, 255, {255, 255}},
+        {"i8", "42", false, false, 42, {42}},
+        {"i8", "256", true, false, 0, {}},
+        {"i8", "0x0", false, false, 0, {0}},
+        {"i8", "0xff", false, false, 255, {255}},
+        {"i8", "0x42", false, false, 0x42, {0x42}},
+        {"i8", "0x100", true, false, 0, {}},
+
+        {"i8", "*", false, true, 0, {0, 1}},
+        {"i8", "*[100-101]", false, true, 0, {100, 101, 100}},
+        {"i8", "*[0x64-101]", false, true, 0, {100, 101, 100}},
+        {"i8", "*[0x64-0x65]", false, true, 0, {100, 101, 100}},
+        {"i8", "*[101-100]", true, true, 0, {}},
+        {"i8", "*[255-256]", true, true, 0, {}},
+        {"i8", "*[256-257]", true, true, 0, {}}
+
+        // TODO syntax errors
+    };
+    runTestCase<uint8_t> (i8tests);
+
+    static const std::vector<testcase_t<uint16_t>> i16tests = 
+    {
+        {"i16", "0", false, false, 0, {0}},
+        {"i16", "65535", false, false, std::numeric_limits<uint16_t>::max(), {std::numeric_limits<uint16_t>::max(), std::numeric_limits<uint16_t>::max()}},
+        {"i16", "4200", false, false, 4200, {4200}},
+        {"i16", "65536", true, false, 0, {}},
+        {"i16", "0x0", false, false, 0, {0}},
+        {"i16", "0xffff", false, false, std::numeric_limits<uint16_t>::max(), {std::numeric_limits<uint16_t>::max()}},
+        {"i16", "0x4200", false, false, 0x4200, {0x4200}},
+        {"i16", "0x10000", true, false, 0, {}},
+
+        {"i16", "*", false, true, 0, {0, 1}},
+        {"i16", "*[1000-1001]", false, true, 0, {1000, 1001, 1000}},
+        {"i16", "*[0x3e8-1001]", false, true, 0, {1000, 1001, 1000}},
+        {"i16", "*[0x3e8-0x3e9]", false, true, 0, {1000, 1001, 1000}},
+        {"i16", "*[1001-1000]", true, true, 0, {}},
+        {"i16", "*[65535-65536]", true, true, 0, {}},
+        {"i16", "*[65536-65537]", true, true, 0, {}}
+
+        // TODO syntax errors
+    };
+    runTestCase<uint16_t> (i16tests);
+
+    static const std::vector<testcase_t<uint32_t>> i32tests = 
+    {
+        {"i32", "0", false, false, 0, {0}},
+        {"i32", "4294967295", false, false, std::numeric_limits<uint32_t>::max(), {std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max()}},
+        {"i32", "42000000", false, false, 42000000, {42000000}},
+        {"i32", "4294967296", true, false, 0, {}},
+        {"i32", "0x0", false, false, 0, {0}},
+        {"i32", "0xffffffff", false, false, std::numeric_limits<uint32_t>::max(), {std::numeric_limits<uint32_t>::max()}},
+        {"i32", "0x42000000", false, false, 0x42000000, {0x42000000}},
+        {"i32", "0x100000000", true, false, 0, {}},
+
+        {"i32", "*", false, true, 0, {0, 1}},
+        {"i32", "*[100000-100001]", false, true, 0, {100000, 100001, 100000}},
+        {"i32", "*[0x186a0-100001]", false, true, 0, {100000, 100001, 100000}},
+        {"i32", "*[0x186a0-0x186a1]", false, true, 0, {100000, 100001, 100000}},
+        {"i32", "*[100001-100000]", true, true, 0, {}},
+        {"i32", "*[4294967295-4294967296]", true, true, 0, {}},
+        {"i32", "*[4294967296-4294967297]", true, true, 0, {}}
+
+        // TODO syntax errors
+    };
+    runTestCase<uint32_t> (i32tests);
+
+    static const std::vector<testcase_t<uint64_t>> i64tests = 
+    {
+        {"i64", "0", false, false, 0, {0}},
+        {"i64", "18446744073709551615", false, false, std::numeric_limits<uint64_t>::max(), {std::numeric_limits<uint64_t>::max(), std::numeric_limits<uint64_t>::max()}},
+        {"i64", "420000000000", false, false, 420000000000, {420000000000}},
+        {"i64", "18446744073709551616", true, false, 0, {}},
+        {"i64", "0x0", false, false, 0, {0}},
+        {"i64", "0xffffffffffffffff", false, false, std::numeric_limits<uint64_t>::max(), {std::numeric_limits<uint64_t>::max()}},
+        {"i64", "0x42000000", false, false, 0x42000000, {0x42000000}},
+        {"i64", "0x10000000000000000", true, false, 0, {}},
+
+        {"i64", "*", false, true, 0, {0, 1}},
+        {"i64", "*[10000000000-10000000001]", false, true, 0, {10000000000, 10000000001, 10000000000}},
+        {"i64", "*[0x2540BE400-10000000001]", false, true, 0, {10000000000, 10000000001, 10000000000}},
+        {"i64", "*[0x2540BE400-0x2540BE401]", false, true, 0, {10000000000, 10000000001, 10000000000}},
+        {"i64", "*[10000000001-10000000000]", true, true, 0, {}},
+        {"i64", "*[18446744073709551615-18446744073709551616]", true, true, 0, {}},
+        {"i64", "*[18446744073709551616-18446744073709551617]", true, true, 0, {}}
+
+        // TODO syntax errors
+    };
+    runTestCase<uint64_t> (i64tests);
+
+    // TODO generic integer
+    // TODO double
+    // TODO stream
+    // TODO UUID
 }
 
 template<typename T>
@@ -526,25 +665,29 @@ void ProtocolParameter::runTestCase(const std::vector<testcase_t<T>>& tests)
         {
             cRandom::setCounterMode (0);
             catched = false;
-            ProtocolParameter obj (t.name.c_str(), t.name.size(), t.value.c_str(), t.value.size(), PR_RAW.mandatory, PR_RAW.optional);
+            ProtocolParameter obj (t.name.c_str(), t.name.size(), t.value.c_str(), t.value.size(), PR_UNIT.mandatory, PR_UNIT.optional);
             if (t.willThrow)
                 BUG ("expected to throw");
             BUG_ON (t.isRandom != obj.m_isRandom);
-            BUG_ON (std::memcmp (t.expInternalValue.getAsArray(), std::get<T> (obj.m_value).getAsArray(), t.expInternalValue.size()));
+            if constexpr (std::is_integral_v<T>)
+                BUG_ON (t.expInternalValue != static_cast<T>(std::get<uint64_t> (obj.m_value)));
+            else
+                BUG_ON (t.expInternalValue != std::get<T> (obj.m_value));
+//            BUG_ON (std::memcmp (t.expInternalValue.getAsArray(), std::get<T> (obj.m_value).getAsArray(), t.expInternalValue.size()));
 
             for (const auto& expValue : t.expExternalValues)
             {
-                const uint8_t *value;
+                T value;
                 if constexpr (std::is_same_v<T, cMacAddress>)
-                    value = obj.asMac().getAsArray();
+                    value.set(obj.asMac());
                 else if constexpr (std::is_same_v<T, cIPv4>)
-                    value = obj.asIPv4().getAsArray();
+                    value.set(obj.asIPv4());
                 else if constexpr (std::is_same_v<T, cIPv6>)
-                    value = obj.asIPv6().getAsArray();
+                    value.set(obj.asIPv6());
                 else
-                    static_assert(sizeof(T) == 0, "Unsupported type");
+                    value = obj.get<T>();
 
-                BUG_ON (std::memcmp(expValue.getAsArray(), value, t.expInternalValue.size()));
+                BUG_ON (value != expValue);
             }
         }
         catch(...)

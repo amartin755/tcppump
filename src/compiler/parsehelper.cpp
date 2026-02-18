@@ -197,11 +197,13 @@ bool cParseHelper::range (const char* p, size_t len, int base, uint64_t& begin, 
 
     if (isspace (*(p + 1)))
         return false;
+    errno = 0;
     b = strtoull (p + 1, &numend, base);
     if (errno == ERANGE || *numend != '-' || (numend + 1) >= (p + len))
         return false;
     if (isspace (*(numend + 1)))
         return false;
+    errno = 0;
     e = strtoull (numend + 1, &numend, base);
     if (errno == ERANGE || *numend != ']' || numend >= (p + len))
         return false;
@@ -568,6 +570,34 @@ void cParseHelper::unitTest ()
             0,
             uint64_t(-1),
             2,
+            false
+        },
+        {
+            "[1r-2]",
+            0,
+            0,
+            0,
+            false
+        },
+        {
+            "[1-2t]",
+            0,
+            0,
+            0,
+            false
+        },
+        {
+            "[1a-2]",
+            10,
+            0,
+            0,
+            false
+        },
+        {
+            "[1-2a]",
+            10,
+            0,
+            0,
             false
         },
     };

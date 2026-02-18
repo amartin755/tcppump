@@ -190,6 +190,14 @@ public:
     {
         return !(m_mac[0] & 1);
     }
+    bool operator== (const cMacAddress& b) const
+    {
+        return !std::memcmp (m_mac, b.m_mac, sizeof(m_mac));
+    }
+    bool operator!= (const cMacAddress& b) const
+    {
+        return std::memcmp (m_mac, b.m_mac, sizeof(m_mac));
+    }
 
 
 #ifdef WITH_UNITTESTS
