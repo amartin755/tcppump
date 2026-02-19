@@ -275,6 +275,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
     }
     if (m_syntax->type & Type::Bytestream)
     {
+        // "lkdjl" 012345 * *[10-20] *10 == *[10-10]
         typeCnt--;
         size_t len = 0;
         const size_t min = static_cast<size_t>(m_syntax->min ? std::strtoull (m_syntax->min, nullptr, 0) : 0);
@@ -288,6 +289,10 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
 
             len = m_strValueLen;
             m_value = m_strValue;
+        }
+        else if (checkForRandomStream(min, max))
+        {
+            len = min;
         }
         else
         {
@@ -346,6 +351,51 @@ double ProtocolParameter::getAndCheckDoubleValue (double min, double max) const
     return v;
 }
 
+bool ProtocolParameter::checkForRandomStream (size_t rangeMin, size_t rangeMax)
+{
+        // no random value
+        if (!m_strValueLen || *m_strValue != '*')
+            return false;
+
+        if (m_strValueLen == 1)
+        {
+            // random value without range restrictions
+            m_randRanges.emplace<std::pair <uint64_t, uint64_t>> (32, 32);
+        }
+        else if (isdigit (m_strValue[1]))
+        {
+            // random value with range restriction. Short notation "*NNN" 
+            char* end;
+            errno = 0;
+            unsigned long r = std::strtoul (m_strValue+1, &end, 0);
+            if (end != (m_strValue + m_strValueLen))
+            {
+                throw FormatException (exParFormat, m_strValue+1, (int)m_strValueLen-1);
+            }
+            else if ((!((r >= 1) && (r <= 1024*1024))) || (errno == ERANGE))
+            {
+                throw FormatException (exParRange, m_strValue+1, (int)m_strValueLen-1);
+            }
+            m_randRanges.emplace<std::pair <uint64_t, uint64_t>> (r, r);
+        }
+        else
+        {
+            // random value with range e.g. *[12-42]
+            uint64_t min, max;
+            if (!cParseHelper::range (m_strValue + 1, m_strValueLen - 1, 0, min, max))
+                throw FormatException (exParFormat, m_strValue+1, (int)m_strValueLen-1);
+
+            // if there is a random range specified, it must not violate the values range
+            if (min < rangeMin || max > rangeMax)
+                throw FormatException (exParRange, m_strValue, (int)m_strValueLen);
+            m_randRanges.emplace<std::pair <uint64_t, uint64_t>> (min, max);
+        }
+        m_value = std::make_unique<std::vector<uint8_t>>();
+        m_isRandom = true;
+        return true;
+
+}
+
 #ifdef WITH_UNITTESTS
 
 
@@ -383,77 +433,13 @@ void ProtocolParameter::unitTest ()
 {
     static const std::vector<testcase_t<cMacAddress>> tests = 
     {
-        {
-            "mac",
-            "12:34:56:78:9a:bc",
-            false,
-            false,
-            "12:34:56:78:9a:bc",
-            {
-                "12:34:56:78:9a:bc",
-                "12:34:56:78:9a:bc"
-            }
-        },
-        {
-            "mac",
-            "*",
-            false,
-            true,
-            "0:0:0:0:0:0",
-            {
-                "00:01:02:03:04:05",
-                "06:07:08:09:0a:0b"
-            }
-        },
-        {
-            "mac",
-            "11:*:33:44:*[10-12]:66",
-            false,
-            true,
-            "11:0:33:44:0:66",
-            {
-                "11:0:33:44:11:66",
-                "11:2:33:44:10:66",
-                "11:4:33:44:12:66",
-                "11:6:33:44:11:66"
-            }
-        },
-        {
-            "mac",
-            "11:22:33:44:*[13-12]:66",
-            true,
-            false,
-            cMacAddress(),
-            {}
-        },
-        {
-            "mac",
-            "11:22:33:44:*[13-100]:66",
-            true,
-            false,
-            cMacAddress(),
-            {}
-        },
-        {
-            "mac",
-            "11:22:33:44:*[0-ff]:66",
-            false,
-            true,
-            "11:22:33:44:00:66",
-            {
-                "11:22:33:44:00:66"
-            }
-        },
-        {
-            "mac",
-            "*[0-f]:*[10-1f]:*[20-2f]:*[30-3f]:*[40-4f]:*[50-5f]",
-            false,
-            true,
-            "0:0:0:0:0:0",
-            {
-                "00:11:22:33:44:55"
-            }
-        }
+        {"mac", "12:34:56:78:9a:bc", false, false, "12:34:56:78:9a:bc", {"12:34:56:78:9a:bc", "12:34:56:78:9a:bc"}},
+        {"mac", "*", false, true, "0:0:0:0:0:0", {"00:01:02:03:04:05", "06:07:08:09:0a:0b"}},
+        {"mac", "11:*:33:44:*[10-12]:66", false, true, "11:0:33:44:0:66", {"11:0:33:44:11:66", "11:2:33:44:10:66", "11:4:33:44:12:66", "11:6:33:44:11:66"}},
+        {"mac", "11:22:33:44:*[13-12]:66", true, false, cMacAddress(), {}},
+        {"mac", "11:22:33:44:*[13-100]:66", true, false, cMacAddress(), {}},
+        {"mac", "11:22:33:44:*[0-ff]:66", false, true, "11:22:33:44:00:66", {"11:22:33:44:00:66"}},
+        {"mac", "*[0-f]:*[10-1f]:*[20-2f]:*[30-3f]:*[40-4f]:*[50-5f]", false, true, "0:0:0:0:0:0", {"00:11:22:33:44:55"}}
     };
     runTestCase<cMacAddress> (tests);
 
@@ -510,49 +496,10 @@ void ProtocolParameter::unitTest ()
 
     static const std::vector<testcase_t<cIPv6>> ipv6tests = 
     {
-        {
-            "ip6",
-            "fe80::1ff:fe23:4577:890a",
-            false,
-            false,
-            "fe80::1ff:fe23:4577:890a",
-            {
-                "fe80::1ff:fe23:4577:890a",
-                "fe80::1ff:fe23:4577:890a"
-            }
-        },
-        {
-            "ip6",
-            "fe80::1ff:*:4577:890a",
-            false,
-            true,
-            "fe80::1ff:0:4577:890a",
-            {
-                "fe80::1ff:0000:4577:890a",
-                "fe80::1ff:0001:4577:890a"
-            }
-        },
-        {
-            "ip6",
-            "*::1ff:fe23:4577:*[1000-2000]",
-            false,
-            true,
-            "0::1ff:fe23:4577:0",
-            {
-                "0000::1ff:fe23:4577:1001",
-                "0002::1ff:fe23:4577:1003"
-            }
-        },
-        {
-            "ip6",
-            "*",
-            false,
-            true,
-            "0:0:0:0:0:0:0:0",
-            {
-                "0000:0001:0002:0003:0004:0005:0006:0007"
-            }
-        }
+        {"ip6", "fe80::1ff:fe23:4577:890a", false, false, "fe80::1ff:fe23:4577:890a", {"fe80::1ff:fe23:4577:890a", "fe80::1ff:fe23:4577:890a"}},
+        {"ip6", "fe80::1ff:*:4577:890a", false, true, "fe80::1ff:0:4577:890a", {"fe80::1ff:0000:4577:890a", "fe80::1ff:0001:4577:890a"}},
+        {"ip6", "*::1ff:fe23:4577:*[1000-2000]", false, true, "0::1ff:fe23:4577:0", {"0000::1ff:fe23:4577:1001", "0002::1ff:fe23:4577:1003"}},
+        {"ip6", "*", false, true, "0:0:0:0:0:0:0:0", {"0000:0001:0002:0003:0004:0005:0006:0007"}}
     };
     runTestCase<cIPv6> (ipv6tests);
 
@@ -696,6 +643,7 @@ void ProtocolParameter::unitTest ()
     // TODO stream
     // TODO UUID
     // TODO nested
+    // TODO multitiypes
 }
 
 template<typename T>

@@ -160,6 +160,7 @@ private:
     uint64_t getAndCheckIntegerValue (uint64_t min, uint64_t max) const;
     double getAndCheckDoubleValue (double min, double max) const;
     bool isRandom (uint64_t min, uint64_t max);
+    bool checkForRandomStream (size_t rangeMin, size_t rangeMax);
 
     bool isQuotedString () const
     {
@@ -200,15 +201,13 @@ private:
     void calcNextRandomStream ()
     {
         const auto* range = std::get_if<std::pair<uint64_t, uint64_t>> (&m_randRanges);
-        uint32_t minLen = 32;
-        uint32_t maxLen = 32;
-        if (range)
-        {
-            const auto& [min, max] = *range;
-            minLen = static_cast<uint32_t>(min);
-            maxLen = static_cast<uint32_t>(max);
-        }
+
+        BUG_ON (!range);
+
         // calc length of our random stream
+        const auto& [min, max] = *range;
+        const uint32_t minLen = static_cast<uint32_t>(min);
+        const uint32_t maxLen = static_cast<uint32_t>(max);
         uint32_t nextLen = minLen == maxLen ? maxLen : cRandom::rand<uint32_t> (minLen, maxLen);
 
         // fill the array with random values
@@ -248,7 +247,7 @@ private:
                 m_randRanges.emplace<std::pair <T, T>> (static_cast<T>(min), static_cast<T>(max));
             }
             else
-                throw FormatException (exParFormat, m_strValue+1, (int)m_strValueLen-1);
+                throw FormatException (exParFormat, m_strValue, (int)m_strValueLen);
         }
         m_value = T(rangeMin);
         m_isRandom = true;
