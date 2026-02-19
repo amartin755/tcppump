@@ -358,7 +358,7 @@ static constexpr ParameterSyntax PAR_UNIT_IP4  = {"ip4",  "", IP4};
 static constexpr ParameterSyntax PAR_UNIT_IP6  = {"ip6",  "", IP6};
 static constexpr ParameterSyntax PAR_UNIT_MAC  = {"mac",  "", Mac};
 static constexpr ParameterSyntax PAR_UNIT_FLT  = {"float", "", Float, "1.0", "3.14"};
-static constexpr ParameterSyntax PAR_UNIT_INT  = {"int",   "", Integer, "100", "200"};
+static constexpr ParameterSyntax PAR_UNIT_INT  = {"int",   "", Integer, "100", "200000"};
 static constexpr ParameterSyntax PAR_UNIT_STRR = {"str_range", "", Bytestream, "32", "100"};
 static ProtocolSyntax PR_UNIT = {
     "unit",
@@ -659,10 +659,43 @@ void ProtocolParameter::unitTest ()
     };
     runTestCase<double> (dbltests);
 
+    static const std::vector<testcase_t<uint32_t>> inttests = 
+    {
+        {"int", "0", true, false, 0, {}},
+        {"int", "0x0", true, false, 0, {}},
+        {"int", "99", true, false, 0, {}},
+        {"int", "0x63", true, false, 0, {}},
+        {"int", "200001", true, false, 0, {}},
+        {"int", "0x30D41", true, false, 0, {}},
+        {"int", "18446744073709551615", true, false, 0, {}},
+        {"int", "0xffffffffffffffff", true, false, 0, {}},
+        {"int", "18446744073709551616", true, false, 0, {}},
+        {"int", "0x10000000000000000", true, false, 0, {}},
+
+        {"int", "100", false, false, 100, {100}},
+        {"int", "0x64", false, false, 100, {100}},
+        {"int", "4200", false, false, 4200, {4200}},
+        {"int", "0x1068", false, false, 4200, {4200}},
+        {"int", "200000", false, false, 200000, {200000}},
+        {"int", "0x30D40", false, false, 200000, {200000}},
+
+        {"int", "*", false, true, 100, {100, 101}}/*,
+        {"int", "*[1000-1001]", false, true, 0, {1000, 1001, 1000}},
+        {"int", "*[0x3e8-1001]", false, true, 0, {1000, 1001, 1000}},
+        {"int", "*[0x3e8-0x3e9]", false, true, 0, {1000, 1001, 1000}},
+        {"int", "*[1001-1000]", true, true, 0, {}},
+        {"int", "*[65535-65536]", true, true, 0, {}},
+        {"int", "*[65536-65537]", true, true, 0, {}}*/
+
+        // TODO syntax errors
+    };
+    runTestCase<uint32_t> (inttests);
+
 
     // TODO generic integer
     // TODO stream
     // TODO UUID
+    // TODO nested
 }
 
 template<typename T>
