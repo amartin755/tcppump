@@ -98,7 +98,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
         typeCnt--;
         try
         {
-            if (!checkForRandom<uint8_t>(0, 1))
+            if (!checkForRandom<uint64_t>(0, 1))
                 m_value = getAndCheckIntegerValue (0, 1);
             m_type = Type::Bit;
         }
@@ -115,7 +115,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
         {
             constexpr uint8_t min = std::numeric_limits<uint8_t>::min();
             constexpr uint8_t max = std::numeric_limits<uint8_t>::max();
-            if (!checkForRandom<uint8_t>(min, max))
+            if (!checkForRandom<uint64_t>(min, max))
                 m_value = getAndCheckIntegerValue (min, max);
             m_type = Type::Int8;
         }
@@ -132,7 +132,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
         {
             constexpr uint16_t min = std::numeric_limits<uint16_t>::min();
             constexpr uint16_t max = std::numeric_limits<uint16_t>::max();
-            if (!checkForRandom<uint16_t>(min, max))
+            if (!checkForRandom<uint64_t>(min, max))
                 m_value = getAndCheckIntegerValue (min, max);
             m_type = Type::Int16;
         }
@@ -149,7 +149,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
         {
             constexpr uint32_t min = std::numeric_limits<uint32_t>::min();
             constexpr uint32_t max = std::numeric_limits<uint32_t>::max();
-            if (!checkForRandom<uint32_t>(min, max))
+            if (!checkForRandom<uint64_t>(min, max))
                 m_value = getAndCheckIntegerValue (min, max);
             m_type = Type::Int32;
         }
@@ -679,13 +679,13 @@ void ProtocolParameter::unitTest ()
         {"int", "200000", false, false, 200000, {200000}},
         {"int", "0x30D40", false, false, 200000, {200000}},
 
-        {"int", "*", false, true, 100, {100, 101}}/*,
-        {"int", "*[1000-1001]", false, true, 0, {1000, 1001, 1000}},
-        {"int", "*[0x3e8-1001]", false, true, 0, {1000, 1001, 1000}},
-        {"int", "*[0x3e8-0x3e9]", false, true, 0, {1000, 1001, 1000}},
-        {"int", "*[1001-1000]", true, true, 0, {}},
-        {"int", "*[65535-65536]", true, true, 0, {}},
-        {"int", "*[65536-65537]", true, true, 0, {}}*/
+        {"int", "*", false, true, 100, {100, 101}},
+        {"int", "*[1000-1001]", false, true, 100, {1000, 1001, 1000}},
+        {"int", "*[0x3e8-1001]", false, true, 100, {1000, 1001, 1000}},
+        {"int", "*[0x3e8-0x3e9]", false, true, 100, {1000, 1001, 1000}},
+        {"int", "*[199999-200000]", false, true, 100, {199999, 200000, 199999}},
+        {"int", "*[200000-200001]", true, true, 0, {}},
+        {"int", "*[200001-200002]", true, true, 0, {}}
 
         // TODO syntax errors
     };

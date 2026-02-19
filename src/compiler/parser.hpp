@@ -87,7 +87,7 @@ public:
     inline T get()
     {
         if (m_isRandom)
-            calcNextRandom<T> ();
+            calcNextRandom<INTERNAL_TYPE> ();
         return static_cast<T> (std::get<INTERNAL_TYPE> (m_value));
     }
 
@@ -199,14 +199,14 @@ private:
     }
     void calcNextRandomStream ()
     {
-        const auto* range = std::get_if<std::pair<uint32_t, uint32_t>> (&m_randRanges);
+        const auto* range = std::get_if<std::pair<uint64_t, uint64_t>> (&m_randRanges);
         uint32_t minLen = 32;
         uint32_t maxLen = 32;
         if (range)
         {
             const auto& [min, max] = *range;
-            minLen = min;
-            maxLen = max;
+            minLen = static_cast<uint32_t>(min);
+            maxLen = static_cast<uint32_t>(max);
         }
         // calc length of our random stream
         uint32_t nextLen = minLen == maxLen ? maxLen : cRandom::rand<uint32_t> (minLen, maxLen);
@@ -235,15 +235,20 @@ private:
         }
         else
         {
-            // random value with range e.g. *[12-42]
-            uint64_t min, max;
-            if (!cParseHelper::range (m_strValue + 1, m_strValueLen - 1, 0, min, max))
-                throw FormatException (exParFormat, m_strValue+1, (int)m_strValueLen-1);
+            // random value with range e.g. *[12-42] (only supported for integers)
+            if constexpr (std::is_integral_v<T>)
+            {
+                uint64_t min, max;
+                if (!cParseHelper::range (m_strValue + 1, m_strValueLen - 1, 0, min, max))
+                    throw FormatException (exParFormat, m_strValue+1, (int)m_strValueLen-1);
 
-            // if there is a random range specified, it must not violate the values range
-            if (static_cast<uint64_t>(min) < rangeMin || static_cast<uint64_t>(max) > rangeMax)
-                throw FormatException (exParRange, m_strValue, (int)m_strValueLen);
-            m_randRanges.emplace<std::pair <T, T>> (static_cast<T>(min), static_cast<T>(max));
+                // if there is a random range specified, it must not violate the values range
+                if (static_cast<uint64_t>(min) < rangeMin || static_cast<uint64_t>(max) > rangeMax)
+                    throw FormatException (exParRange, m_strValue, (int)m_strValueLen);
+                m_randRanges.emplace<std::pair <T, T>> (static_cast<T>(min), static_cast<T>(max));
+            }
+            else
+                throw FormatException (exParFormat, m_strValue+1, (int)m_strValueLen-1);
         }
         m_value = T(rangeMin);
         m_isRandom = true;
@@ -360,9 +365,6 @@ private:
     > m_value;
 
     std::variant<
-        std::pair <uint8_t, uint8_t>,
-        std::pair <uint16_t, uint16_t>,
-        std::pair <uint32_t, uint32_t>,
         std::pair <uint64_t, uint64_t>,
         std::pair <double, double>,
         std::vector <std::tuple<int, uint8_t, uint8_t>>,    // ipv4, mac
