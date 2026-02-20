@@ -123,10 +123,10 @@ public:
         BUG_ON (len < size());
         std::memcpy(m_mac, b, size());
     }
-    void setAt (int offset, uint8_t value)
+    void setAt (size_t offset, uint8_t value)
     {
-        BUG_ON (offset > 5);
-        if (offset <= 5)
+        BUG_ON (offset >= size());
+        if (likely(offset < size()))
         {
             m_mac[offset] = value;
         }

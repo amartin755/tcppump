@@ -257,6 +257,11 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
             m_value = cUUID::fromString (uuidAsString);
             m_type = Type::UUID;
         }
+        else if (m_strValueLen == 1 && *m_strValue == '*')
+        {
+            m_value = cUUID::fromZero ();
+            m_isRandom = true;
+        }
         else
         {
             // only throw if there are no other types to try
@@ -410,6 +415,7 @@ static constexpr ParameterSyntax PAR_UNIT_MAC  = {"mac",  "", Mac};
 static constexpr ParameterSyntax PAR_UNIT_FLT  = {"float", "", Float, "1.0", "3.14"};
 static constexpr ParameterSyntax PAR_UNIT_INT  = {"int",   "", Integer, "100", "200000"};
 static constexpr ParameterSyntax PAR_UNIT_STRR = {"str_range", "", Bytestream, "32", "100"};
+static constexpr ParameterSyntax PAR_UNIT_UUID = {"uuid",  "", UUID};
 static ProtocolSyntax PR_UNIT = {
     "unit",
     "",
@@ -425,7 +431,8 @@ static ProtocolSyntax PR_UNIT = {
         &PAR_UNIT_MAC,
         &PAR_UNIT_FLT,
         &PAR_UNIT_INT,
-        &PAR_UNIT_STRR
+        &PAR_UNIT_STRR,
+        &PAR_UNIT_UUID
     }
 };
 
@@ -638,7 +645,10 @@ void ProtocolParameter::unitTest ()
     };
     runTestCase<uint32_t> (inttests);
 
-
+    static const std::vector<testcase_t<cUUID>> uuidtests = 
+    {
+    };
+    
     // TODO generic integer
     // TODO stream
     // TODO UUID

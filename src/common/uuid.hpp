@@ -41,6 +41,8 @@ public:
     }
     static cUUID fromString (const std::string& str)
     {
+        if (unlikely (str.size() != stringSize()))
+            throw std::out_of_range ("invalid uuid string length");
         return cUUID (str.c_str());
     }
     static cUUID fromZero ()
@@ -49,6 +51,13 @@ public:
         std::memset (&uuid.m_uuid, 0, sizeof(uuid.m_uuid));
         return uuid;
     }
+    static cUUID fromRandom ()
+    {
+        cUUID uuid;
+        uuid.setRandom ();
+        return uuid;
+    }
+
     int version () const
     {
         return (m_uuid.asArray[6] >> 4 & 0x0F);
@@ -85,15 +94,49 @@ public:
         return std::string (uuid);
     }
 
-    static size_t stringSize ()
+    void setRandom ()
+    {
+        m_uuid.asInt64[0] = cRandom::rand<uint64_t>();
+        m_uuid.asInt64[1] = cRandom::rand<uint64_t>();
+        // set version and variant field
+        m_uuid.asArray[6] = (m_uuid.asArray[6] & 0x0f) | 4;
+        m_uuid.asArray[8] = (m_uuid.asArray[8] & 0x3f) | 0x80;
+    }
+
+    void setAt (size_t offset, uint8_t value)
+    {
+        BUG_ON (offset >= size());
+        if (likely(offset < size()))
+        {
+            m_uuid.asArray[offset] = value;
+        }
+
+    }
+
+    static constexpr size_t stringSize ()
     {
         return sizeof ("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx")-1;
     }
-    static size_t rasSize ()
+    static constexpr size_t size ()
     {
         return sizeof (cUUID::m_uuid);
     }
-
+    bool operator== (const cUUID& b) const
+    {
+        return !std::memcmp (&m_uuid, &b.m_uuid, sizeof(m_uuid));
+    }
+    bool operator!= (const cUUID& b) const
+    {
+        return std::memcmp (&m_uuid, &b.m_uuid, sizeof(m_uuid));
+    }
+    bool operator== (const std::string& b) const
+    {
+        return asString() == b;
+    }
+    bool operator!= (const std::string& b) const
+    {
+        return asString() != b;
+    }
 private:
     cUUID ()
     {
@@ -137,8 +180,6 @@ private:
             }
             index++;
         }
-        if (unlikely (n != 36))
-            throw std::out_of_range ("invalid uuid string length");
     }
 
     union uuid
@@ -158,6 +199,50 @@ public:
 
         BUG_ON (std::memcmp (uuid.asArray (), uuidArray, sizeof (uuidArray)));
         BUG_ON (uuid.asString() != uuidString);
+
+        const std::vector<std::string> badStrings = {
+            "0011223-4455-6677-8899-aabbccddeeff",
+            "00112233-445-6677-8899-aabbccddeeff",
+            "00112233-4455-667-8899-aabbccddeeff",
+            "00112233-4455-6677-889-aabbccddeeff",
+            "00112233-4455-6677-8899-aabbccddeef",
+            "0011223344-4455-6677-8899-aabbccddeeff",
+            "00112233-445566-6677-8899-aabbccddeeff",
+            "00112233-4455-667788-8899-aabbccddeeff",
+            "00112233-4455-6677-8899aa-aabbccddeeff",
+            "00112233-4455-6677-8899-aabbccddeeff00",
+            "001122-445566-6677-8899-aabbccddeeff",
+            "00112233-44-667788-8899-aabbccddeeff",
+            "00112233-4455-66-889900-aabbccddeeff",
+            "00112233-4455-6677-88-aabbccddeeff00",
+            "0011r233-4455-6677-8899-aabbccddeeff",
+            "00112233-4y55-6677-8899-aabbccddeeff",
+            "00112233-4455-6x77-8899-aabbccddeeff",
+            "00112233-4455-6677-88z9-aabbccddeeff",
+            "00112233-4455-6677-8899-aabbccddeoff",
+            "0011223--4455-6677-8899-aabbccddeeff",
+            "00112233-4455-6677-8899-aabb-cddeeff",
+            "00112233-4455-6677-88-9-aabbccddeeff",
+            "00112233-4455-66-7-8899-aabbccddeeff",
+            "        -    -    -    -            ",
+            "",
+            "1"
+        };
+
+        for (const auto& bad : badStrings)
+        {
+            try
+            {
+                cUUID uuid = cUUID::fromString (bad);
+                BUG ("expected to throw");
+                (void)uuid;
+            }
+            catch (...)
+            {
+        }
+
+        }
+        
     }
 #endif
 

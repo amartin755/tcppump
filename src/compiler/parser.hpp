@@ -129,8 +129,10 @@ public:
             calcNextRandom<cIPv6, uint16_t> ();
         return std::get<cIPv6> (m_value);
     }
-    const cUUID& asUUID () const
+    const cUUID& asUUID ()
     {
+        if (m_isRandom)
+            calcNextRandom<cUUID, uint8_t> ();
         return std::get<cUUID> (m_value);
     }
     const Protocol& asNested () const
@@ -185,7 +187,7 @@ private:
     void calcNextRandom ()
     {
         auto& val = std::get<T> (m_value);
-        const auto* randRanges = std::get_if<std::vector <std::tuple<int, W, W>>> (&m_randRanges);
+        const auto* randRanges = std::get_if<std::vector <std::tuple<size_t, W, W>>> (&m_randRanges);
         if (randRanges && randRanges->size())
         {
             for (const auto& [offset, min, max] : *randRanges)
@@ -293,7 +295,7 @@ private:
         }
         else
         {
-            m_randRanges.emplace<std::vector <std::tuple<int, value_type, value_type>>>();
+            m_randRanges.emplace<std::vector <std::tuple<size_t, value_type, value_type>>>();
             for (const auto& token : tokens)
             {
                 uint64_t randMin = 0, randMax = static_cast<uint64_t>(max);
@@ -324,7 +326,7 @@ private:
                 {
                     newValString += emptyToken;
                     // create entry in m_randRanges
-                    auto& val = std::get<std::vector <std::tuple<int, value_type, value_type>>> (m_randRanges);
+                    auto& val = std::get<std::vector <std::tuple<size_t, value_type, value_type>>> (m_randRanges);
                     val.emplace_back (index + offset, static_cast<value_type>(randMin), static_cast<value_type>(randMax));
                     m_isRandom = true;
                 }
@@ -366,8 +368,8 @@ private:
     std::variant<
         std::pair <uint64_t, uint64_t>,
         std::pair <double, double>,
-        std::vector <std::tuple<int, uint8_t, uint8_t>>,    // ipv4, mac
-        std::vector <std::tuple<int, uint16_t, uint16_t>>   // ipv6
+        std::vector <std::tuple<size_t, uint8_t, uint8_t>>,    // ipv4, mac
+        std::vector <std::tuple<size_t, uint16_t, uint16_t>>   // ipv6
     > m_randRanges;
 
     // TODO do we need unique id that it can be part of a map?

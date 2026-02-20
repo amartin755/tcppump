@@ -87,9 +87,9 @@ public:
         return (ipv4.s_addr = inet_addr (ip)) != INADDR_NONE;
 #endif
     }
-    void setAt (int offset, uint8_t value)
+    void setAt (size_t offset, uint8_t value)
     {
-        if (likely(offset <= 3))
+        if (likely(offset < size()))
         {
             uint8_t* ip = (uint8_t*)&ipv4.s_addr;
             ip[offset] = value;
@@ -282,9 +282,9 @@ public:
         ipAsString[len] = '\0';
         return set (ipAsString);
     }
-    void setAt (int offset, uint16_t value)
+    void setAt (size_t offset, uint16_t value)
     {
-        if (likely(offset <= 7))
+        if (likely(offset < size()))
         {
             uint16_t* ip = (uint16_t*)&ipv6.s6_addr[0];
             ip[offset] = htons(value);
