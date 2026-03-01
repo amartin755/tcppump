@@ -41,21 +41,62 @@ public:
     }
     static cUUID fromString (const std::string& str)
     {
-        if (unlikely (str.size() != stringSize()))
-            throw std::out_of_range ("invalid uuid string length");
-        return cUUID (str.c_str());
+        return cUUID (str.c_str(), str.size());
     }
     static cUUID fromZero ()
     {
-        cUUID uuid;
-        std::memset (&uuid.m_uuid, 0, sizeof(uuid.m_uuid));
-        return uuid;
+        return cUUID ();
     }
     static cUUID fromRandom ()
     {
         cUUID uuid;
         uuid.setRandom ();
         return uuid;
+    }
+
+    cUUID ()
+    {
+        std::memset (&m_uuid, 0, sizeof(m_uuid));
+    }
+
+    cUUID (const char* str, size_t len = 0)
+    {
+        //xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+        if (!len)
+            len = std::strlen (str);
+
+        if (unlikely (len != stringSize()))
+            throw std::out_of_range ("invalid uuid string length");
+
+        int n;
+        int index = 0;
+        char nibbles[3] = {0,0,0};
+
+        for (n = 0; str[n] && n < 36; n++)
+        {
+            if (str[n] == '-')
+            {
+                if (unlikely(n != 8 && n != 13 && n != 18 && n != 23))
+                    throw std::out_of_range ("invalid uuid string");
+                else
+                    continue;
+            }
+            if (unlikely (!isxdigit (str[n])))
+            {
+                throw std::out_of_range ("invalid uuid string");
+            }
+            nibbles [index & 1] = str[n];
+            if (index & 1)
+            {
+                m_uuid.asArray[index >> 1] = (uint8_t)strtoul (nibbles, nullptr, 16);
+            }
+            index++;
+        }
+    }
+
+    cUUID (std::string& str) : cUUID (str.c_str(), str.size())
+    {
     }
 
     int version () const
@@ -137,11 +178,8 @@ public:
     {
         return asString() != b;
     }
-private:
-    cUUID ()
-    {
-    }
 
+private:
     cUUID (const uint8_t* uuid, uint8_t version = 0)
     {
         std::memcpy (m_uuid.asArray, uuid, sizeof (m_uuid.asArray));
@@ -153,35 +191,6 @@ private:
             m_uuid.asArray[8] = (m_uuid.asArray[8] & 0x3f) | 0x80;
         }
     }
-    cUUID (const char* str)
-    {
-        //xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        int n;
-        int index = 0;
-        char nibbles[3] = {0,0,0};
-
-        for (n = 0; str[n] && n < 36; n++)
-        {
-            if (str[n] == '-')
-            {
-                if (unlikely(n != 8 && n != 13 && n != 18 && n != 23))
-                    throw std::out_of_range ("invalid uuid string");
-                else
-                    continue;
-            }
-            if (unlikely (!isxdigit (str[n])))
-            {
-                throw std::out_of_range ("invalid uuid string");
-            }
-            nibbles [index & 1] = str[n];
-            if (index & 1)
-            {
-                m_uuid.asArray[index >> 1] = (uint8_t)strtoul (nibbles, nullptr, 16);
-            }
-            index++;
-        }
-    }
-
     union uuid
     {
         uint64_t asInt64[2];

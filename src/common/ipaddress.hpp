@@ -238,7 +238,6 @@ class cIPv6
 {
 public:
 
-    void operator=(const cIPv6&) = delete;       // no copy-assignment operator
 
     cIPv6 ()
     {

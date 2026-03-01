@@ -209,7 +209,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
             m_value.emplace<cMacAddress> (s);
             m_type = Type::Mac;
         }
-        catch(const std::exception&)
+        catch(...)
         {
             // only throw if there are no other types to try
             if (typeCnt == 0)
@@ -225,7 +225,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
             m_value.emplace<cIPv4> (s);
             m_type = Type::IP4;
         }
-        catch(const std::exception&)
+        catch(...)
         {
             // only throw if there are no other types to try
             if (typeCnt == 0)
@@ -241,7 +241,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
             m_value.emplace<cIPv6> (s);
             m_type = Type::IP6;
         }
-        catch(const std::exception&)
+        catch(...)
         {
             // only throw if there are no other types to try
             if (typeCnt == 0)
@@ -251,23 +251,27 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
     if (m_syntax->type & Type::UUID)
     {
         typeCnt--;
-        if (isQuotedString ())
+
+        // random UUID?
+        if (m_strValueLen == 1 && *m_strValue == '*')
         {
-            std::string uuidAsString (m_strValue + 1, m_strValueLen - 2);
-            m_value = cUUID::fromString (uuidAsString);
-            m_type = Type::UUID;
-        }
-        else if (m_strValueLen == 1 && *m_strValue == '*')
-        {
-            m_value = cUUID::fromZero ();
+            m_value.emplace<cUUID>();
             m_isRandom = true;
         }
         else
         {
-            // only throw if there are no other types to try
-            if (typeCnt == 0)
-                throw FormatException (exParFormat, m_strValue, (int)m_strValueLen);
+            try
+            {
+                m_value.emplace<cUUID> (m_strValue, m_strValueLen);
+            }
+            catch (...)
+            {
+                // only throw if there are no other types to try
+                if (typeCnt == 0)
+                    throw FormatException (exParFormat, m_strValue, (int)m_strValueLen);
+            }
         }
+        m_type = Type::UUID;
     }
     if (m_syntax->type & Type::Nested)
     {
@@ -403,6 +407,7 @@ bool ProtocolParameter::checkForRandomStream (size_t rangeMin, size_t rangeMax)
 
 #ifdef WITH_UNITTESTS
 
+#include "console.hpp"
 
 static constexpr ParameterSyntax PAR_UNIT_I8   = {"i8",   "", Int8};
 static constexpr ParameterSyntax PAR_UNIT_I16  = {"i16",  "", Int16};
@@ -438,6 +443,8 @@ static ProtocolSyntax PR_UNIT = {
 
 void ProtocolParameter::unitTest ()
 {
+    Console::PrintDebug("-- " __FILE__ " --\n");
+
     static const std::vector<testcase_t<cMacAddress>> tests = 
     {
         {"mac", "12:34:56:78:9a:bc", false, false, "12:34:56:78:9a:bc", {"12:34:56:78:9a:bc", "12:34:56:78:9a:bc"}},
@@ -647,11 +654,18 @@ void ProtocolParameter::unitTest ()
 
     static const std::vector<testcase_t<cUUID>> uuidtests = 
     {
+#if (HAVE_BIG_ENDIAN)
+        {"uuid", "*", false, true, "00000000-0000-0000-0000-000000000000", {"00000000-0000-0400-8000-000000000001", "00000000-0000-0402-8000-000000000003"}},
+#else
+        {"uuid", "*", false, true, "00000000-0000-0000-0000-000000000000", {"00000000-0000-0400-8100-000000000000", "02000000-0000-0400-8300-000000000000"}},
+#endif
+        {"uuid", "00112233-4455-6677-8899-aabbccddeeff", false, false, "00112233-4455-6677-8899-aabbccddeeff", {}},
+
+        // uuid syntax errors are tested in cUUID::unitTest()
     };
-    
-    // TODO generic integer
+    runTestCase<cUUID> (uuidtests);
+
     // TODO stream
-    // TODO UUID
     // TODO nested
     // TODO multitiypes
 }
@@ -685,6 +699,8 @@ void ProtocolParameter::runTestCase(const std::vector<testcase_t<T>>& tests)
                     value.set(obj.asIPv4());
                 else if constexpr (std::is_same_v<T, cIPv6>)
                     value.set(obj.asIPv6());
+                else if constexpr (std::is_same_v<T, cUUID>)
+                    value = obj.asUUID();
                 else if constexpr (std::is_same_v<T, double>)
                     value = obj.get<T,T>();
                 else
