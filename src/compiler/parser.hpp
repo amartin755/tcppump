@@ -388,9 +388,19 @@ public:
         T expInternalValue;
         std::vector<T> expExternalValues;
     };
+
+    struct stream_testcase_t
+    {
+        const std::string name;
+        const std::string value;
+        bool willThrow;
+        bool isRandom;
+        std::vector<std::vector<uint8_t>> expExternalValues;
+    };
 private:
     template<typename T>
     static void runTestCase (const std::vector<testcase_t<T>>& testcases);
+    static void runStreamTestCase (const std::vector<stream_testcase_t>& testcases);
 #endif
 
 };

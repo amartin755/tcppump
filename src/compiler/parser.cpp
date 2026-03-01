@@ -309,8 +309,8 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
             auto ptr = std::unique_ptr<std::vector<uint8_t>>(cParseHelper::hexStringToBin (m_strValue, m_strValueLen));
             if (!ptr)
                 throw FormatException (exParFormat, m_strValue, (int)m_strValueLen);
-            m_value = std::move(ptr);
             len = ptr->size();
+            m_value = std::move(ptr);
 
             // TODO in case of random we must create an empty vector
         }
@@ -320,6 +320,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
             m_type = Type::Invalid;
             throw FormatException (exParRange, m_strValue, (int)m_strValueLen);
         }
+        m_type = Type::Bytestream;
     }
 
     // if m_type is not zero, we either forgot to implement a handler for a particular type
@@ -337,7 +338,7 @@ uint64_t ProtocolParameter::getAndCheckIntegerValue (uint64_t min, uint64_t max)
     {
         throw FormatException (exParFormat, m_strValue, (int)m_strValueLen);
     }
-    else if (errno == ERANGE || v < min || v > max)
+    else if (errno == ERANGE || v < min || v > max || *m_strValue == '-')
     {
         throw FormatException (exParRange, m_strValue, (int)m_strValueLen);
     }
@@ -369,30 +370,32 @@ bool ProtocolParameter::checkForRandomStream (size_t rangeMin, size_t rangeMax)
         if (m_strValueLen == 1)
         {
             // random value without range restrictions
-            m_randRanges.emplace<std::pair <uint64_t, uint64_t>> (32, 32);
+            if (32 >= rangeMin && 32 <= rangeMax)
+                m_randRanges.emplace<std::pair <uint64_t, uint64_t>> (32, 32);
+            else
+                m_randRanges.emplace<std::pair <uint64_t, uint64_t>> (rangeMin, rangeMax);
         }
-        else if (isdigit (m_strValue[1]))
+        else 
         {
-            // random value with range restriction. Short notation "*NNN" 
-            char* end;
-            errno = 0;
-            unsigned long r = std::strtoul (m_strValue+1, &end, 0);
-            if (end != (m_strValue + m_strValueLen))
-            {
-                throw FormatException (exParFormat, m_strValue+1, (int)m_strValueLen-1);
-            }
-            else if ((!((r >= 1) && (r <= 1024*1024))) || (errno == ERANGE))
-            {
-                throw FormatException (exParRange, m_strValue+1, (int)m_strValueLen-1);
-            }
-            m_randRanges.emplace<std::pair <uint64_t, uint64_t>> (r, r);
-        }
-        else
-        {
-            // random value with range e.g. *[12-42]
             uint64_t min, max;
-            if (!cParseHelper::range (m_strValue + 1, m_strValueLen - 1, 0, min, max))
-                throw FormatException (exParFormat, m_strValue+1, (int)m_strValueLen-1);
+            if (isdigit (m_strValue[1]))
+            {
+                // random value with range restriction. Short notation "*NNN" 
+                char* end;
+                errno = 0;
+                unsigned long r = std::strtoul (m_strValue+1, &end, 0);
+                if (end != (m_strValue + m_strValueLen))
+                {
+                    throw FormatException (exParFormat, m_strValue+1, (int)m_strValueLen-1);
+                }
+                min = max = r;
+            }
+            else
+            {
+                // random value with range e.g. *[12-42]
+                if (!cParseHelper::range (m_strValue + 1, m_strValueLen - 1, 0, min, max))
+                    throw FormatException (exParFormat, m_strValue+1, (int)m_strValueLen-1);
+            }
 
             // if there is a random range specified, it must not violate the values range
             if (min < rangeMin || max > rangeMax)
@@ -419,7 +422,7 @@ static constexpr ParameterSyntax PAR_UNIT_IP6  = {"ip6",  "", IP6};
 static constexpr ParameterSyntax PAR_UNIT_MAC  = {"mac",  "", Mac};
 static constexpr ParameterSyntax PAR_UNIT_FLT  = {"float", "", Float, "1.0", "3.14"};
 static constexpr ParameterSyntax PAR_UNIT_INT  = {"int",   "", Integer, "100", "200000"};
-static constexpr ParameterSyntax PAR_UNIT_STRR = {"str_range", "", Bytestream, "32", "100"};
+static constexpr ParameterSyntax PAR_UNIT_STRR = {"str_range", "", Bytestream, "16", "20"};
 static constexpr ParameterSyntax PAR_UNIT_UUID = {"uuid",  "", UUID};
 static ProtocolSyntax PR_UNIT = {
     "unit",
@@ -454,6 +457,8 @@ void ProtocolParameter::unitTest ()
         {"mac", "11:22:33:44:*[13-100]:66", true, false, cMacAddress(), {}},
         {"mac", "11:22:33:44:*[0-ff]:66", false, true, "11:22:33:44:00:66", {"11:22:33:44:00:66"}},
         {"mac", "*[0-f]:*[10-1f]:*[20-2f]:*[30-3f]:*[40-4f]:*[50-5f]", false, true, "0:0:0:0:0:0", {"00:11:22:33:44:55"}}
+
+        // syntax errors are tested in cMacAddress::unitTest()
     };
     runTestCase<cMacAddress> (tests);
 
@@ -505,6 +510,8 @@ void ProtocolParameter::unitTest ()
         {"ip4", "*.*.3.*[50-60]", false, true, "0.0.3.0", {"0.1.3.52", "3.4.3.55"}},
         {"ip4", "*.*.*.*", false, true, "0.0.0.0", {"0.1.2.3", "4.5.6.7"}},
         {"ip4", "*", false, true, "0.0.0.0", {"0.0.0.0", "0.0.0.1"}}
+
+        // syntax errors are tested in cIPv4::unitTest()
     };
     runTestCase<cIPv4> (ipv4tests);
 
@@ -514,6 +521,8 @@ void ProtocolParameter::unitTest ()
         {"ip6", "fe80::1ff:*:4577:890a", false, true, "fe80::1ff:0:4577:890a", {"fe80::1ff:0000:4577:890a", "fe80::1ff:0001:4577:890a"}},
         {"ip6", "*::1ff:fe23:4577:*[1000-2000]", false, true, "0::1ff:fe23:4577:0", {"0000::1ff:fe23:4577:1001", "0002::1ff:fe23:4577:1003"}},
         {"ip6", "*", false, true, "0:0:0:0:0:0:0:0", {"0000:0001:0002:0003:0004:0005:0006:0007"}}
+
+        // syntax errors are tested in cIPv6::unitTest()
     };
     runTestCase<cIPv6> (ipv6tests);
 
@@ -534,9 +543,18 @@ void ProtocolParameter::unitTest ()
         {"i8", "*[0x64-0x65]", false, true, 0, {100, 101, 100}},
         {"i8", "*[101-100]", true, true, 0, {}},
         {"i8", "*[255-256]", true, true, 0, {}},
-        {"i8", "*[256-257]", true, true, 0, {}}
+        {"i8", "*[256-257]", true, true, 0, {}},
 
-        // TODO syntax errors
+        {"i8", "0x", true, false, 0, {}},
+        {"i8", "0xx1", true, false, 0, {}},
+        {"i8", "x1", true, false, 0, {}},
+        {"i8", "z", true, false, 0, {}},
+        {"i8", "a", true, false, 0, {}},
+        {"i8", "-1", true, false, 0, {}},
+        {"i8", "1.1", true, false, 0, {}},
+        {"i8", ".1", true, false, 0, {}},
+        {"i8", "1.", true, false, 0, {}},
+        {"i8", "1 2", true, false, 0, {}}
     };
     runTestCase<uint8_t> (i8tests);
 
@@ -557,9 +575,18 @@ void ProtocolParameter::unitTest ()
         {"i16", "*[0x3e8-0x3e9]", false, true, 0, {1000, 1001, 1000}},
         {"i16", "*[1001-1000]", true, true, 0, {}},
         {"i16", "*[65535-65536]", true, true, 0, {}},
-        {"i16", "*[65536-65537]", true, true, 0, {}}
+        {"i16", "*[65536-65537]", true, true, 0, {}},
 
-        // TODO syntax errors
+        {"i16", "0x", true, false, 0, {}},
+        {"i16", "0xx1", true, false, 0, {}},
+        {"i16", "x1", true, false, 0, {}},
+        {"i16", "z", true, false, 0, {}},
+        {"i16", "a", true, false, 0, {}},
+        {"i16", "-1", true, false, 0, {}},
+        {"i16", "1.1", true, false, 0, {}},
+        {"i16", ".1", true, false, 0, {}},
+        {"i16", "1.", true, false, 0, {}},
+        {"i16", "1 2", true, false, 0, {}}
     };
     runTestCase<uint16_t> (i16tests);
 
@@ -580,9 +607,18 @@ void ProtocolParameter::unitTest ()
         {"i32", "*[0x186a0-0x186a1]", false, true, 0, {100000, 100001, 100000}},
         {"i32", "*[100001-100000]", true, true, 0, {}},
         {"i32", "*[4294967295-4294967296]", true, true, 0, {}},
-        {"i32", "*[4294967296-4294967297]", true, true, 0, {}}
+        {"i32", "*[4294967296-4294967297]", true, true, 0, {}},
 
-        // TODO syntax errors
+        {"i32", "0x", true, false, 0, {}},
+        {"i32", "0xx1", true, false, 0, {}},
+        {"i32", "x1", true, false, 0, {}},
+        {"i32", "z", true, false, 0, {}},
+        {"i32", "a", true, false, 0, {}},
+        {"i32", "-1", true, false, 0, {}},
+        {"i32", "1.1", true, false, 0, {}},
+        {"i32", ".1", true, false, 0, {}},
+        {"i32", "1.", true, false, 0, {}},
+        {"i32", "1 2", true, false, 0, {}}
     };
     runTestCase<uint32_t> (i32tests);
 
@@ -603,9 +639,18 @@ void ProtocolParameter::unitTest ()
         {"i64", "*[0x2540BE400-0x2540BE401]", false, true, 0, {10000000000, 10000000001, 10000000000}},
         {"i64", "*[10000000001-10000000000]", true, true, 0, {}},
         {"i64", "*[18446744073709551615-18446744073709551616]", true, true, 0, {}},
-        {"i64", "*[18446744073709551616-18446744073709551617]", true, true, 0, {}}
+        {"i64", "*[18446744073709551616-18446744073709551617]", true, true, 0, {}},
 
-        // TODO syntax errors
+        {"i64", "0x", true, false, 0, {}},
+        {"i64", "0xx1", true, false, 0, {}},
+        {"i64", "x1", true, false, 0, {}},
+        {"i64", "z", true, false, 0, {}},
+        {"i64", "a", true, false, 0, {}},
+        {"i64", "-1", true, false, 0, {}},
+        {"i64", "1.1", true, false, 0, {}},
+        {"i64", ".1", true, false, 0, {}},
+        {"i64", "1.", true, false, 0, {}},
+        {"i64", "1 2", true, false, 0, {}}
     };
     runTestCase<uint64_t> (i64tests);
 
@@ -616,7 +661,15 @@ void ProtocolParameter::unitTest ()
         {"float", "1.0", false, false, 1.0, {1.0}},
         {"float", "3.14", false, false, 3.14, {3.14}},
         {"float", "3.15", true, false, 0, {}},
-        {"float", "*", false, true, 1, {1}}
+        {"float", "*", false, true, 1, {1}},
+
+        {"float", ".2", true, false, 0, {0}},
+        {"float", "0x", true, false, 0, {}},
+        {"float", "0xx1", true, false, 0, {}},
+        {"float", "x1", true, false, 0, {}},
+        {"float", "z", true, false, 0, {}},
+        {"float", "a", true, false, 0, {}},
+        {"float", "-1", true, false, 0, {}},
     };
     runTestCase<double> (dbltests);
 
@@ -646,9 +699,18 @@ void ProtocolParameter::unitTest ()
         {"int", "*[0x3e8-0x3e9]", false, true, 100, {1000, 1001, 1000}},
         {"int", "*[199999-200000]", false, true, 100, {199999, 200000, 199999}},
         {"int", "*[200000-200001]", true, true, 0, {}},
-        {"int", "*[200001-200002]", true, true, 0, {}}
+        {"int", "*[200001-200002]", true, true, 0, {}},
 
-        // TODO syntax errors
+        {"int", "0x", true, false, 0, {}},
+        {"int", "0xx1", true, false, 0, {}},
+        {"int", "x1", true, false, 0, {}},
+        {"int", "z", true, false, 0, {}},
+        {"int", "a", true, false, 0, {}},
+        {"int", "-1", true, false, 0, {}},
+        {"int", "1.1", true, false, 0, {}},
+        {"int", ".1", true, false, 0, {}},
+        {"int", "1.", true, false, 0, {}},
+        {"int", "1 2", true, false, 0, {}}
     };
     runTestCase<uint32_t> (inttests);
 
@@ -665,7 +727,38 @@ void ProtocolParameter::unitTest ()
     };
     runTestCase<cUUID> (uuidtests);
 
-    // TODO stream
+    static const std::vector<stream_testcase_t> streamtests = 
+    {
+        {"str", "000102", false, false, {{0, 1, 2}, {0, 1, 2}}},
+        {"str", "\"Hello World!\"", false, false, {{'H','e','l','l','o',' ','W','o','r','l','d','!'}, {'H','e','l','l','o',' ','W','o','r','l','d','!'}}},
+        {"str", "*", false, true, {{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31}, {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31}}},
+        {"str", "*[32-32]", false, true, {{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31}, {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31}}},
+        {"str", "*[2-4]", false, true, {{0,1}, {0,1,2}, {0,1,2,3}, {0,1}}},
+        {"str", "*[0-2]", false, true, {{}, {0}, {0,1}, {}}},
+        {"str", "*[0-1048576]", false, true, {{}, {0}}},
+        {"str", "*16", false, true, {{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15},{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}}},
+        {"str", "*0x10", false, true, {{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15},{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}}},
+        {"str", "*0", false, true, {{}}},
+        {"str", "*1048577", true, false, {}},
+        {"str", "*[10-1048577]", true, false, {}},
+
+        {"str_range", "000102", true, false, {}},
+        {"str_range", "\"Hello World!\"", true, false, {}},
+        {"str_range", "000000000000000000000000000000000000000000", true, false, {}},
+        {"str_range", "\"aaaaaaaaaaaaaaaaaaaaa\"", true, false, {}},
+        {"str_range", "0000000000000000000000000000000000000000", false, false, {{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}}},
+        {"str_range", "\"aaaaaaaaaaaaaaaaaaaa\"", false, false, {{'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a'}}},
+        {"str_range", "*", false, true, {{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}}},
+        {"str_range", "*16", false, true, {{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}}},
+        {"str_range", "*20", false, true, {{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19}}},
+        {"str_range", "*15", true, false, {}},
+        {"str_range", "*21", true, false, {}},
+        {"str_range", "*[15-20]", true, false, {}},
+        {"str_range", "*[16-21]", true, false, {}},
+        {"str_range", "*[16-20]", false, true, {{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15},{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16}}},
+    };
+    runStreamTestCase (streamtests);
+
     // TODO nested
     // TODO multitiypes
 }
@@ -719,42 +812,36 @@ void ProtocolParameter::runTestCase(const std::vector<testcase_t<T>>& tests)
     }
 }
 
+void ProtocolParameter::runStreamTestCase (const std::vector<stream_testcase_t>& testcases)
+{
+    bool catched;
+    size_t n = 0;
+    for (const auto& t : testcases)
+    {
+        try
+        {
+            cRandom::setCounterMode (0);
+            catched = false;
+            ProtocolParameter obj (t.name.c_str(), t.name.size(), t.value.c_str(), t.value.size(), PR_UNIT.mandatory, PR_UNIT.optional);
+            if (t.willThrow)
+                BUG ("expected to throw");
+            BUG_ON (t.isRandom != obj.m_isRandom);
+
+            for (const auto& expValue : t.expExternalValues)
+            {
+                std::pair<const uint8_t*, size_t> value = obj.asStream();
+                BUG_ON (value.second != expValue.size());
+                BUG_ON (std::memcmp (value.first, expValue.data(), value.second));
+            }
+        }
+        catch(...)
+        {
+            catched = true;
+        }
+        BUG_ON (t.willThrow != catched);
+        
+        n++;
+    }
+}
+
 #endif
-
-/*
-
-Random values:
-Integer:
-"*"
-"*[min-max]"
-min, max: range of the integer type
---> 2-16 bytes
-
-MAC:
-"*"
-"*:*:*:*:*:*"
-"*[min-max]:*[min-max]:*[min-max]:*[min-max]:*[min-max]:*[min-max]"
-min, max: 0-ff
---> 12 bytes
-
-IPv4
-"*"
-"*.*.*.*"
-"*[min-max].*[min-max].*[min-max].*[min-max]"
-min, max: 0-255
---> 8 bytes
-
-IPv6
-"*"
-"*:*:*:*:*:*:*:*"
-"*[min-max]:*[min-max]:*[min-max]:*[min-max]:*[min-max]:*[min-max]:*[min-max]:*[min-max]"
-min, max: 0-ffff
---> 32 bytes
-
-Stream:
-"*"
-"*len" == shortcut for "*[minlen-maxlen]"
-min, max: 0-1MiB
---> 8 bytes
-
-*/
