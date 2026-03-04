@@ -86,6 +86,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
             if (!checkForRandom<uint64_t>(min, max))
                 m_value = getAndCheckIntegerValue (min, max);
             m_type = Type::Integer;
+            goto out;
         }
         catch (...)
         {
@@ -101,6 +102,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
             if (!checkForRandom<uint64_t>(0, 1))
                 m_value = getAndCheckIntegerValue (0, 1);
             m_type = Type::Bit;
+            goto out;
         }
         catch (...)
         {
@@ -118,6 +120,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
             if (!checkForRandom<uint64_t>(min, max))
                 m_value = getAndCheckIntegerValue (min, max);
             m_type = Type::Int8;
+            goto out;
         }
         catch (...)
         {
@@ -135,6 +138,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
             if (!checkForRandom<uint64_t>(min, max))
                 m_value = getAndCheckIntegerValue (min, max);
             m_type = Type::Int16;
+            goto out;
         }
         catch (...)
         {
@@ -152,6 +156,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
             if (!checkForRandom<uint64_t>(min, max))
                 m_value = getAndCheckIntegerValue (min, max);
             m_type = Type::Int32;
+            goto out;
         }
         catch (...)
         {
@@ -169,6 +174,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
             if (!checkForRandom<uint64_t>(min, max))
                 m_value = getAndCheckIntegerValue (min, max);
             m_type = Type::Int64;
+            goto out;
         }
         catch (...)
         {
@@ -193,6 +199,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
             if (!checkForRandom<double>(min, max))
                 m_value = getAndCheckDoubleValue (min, max);
             m_type = Type::Float;
+            goto out;
         }
         catch (...)
         {
@@ -208,6 +215,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
             std::string s = checkForRandom<cMacAddress> ();
             m_value.emplace<cMacAddress> (s);
             m_type = Type::Mac;
+            goto out;
         }
         catch(...)
         {
@@ -224,6 +232,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
             std::string s = checkForRandom<cIPv4> ();
             m_value.emplace<cIPv4> (s);
             m_type = Type::IP4;
+            goto out;
         }
         catch(...)
         {
@@ -240,6 +249,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
             std::string s = checkForRandom<cIPv6> ();
             m_value.emplace<cIPv6> (s);
             m_type = Type::IP6;
+            goto out;
         }
         catch(...)
         {
@@ -272,6 +282,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
             }
         }
         m_type = Type::UUID;
+        goto out;
     }
     if (m_syntax->type & Type::Nested)
     {
@@ -281,6 +292,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
 
         m_value = std::make_unique<const Protocol> ();         //TODO
         m_type = Type::Nested;
+        goto out;
     }
     if (m_syntax->type & Type::Bytestream)
     {
@@ -311,8 +323,6 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
                 throw FormatException (exParFormat, m_strValue, (int)m_strValueLen);
             len = ptr->size();
             m_value = std::move(ptr);
-
-            // TODO in case of random we must create an empty vector
         }
 
         if (len < min || len > max)
@@ -322,7 +332,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
         }
         m_type = Type::Bytestream;
     }
-
+out:
     // if m_type is not zero, we either forgot to implement a handler for a particular type
     // or a invalid type was used in the syntax definition
     BUG_ON (m_type == Type::Invalid);
@@ -375,12 +385,12 @@ bool ProtocolParameter::checkForRandomStream (size_t rangeMin, size_t rangeMax)
             else
                 m_randRanges.emplace<std::pair <uint64_t, uint64_t>> (rangeMin, rangeMax);
         }
-        else 
+        else
         {
             uint64_t min, max;
             if (isdigit (m_strValue[1]))
             {
-                // random value with range restriction. Short notation "*NNN" 
+                // random value with range restriction. Short notation "*NNN"
                 char* end;
                 errno = 0;
                 unsigned long r = std::strtoul (m_strValue+1, &end, 0);
@@ -424,6 +434,7 @@ static constexpr ParameterSyntax PAR_UNIT_FLT  = {"float", "", Float, "1.0", "3.
 static constexpr ParameterSyntax PAR_UNIT_INT  = {"int",   "", Integer, "100", "200000"};
 static constexpr ParameterSyntax PAR_UNIT_STRR = {"str_range", "", Bytestream, "16", "20"};
 static constexpr ParameterSyntax PAR_UNIT_UUID = {"uuid",  "", UUID};
+static constexpr ParameterSyntax PAR_UNIT_MULT = {"multi", "", Bytestream | IP4 | IP6 | Mac, "0", "255"};
 static ProtocolSyntax PR_UNIT = {
     "unit",
     "",
@@ -440,7 +451,8 @@ static ProtocolSyntax PR_UNIT = {
         &PAR_UNIT_FLT,
         &PAR_UNIT_INT,
         &PAR_UNIT_STRR,
-        &PAR_UNIT_UUID
+        &PAR_UNIT_UUID,
+        &PAR_UNIT_MULT
     }
 };
 
@@ -448,7 +460,7 @@ void ProtocolParameter::unitTest ()
 {
     Console::PrintDebug("-- " __FILE__ " --\n");
 
-    static const std::vector<testcase_t<cMacAddress>> tests = 
+    static const std::vector<testcase_t<cMacAddress>> tests =
     {
         {"mac", "12:34:56:78:9a:bc", false, false, "12:34:56:78:9a:bc", {"12:34:56:78:9a:bc", "12:34:56:78:9a:bc"}},
         {"mac", "*", false, true, "0:0:0:0:0:0", {"00:01:02:03:04:05", "06:07:08:09:0a:0b"}},
@@ -462,7 +474,7 @@ void ProtocolParameter::unitTest ()
     };
     runTestCase<cMacAddress> (tests);
 
-    static const std::vector<testcase_t<cIPv4>> ipv4tests = 
+    static const std::vector<testcase_t<cIPv4>> ipv4tests =
     {
         {"ip4", ".", true, false, cIPv4(), {}},
         {"ip4", "..", true, false, cIPv4(), {}},
@@ -515,7 +527,7 @@ void ProtocolParameter::unitTest ()
     };
     runTestCase<cIPv4> (ipv4tests);
 
-    static const std::vector<testcase_t<cIPv6>> ipv6tests = 
+    static const std::vector<testcase_t<cIPv6>> ipv6tests =
     {
         {"ip6", "fe80::1ff:fe23:4577:890a", false, false, "fe80::1ff:fe23:4577:890a", {"fe80::1ff:fe23:4577:890a", "fe80::1ff:fe23:4577:890a"}},
         {"ip6", "fe80::1ff:*:4577:890a", false, true, "fe80::1ff:0:4577:890a", {"fe80::1ff:0000:4577:890a", "fe80::1ff:0001:4577:890a"}},
@@ -526,7 +538,7 @@ void ProtocolParameter::unitTest ()
     };
     runTestCase<cIPv6> (ipv6tests);
 
-    static const std::vector<testcase_t<uint8_t>> i8tests = 
+    static const std::vector<testcase_t<uint8_t>> i8tests =
     {
         {"i8", "0", false, false, 0, {0}},
         {"i8", "255", false, false, 255, {255, 255}},
@@ -558,7 +570,7 @@ void ProtocolParameter::unitTest ()
     };
     runTestCase<uint8_t> (i8tests);
 
-    static const std::vector<testcase_t<uint16_t>> i16tests = 
+    static const std::vector<testcase_t<uint16_t>> i16tests =
     {
         {"i16", "0", false, false, 0, {0}},
         {"i16", "65535", false, false, std::numeric_limits<uint16_t>::max(), {std::numeric_limits<uint16_t>::max(), std::numeric_limits<uint16_t>::max()}},
@@ -590,7 +602,7 @@ void ProtocolParameter::unitTest ()
     };
     runTestCase<uint16_t> (i16tests);
 
-    static const std::vector<testcase_t<uint32_t>> i32tests = 
+    static const std::vector<testcase_t<uint32_t>> i32tests =
     {
         {"i32", "0", false, false, 0, {0}},
         {"i32", "4294967295", false, false, std::numeric_limits<uint32_t>::max(), {std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max()}},
@@ -622,7 +634,7 @@ void ProtocolParameter::unitTest ()
     };
     runTestCase<uint32_t> (i32tests);
 
-    static const std::vector<testcase_t<uint64_t>> i64tests = 
+    static const std::vector<testcase_t<uint64_t>> i64tests =
     {
         {"i64", "0", false, false, 0, {0}},
         {"i64", "18446744073709551615", false, false, std::numeric_limits<uint64_t>::max(), {std::numeric_limits<uint64_t>::max(), std::numeric_limits<uint64_t>::max()}},
@@ -654,7 +666,7 @@ void ProtocolParameter::unitTest ()
     };
     runTestCase<uint64_t> (i64tests);
 
-    static const std::vector<testcase_t<double>> dbltests = 
+    static const std::vector<testcase_t<double>> dbltests =
     {
         {"float", "0.0", true, false, 0, {0}},
         {"float", "1", false, false, 1.0, {1.0}},
@@ -673,7 +685,7 @@ void ProtocolParameter::unitTest ()
     };
     runTestCase<double> (dbltests);
 
-    static const std::vector<testcase_t<uint32_t>> inttests = 
+    static const std::vector<testcase_t<uint32_t>> inttests =
     {
         {"int", "0", true, false, 0, {}},
         {"int", "0x0", true, false, 0, {}},
@@ -714,7 +726,7 @@ void ProtocolParameter::unitTest ()
     };
     runTestCase<uint32_t> (inttests);
 
-    static const std::vector<testcase_t<cUUID>> uuidtests = 
+    static const std::vector<testcase_t<cUUID>> uuidtests =
     {
 #if (HAVE_BIG_ENDIAN)
         {"uuid", "*", false, true, "00000000-0000-0000-0000-000000000000", {"00000000-0000-0400-8000-000000000001", "00000000-0000-0402-8000-000000000003"}},
@@ -727,7 +739,7 @@ void ProtocolParameter::unitTest ()
     };
     runTestCase<cUUID> (uuidtests);
 
-    static const std::vector<stream_testcase_t> streamtests = 
+    static const std::vector<stream_testcase_t> streamtests =
     {
         {"str", "000102", false, false, {{0, 1, 2}, {0, 1, 2}}},
         {"str", "\"Hello World!\"", false, false, {{'H','e','l','l','o',' ','W','o','r','l','d','!'}, {'H','e','l','l','o',' ','W','o','r','l','d','!'}}},
@@ -759,8 +771,237 @@ void ProtocolParameter::unitTest ()
     };
     runStreamTestCase (streamtests);
 
+    {
+        char name[] = "multi";
+        char value[] = "1.2.3.4";
+        try
+        {
+            ProtocolParameter obj (name, sizeof(name)-1, value, sizeof(value)-1, PR_UNIT.mandatory, PR_UNIT.optional);
+            try
+            {
+                auto value = obj.asInt8();
+                BUG ("expected to throw");
+                (void)value;
+            }
+            catch (...)
+            {
+                try
+                {
+                    auto value = obj.asStream();
+                    BUG ("expected to throw");
+                    (void)value;
+                }
+                catch (...)
+                {
+                    try
+                    {
+                        auto value = obj.asMac();
+                        BUG ("expected to throw");
+                        (void)value;
+                    }
+                    catch (...)
+                    {
+                        try
+                        {
+                            auto value = obj.asIPv6();
+                            BUG ("expected to throw");
+                            (void)value;
+                    }
+                        catch (...)
+                        {
+                            try
+                            {
+                                auto value = obj.asIPv4();
+                                BUG_ON (cIPv4("1.2.3.4") != value);
+                            }
+                            catch (...)
+                            {
+                                BUG ("expected not to throw");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (...)
+        {
+            BUG ("expected not to throw");
+        }
+    }
+    {
+        char name[] = "multi";
+        char value[] = "1::4";
+        try
+        {
+            ProtocolParameter obj (name, sizeof(name)-1, value, sizeof(value)-1, PR_UNIT.mandatory, PR_UNIT.optional);
+            try
+            {
+                auto value = obj.asInt8();
+                BUG ("expected to throw");
+                (void)value;
+            }
+            catch (...)
+            {
+                try
+                {
+                    auto value = obj.asStream();
+                    BUG ("expected to throw");
+                    (void)value;
+                }
+                catch (...)
+                {
+                    try
+                    {
+                        auto value = obj.asMac();
+                        BUG ("expected to throw");
+                        (void)value;
+                    }
+                    catch (...)
+                    {
+                        try
+                        {
+                            auto value = obj.asIPv4();
+                            BUG ("expected to throw");
+                            (void)value;
+                        }
+                        catch (...)
+                        {
+                            try
+                            {
+                                auto value = obj.asIPv6();
+                                BUG_ON (cIPv6("1::4") != value);
+                            }
+                            catch (...)
+                            {
+                                BUG ("expected not to throw");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (...)
+        {
+            BUG ("expected not to throw");
+        }
+    }
+    {
+        char name[] = "multi";
+        char value[] = "12:34:56:78:90:AB";
+        try
+        {
+            ProtocolParameter obj (name, sizeof(name)-1, value, sizeof(value)-1, PR_UNIT.mandatory, PR_UNIT.optional);
+            try
+            {
+                auto value = obj.asInt8();
+                BUG ("expected to throw");
+                (void)value;
+            }
+            catch (...)
+            {
+                try
+                {
+                    auto value = obj.asStream();
+                    BUG ("expected to throw");
+                    (void)value;
+                }
+                catch (...)
+                {
+                    try
+                    {
+                        auto value = obj.asIPv4();
+                        BUG ("expected to throw");
+                        (void)value;
+                    }
+                    catch (...)
+                    {
+                        try
+                        {
+                            auto value = obj.asIPv6();
+                            BUG ("expected to throw");
+                            (void)value;
+                        }
+                        catch (...)
+                        {
+                            try
+                            {
+                                auto value = obj.asMac();
+                                BUG_ON (cMacAddress("12:34:56:78:90:AB") != value);
+                            }
+                            catch (...)
+                            {
+                                BUG ("expected not to throw");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (...)
+        {
+            BUG ("expected not to throw");
+        }
+    }
+    {
+        char name[] = "multi";
+        char value[] = "1234";
+        try
+        {
+            ProtocolParameter obj (name, sizeof(name)-1, value, sizeof(value)-1, PR_UNIT.mandatory, PR_UNIT.optional);
+            try
+            {
+                auto value = obj.asInt8();
+                BUG ("expected to throw");
+                (void)value;
+            }
+            catch (...)
+            {
+                try
+                {
+                    auto value = obj.asMac();
+                    BUG ("expected to throw");
+                    (void)value;
+                }
+                catch (...)
+                {
+                    try
+                    {
+                        auto value = obj.asIPv4();
+                        BUG ("expected to throw");
+                        (void)value;
+                    }
+                    catch (...)
+                    {
+                        try
+                        {
+                            auto value = obj.asIPv6();
+                            BUG ("expected to throw");
+                            (void)value;
+                        }
+                        catch (...)
+                        {
+                            try
+                            {
+                                auto v = obj.asStream();
+                                BUG_ON (v.second != (sizeof(value)-1)/2);
+                                uint8_t data[] = {0x12,0x34};
+                                BUG_ON (std::memcmp (v.first, data, v.second));
+                            }
+                            catch (...)
+                            {
+                                BUG ("expected not to throw");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (...)
+        {
+            BUG ("expected not to throw");
+        }
+    }
     // TODO nested
-    // TODO multitiypes
 }
 
 template<typename T>
@@ -807,7 +1048,7 @@ void ProtocolParameter::runTestCase(const std::vector<testcase_t<T>>& tests)
             catched = true;
         }
         BUG_ON (t.willThrow != catched);
-        
+
         n++;
     }
 }
@@ -839,7 +1080,7 @@ void ProtocolParameter::runStreamTestCase (const std::vector<stream_testcase_t>&
             catched = true;
         }
         BUG_ON (t.willThrow != catched);
-        
+
         n++;
     }
 }
