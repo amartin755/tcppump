@@ -29,6 +29,7 @@
 #include "ipaddress.hpp"
 #include "macaddress.hpp"
 #include "linkable.hpp"
+#include "parseexception.hpp"
 
 class cParameterList;
 class cParameter;
@@ -107,53 +108,6 @@ private:
     const char* m_currentInstruction;
     bool        m_ipOptionalDestMAC;
     unsigned    m_recursionDepth;
-};
-
-class ParseException
-{
-public:
-    ParseException (const char* inst, const char* errMsg, const char* errBegin, int errLen = 0)
-    : m_errMsg (errMsg), m_errorBegin (errBegin), m_inst (inst), m_details (), m_errorLen (errLen)
-    {
-    }
-    ParseException (const char* inst, const char* errMsg, const char* details, const char* errBegin, int errLen)
-    : m_errMsg (errMsg), m_errorBegin (errBegin), m_inst (inst), m_details (!details ? "" : details), m_errorLen (errLen)
-    {
-    }
-
-    const char* errorMsg () const
-    {
-        return m_errMsg.c_str();
-    }
-
-    const char* instruction () const
-    {
-        return m_inst;
-    }
-
-    const char* errorBegin () const
-    {
-        return m_errorBegin;
-    }
-
-    int errorLen () const
-    {
-        return m_errorLen;
-    }
-
-    const char* details () const
-    {
-        return m_details.empty() ? nullptr : m_details.c_str();
-    }
-
-
-
-private:
-    const std::string m_errMsg;
-    const char* m_errorBegin;
-    const char* m_inst;
-    const std::string m_details;
-    int m_errorLen;
 };
 
 

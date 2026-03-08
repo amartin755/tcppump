@@ -41,8 +41,8 @@ cParameter::cParameter (const cParameter& obj)
 {
     parameter = obj.parameter;
     parLen    = obj.parLen;
-    value     = obj.value;
-    valLen    = obj.valLen;
+    m_value     = obj.m_value;
+    m_valLen    = obj.m_valLen;
     index     = obj.index;
     if (obj.dataLen)
     {
@@ -68,8 +68,8 @@ void cParameter::clear ()
 {
     parameter = NULL;
     parLen    = 0;
-    value     = NULL;
-    valLen    = 0;
+    m_value     = NULL;
+    m_valLen    = 0;
     index     = -1;
     data      = nullptr;
     dataLen   = 0;
@@ -78,44 +78,44 @@ void cParameter::clear ()
 
 int cParameter::isRandom (bool allowRange) const
 {
-    if (!valLen || *value != '*')
+    if (!m_valLen || *m_value != '*')
         return -1;
 
-    if (valLen == 1)
+    if (m_valLen == 1)
         return 0;
 
     if (allowRange)
     {
         char* end;
         errno = 0;
-        unsigned long r = strtoul (value+1, &end, 0);
-        if (end != (value + valLen))
+        unsigned long r = strtoul (m_value+1, &end, 0);
+        if (end != (m_value + m_valLen))
         {
-            throw FormatException (exParFormat, value+1, (int)valLen-1);
+            throw FormatException (exParFormat, m_value+1, (int)m_valLen-1);
         }
         else if ((!((r >= 1) && (r <= 65535))) || (errno == ERANGE))
         {
-            throw FormatException (exParRange, value+1, (int)valLen-1);
+            throw FormatException (exParRange, m_value+1, (int)m_valLen-1);
         }
         return (int)r;
     }
     else
     {
-        throw FormatException (exParFormat, value+1, (int)valLen-1);
+        throw FormatException (exParFormat, m_value+1, (int)m_valLen-1);
     }
 }
 
 
 int cParameter::isRandomInteger (uint64_t& min, uint64_t& max) const
 {
-    if (!valLen || *value != '*')
+    if (!m_valLen || *m_value != '*')
         return -1;
 
-    if (valLen == 1)
+    if (m_valLen == 1)
         return 0;
 
-    if (!cParseHelper::range (value + 1, valLen - 1, 0, min, max))
-        throw FormatException (exParFormat, value+1, (int)valLen-1);
+    if (!cParseHelper::range (m_value + 1, m_valLen - 1, 0, min, max))
+        throw FormatException (exParFormat, m_value+1, (int)m_valLen-1);
 
     return 1;
 }
@@ -135,7 +135,7 @@ uint32_t cParameter::asInt32 (uint32_t rangeBegin, uint32_t rangeEnd) const
         {
             // if there is a random range specified, it must not violate the values range
             if (min < rangeBegin || max > rangeEnd)
-                throw FormatException (exParRange, value, (int)valLen);
+                throw FormatException (exParRange, m_value, (int)m_valLen);
             rangeBegin = (uint32_t)min;
             rangeEnd   = (uint32_t)max;
         }
@@ -145,14 +145,14 @@ uint32_t cParameter::asInt32 (uint32_t rangeBegin, uint32_t rangeEnd) const
     {
         char* end;
         errno = 0;
-        v = strtoul (value, &end, 0);
-        if (end != (value + valLen))
+        v = strtoul (m_value, &end, 0);
+        if (end != (m_value + m_valLen))
         {
-            throw FormatException (exParFormat, value, (int)valLen);
+            throw FormatException (exParFormat, m_value, (int)m_valLen);
         }
         else if ((!((v >= rangeBegin) && (v <= rangeEnd))) || (errno == ERANGE))
         {
-            throw FormatException (exParRange, value, (int)valLen);
+            throw FormatException (exParRange, m_value, (int)m_valLen);
         }
     }
 
@@ -174,7 +174,7 @@ uint64_t cParameter::asInt64 (uint64_t rangeBegin, uint64_t rangeEnd) const
         {
             // if there is a random range specified, it must not violate the values range
             if (min < rangeBegin || max > rangeEnd)
-                throw FormatException (exParRange, value, (int)valLen);
+                throw FormatException (exParRange, m_value, (int)m_valLen);
             rangeBegin = min;
             rangeEnd   = max;
         }
@@ -184,14 +184,14 @@ uint64_t cParameter::asInt64 (uint64_t rangeBegin, uint64_t rangeEnd) const
     {
         char* end;
         errno = 0;
-        v = strtoull (value, &end, 0);
-        if (end != (value + valLen))
+        v = strtoull (m_value, &end, 0);
+        if (end != (m_value + m_valLen))
         {
-            throw FormatException (exParFormat, value, (int)valLen);
+            throw FormatException (exParFormat, m_value, (int)m_valLen);
         }
         else if ((!((v >= rangeBegin) && (v <= rangeEnd))) || (errno == ERANGE))
         {
-            throw FormatException (exParRange, value, (int)valLen);
+            throw FormatException (exParRange, m_value, (int)m_valLen);
         }
     }
 
@@ -220,24 +220,24 @@ double cParameter::asDouble (double rangeBegin, double rangeEnd) const
 
     try
     {
-        v = std::stod (value, &end);
+        v = std::stod (m_value, &end);
     }
     catch (const std::out_of_range&)
     {
-        throw FormatException (exParRange, value, (int)valLen);
+        throw FormatException (exParRange, m_value, (int)m_valLen);
     }
     catch (...)
     {
-        throw FormatException (exParFormat, value, (int)valLen);
+        throw FormatException (exParFormat, m_value, (int)m_valLen);
     }
 
-    if (end != valLen)
+    if (end != m_valLen)
     {
-        throw FormatException (exParFormat, value, (int)valLen);
+        throw FormatException (exParFormat, m_value, (int)m_valLen);
     }
     else if ((v < rangeBegin) || (v > rangeEnd))
     {
-        throw FormatException (exParRange, value, (int)valLen);
+        throw FormatException (exParRange, m_value, (int)m_valLen);
     }
 
     return v;
@@ -248,12 +248,12 @@ cMacAddress cParameter::asMac () const
 {
     try
     {
-        cMacAddress mac(value, valLen);
+        cMacAddress mac(m_value, m_valLen);
         return mac;
     }
     catch(const std::exception&)
     {
-        throw FormatException (exParFormat, value, (int)valLen);
+        throw FormatException (exParFormat, m_value, (int)m_valLen);
     }
 }
 
@@ -287,26 +287,26 @@ const uint8_t* cParameter::asStream (bool allowEmbPacket, bool &isEmbedded, size
 
             cRandom::rand (data, dataLen);
         }
-        else if ( (allowEmbPacket && (*value == '"' || *value == '<')) ||
-                 (!allowEmbPacket && *value == '"'))
+        else if ( (allowEmbPacket && (*m_value == '"' || *m_value == '<')) ||
+                 (!allowEmbPacket && *m_value == '"'))
         {
-            isEmbedded = *value == '<';
-            len = valLen - 2; // don't count " or <> at begin and end of string/embedded packet
+            isEmbedded = *m_value == '<';
+            len = m_valLen - 2; // don't count " or <> at begin and end of string/embedded packet
             if (len > maxLen)
-                throw FormatException (exParFormat, value, (int)valLen);
+                throw FormatException (exParFormat, m_value, (int)m_valLen);
 
-            return (uint8_t*)value + 1;
+            return (uint8_t*)m_value + 1;
         }
         else
         {
-            data = cParseHelper::hexStringToBin(value, valLen, dataLen);
+            data = cParseHelper::hexStringToBin(m_value, m_valLen, dataLen);
             if (!data)
-                throw FormatException (exParFormat, value, (int)valLen);
+                throw FormatException (exParFormat, m_value, (int)m_valLen);
         }
     }
 
     if (dataLen > maxLen)
-        throw FormatException (exParFormat, value, (int)valLen);
+        throw FormatException (exParFormat, m_value, (int)m_valLen);
 
     len = dataLen;
 
@@ -317,13 +317,13 @@ const uint8_t* cParameter::asStream (bool allowEmbPacket, bool &isEmbedded, size
 cIPv4 cParameter::asIPv4 () const
 {
     cIPv4 ip;
-    if (ip.set(value, valLen))
+    if (ip.set(m_value, m_valLen))
     {
         return ip;
     }
     else
     {
-        throw FormatException (exParFormat, value, (int)valLen);
+        throw FormatException (exParFormat, m_value, (int)m_valLen);
     }
 }
 
@@ -338,13 +338,13 @@ cIPv6 cParameter::asIPv6 () const
     }
     else
     {
-        if (ip.set(value, valLen))
+        if (ip.set(m_value, m_valLen))
         {
             return ip;
         }
         else
         {
-            throw FormatException (exParFormat, value, (int)valLen);
+            throw FormatException (exParFormat, m_value, (int)m_valLen);
         }
     }
 }
@@ -352,7 +352,7 @@ cIPv6 cParameter::asIPv6 () const
 
 void cParameter::throwValueException (void) const
 {
-    throw FormatException (exParFormat, value, (int)valLen);
+    throw FormatException (exParFormat, m_value, (int)m_valLen);
 }
 
 
@@ -577,13 +577,13 @@ const char* cParameterList::parseParameters (const char* parameters, bool ignore
             }
             else
                 p = cParseHelper::nextValueEnd (p);
-            v.value  = token;
-            v.valLen = p - token;
+            v.m_value  = token;
+            v.m_valLen = p - token;
         }
         else    // --> parameter without value
         {
-            v.value  = BOOLVALUE;
-            v.valLen = sizeof (BOOLVALUE) - 1;
+            v.m_value  = BOOLVALUE;
+            v.m_valLen = sizeof (BOOLVALUE) - 1;
         }
         // store parameter and its value
         v.index = (int)list.size ();

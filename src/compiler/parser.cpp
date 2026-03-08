@@ -17,27 +17,73 @@
  */
 
 
- // TEST-CODE!!!
-
 #include <bitset>
 #include <cstdlib>
 #include <limits>
 
-#include "bug.hpp"
 #include "parser.hpp"
-#include "parsehelper.hpp"
 
-/*
-class Protocol
+#include "bug.hpp"
+#include "parsehelper.hpp"
+#include "parseexception.hpp"
+#include "parameterlist.hpp"
+
+
+Protocol::Protocol (const char* instruction, bool acceptTrailingGarbage)
 {
-    struct ProtocolSyntax *m_syntax;
-    std::vector<ProtocolParameter> m_parameters;
-};
-*/
+    const char* p = instruction;
+    const char* pProtId = nullptr;
+    const char* pProtIdEnd = nullptr;
+    const ProtocolSyntax* protSyntax = nullptr;
+
+    // find beginning of protocol identifier
+    p = pProtId = cParseHelper::nextKeyStart (p);
+    // find end of protocol identifier
+    if (pProtId)
+        p = pProtIdEnd = cParseHelper::nextKeyEnd (p);
+    if (!pProtId || !pProtIdEnd)
+        throw ParseException (instruction, "Missing protocol specifier", p);
+
+    // find begin of parameter list --> '('
+    p = cParseHelper::nextCharIgnoreWhitspaces (p, '(');
+    if (!p)
+        throw ParseException (instruction, "Expected '(' after protocol specifier", pProtIdEnd);
+    size_t protoLen = pProtIdEnd - pProtId;
+
+    // find matching protocol syntax definition
+    for (const auto &proto : all_protos)
+    {
+        if (std::strlen (proto->syntax) == protoLen && std::strncmp (pProtId, proto->syntax, protoLen) == 0)
+        {
+            protSyntax = proto;
+            break;
+        }
+    }
+    if (!protSyntax)
+        throw ParseException (instruction, "Unknown protocol type", pProtId, protoLen);
+
+    // parse protocol parameter list
+    cParameterList params (p, acceptTrailingGarbage);
+    if (!params.isValid ())
+    {
+        throw ParseException (instruction, "Syntax error", params.getParseError ());
+    }
+
+    // create ProtocolParameter objects
+    m_parameters.reserve (params.size());
+    for (const auto &par : params)
+    {
+        const auto& [name, nameLen] = par.name();
+        const auto& [value, valueLen] = par.value();
+
+        m_parameters.emplace_back (name, nameLen, value, valueLen, protSyntax->mandatory, protSyntax->optional);
+    }
+}
+
 
 ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const char* value, size_t valueLen,
     const std::vector<const ParameterSyntax*> mandatory, const std::vector<const ParameterSyntax*> optional)
-    : m_name (name), m_nameLen (nameLen), m_strValue (value), m_strValueLen (valueLen), m_syntax (nullptr), m_isRandom (false), m_type (Type::Invalid)
+    : m_strValue (value), m_strValueLen (valueLen), m_syntax (nullptr), m_isRandom (false), m_type (Type::Invalid)
 {
     // we rely on the lexer to not call us with empty parameter name or value
     BUG_ON (!nameLen || !valueLen || !name || !value);
@@ -279,7 +325,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
         if (*m_strValue != '<')
             throw FormatException (exParFormat, m_strValue, (int)m_strValueLen);
 
-        m_value = std::make_unique<const Protocol> ();         //TODO
+        m_value = std::make_unique<const Protocol> (m_strValue, true);         //TODO
         m_type = Type::Nested;
     }
     if (m_type == Type::Invalid && m_syntax->type & Type::Bytestream)

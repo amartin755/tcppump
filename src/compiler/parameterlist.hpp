@@ -57,13 +57,17 @@ public:
         }
         catch(...)
         {
-            throw FormatException (exParFormat, value, (int)valLen);
+            throw FormatException (exParFormat, m_value, (int)m_valLen);
         }
     }
 
     std::pair<const char*, size_t> name () const
     {
         return std::pair<const char*, size_t> (parameter, parLen);
+    }
+    std::pair<const char*, size_t> value () const
+    {
+        return std::pair<const char*, size_t> (m_value, m_valLen);
     }
 
     void throwValueException (void) const;
@@ -76,8 +80,8 @@ private:
 
     const char* parameter;
     size_t      parLen;
-    const char* value;
-    size_t      valLen;
+    const char* m_value;
+    size_t      m_valLen;
     int         index;
     uint8_t*    data;
     size_t      dataLen;
@@ -149,6 +153,7 @@ public:
     iterator end ()   { return list.end (); }
     const_iterator cbegin () const { return list.cbegin(); }
     const_iterator cend () const   { return list.cend(); }
+    size_t size () const { return list.size(); }
 
     void setParameterUsed (const cParameter* s, bool val)
     {

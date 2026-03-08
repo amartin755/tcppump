@@ -242,7 +242,7 @@ const char* cInstructionParser::parseProtocollIdentifier (const char* p, const c
     // find begin of parameter list --> '('
     p = cParseHelper::nextCharIgnoreWhitspaces (p, '(');
     if (!p)
-        throwParseException ("Expected '(' after protocol specifier", keyword);
+        throwParseException ("Expected '(' after protocol specifier", keywordEnd);
 
 
 

@@ -17,7 +17,9 @@
  */
 
 
- // TEST-CODE!!!
+#ifndef PARSER_HPP_
+#define PARSER_HPP_
+
 
 #include <variant>
 #include <vector>
@@ -38,6 +40,12 @@ class ProtocolParameter;
 
 class Protocol
 {
+public:
+    Protocol (const char* instruction, bool acceptTrailingGarbage = false);
+
+private:
+    const char* parseProtocollIdentifier (const char* p, const char** identifier, size_t *len) const;
+
     struct ProtocolSyntax *m_syntax;
     std::vector<ProtocolParameter> m_parameters;
 };
@@ -344,8 +352,8 @@ private:
         return newValString;
     }
 
-    const char* m_name;
-    size_t      m_nameLen;
+    // FIXME we must get rid of this and work with a copy, because it could point to a no longer valid address
+    //       after leaving the constructor. We currently only use it real string value
     const char* m_strValue;
     size_t      m_strValueLen;
 
@@ -405,3 +413,4 @@ private:
 
 };
 
+#endif
