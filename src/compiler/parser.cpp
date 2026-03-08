@@ -86,7 +86,6 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
             if (!checkForRandom<uint64_t>(min, max))
                 m_value = getAndCheckIntegerValue (min, max);
             m_type = Type::Integer;
-            goto out;
         }
         catch (...)
         {
@@ -102,7 +101,6 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
             if (!checkForRandom<uint64_t>(0, 1))
                 m_value = getAndCheckIntegerValue (0, 1);
             m_type = Type::Bit;
-            goto out;
         }
         catch (...)
         {
@@ -120,7 +118,6 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
             if (!checkForRandom<uint64_t>(min, max))
                 m_value = getAndCheckIntegerValue (min, max);
             m_type = Type::Int8;
-            goto out;
         }
         catch (...)
         {
@@ -138,7 +135,6 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
             if (!checkForRandom<uint64_t>(min, max))
                 m_value = getAndCheckIntegerValue (min, max);
             m_type = Type::Int16;
-            goto out;
         }
         catch (...)
         {
@@ -156,7 +152,6 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
             if (!checkForRandom<uint64_t>(min, max))
                 m_value = getAndCheckIntegerValue (min, max);
             m_type = Type::Int32;
-            goto out;
         }
         catch (...)
         {
@@ -174,7 +169,6 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
             if (!checkForRandom<uint64_t>(min, max))
                 m_value = getAndCheckIntegerValue (min, max);
             m_type = Type::Int64;
-            goto out;
         }
         catch (...)
         {
@@ -182,7 +176,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
             if (typeCnt == 0) throw;
         }
     }
-    if (m_syntax->type & Type::Float)
+    if (m_type == Type::Invalid && m_syntax->type & Type::Float)
     {
         typeCnt--;
 
@@ -199,7 +193,6 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
             if (!checkForRandom<double>(min, max))
                 m_value = getAndCheckDoubleValue (min, max);
             m_type = Type::Float;
-            goto out;
         }
         catch (...)
         {
@@ -207,7 +200,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
             if (typeCnt == 0) throw;
         }
     }
-    if (m_syntax->type & Type::Mac)
+    if (m_type == Type::Invalid && m_syntax->type & Type::Mac)
     {
         typeCnt--;
         try
@@ -215,7 +208,6 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
             std::string s = checkForRandom<cMacAddress> ();
             m_value.emplace<cMacAddress> (s);
             m_type = Type::Mac;
-            goto out;
         }
         catch(...)
         {
@@ -224,7 +216,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
                 throw FormatException (exParFormat, m_strValue, (int)m_strValueLen);
         }
     }
-    if (m_syntax->type & Type::IP4)
+    if (m_type == Type::Invalid && m_syntax->type & Type::IP4)
     {
         typeCnt--;
         try
@@ -232,7 +224,6 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
             std::string s = checkForRandom<cIPv4> ();
             m_value.emplace<cIPv4> (s);
             m_type = Type::IP4;
-            goto out;
         }
         catch(...)
         {
@@ -241,7 +232,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
                 throw FormatException (exParFormat, m_strValue, (int)m_strValueLen);
         }
     }
-    if (m_syntax->type & Type::IP6)
+    if (m_type == Type::Invalid && m_syntax->type & Type::IP6)
     {
         typeCnt--;
         try
@@ -249,7 +240,6 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
             std::string s = checkForRandom<cIPv6> ();
             m_value.emplace<cIPv6> (s);
             m_type = Type::IP6;
-            goto out;
         }
         catch(...)
         {
@@ -258,7 +248,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
                 throw FormatException (exParFormat, m_strValue, (int)m_strValueLen);
         }
     }
-    if (m_syntax->type & Type::UUID)
+    if (m_type == Type::Invalid && m_syntax->type & Type::UUID)
     {
         typeCnt--;
 
@@ -282,9 +272,8 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
             }
         }
         m_type = Type::UUID;
-        goto out;
     }
-    if (m_syntax->type & Type::Nested)
+    if (m_type == Type::Invalid && m_syntax->type & Type::Nested)
     {
         typeCnt--;
         if (*m_strValue != '<')
@@ -292,9 +281,8 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
 
         m_value = std::make_unique<const Protocol> ();         //TODO
         m_type = Type::Nested;
-        goto out;
     }
-    if (m_syntax->type & Type::Bytestream)
+    if (m_type == Type::Invalid && m_syntax->type & Type::Bytestream)
     {
         // "lkdjl" 012345 * *[10-20] *10 == *[10-10]
         typeCnt--;
@@ -332,7 +320,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
         }
         m_type = Type::Bytestream;
     }
-out:
+
     // if m_type is not zero, we either forgot to implement a handler for a particular type
     // or a invalid type was used in the syntax definition
     BUG_ON (m_type == Type::Invalid);
