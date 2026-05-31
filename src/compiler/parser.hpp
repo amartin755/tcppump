@@ -44,8 +44,6 @@ public:
     Protocol (const char* instruction, bool acceptTrailingGarbage = false);
 
 private:
-    const char* parseProtocollIdentifier (const char* p, const char** identifier, size_t *len) const;
-
     struct ProtocolSyntax *m_syntax;
     std::vector<ProtocolParameter> m_parameters;
 };
@@ -84,7 +82,7 @@ class ProtocolParameter
 {
 public:
     ProtocolParameter (const char* name, size_t nameLen, const char* value, size_t valueLen,
-        const std::vector<const ParameterSyntax*> mandatory, const std::vector<const ParameterSyntax*> optional);
+        ParameterSyntaxArray mandatory, ParameterSyntaxArray optional);
 
     bool isNested () const
     {

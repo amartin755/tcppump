@@ -82,27 +82,27 @@ Protocol::Protocol (const char* instruction, bool acceptTrailingGarbage)
 
 
 ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const char* value, size_t valueLen,
-    const std::vector<const ParameterSyntax*> mandatory, const std::vector<const ParameterSyntax*> optional)
+    ParameterSyntaxArray mandatory, ParameterSyntaxArray optional)
     : m_strValue (value), m_strValueLen (valueLen), m_syntax (nullptr), m_isRandom (false), m_type (Type::Invalid)
 {
     // we rely on the lexer to not call us with empty parameter name or value
     BUG_ON (!nameLen || !valueLen || !name || !value);
 
-    for (const ParameterSyntax* s : mandatory)
+    for (auto s = mandatory; *s;  s++)
     {
-        if (std::strlen (s->syntax) == nameLen && std::strncmp (name, s->syntax, nameLen) == 0)
+        if (std::strlen ((*s)->syntax) == nameLen && std::strncmp (name, (*s)->syntax, nameLen) == 0)
         {
-            m_syntax = s;
+            m_syntax = *s;
             break;
         }
     }
     if (!m_syntax)
     {
-        for (const ParameterSyntax* s : optional)
+        for (auto s = optional; *s;  s++)
         {
-            if (std::strlen (s->syntax) == nameLen && std::strncmp (name, s->syntax, nameLen) == 0)
+            if (std::strlen ((*s)->syntax) == nameLen && std::strncmp (name, (*s)->syntax, nameLen) == 0)
             {
-                m_syntax = s;
+                m_syntax = *s;
                 break;
             }
         }
@@ -469,25 +469,27 @@ static constexpr ParameterSyntax PAR_UNIT_INT  = {"int",   "", Integer, "100", "
 static constexpr ParameterSyntax PAR_UNIT_STRR = {"str_range", "", Bytestream, "16", "20"};
 static constexpr ParameterSyntax PAR_UNIT_UUID = {"uuid",  "", UUID};
 static constexpr ParameterSyntax PAR_UNIT_MULT = {"multi", "", Bytestream | IP4 | IP6 | Mac, "0", "255"};
+static constexpr ParameterSyntaxArray PAR_UNIT_OPT = {
+    &PAR_UNIT_I8,
+    &PAR_UNIT_I16,
+    &PAR_UNIT_I32,
+    &PAR_UNIT_I64,
+    &PAR_UNIT_STR,
+    &PAR_UNIT_IP4,
+    &PAR_UNIT_IP6,
+    &PAR_UNIT_MAC,
+    &PAR_UNIT_FLT,
+    &PAR_UNIT_INT,
+    &PAR_UNIT_STRR,
+    &PAR_UNIT_UUID,
+    &PAR_UNIT_MULT,
+    nullptr
+};
 static ProtocolSyntax PR_UNIT = {
     "unit",
     "",
-    {},
-    {
-        &PAR_UNIT_I8,
-        &PAR_UNIT_I16,
-        &PAR_UNIT_I32,
-        &PAR_UNIT_I64,
-        &PAR_UNIT_STR,
-        &PAR_UNIT_IP4,
-        &PAR_UNIT_IP6,
-        &PAR_UNIT_MAC,
-        &PAR_UNIT_FLT,
-        &PAR_UNIT_INT,
-        &PAR_UNIT_STRR,
-        &PAR_UNIT_UUID,
-        &PAR_UNIT_MULT
-    }
+    empty_params,
+    PAR_UNIT_OPT
 };
 
 void ProtocolParameter::unitTest ()
@@ -1042,7 +1044,6 @@ template<typename T>
 void ProtocolParameter::runTestCase(const std::vector<testcase_t<T>>& tests)
 {
     bool catched;
-    size_t n = 0;
     for (const auto& t : tests)
     {
         try
@@ -1082,15 +1083,12 @@ void ProtocolParameter::runTestCase(const std::vector<testcase_t<T>>& tests)
             catched = true;
         }
         BUG_ON (t.willThrow != catched);
-
-        n++;
     }
 }
 
 void ProtocolParameter::runStreamTestCase (const std::vector<stream_testcase_t>& testcases)
 {
     bool catched;
-    size_t n = 0;
     for (const auto& t : testcases)
     {
         try
@@ -1114,8 +1112,6 @@ void ProtocolParameter::runStreamTestCase (const std::vector<stream_testcase_t>&
             catched = true;
         }
         BUG_ON (t.willThrow != catched);
-
-        n++;
     }
 }
 

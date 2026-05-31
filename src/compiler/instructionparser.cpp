@@ -1286,14 +1286,14 @@ void cInstructionParser::printProtocolList (const char* proto)
 
             if (proto)
             {
-                for (const auto& m: p->mandatory)
+                for (auto m = p->mandatory; *m;  m++)
                 {
-                    Console::Print ("   %-21s%s\n", m->syntax, m->descr);
+                    Console::Print ("   %-21s%s\n", (*m)->syntax, (*m)->descr);
                 }
                 Console::Print (" optional\n");
-                for (const auto& o: p->optional)
+                for (auto o = p->optional; *o;  o++)
                 {
-                    Console::Print ("   %-21s%s\n", o->syntax, o->descr);
+                    Console::Print ("   %-21s%s\n", (*o)->syntax, (*o)->descr);
                 }
                 Console::Print ("\n");
                 if (!all)
