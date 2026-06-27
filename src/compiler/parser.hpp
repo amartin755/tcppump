@@ -84,6 +84,11 @@ public:
     ProtocolParameter (const char* name, size_t nameLen, const char* value, size_t valueLen,
         ParameterSyntaxArray mandatory, ParameterSyntaxArray optional);
 
+    int key () const
+    {
+        return m_syntax->key;
+    }
+
     bool isNested () const
     {
         return m_type & Nested;
@@ -378,7 +383,6 @@ private:
         std::vector <std::tuple<size_t, uint16_t, uint16_t>>   // ipv6
     > m_randRanges;
 
-    // TODO do we need unique id that it can be part of a map?
 
 
 #ifdef WITH_UNITTESTS

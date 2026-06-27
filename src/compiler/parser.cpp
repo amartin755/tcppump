@@ -456,19 +456,19 @@ bool ProtocolParameter::checkForRandomStream (size_t rangeMin, size_t rangeMax)
 
 #include "console.hpp"
 
-static constexpr ParameterSyntax PAR_UNIT_I8   = {"i8",   "", Int8};
-static constexpr ParameterSyntax PAR_UNIT_I16  = {"i16",  "", Int16};
-static constexpr ParameterSyntax PAR_UNIT_I32  = {"i32",  "", Int32};
-static constexpr ParameterSyntax PAR_UNIT_I64  = {"i64",  "", Int64};
-static constexpr ParameterSyntax PAR_UNIT_STR  = {"str",  "", Bytestream};
-static constexpr ParameterSyntax PAR_UNIT_IP4  = {"ip4",  "", IP4};
-static constexpr ParameterSyntax PAR_UNIT_IP6  = {"ip6",  "", IP6};
-static constexpr ParameterSyntax PAR_UNIT_MAC  = {"mac",  "", Mac};
-static constexpr ParameterSyntax PAR_UNIT_FLT  = {"float", "", Float, "1.0", "3.14"};
-static constexpr ParameterSyntax PAR_UNIT_INT  = {"int",   "", Integer, "100", "200000"};
-static constexpr ParameterSyntax PAR_UNIT_STRR = {"str_range", "", Bytestream, "16", "20"};
-static constexpr ParameterSyntax PAR_UNIT_UUID = {"uuid",  "", UUID};
-static constexpr ParameterSyntax PAR_UNIT_MULT = {"multi", "", Bytestream | IP4 | IP6 | Mac, "0", "255"};
+static constexpr ParameterSyntax PAR_UNIT_I8   = {"i8",   "", Int8, 0};
+static constexpr ParameterSyntax PAR_UNIT_I16  = {"i16",  "", Int16, 1};
+static constexpr ParameterSyntax PAR_UNIT_I32  = {"i32",  "", Int32, 2};
+static constexpr ParameterSyntax PAR_UNIT_I64  = {"i64",  "", Int64, 3};
+static constexpr ParameterSyntax PAR_UNIT_STR  = {"str",  "", Bytestream, 4};
+static constexpr ParameterSyntax PAR_UNIT_IP4  = {"ip4",  "", IP4, 5};
+static constexpr ParameterSyntax PAR_UNIT_IP6  = {"ip6",  "", IP6, 6};
+static constexpr ParameterSyntax PAR_UNIT_MAC  = {"mac",  "", Mac, 7};
+static constexpr ParameterSyntax PAR_UNIT_FLT  = {"float", "", Float, 8, "1.0", "3.14"};
+static constexpr ParameterSyntax PAR_UNIT_INT  = {"int",   "", Integer, 9, "100", "200000"};
+static constexpr ParameterSyntax PAR_UNIT_STRR = {"str_range", "", Bytestream, 10, "16", "20"};
+static constexpr ParameterSyntax PAR_UNIT_UUID = {"uuid",  "", UUID, 11};
+static constexpr ParameterSyntax PAR_UNIT_MULT = {"multi", "", Bytestream | IP4 | IP6 | Mac, 12, "0", "255"};
 static constexpr ParameterSyntaxArray PAR_UNIT_OPT = {
     &PAR_UNIT_I8,
     &PAR_UNIT_I16,
