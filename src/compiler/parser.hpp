@@ -43,6 +43,30 @@ class Protocol
 public:
     Protocol (const char* instruction, bool acceptTrailingGarbage = false);
 
+    ProtocolParameter* find (const ParameterSyntax* parameter)
+    {
+        return findParameter (parameter, nullptr, nullptr, false);
+    }
+    ProtocolParameter* findInRange (const ParameterSyntax* parameter,
+        const ProtocolParameter* start, const ParameterSyntax* stop = nullptr)
+    {
+        return findParameter (parameter, start, stop, false);
+    }
+    ProtocolParameter* findOptionalInRange (const ParameterSyntax* parameter,
+        const ProtocolParameter* start, const ParameterSyntax* stop = nullptr)
+    {
+        return findParameter (parameter, start, stop, true);
+    }
+    ProtocolParameter* findOptional (const ParameterSyntax* parameter)
+    {
+        return findParameter (parameter, nullptr, nullptr, true);
+    }
+
+private:
+    ProtocolParameter* findParameter (const ParameterSyntax* parameter, 
+        const ProtocolParameter* start, const ParameterSyntax* stop, bool optional);
+
+
 private:
     struct ProtocolSyntax *m_syntax;
     std::vector<ProtocolParameter> m_parameters;
@@ -82,11 +106,16 @@ class ProtocolParameter
 {
 public:
     ProtocolParameter (const char* name, size_t nameLen, const char* value, size_t valueLen,
-        ParameterSyntaxArray mandatory, ParameterSyntaxArray optional);
+        ParameterSyntaxArray mandatory, ParameterSyntaxArray optional, size_t position = -1);
 
     int key () const
     {
         return m_syntax->key;
+    }
+
+    size_t position () const
+    {
+        return m_position;
     }
 
     bool isNested () const
@@ -363,6 +392,7 @@ private:
     const struct ParameterSyntax *m_syntax;
     bool m_isRandom;
     Type m_type;
+    size_t m_position;
 
     std::variant<
         uint64_t,

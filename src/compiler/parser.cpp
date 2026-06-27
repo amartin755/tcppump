@@ -76,14 +76,39 @@ Protocol::Protocol (const char* instruction, bool acceptTrailingGarbage)
         const auto& [name, nameLen] = par.name();
         const auto& [value, valueLen] = par.value();
 
-        m_parameters.emplace_back (name, nameLen, value, valueLen, protSyntax->mandatory, protSyntax->optional);
+        m_parameters.emplace_back (name, nameLen, value, valueLen, 
+            protSyntax->mandatory, protSyntax->optional, m_parameters.size ());
     }
+}
+
+ProtocolParameter* Protocol::findParameter (const ParameterSyntax* parameter, 
+    const ProtocolParameter* start, const ParameterSyntax* stop, bool optional)
+{
+    BUG_ON (!parameter);
+
+    const size_t s = start ? start->position() + 1 : 0;
+
+    for (size_t n = s; n < m_parameters.size (); n++)
+    {
+        ProtocolParameter& currPar = m_parameters[n];
+        // if there's a stop condition check it
+        if (stop && stop->key == currPar.key())
+            break;
+        if (parameter->key == currPar.key())
+            return  &currPar;
+    }
+
+    if (!optional)
+        throw FormatException (exParUnknown, parameter->syntax, std::strlen (parameter->syntax));
+
+    return nullptr;
 }
 
 
 ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const char* value, size_t valueLen,
-    ParameterSyntaxArray mandatory, ParameterSyntaxArray optional)
-    : m_strValue (value), m_strValueLen (valueLen), m_syntax (nullptr), m_isRandom (false), m_type (Type::Invalid)
+    ParameterSyntaxArray mandatory, ParameterSyntaxArray optional, size_t position)
+    : m_strValue (value), m_strValueLen (valueLen), m_syntax (nullptr), 
+      m_isRandom (false), m_type (Type::Invalid), m_position (position)
 {
     // we rely on the lexer to not call us with empty parameter name or value
     BUG_ON (!nameLen || !valueLen || !name || !value);
