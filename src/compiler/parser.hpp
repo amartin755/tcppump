@@ -36,41 +36,7 @@
 #include "formatexception.hpp"
 
 
-class ProtocolParameter;
-
-class Protocol
-{
-public:
-    Protocol (const char* instruction, bool acceptTrailingGarbage = false);
-
-    ProtocolParameter* find (const ParameterSyntax* parameter)
-    {
-        return findParameter (parameter, nullptr, nullptr, false);
-    }
-    ProtocolParameter* findInRange (const ParameterSyntax* parameter,
-        const ProtocolParameter* start, const ParameterSyntax* stop = nullptr)
-    {
-        return findParameter (parameter, start, stop, false);
-    }
-    ProtocolParameter* findOptionalInRange (const ParameterSyntax* parameter,
-        const ProtocolParameter* start, const ParameterSyntax* stop = nullptr)
-    {
-        return findParameter (parameter, start, stop, true);
-    }
-    ProtocolParameter* findOptional (const ParameterSyntax* parameter)
-    {
-        return findParameter (parameter, nullptr, nullptr, true);
-    }
-
-private:
-    ProtocolParameter* findParameter (const ParameterSyntax* parameter, 
-        const ProtocolParameter* start, const ParameterSyntax* stop, bool optional);
-
-
-private:
-    struct ProtocolSyntax *m_syntax;
-    std::vector<ProtocolParameter> m_parameters;
-};
+class Protocol;
 
 template<typename T>
 struct checkForRandomTraits;
@@ -123,6 +89,7 @@ public:
         return m_type & Nested;
     }
 
+    // TODO better make it private? can only be used for integrals
     template<typename T, typename INTERNAL_TYPE = uint64_t>
     inline T get()
     {
@@ -444,5 +411,60 @@ private:
 #endif
 
 };
+
+class Protocol
+{
+public:
+    Protocol (const char* instruction, bool acceptTrailingGarbage = false);
+
+    ProtocolParameter* find (const ParameterSyntax* parameter, bool dontThrow = false)
+    {
+        return findParameter (parameter, nullptr, nullptr, dontThrow);
+    }
+    ProtocolParameter* findInRange (const ParameterSyntax* parameter,
+        const ProtocolParameter* start, const ParameterSyntax* stop = nullptr, bool dontThrow = false)
+    {
+        return findParameter (parameter, start, stop, dontThrow);
+    }
+
+    template<typename T>
+    const T& getValueOrDefault (const ParameterSyntax* parameter, const T& defaultValue)
+    {
+        return getValueInRangeOrDefault (parameter, nullptr, nullptr, defaultValue);
+    }
+
+    template<typename T>
+    const T& getValueInRangeOrDefault (const ParameterSyntax* parameter,
+        const ProtocolParameter* start, const ParameterSyntax* stop, const T& defaultValue)
+    {
+        ProtocolParameter* par = findInRange (parameter, start, stop, true);
+        if (!par)
+        {
+            if constexpr (std::is_same_v<T, cMacAddress>)
+                return par->asMac ();
+            else if constexpr (std::is_same_v<T, cIPv4>)
+                return par->asIPv4 ();
+            else if constexpr (std::is_same_v<T, cIPv6>)
+                return par->asIPv6 ();
+            else if constexpr (std::is_same_v<T, cUUID>)
+                return par->asUUID ();
+            else if constexpr (std::is_same_v<T, double>)
+                return par->get<T,T> ();
+            else
+                return par->get<T> ();
+        }
+        return defaultValue;
+    }
+
+private:
+    ProtocolParameter* findParameter (const ParameterSyntax* parameter, 
+        const ProtocolParameter* start, const ParameterSyntax* stop, bool optional);
+
+
+private:
+    struct ProtocolSyntax *m_syntax;
+    std::vector<ProtocolParameter> m_parameters;
+};
+
 
 #endif
