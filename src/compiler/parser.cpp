@@ -479,6 +479,7 @@ bool ProtocolParameter::checkForRandomStream (size_t rangeMin, size_t rangeMax)
 
 #ifdef WITH_UNITTESTS
 
+#include "unittest.hpp"
 #include "console.hpp"
 
 static constexpr ParameterSyntax PAR_UNIT_I8   = {"i8",   "", Int8, 0};
@@ -838,51 +839,12 @@ void ProtocolParameter::unitTest ()
         try
         {
             ProtocolParameter obj (name, sizeof(name)-1, value, sizeof(value)-1, PR_UNIT.mandatory, PR_UNIT.optional);
-            try
-            {
-                auto value = obj.asInt8();
-                BUG ("expected to throw");
-                (void)value;
-            }
-            catch (...)
-            {
-                try
-                {
-                    auto value = obj.asStream();
-                    BUG ("expected to throw");
-                    (void)value;
-                }
-                catch (...)
-                {
-                    try
-                    {
-                        auto value = obj.asMac();
-                        BUG ("expected to throw");
-                        (void)value;
-                    }
-                    catch (...)
-                    {
-                        try
-                        {
-                            auto value = obj.asIPv6();
-                            BUG ("expected to throw");
-                            (void)value;
-                    }
-                        catch (...)
-                        {
-                            try
-                            {
-                                auto value = obj.asIPv4();
-                                BUG_ON (cIPv4("1.2.3.4") != value);
-                            }
-                            catch (...)
-                            {
-                                BUG ("expected not to throw");
-                            }
-                        }
-                    }
-                }
-            }
+            MUST_THROW (obj.asInt8());
+            MUST_THROW (obj.asStream());
+            MUST_THROW (obj.asMac());
+            MUST_THROW (obj.asIPv6());
+            auto value = obj.asIPv4();
+            BUG_ON (cIPv4("1.2.3.4") != value);
         }
         catch (...)
         {
@@ -895,51 +857,12 @@ void ProtocolParameter::unitTest ()
         try
         {
             ProtocolParameter obj (name, sizeof(name)-1, value, sizeof(value)-1, PR_UNIT.mandatory, PR_UNIT.optional);
-            try
-            {
-                auto value = obj.asInt8();
-                BUG ("expected to throw");
-                (void)value;
-            }
-            catch (...)
-            {
-                try
-                {
-                    auto value = obj.asStream();
-                    BUG ("expected to throw");
-                    (void)value;
-                }
-                catch (...)
-                {
-                    try
-                    {
-                        auto value = obj.asMac();
-                        BUG ("expected to throw");
-                        (void)value;
-                    }
-                    catch (...)
-                    {
-                        try
-                        {
-                            auto value = obj.asIPv4();
-                            BUG ("expected to throw");
-                            (void)value;
-                        }
-                        catch (...)
-                        {
-                            try
-                            {
-                                auto value = obj.asIPv6();
-                                BUG_ON (cIPv6("1::4") != value);
-                            }
-                            catch (...)
-                            {
-                                BUG ("expected not to throw");
-                            }
-                        }
-                    }
-                }
-            }
+            MUST_THROW (obj.asInt8());
+            MUST_THROW (obj.asStream());
+            MUST_THROW (obj.asMac());
+            MUST_THROW (obj.asIPv4());
+            auto value = obj.asIPv6();
+            BUG_ON (cIPv6("1::4") != value);
         }
         catch (...)
         {
@@ -952,51 +875,12 @@ void ProtocolParameter::unitTest ()
         try
         {
             ProtocolParameter obj (name, sizeof(name)-1, value, sizeof(value)-1, PR_UNIT.mandatory, PR_UNIT.optional);
-            try
-            {
-                auto value = obj.asInt8();
-                BUG ("expected to throw");
-                (void)value;
-            }
-            catch (...)
-            {
-                try
-                {
-                    auto value = obj.asStream();
-                    BUG ("expected to throw");
-                    (void)value;
-                }
-                catch (...)
-                {
-                    try
-                    {
-                        auto value = obj.asIPv4();
-                        BUG ("expected to throw");
-                        (void)value;
-                    }
-                    catch (...)
-                    {
-                        try
-                        {
-                            auto value = obj.asIPv6();
-                            BUG ("expected to throw");
-                            (void)value;
-                        }
-                        catch (...)
-                        {
-                            try
-                            {
-                                auto value = obj.asMac();
-                                BUG_ON (cMacAddress("12:34:56:78:90:AB") != value);
-                            }
-                            catch (...)
-                            {
-                                BUG ("expected not to throw");
-                            }
-                        }
-                    }
-                }
-            }
+            MUST_THROW (obj.asInt8());
+            MUST_THROW (obj.asStream());
+            MUST_THROW (obj.asIPv4());
+            MUST_THROW (obj.asIPv6());
+            auto value = obj.asMac();
+            BUG_ON (cMacAddress("12:34:56:78:90:AB") != value);
         }
         catch (...)
         {
@@ -1009,53 +893,14 @@ void ProtocolParameter::unitTest ()
         try
         {
             ProtocolParameter obj (name, sizeof(name)-1, value, sizeof(value)-1, PR_UNIT.mandatory, PR_UNIT.optional);
-            try
-            {
-                auto value = obj.asInt8();
-                BUG ("expected to throw");
-                (void)value;
-            }
-            catch (...)
-            {
-                try
-                {
-                    auto value = obj.asMac();
-                    BUG ("expected to throw");
-                    (void)value;
-                }
-                catch (...)
-                {
-                    try
-                    {
-                        auto value = obj.asIPv4();
-                        BUG ("expected to throw");
-                        (void)value;
-                    }
-                    catch (...)
-                    {
-                        try
-                        {
-                            auto value = obj.asIPv6();
-                            BUG ("expected to throw");
-                            (void)value;
-                        }
-                        catch (...)
-                        {
-                            try
-                            {
-                                auto v = obj.asStream();
-                                BUG_ON (v.second != (sizeof(value)-1)/2);
-                                uint8_t data[] = {0x12,0x34};
-                                BUG_ON (std::memcmp (v.first, data, v.second));
-                            }
-                            catch (...)
-                            {
-                                BUG ("expected not to throw");
-                            }
-                        }
-                    }
-                }
-            }
+            MUST_THROW (obj.asInt8());
+            MUST_THROW (obj.asMac());
+            MUST_THROW (obj.asIPv4());
+            MUST_THROW (obj.asIPv6());
+            auto v = obj.asStream();
+            BUG_ON (v.second != (sizeof(value)-1)/2);
+            uint8_t data[] = {0x12,0x34};
+            BUG_ON (std::memcmp (v.first, data, v.second));
         }
         catch (...)
         {
@@ -1063,6 +908,89 @@ void ProtocolParameter::unitTest ()
         }
     }
     // TODO nested
+
+    {
+        MUST_THROW (Protocol (""));
+        MUST_THROW (Protocol ("  eth \tde_0f  ghi"));
+        MUST_THROW (Protocol ("eth \tde_0f  ghi"));
+        MUST_THROW (Protocol ("  eth (\tde_0f  ghi"));
+        MUST_THROW (Protocol ("  eth("));
+        MUST_THROW (Protocol ("  eth ("));
+        MUST_THROW (Protocol ("  eth\t("));
+        MUST_THROW (Protocol ("eth("));
+        MUST_THROW (Protocol ("eth(=)"));
+        MUST_THROW (Protocol ("eth(dmac)"));
+        MUST_THROW (Protocol ("eth(dmac=)"));
+        MUST_THROW (Protocol ("eth(x=1)"));
+        MUST_THROW (Protocol ("eth(dmac=11:11:11:11:11:11) dd"));
+        MUST_THROW (Protocol ("eth(dmac=11:11:11:11:11)"));
+        MUST_NOT_THROW (Protocol ("eth(dmac=11:11:11:11:11:11) "));
+        MUST_NOT_THROW (Protocol ("eth(dmac=11:11:11:11:11:11) dd", true));
+
+        try
+        {
+            Protocol obj("eth(dmac=11:11:11:11:11:11, ethertype = 0x1234) ");
+            MUST_THROW (obj.find (&PAR_ETH_SMAC));
+            BUG_ON (obj.find (&PAR_ETH_SMAC, true));
+            {
+                ProtocolParameter* par = obj.find (&PAR_ETH_ETHERTYPE);
+                BUG_ON (!par);
+                BUG_ON (par->asInt16() != 0x1234);
+            }
+            {
+                ProtocolParameter* par = obj.find (&PAR_ETH_DMAC);
+                BUG_ON (!par);
+                BUG_ON (par->asMac() != cMacAddress ("11:11:11:11:11:11"));
+            }
+        }
+        catch (...)
+        {
+            BUG ("expected not to throw");
+        }
+
+        try
+        {
+            ProtocolParameter* par = nullptr;
+            ProtocolParameter* parVID = nullptr;
+            Protocol obj("eth(vid=10, prio=1, vid=20, vid=30, prio=3, ethertype=0x1234)");
+            parVID = obj.find (&PAR_ETH_VID);
+            BUG_ON (!parVID);
+            BUG_ON (parVID->asInt16() != 10);
+            par = obj.findInRange (&PAR_ETH_PRIO, parVID, &PAR_ETH_VID);
+            BUG_ON (!par);
+            BUG_ON (par->asInt8() != 1);
+            parVID = obj.findInRange (&PAR_ETH_VID, parVID);
+            BUG_ON (!parVID);
+            BUG_ON (parVID->asInt16() != 20);
+            par = obj.findInRange (&PAR_ETH_PRIO, parVID, &PAR_ETH_VID, true);
+            BUG_ON (par);
+            parVID = obj.findInRange (&PAR_ETH_VID, parVID);
+            BUG_ON (!parVID);
+            BUG_ON (parVID->asInt16() != 30);
+            par = obj.findInRange (&PAR_ETH_PRIO, parVID, &PAR_ETH_VID);
+            BUG_ON (!par);
+            BUG_ON (par->asInt8() != 3);
+            par = obj.find (&PAR_ETH_ETHERTYPE);
+            BUG_ON (!par);
+            BUG_ON (par->asInt16() != 0x1234);
+            MUST_THROW(obj.findInRange (&PAR_ETH_VID, par));
+        }
+        catch (...)
+        {
+            BUG ("expected not to throw");
+        }
+
+        try
+        {
+            Protocol obj("eth(vid=10, prio=1, vid=20, vid=30, prio=3, ethertype=0x1234)");
+            BUG_ON (obj.getValueOrDefault<uint16_t>(&PAR_ETH_VID, 42) != 10);
+        }
+        catch (...)
+        {
+            BUG ("expected not to throw");
+        }
+
+    }
 }
 
 template<typename T>

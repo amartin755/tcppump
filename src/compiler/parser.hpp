@@ -438,7 +438,7 @@ public:
         const ProtocolParameter* start, const ParameterSyntax* stop, const T& defaultValue)
     {
         ProtocolParameter* par = findInRange (parameter, start, stop, true);
-        if (!par)
+        if (par)
         {
             if constexpr (std::is_same_v<T, cMacAddress>)
                 return par->asMac ();
