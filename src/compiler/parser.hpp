@@ -27,6 +27,7 @@
 #include <memory>
 #include <utility>
 #include <tuple>
+#include <type_traits>
 
 #include "syntax.hpp"
 #include "ipaddress.hpp"
@@ -89,13 +90,24 @@ public:
         return m_type & Nested;
     }
 
-    // TODO better make it private? can only be used for integrals
-    template<typename T, typename INTERNAL_TYPE = uint64_t>
-    inline T get()
+    template<typename T>
+    using get_return_t =
+        std::conditional_t<std::is_integral_v<T>, T, const T&>;
+
+    template<typename T>
+    get_return_t<T> get()
     {
         if (m_isRandom)
-            calcNextRandom<INTERNAL_TYPE> ();
-        return static_cast<T> (std::get<INTERNAL_TYPE> (m_value));
+            calcNextRandom<T>();
+
+        if constexpr (std::is_integral_v<T>)
+        {
+            return static_cast<T>(std::get<uint64_t>(m_value));
+        }
+        else
+        {
+            return std::get<T>(m_value);
+        }
     }
 
     uint8_t asInt8 ()
@@ -116,31 +128,23 @@ public:
     }
     double asDouble ()
     {
-        return get<double, double>();
+        return get<double>();
     }
     const cMacAddress& asMac ()
     {
-        if (m_isRandom)
-            calcNextRandom<cMacAddress, uint8_t> ();
-        return std::get<cMacAddress> (m_value);
+        return get<cMacAddress> ();
     }
     const cIPv4& asIPv4 ()
     {
-        if (m_isRandom)
-            calcNextRandom<cIPv4, uint8_t> ();
-        return std::get<cIPv4> (m_value);
+        return get<cIPv4> ();
     }
     const cIPv6& asIPv6 ()
     {
-        if (m_isRandom)
-            calcNextRandom<cIPv6, uint16_t> ();
-        return std::get<cIPv6> (m_value);
+        return get<cIPv6> ();
     }
     const cUUID& asUUID ()
     {
-        if (m_isRandom)
-            calcNextRandom<cUUID, uint8_t> ();
-        return std::get<cUUID> (m_value);
+        return get<cUUID> ();
     }
     const Protocol& asNested () const
     {
@@ -179,32 +183,38 @@ private:
     template<typename T>
     void calcNextRandom ()
     {
-        const auto* p = std::get_if<std::pair<T, T>> (&m_randRanges);
-        if (p)
+        if constexpr (std::is_integral_v<T> || std::is_floating_point_v<T>)
         {
-            const auto& [min, max] = *p;
-            m_value = cRandom::rand<T> (min, max);
-        }
-        else
-        {
-            m_value = cRandom::rand<T> ();
-        }
-    }
-    template<typename T, typename W>
-    void calcNextRandom ()
-    {
-        auto& val = std::get<T> (m_value);
-        const auto* randRanges = std::get_if<std::vector <std::tuple<size_t, W, W>>> (&m_randRanges);
-        if (randRanges && randRanges->size())
-        {
-            for (const auto& [offset, min, max] : *randRanges)
+            // internally we only have ranges for uint64_t (integers) and double (floating point numbers)
+            using StorageType = std::conditional_t<std::is_integral_v<T>, std::uint64_t, double>;
+            const auto* p = std::get_if<std::pair<StorageType, StorageType>> (&m_randRanges);
+            if (p)
             {
-                val.setAt (offset, cRandom::rand<W> (min, max));
+                const auto& [min, max] = *p;
+                m_value = static_cast<T>(cRandom::rand<StorageType> (min, max));
+            }
+            else
+            {
+                m_value = static_cast<T>(cRandom::rand<StorageType> ());
             }
         }
         else
         {
-            val.setRandom();
+            // in case of IPv6 the elements are uint16_t, otherwise uint8_t
+            using StorageType = std::conditional_t<std::is_same_v<T, cIPv6>, std::uint16_t, std::uint8_t>;
+            auto& val = std::get<T> (m_value);
+            const auto* randRanges = std::get_if<std::vector <std::tuple<size_t, StorageType, StorageType>>> (&m_randRanges);
+            if (randRanges && randRanges->size())
+            {
+                for (const auto& [offset, min, max] : *randRanges)
+                {
+                    val.setAt (offset, cRandom::rand<StorageType> (min, max));
+                }
+            }
+            else
+            {
+                val.setRandom();
+            }
         }
     }
     void calcNextRandomStream ()
@@ -232,6 +242,8 @@ private:
     template<typename T>
     bool checkForRandom (T rangeMin, T rangeMax)
     {
+        using StorageType = std::conditional_t<std::is_integral_v<T>, std::uint64_t, T>;
+
         // no random value
         if (!m_strValueLen || *m_strValue != '*')
             return false;
@@ -239,7 +251,7 @@ private:
         if (m_strValueLen == 1)
         {
             // random value without range restrictions
-            m_randRanges.emplace<std::pair <T, T>> (rangeMin, rangeMax);
+            m_randRanges.emplace<std::pair <StorageType, StorageType>> (rangeMin, rangeMax);
         }
         else
         {
@@ -253,7 +265,7 @@ private:
                 // if there is a random range specified, it must not violate the values range
                 if (static_cast<uint64_t>(min) < rangeMin || static_cast<uint64_t>(max) > rangeMax)
                     throw FormatException (exParRange, m_strValue, (int)m_strValueLen);
-                m_randRanges.emplace<std::pair <T, T>> (static_cast<T>(min), static_cast<T>(max));
+                m_randRanges.emplace<std::pair <StorageType, StorageType>> (static_cast<StorageType>(min), static_cast<StorageType>(max));
             }
             else
                 throw FormatException (exParFormat, m_strValue, (int)m_strValueLen);
@@ -352,7 +364,7 @@ private:
     }
 
     // FIXME we must get rid of this and work with a copy, because it could point to a no longer valid address
-    //       after leaving the constructor. We currently only use it real string value
+    //       after leaving the constructor. We currently only use it for real string value
     const char* m_strValue;
     size_t      m_strValueLen;
 
@@ -374,7 +386,7 @@ private:
     > m_value;
 
     std::variant<
-        std::pair <uint64_t, uint64_t>,
+        std::pair <uint64_t, uint64_t>,                        // integers
         std::pair <double, double>,
         std::vector <std::tuple<size_t, uint8_t, uint8_t>>,    // ipv4, mac
         std::vector <std::tuple<size_t, uint16_t, uint16_t>>   // ipv6
@@ -426,7 +438,7 @@ public:
     {
         return findParameter (parameter, start, stop, dontThrow);
     }
-
+#if 0
     template<typename T>
     const T& getValueOrDefault (const ParameterSyntax* parameter, const T& defaultValue)
     {
@@ -455,7 +467,7 @@ public:
         }
         return defaultValue;
     }
-
+#endif
 private:
     ProtocolParameter* findParameter (const ParameterSyntax* parameter, 
         const ProtocolParameter* start, const ParameterSyntax* stop, bool optional);

@@ -393,7 +393,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
     }
 
     // if m_type is not zero, we either forgot to implement a handler for a particular type
-    // or a invalid type was used in the syntax definition
+    // or an invalid type was used in the syntax definition
     BUG_ON (m_type == Type::Invalid);
     BUG_ON (m_value.index() == std::variant_npos);
 }
@@ -979,17 +979,22 @@ void ProtocolParameter::unitTest ()
         {
             BUG ("expected not to throw");
         }
-
+#if 0
         try
         {
+            int64_t val = 3;
+
+            const int8_t &r = val;
+
+
             Protocol obj("eth(vid=10, prio=1, vid=20, vid=30, prio=3, ethertype=0x1234)");
-            BUG_ON (obj.getValueOrDefault<uint16_t>(&PAR_ETH_VID, 42) != 10);
+            BUG_ON (obj.getValueOrDefault<uint16_t>(&PAR_ETH_VID, r) != 10);
         }
         catch (...)
         {
             BUG ("expected not to throw");
         }
-
+#endif
     }
 }
 
@@ -1014,19 +1019,7 @@ void ProtocolParameter::runTestCase(const std::vector<testcase_t<T>>& tests)
 
             for (const auto& expValue : t.expExternalValues)
             {
-                T value;
-                if constexpr (std::is_same_v<T, cMacAddress>)
-                    value.set(obj.asMac());
-                else if constexpr (std::is_same_v<T, cIPv4>)
-                    value.set(obj.asIPv4());
-                else if constexpr (std::is_same_v<T, cIPv6>)
-                    value.set(obj.asIPv6());
-                else if constexpr (std::is_same_v<T, cUUID>)
-                    value = obj.asUUID();
-                else if constexpr (std::is_same_v<T, double>)
-                    value = obj.get<T,T>();
-                else
-                    value = obj.get<T>();
+                T value = obj.get<T>();
 
                 BUG_ON (value != expValue);
             }
