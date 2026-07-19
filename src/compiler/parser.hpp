@@ -69,11 +69,21 @@ struct checkForRandomTraits<cMacAddress> {
     static constexpr size_t maxTokenCnt = 6;
 };
 
+template<typename>
+inline constexpr bool dependent_false_v = false;
+
+template<typename T>
+inline constexpr bool is_value_type_v =
+    std::is_integral_v<T>      || 
+    std::is_same_v<T, double>;
+
 class ProtocolParameter
 {
 public:
     ProtocolParameter (const char* name, size_t nameLen, const char* value, size_t valueLen,
         ParameterSyntaxArray mandatory, ParameterSyntaxArray optional, size_t position = -1);
+
+    ~ProtocolParameter ();
 
     int key () const
     {
@@ -90,24 +100,9 @@ public:
         return m_type & Nested;
     }
 
-    template<typename T>
-    using get_return_t =
-        std::conditional_t<std::is_integral_v<T>, T, const T&>;
-
-    template<typename T>
-    get_return_t<T> get()
+    Type type () const
     {
-        if (m_isRandom)
-            calcNextRandom<T>();
-
-        if constexpr (std::is_integral_v<T>)
-        {
-            return static_cast<T>(std::get<uint64_t>(m_value));
-        }
-        else
-        {
-            return std::get<T>(m_value);
-        }
+        return m_type;
     }
 
     uint8_t asInt8 ()
@@ -148,25 +143,14 @@ public:
     }
     const Protocol& asNested () const
     {
-        return *std::get<std::unique_ptr<const Protocol>> (m_value);
+        return *m_value.pNested;
     }
     const std::pair<const uint8_t*, size_t> asStream ()
     {
         if (m_isRandom)
             calcNextRandomStream ();
 
-        // is our stream a string?
-        if (std::holds_alternative <const char*>(m_value))
-        {
-            return std::pair <const uint8_t*, size_t>(
-                reinterpret_cast<const uint8_t*>(m_strValue), m_strValueLen);
-        }
-        else
-        {
-            // no, then it must be a vector
-            auto val = std::get <std::unique_ptr <std::vector<uint8_t>>>(m_value).get ();
-            return std::pair <const uint8_t*, size_t> (val->data (), val->size ());
-        }
+        return std::pair <const uint8_t*, size_t> (m_value.pStream->data (), m_value.pStream->size ());
     }
 
 private:
@@ -175,9 +159,60 @@ private:
     bool isRandom (uint64_t min, uint64_t max);
     bool checkForRandomStream (size_t rangeMin, size_t rangeMax);
 
-    bool isQuotedString () const
+    template<typename T>
+    using get_set_t =
+        std::conditional_t<is_value_type_v<T>, T, T&>;
+
+    template<typename T>
+    get_set_t<T> getRawValue()
     {
-        return m_strValueLen >= 2 && *m_strValue == '"' && *(m_strValue + m_strValueLen - 1) == '"';
+        if constexpr (std::is_integral_v<T>)
+            return static_cast<T>(m_value.integer);
+        else if constexpr (std::is_same_v<T, cMacAddress>)
+            return *m_value.pMAC;
+        else if constexpr (std::is_same_v<T, cIPv4>)
+            return *m_value.pIPv4;
+        else if constexpr (std::is_same_v<T, cIPv6>)
+            return *m_value.pIPv6;
+        else if constexpr (std::is_same_v<T, cUUID>)
+            return *m_value.pUUID;
+        else if constexpr (std::is_same_v<T, double>)
+            return m_value.floatingPoint;
+        else if constexpr (std::is_same_v<T, std::vector<uint8_t>>)
+            return *m_value.pStream;
+        else
+            static_assert(dependent_false_v<T>, "T is unsupported");
+    }
+
+    template<typename T>
+    get_set_t<T> get()
+    {
+        if (m_isRandom)
+            calcNextRandom<T>();
+
+        return getRawValue <T> ();
+    }    
+    
+    template<typename T>
+    void set (get_set_t<T> value)
+    {
+        if constexpr (std::is_integral_v<T>)
+            m_value.integer =  static_cast<uint64_t>(value);
+        else if constexpr (std::is_same_v<T, cMacAddress>)
+            *m_value.pMAC->set (value);
+        else if constexpr (std::is_same_v<T, cIPv4>)
+            *m_value.pIPv4->set (value);
+        else if constexpr (std::is_same_v<T, cIPv6>)
+            *m_value.pIPv6->set (value);
+        else if constexpr (std::is_same_v<T, double>)
+            m_value.floatingPoint = value;
+        else
+            static_assert(dependent_false_v<T>, "T is unsupported");
+    }
+
+    bool isQuotedString (const char* str, size_t len) const
+    {
+        return len >= 2 && *str == '"' && *(str + len - 1) == '"';
     }
 
     template<typename T>
@@ -191,18 +226,18 @@ private:
             if (p)
             {
                 const auto& [min, max] = *p;
-                m_value = static_cast<T>(cRandom::rand<StorageType> (min, max));
+                this->set<StorageType> (static_cast<T>(cRandom::rand<StorageType> (min, max)));
             }
             else
             {
-                m_value = static_cast<T>(cRandom::rand<StorageType> ());
+                this->set<StorageType> (static_cast<T>(cRandom::rand<StorageType> ()));
             }
         }
         else
         {
             // in case of IPv6 the elements are uint16_t, otherwise uint8_t
             using StorageType = std::conditional_t<std::is_same_v<T, cIPv6>, std::uint16_t, std::uint8_t>;
-            auto& val = std::get<T> (m_value);
+            auto& val = this->getRawValue<T> ();
             const auto* randRanges = std::get_if<std::vector <std::tuple<size_t, StorageType, StorageType>>> (&m_randRanges);
             if (randRanges && randRanges->size())
             {
@@ -232,10 +267,10 @@ private:
         // fill the array with random values
         // TODO this could be improved. 
         //      resize() unnecessarily copies and initializes the vector, but we will overwrite all values anyway.
-        auto val = std::get <std::unique_ptr <std::vector<uint8_t>>>(m_value).get ();
-        val->resize (nextLen);
+        auto& val = this->getRawValue <std::vector<uint8_t>> ();
+        val.resize (nextLen);
         cRandom::rand (
-            reinterpret_cast<void*>(val->data()), 
+            reinterpret_cast<void*>(val.data()), 
             static_cast<size_t> (nextLen));
     }
 
@@ -270,21 +305,10 @@ private:
             else
                 throw FormatException (exParFormat, m_strValue, (int)m_strValueLen);
         }
-        m_value = T(rangeMin);
         m_isRandom = true;
         return true;
     }
 
-#if 0
-    template<typename T>
-    constexpr std::string_view emptyToken ()
-    {
-        if constexpr (std::is_same_v<T, uint16_t>)
-            return "0000";
-        else
-            return "0";
-    }
-#endif
     // applies only for MAC and IP addresses
     template<typename T>
     std::string checkForRandom ()
@@ -295,7 +319,7 @@ private:
         constexpr int    base        = traits::base;
         constexpr size_t maxTokenCnt = traits::maxTokenCnt;
 
-        std::string newValString; newValString.reserve (m_strValueLen); // the new string is never bigger then the original
+        std::string newValString; newValString.reserve (m_strValueLen); // the new string is never bigger than the original
         std::vector<std::string_view> tokens = cParseHelper::tokenize (m_strValue, m_strValueLen, delimiter);
         size_t index = 0, offset = 0;
         constexpr value_type max = std::numeric_limits<value_type>::max();
@@ -364,7 +388,7 @@ private:
     }
 
     // FIXME we must get rid of this and work with a copy, because it could point to a no longer valid address
-    //       after leaving the constructor. We currently only use it for real string value
+    //       after leaving the constructor. 
     const char* m_strValue;
     size_t      m_strValueLen;
 
@@ -373,17 +397,17 @@ private:
     Type m_type;
     size_t m_position;
 
-    std::variant<
-        uint64_t,
-        double,
-        cIPv4,
-        cIPv6,
-        cMacAddress,
-        cUUID,
-        std::unique_ptr <std::vector<uint8_t>>, // stream
-        std::unique_ptr <const Protocol>,       // embedded
-        const char* // string
-    > m_value;
+    union TheValue
+    {
+        uint64_t               integer;
+        double                 floatingPoint;
+        cIPv4                 *pIPv4;
+        cIPv6                 *pIPv6;
+        cMacAddress           *pMAC;
+        cUUID                 *pUUID;
+        std::vector<uint8_t>  *pStream;
+        const Protocol        *pNested;
+    }m_value;
 
     std::variant<
         std::pair <uint64_t, uint64_t>,                        // integers
