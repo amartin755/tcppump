@@ -1028,22 +1028,32 @@ void Protocol::unitTest ()
         {
             BUG ("expected not to throw");
         }
-#if 0
+
         try
         {
-            int64_t val = 3;
-
-            const int8_t &r = val;
-
+            ProtocolParameter* parVID = nullptr;
+            int16_t val = 42;
 
             Protocol obj("eth(vid=10, prio=1, vid=20, vid=30, prio=3, ethertype=0x1234)");
-            BUG_ON (obj.getValueOrDefault<uint16_t>(&PAR_ETH_VID, r) != 10);
+            BUG_ON (obj.getValueOrDefault<uint16_t>(&PAR_ETH_VID, val) != 10);
+            parVID = obj.find (&PAR_ETH_VID);
+            BUG_ON (!parVID);
+            BUG_ON (obj.getValueInRangeOrDefault (&PAR_ETH_PRIO, parVID, &PAR_ETH_VID, val) != 1);
+            BUG_ON (obj.getValueInRangeOrDefault (&PAR_ETH_VID, parVID, &PAR_ETH_ETHERTYPE, val) != 20);
+            parVID = obj.findInRange (&PAR_ETH_VID, parVID);
+            BUG_ON (!parVID);
+            BUG_ON (parVID->asInt16() != 20);
+            BUG_ON (obj.getValueInRangeOrDefault (&PAR_ETH_PRIO, parVID, &PAR_ETH_VID, val) != 42);
+            BUG_ON (obj.getValueInRangeOrDefault (&PAR_ETH_VID, parVID, &PAR_ETH_ETHERTYPE, val) != 30);
+            parVID = obj.findInRange (&PAR_ETH_VID, parVID);
+            BUG_ON (!parVID);
+            BUG_ON (parVID->asInt16() != 30);
+            BUG_ON (obj.getValueInRangeOrDefault (&PAR_ETH_PRIO, parVID, &PAR_ETH_VID, val) != 3);
         }
         catch (...)
         {
             BUG ("expected not to throw");
         }
-#endif
     }
 }
 

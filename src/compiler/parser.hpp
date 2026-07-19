@@ -79,6 +79,8 @@ inline constexpr bool is_value_type_v =
 
 class ProtocolParameter
 {
+    friend class Protocol;
+
 public:
     ProtocolParameter (const char* name, size_t nameLen, const char* value, size_t valueLen,
         ParameterSyntaxArray mandatory, ParameterSyntaxArray optional, size_t position = -1);
@@ -455,36 +457,29 @@ public:
     {
         return findParameter (parameter, start, stop, dontThrow);
     }
-#if 0
+
     template<typename T>
-    const T& getValueOrDefault (const ParameterSyntax* parameter, const T& defaultValue)
+    using get_set_t =
+        std::conditional_t<is_value_type_v<T>, T, const T&>;
+
+    template<typename T>
+    get_set_t<T> getValueOrDefault (const ParameterSyntax* parameter, const T& defaultValue)
     {
         return getValueInRangeOrDefault (parameter, nullptr, nullptr, defaultValue);
     }
 
     template<typename T>
-    const T& getValueInRangeOrDefault (const ParameterSyntax* parameter,
+    get_set_t<T> getValueInRangeOrDefault (const ParameterSyntax* parameter,
         const ProtocolParameter* start, const ParameterSyntax* stop, const T& defaultValue)
     {
         ProtocolParameter* par = findInRange (parameter, start, stop, true);
         if (par)
         {
-            if constexpr (std::is_same_v<T, cMacAddress>)
-                return par->asMac ();
-            else if constexpr (std::is_same_v<T, cIPv4>)
-                return par->asIPv4 ();
-            else if constexpr (std::is_same_v<T, cIPv6>)
-                return par->asIPv6 ();
-            else if constexpr (std::is_same_v<T, cUUID>)
-                return par->asUUID ();
-            else if constexpr (std::is_same_v<T, double>)
-                return par->get<T,T> ();
-            else
-                return par->get<T> ();
+            return par->get<T> ();
         }
         return defaultValue;
     }
-#endif
+
 private:
     ProtocolParameter* findParameter (const ParameterSyntax* parameter, 
         const ProtocolParameter* start, const ParameterSyntax* stop, bool optional);
