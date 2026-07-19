@@ -81,6 +81,7 @@ int main (int argc, char* argv[])
         cParameterList::unitTest ();
         cInstructionParser::unitTest ();
         ProtocolParameter::unitTest ();
+        Protocol::unitTest ();
 
 #if HAVE_PCAP
         cPcapFileIO::unitTest (argv[1]);

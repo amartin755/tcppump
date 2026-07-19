@@ -143,14 +143,12 @@ public:
     }
     const Protocol& asNested () const
     {
+        // TODO unify via get
         return *m_value.pNested;
     }
-    const std::pair<const uint8_t*, size_t> asStream ()
+    const std::vector<uint8_t> asStream ()
     {
-        if (m_isRandom)
-            calcNextRandomStream ();
-
-        return std::pair <const uint8_t*, size_t> (m_value.pStream->data (), m_value.pStream->size ());
+        return get<std::vector<uint8_t>> ();
     }
 
 private:
@@ -188,7 +186,12 @@ private:
     get_set_t<T> get()
     {
         if (m_isRandom)
-            calcNextRandom<T>();
+        {
+            if constexpr (std::is_same_v<T, std::vector<uint8_t>>)
+                calcNextRandomStream ();
+            else
+                calcNextRandom<T>();
+        }
 
         return getRawValue <T> ();
     }    
@@ -428,22 +431,12 @@ public:
         const std::string value;
         bool willThrow;
         bool isRandom;
-        T expInternalValue;
+        Type expType;
         std::vector<T> expExternalValues;
-    };
-
-    struct stream_testcase_t
-    {
-        const std::string name;
-        const std::string value;
-        bool willThrow;
-        bool isRandom;
-        std::vector<std::vector<uint8_t>> expExternalValues;
     };
 private:
     template<typename T>
     static void runTestCase (const std::vector<testcase_t<T>>& testcases);
-    static void runStreamTestCase (const std::vector<stream_testcase_t>& testcases);
 #endif
 
 };
@@ -500,6 +493,11 @@ private:
 private:
     struct ProtocolSyntax *m_syntax;
     std::vector<ProtocolParameter> m_parameters;
+
+#ifdef WITH_UNITTESTS
+public:
+    static void unitTest ();
+#endif
 };
 
 

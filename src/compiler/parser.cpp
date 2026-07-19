@@ -363,7 +363,7 @@ ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const ch
         const size_t min = static_cast<size_t>(m_syntax->min ? std::strtoull (m_syntax->min, nullptr, 0) : 0);
         const size_t max = static_cast<size_t>(m_syntax->max ? std::strtoull (m_syntax->max, nullptr, 0) : 1024*1024); // 1MiB should be enough
 
-        if (isQuotedString ())
+        if (isQuotedString (m_strValue, m_strValueLen))
         {
             // remove quotes
             m_strValueLen -= 2;
@@ -551,13 +551,13 @@ void ProtocolParameter::unitTest ()
 
     static const std::vector<testcase_t<cMacAddress>> tests =
     {
-        {"mac", "12:34:56:78:9a:bc", false, false, "12:34:56:78:9a:bc", {"12:34:56:78:9a:bc", "12:34:56:78:9a:bc"}},
-        {"mac", "*", false, true, "0:0:0:0:0:0", {"00:01:02:03:04:05", "06:07:08:09:0a:0b"}},
-        {"mac", "11:*:33:44:*[10-12]:66", false, true, "11:0:33:44:0:66", {"11:0:33:44:11:66", "11:2:33:44:10:66", "11:4:33:44:12:66", "11:6:33:44:11:66"}},
-        {"mac", "11:22:33:44:*[13-12]:66", true, false, cMacAddress(), {}},
-        {"mac", "11:22:33:44:*[13-100]:66", true, false, cMacAddress(), {}},
-        {"mac", "11:22:33:44:*[0-ff]:66", false, true, "11:22:33:44:00:66", {"11:22:33:44:00:66"}},
-        {"mac", "*[0-f]:*[10-1f]:*[20-2f]:*[30-3f]:*[40-4f]:*[50-5f]", false, true, "0:0:0:0:0:0", {"00:11:22:33:44:55"}}
+        {"mac", "12:34:56:78:9a:bc", false, false, Type::Mac, {"12:34:56:78:9a:bc", "12:34:56:78:9a:bc"}},
+        {"mac", "*", false, true, Type::Mac, {"00:01:02:03:04:05", "06:07:08:09:0a:0b"}},
+        {"mac", "11:*:33:44:*[10-12]:66", false, true, Type::Mac, {"11:0:33:44:11:66", "11:2:33:44:10:66", "11:4:33:44:12:66", "11:6:33:44:11:66"}},
+        {"mac", "11:22:33:44:*[13-12]:66", true, false, Type::Mac, {}},
+        {"mac", "11:22:33:44:*[13-100]:66", true, false, Type::Mac, {}},
+        {"mac", "11:22:33:44:*[0-ff]:66", false, true, Type::Mac, {"11:22:33:44:00:66"}},
+        {"mac", "*[0-f]:*[10-1f]:*[20-2f]:*[30-3f]:*[40-4f]:*[50-5f]", false, true, Type::Mac, {"00:11:22:33:44:55"}}
 
         // syntax errors are tested in cMacAddress::unitTest()
     };
@@ -565,52 +565,52 @@ void ProtocolParameter::unitTest ()
 
     static const std::vector<testcase_t<cIPv4>> ipv4tests =
     {
-        {"ip4", ".", true, false, cIPv4(), {}},
-        {"ip4", "..", true, false, cIPv4(), {}},
-        {"ip4", "1..3.4", true, false, cIPv4(), {}},
-        {"ip4", "*[2-4].*.3.", true, false, cIPv4(), {}},
-        {"ip4", "*[300-400].*.3.4", true, false, cIPv4(), {}},
-        {"ip4", "*.*.*.*.*", true, false, cIPv4(), {}},
-        {"ip4", "*[0x2-0x4].2.3.4", true, false, cIPv4(), {}},
-        {"ip4", "1.*[0x2-0x4].3.4", true, false, cIPv4(), {}},
-        {"ip4", "1.2.*[0x2-0x4].4", true, false, cIPv4(), {}},
-        {"ip4", "1.2.3.*[0x2-0x4]", true, false, cIPv4(), {}},
-        {"ip4", "[2-4].2.3.4", true, false, cIPv4(), {}},
-        {"ip4", "1.[2-4].3.4", true, false, cIPv4(), {}},
-        {"ip4", "1.2.[2-4].4", true, false, cIPv4(), {}},
-        {"ip4", "1.2.3.[2-4]", true, false, cIPv4(), {}},
-        {"ip4", "1.2.3.*", false, true, "1.2.3.0", {"1.2.3.0", "1.2.3.1"}},
-        {"ip4", "1.2.*.4", false, true, "1.2.0.4", {"1.2.0.4", "1.2.1.4"}},
-        {"ip4", "1.2.*.*", false, true, "1.2.0.0", {"1.2.0.1", "1.2.2.3"}},
-        {"ip4", "1.*.3.4", false, true, "1.0.3.4", {"1.0.3.4", "1.1.3.4"}},
-        {"ip4", "1.*.3.*", false, true, "1.0.3.0", {"1.0.3.1", "1.2.3.3"}},
-        {"ip4", "1.*.*.4", false, true, "1.0.0.4", {"1.0.1.4", "1.2.3.4"}},
-        {"ip4", "1.*.*.*", false, true, "1.0.0.0", {"1.0.1.2", "1.3.4.5"}},
-        {"ip4", "*.2.3.4", false, true, "0.2.3.4", {"0.2.3.4", "1.2.3.4"}},
-        {"ip4", "*.2.3.*", false, true, "0.2.3.0", {"0.2.3.1", "2.2.3.3"}},
-        {"ip4", "*.2.*.4", false, true, "0.2.0.4", {"0.2.1.4", "2.2.3.4"}},
-        {"ip4", "*.2.*.*", false, true, "0.2.0.0", {"0.2.1.2", "3.2.4.5"}},
-        {"ip4", "*.*.3.4", false, true, "0.0.3.4", {"0.1.3.4", "2.3.3.4"}},
-        {"ip4", "*.*.3.*", false, true, "0.0.3.0", {"0.1.3.2", "3.4.3.5"}},
-        {"ip4", "*.*.*.4", false, true, "0.0.0.4", {"0.1.2.4", "3.4.5.4"}},
-        {"ip4", "1.2.3.*[10-11]", false, true, "1.2.3.0", {"1.2.3.10", "1.2.3.11"}},
-        {"ip4", "1.2.*[10-11].4", false, true, "1.2.0.4", {"1.2.10.4", "1.2.11.4"}},
-        {"ip4", "1.2.*[10-12].*[10-12]", false, true, "1.2.0.0", {"1.2.10.11", "1.2.12.10"}},
-        {"ip4", "1.*[10-11].3.4", false, true, "1.0.3.4", {"1.10.3.4", "1.11.3.4"}},
-        {"ip4", "1.*[10-11].3.*[10-11]", false, true, "1.0.3.0", {"1.10.3.11", "1.10.3.11"}},
-        {"ip4", "1.*[10-12].*[10-12].4", false, true, "1.0.0.4", {"1.10.11.4", "1.12.10.4"}},
-        {"ip4", "1.*[10-11].*[10-11].*[10-11]", false, true, "1.0.0.0", {"1.10.11.10", "1.11.10.11"}},
-        {"ip4", "*[10-11].2.3.4", false, true, "0.2.3.4", {"10.2.3.4", "11.2.3.4"}},
-        {"ip4", "*[10-11].2.3.*[10-13]", false, true, "0.2.3.0", {"10.2.3.11", "10.2.3.13"}},
-        {"ip4", "*[10-11].2.*[10-13].4", false, true, "0.2.0.4", {"10.2.11.4", "10.2.13.4"}},
-        {"ip4", "*[10-11].2.*[10-11].*[10-11]", false, true, "0.2.0.0", {"10.2.11.10", "11.2.10.11"}},
-        {"ip4", "*[10-11].*[10-11].3.4", false, true, "0.0.3.4", {"10.11.3.4", "10.11.3.4"}},
-        {"ip4", "*[10-11].*[10-11].3.*[10-11]", false, true, "0.0.3.0", {"10.11.3.10", "11.10.3.11"}},
-        {"ip4", "*[10-11].*[10-11].*[10-11].4", false, true, "0.0.0.4", {"10.11.10.4", "11.10.11.4"}},
-        {"ip4", "1.2.3.4", false, false, "1.2.3.4", {"1.2.3.4", "1.2.3.4"}},
-        {"ip4", "*.*.3.*[50-60]", false, true, "0.0.3.0", {"0.1.3.52", "3.4.3.55"}},
-        {"ip4", "*.*.*.*", false, true, "0.0.0.0", {"0.1.2.3", "4.5.6.7"}},
-        {"ip4", "*", false, true, "0.0.0.0", {"0.0.0.0", "0.0.0.1"}}
+        {"ip4", ".", true, false, Type::IP4, {}},
+        {"ip4", "..", true, false, Type::IP4, {}},
+        {"ip4", "1..3.4", true, false, Type::IP4, {}},
+        {"ip4", "*[2-4].*.3.", true, false, Type::IP4, {}},
+        {"ip4", "*[300-400].*.3.4", true, false, Type::IP4, {}},
+        {"ip4", "*.*.*.*.*", true, false, Type::IP4, {}},
+        {"ip4", "*[0x2-0x4].2.3.4", true, false, Type::IP4, {}},
+        {"ip4", "1.*[0x2-0x4].3.4", true, false, Type::IP4, {}},
+        {"ip4", "1.2.*[0x2-0x4].4", true, false, Type::IP4, {}},
+        {"ip4", "1.2.3.*[0x2-0x4]", true, false, Type::IP4, {}},
+        {"ip4", "[2-4].2.3.4", true, false, Type::IP4, {}},
+        {"ip4", "1.[2-4].3.4", true, false, Type::IP4, {}},
+        {"ip4", "1.2.[2-4].4", true, false, Type::IP4, {}},
+        {"ip4", "1.2.3.[2-4]", true, false, Type::IP4, {}},
+        {"ip4", "1.2.3.*", false, true, Type::IP4, {"1.2.3.0", "1.2.3.1"}},
+        {"ip4", "1.2.*.4", false, true, Type::IP4, {"1.2.0.4", "1.2.1.4"}},
+        {"ip4", "1.2.*.*", false, true, Type::IP4, {"1.2.0.1", "1.2.2.3"}},
+        {"ip4", "1.*.3.4", false, true, Type::IP4, {"1.0.3.4", "1.1.3.4"}},
+        {"ip4", "1.*.3.*", false, true, Type::IP4, {"1.0.3.1", "1.2.3.3"}},
+        {"ip4", "1.*.*.4", false, true, Type::IP4, {"1.0.1.4", "1.2.3.4"}},
+        {"ip4", "1.*.*.*", false, true, Type::IP4, {"1.0.1.2", "1.3.4.5"}},
+        {"ip4", "*.2.3.4", false, true, Type::IP4, {"0.2.3.4", "1.2.3.4"}},
+        {"ip4", "*.2.3.*", false, true, Type::IP4, {"0.2.3.1", "2.2.3.3"}},
+        {"ip4", "*.2.*.4", false, true, Type::IP4, {"0.2.1.4", "2.2.3.4"}},
+        {"ip4", "*.2.*.*", false, true, Type::IP4, {"0.2.1.2", "3.2.4.5"}},
+        {"ip4", "*.*.3.4", false, true, Type::IP4, {"0.1.3.4", "2.3.3.4"}},
+        {"ip4", "*.*.3.*", false, true, Type::IP4, {"0.1.3.2", "3.4.3.5"}},
+        {"ip4", "*.*.*.4", false, true, Type::IP4, {"0.1.2.4", "3.4.5.4"}},
+        {"ip4", "1.2.3.*[10-11]", false, true, Type::IP4, {"1.2.3.10", "1.2.3.11"}},
+        {"ip4", "1.2.*[10-11].4", false, true, Type::IP4, {"1.2.10.4", "1.2.11.4"}},
+        {"ip4", "1.2.*[10-12].*[10-12]", false, true, Type::IP4, {"1.2.10.11", "1.2.12.10"}},
+        {"ip4", "1.*[10-11].3.4", false, true, Type::IP4, {"1.10.3.4", "1.11.3.4"}},
+        {"ip4", "1.*[10-11].3.*[10-11]", false, true, Type::IP4, {"1.10.3.11", "1.10.3.11"}},
+        {"ip4", "1.*[10-12].*[10-12].4", false, true, Type::IP4, {"1.10.11.4", "1.12.10.4"}},
+        {"ip4", "1.*[10-11].*[10-11].*[10-11]", false, true, Type::IP4, {"1.10.11.10", "1.11.10.11"}},
+        {"ip4", "*[10-11].2.3.4", false, true, Type::IP4, {"10.2.3.4", "11.2.3.4"}},
+        {"ip4", "*[10-11].2.3.*[10-13]", false, true, Type::IP4, {"10.2.3.11", "10.2.3.13"}},
+        {"ip4", "*[10-11].2.*[10-13].4", false, true, Type::IP4, {"10.2.11.4", "10.2.13.4"}},
+        {"ip4", "*[10-11].2.*[10-11].*[10-11]", false, true, Type::IP4, {"10.2.11.10", "11.2.10.11"}},
+        {"ip4", "*[10-11].*[10-11].3.4", false, true, Type::IP4, {"10.11.3.4", "10.11.3.4"}},
+        {"ip4", "*[10-11].*[10-11].3.*[10-11]", false, true, Type::IP4, {"10.11.3.10", "11.10.3.11"}},
+        {"ip4", "*[10-11].*[10-11].*[10-11].4", false, true, Type::IP4, {"10.11.10.4", "11.10.11.4"}},
+        {"ip4", "1.2.3.4", false, false, Type::IP4, {"1.2.3.4", "1.2.3.4"}},
+        {"ip4", "*.*.3.*[50-60]", false, true, Type::IP4, {"0.1.3.52", "3.4.3.55"}},
+        {"ip4", "*.*.*.*", false, true, Type::IP4, {"0.1.2.3", "4.5.6.7"}},
+        {"ip4", "*", false, true, Type::IP4, {"0.0.0.0", "0.0.0.1"}}
 
         // syntax errors are tested in cIPv4::unitTest()
     };
@@ -618,10 +618,10 @@ void ProtocolParameter::unitTest ()
 
     static const std::vector<testcase_t<cIPv6>> ipv6tests =
     {
-        {"ip6", "fe80::1ff:fe23:4577:890a", false, false, "fe80::1ff:fe23:4577:890a", {"fe80::1ff:fe23:4577:890a", "fe80::1ff:fe23:4577:890a"}},
-        {"ip6", "fe80::1ff:*:4577:890a", false, true, "fe80::1ff:0:4577:890a", {"fe80::1ff:0000:4577:890a", "fe80::1ff:0001:4577:890a"}},
-        {"ip6", "*::1ff:fe23:4577:*[1000-2000]", false, true, "0::1ff:fe23:4577:0", {"0000::1ff:fe23:4577:1001", "0002::1ff:fe23:4577:1003"}},
-        {"ip6", "*", false, true, "0:0:0:0:0:0:0:0", {"0000:0001:0002:0003:0004:0005:0006:0007"}}
+        {"ip6", "fe80::1ff:fe23:4577:890a", false, false, Type::IP6, {"fe80::1ff:fe23:4577:890a", "fe80::1ff:fe23:4577:890a"}},
+        {"ip6", "fe80::1ff:*:4577:890a", false, true, Type::IP6, {"fe80::1ff:0000:4577:890a", "fe80::1ff:0001:4577:890a"}},
+        {"ip6", "*::1ff:fe23:4577:*[1000-2000]", false, true, Type::IP6, {"0000::1ff:fe23:4577:1001", "0002::1ff:fe23:4577:1003"}},
+        {"ip6", "*", false, true, Type::IP6, {"0000:0001:0002:0003:0004:0005:0006:0007"}}
 
         // syntax errors are tested in cIPv6::unitTest()
     };
@@ -629,236 +629,236 @@ void ProtocolParameter::unitTest ()
 
     static const std::vector<testcase_t<uint8_t>> i8tests =
     {
-        {"i8", "0", false, false, 0, {0}},
-        {"i8", "255", false, false, 255, {255, 255}},
-        {"i8", "42", false, false, 42, {42}},
-        {"i8", "256", true, false, 0, {}},
-        {"i8", "0x0", false, false, 0, {0}},
-        {"i8", "0xff", false, false, 255, {255}},
-        {"i8", "0x42", false, false, 0x42, {0x42}},
-        {"i8", "0x100", true, false, 0, {}},
+        {"i8", "0", false, false, Type::Int8, {0}},
+        {"i8", "255", false, false, Type::Int8, {255, 255}},
+        {"i8", "42", false, false, Type::Int8, {42}},
+        {"i8", "256", true, false, Type::Int8, {}},
+        {"i8", "0x0", false, false, Type::Int8, {0}},
+        {"i8", "0xff", false, false, Type::Int8, {255}},
+        {"i8", "0x42", false, false, Type::Int8, {0x42}},
+        {"i8", "0x100", true, false, Type::Int8, {}},
 
-        {"i8", "*", false, true, 0, {0, 1}},
-        {"i8", "*[100-101]", false, true, 0, {100, 101, 100}},
-        {"i8", "*[0x64-101]", false, true, 0, {100, 101, 100}},
-        {"i8", "*[0x64-0x65]", false, true, 0, {100, 101, 100}},
-        {"i8", "*[101-100]", true, true, 0, {}},
-        {"i8", "*[255-256]", true, true, 0, {}},
-        {"i8", "*[256-257]", true, true, 0, {}},
+        {"i8", "*", false, true, Type::Int8, {0, 1}},
+        {"i8", "*[100-101]", false, true, Type::Int8, {100, 101, 100}},
+        {"i8", "*[0x64-101]", false, true, Type::Int8, {100, 101, 100}},
+        {"i8", "*[0x64-0x65]", false, true, Type::Int8, {100, 101, 100}},
+        {"i8", "*[101-100]", true, true, Type::Int8, {}},
+        {"i8", "*[255-256]", true, true, Type::Int8, {}},
+        {"i8", "*[256-257]", true, true, Type::Int8, {}},
 
-        {"i8", "0x", true, false, 0, {}},
-        {"i8", "0xx1", true, false, 0, {}},
-        {"i8", "x1", true, false, 0, {}},
-        {"i8", "z", true, false, 0, {}},
-        {"i8", "a", true, false, 0, {}},
-        {"i8", "-1", true, false, 0, {}},
-        {"i8", "1.1", true, false, 0, {}},
-        {"i8", ".1", true, false, 0, {}},
-        {"i8", "1.", true, false, 0, {}},
-        {"i8", "1 2", true, false, 0, {}}
+        {"i8", "0x", true, false, Type::Int8, {}},
+        {"i8", "0xx1", true, false, Type::Int8, {}},
+        {"i8", "x1", true, false, Type::Int8, {}},
+        {"i8", "z", true, false, Type::Int8, {}},
+        {"i8", "a", true, false, Type::Int8, {}},
+        {"i8", "-1", true, false, Type::Int8, {}},
+        {"i8", "1.1", true, false, Type::Int8, {}},
+        {"i8", ".1", true, false, Type::Int8, {}},
+        {"i8", "1.", true, false, Type::Int8, {}},
+        {"i8", "1 2", true, false, Type::Int8, {}}
     };
     runTestCase<uint8_t> (i8tests);
 
     static const std::vector<testcase_t<uint16_t>> i16tests =
     {
-        {"i16", "0", false, false, 0, {0}},
-        {"i16", "65535", false, false, std::numeric_limits<uint16_t>::max(), {std::numeric_limits<uint16_t>::max(), std::numeric_limits<uint16_t>::max()}},
-        {"i16", "4200", false, false, 4200, {4200}},
-        {"i16", "65536", true, false, 0, {}},
-        {"i16", "0x0", false, false, 0, {0}},
-        {"i16", "0xffff", false, false, std::numeric_limits<uint16_t>::max(), {std::numeric_limits<uint16_t>::max()}},
-        {"i16", "0x4200", false, false, 0x4200, {0x4200}},
-        {"i16", "0x10000", true, false, 0, {}},
+        {"i16", "0", false, false, Type::Int16, {0}},
+        {"i16", "65535", false, false, Type::Int16, {std::numeric_limits<uint16_t>::max(), std::numeric_limits<uint16_t>::max()}},
+        {"i16", "4200", false, false, Type::Int16, {4200}},
+        {"i16", "65536", true, false, Type::Int16, {}},
+        {"i16", "0x0", false, false, Type::Int16, {0}},
+        {"i16", "0xffff", false, false, Type::Int16, {std::numeric_limits<uint16_t>::max()}},
+        {"i16", "0x4200", false, false, Type::Int16, {0x4200}},
+        {"i16", "0x10000", true, false, Type::Int16, {}},
 
-        {"i16", "*", false, true, 0, {0, 1}},
-        {"i16", "*[1000-1001]", false, true, 0, {1000, 1001, 1000}},
-        {"i16", "*[0x3e8-1001]", false, true, 0, {1000, 1001, 1000}},
-        {"i16", "*[0x3e8-0x3e9]", false, true, 0, {1000, 1001, 1000}},
-        {"i16", "*[1001-1000]", true, true, 0, {}},
-        {"i16", "*[65535-65536]", true, true, 0, {}},
-        {"i16", "*[65536-65537]", true, true, 0, {}},
+        {"i16", "*", false, true, Type::Int16, {0, 1}},
+        {"i16", "*[1000-1001]", false, true, Type::Int16, {1000, 1001, 1000}},
+        {"i16", "*[0x3e8-1001]", false, true, Type::Int16, {1000, 1001, 1000}},
+        {"i16", "*[0x3e8-0x3e9]", false, true, Type::Int16, {1000, 1001, 1000}},
+        {"i16", "*[1001-1000]", true, true, Type::Int16, {}},
+        {"i16", "*[65535-65536]", true, true, Type::Int16, {}},
+        {"i16", "*[65536-65537]", true, true, Type::Int16, {}},
 
-        {"i16", "0x", true, false, 0, {}},
-        {"i16", "0xx1", true, false, 0, {}},
-        {"i16", "x1", true, false, 0, {}},
-        {"i16", "z", true, false, 0, {}},
-        {"i16", "a", true, false, 0, {}},
-        {"i16", "-1", true, false, 0, {}},
-        {"i16", "1.1", true, false, 0, {}},
-        {"i16", ".1", true, false, 0, {}},
-        {"i16", "1.", true, false, 0, {}},
-        {"i16", "1 2", true, false, 0, {}}
+        {"i16", "0x", true, false, Type::Int16, {}},
+        {"i16", "0xx1", true, false, Type::Int16, {}},
+        {"i16", "x1", true, false, Type::Int16, {}},
+        {"i16", "z", true, false, Type::Int16, {}},
+        {"i16", "a", true, false, Type::Int16, {}},
+        {"i16", "-1", true, false, Type::Int16, {}},
+        {"i16", "1.1", true, false, Type::Int16, {}},
+        {"i16", ".1", true, false, Type::Int16, {}},
+        {"i16", "1.", true, false, Type::Int16, {}},
+        {"i16", "1 2", true, false, Type::Int16, {}}
     };
     runTestCase<uint16_t> (i16tests);
 
     static const std::vector<testcase_t<uint32_t>> i32tests =
     {
-        {"i32", "0", false, false, 0, {0}},
-        {"i32", "4294967295", false, false, std::numeric_limits<uint32_t>::max(), {std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max()}},
-        {"i32", "42000000", false, false, 42000000, {42000000}},
-        {"i32", "4294967296", true, false, 0, {}},
-        {"i32", "0x0", false, false, 0, {0}},
-        {"i32", "0xffffffff", false, false, std::numeric_limits<uint32_t>::max(), {std::numeric_limits<uint32_t>::max()}},
-        {"i32", "0x42000000", false, false, 0x42000000, {0x42000000}},
-        {"i32", "0x100000000", true, false, 0, {}},
+        {"i32", "0", false, false, Type::Int32, {0}},
+        {"i32", "4294967295", false, false, Type::Int32, {std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max()}},
+        {"i32", "42000000", false, false, Type::Int32, {42000000}},
+        {"i32", "4294967296", true, false, Type::Int32, {}},
+        {"i32", "0x0", false, false, Type::Int32, {0}},
+        {"i32", "0xffffffff", false, false, Type::Int32, {std::numeric_limits<uint32_t>::max()}},
+        {"i32", "0x42000000", false, false, Type::Int32, {0x42000000}},
+        {"i32", "0x100000000", true, false, Type::Int32, {}},
 
-        {"i32", "*", false, true, 0, {0, 1}},
-        {"i32", "*[100000-100001]", false, true, 0, {100000, 100001, 100000}},
-        {"i32", "*[0x186a0-100001]", false, true, 0, {100000, 100001, 100000}},
-        {"i32", "*[0x186a0-0x186a1]", false, true, 0, {100000, 100001, 100000}},
-        {"i32", "*[100001-100000]", true, true, 0, {}},
-        {"i32", "*[4294967295-4294967296]", true, true, 0, {}},
-        {"i32", "*[4294967296-4294967297]", true, true, 0, {}},
+        {"i32", "*", false, true, Type::Int32, {0, 1}},
+        {"i32", "*[100000-100001]", false, true, Type::Int32, {100000, 100001, 100000}},
+        {"i32", "*[0x186a0-100001]", false, true, Type::Int32, {100000, 100001, 100000}},
+        {"i32", "*[0x186a0-0x186a1]", false, true, Type::Int32, {100000, 100001, 100000}},
+        {"i32", "*[100001-100000]", true, true, Type::Int32, {}},
+        {"i32", "*[4294967295-4294967296]", true, true, Type::Int32, {}},
+        {"i32", "*[4294967296-4294967297]", true, true, Type::Int32, {}},
 
-        {"i32", "0x", true, false, 0, {}},
-        {"i32", "0xx1", true, false, 0, {}},
-        {"i32", "x1", true, false, 0, {}},
-        {"i32", "z", true, false, 0, {}},
-        {"i32", "a", true, false, 0, {}},
-        {"i32", "-1", true, false, 0, {}},
-        {"i32", "1.1", true, false, 0, {}},
-        {"i32", ".1", true, false, 0, {}},
-        {"i32", "1.", true, false, 0, {}},
-        {"i32", "1 2", true, false, 0, {}}
+        {"i32", "0x", true, false, Type::Int32, {}},
+        {"i32", "0xx1", true, false, Type::Int32, {}},
+        {"i32", "x1", true, false, Type::Int32, {}},
+        {"i32", "z", true, false, Type::Int32, {}},
+        {"i32", "a", true, false, Type::Int32, {}},
+        {"i32", "-1", true, false, Type::Int32, {}},
+        {"i32", "1.1", true, false, Type::Int32, {}},
+        {"i32", ".1", true, false, Type::Int32, {}},
+        {"i32", "1.", true, false, Type::Int32, {}},
+        {"i32", "1 2", true, false, Type::Int32, {}}
     };
     runTestCase<uint32_t> (i32tests);
 
     static const std::vector<testcase_t<uint64_t>> i64tests =
     {
-        {"i64", "0", false, false, 0, {0}},
-        {"i64", "18446744073709551615", false, false, std::numeric_limits<uint64_t>::max(), {std::numeric_limits<uint64_t>::max(), std::numeric_limits<uint64_t>::max()}},
-        {"i64", "420000000000", false, false, 420000000000, {420000000000}},
-        {"i64", "18446744073709551616", true, false, 0, {}},
-        {"i64", "0x0", false, false, 0, {0}},
-        {"i64", "0xffffffffffffffff", false, false, std::numeric_limits<uint64_t>::max(), {std::numeric_limits<uint64_t>::max()}},
-        {"i64", "0x42000000", false, false, 0x42000000, {0x42000000}},
-        {"i64", "0x10000000000000000", true, false, 0, {}},
+        {"i64", "0", false, false, Type::Int64, {0}},
+        {"i64", "18446744073709551615", false, false, Type::Int64, {std::numeric_limits<uint64_t>::max(), std::numeric_limits<uint64_t>::max()}},
+        {"i64", "420000000000", false, false, Type::Int64, {420000000000}},
+        {"i64", "18446744073709551616", true, false, Type::Int64, {}},
+        {"i64", "0x0", false, false, Type::Int64, {0}},
+        {"i64", "0xffffffffffffffff", false, false, Type::Int64, {std::numeric_limits<uint64_t>::max()}},
+        {"i64", "0x42000000", false, false, Type::Int64, {0x42000000}},
+        {"i64", "0x10000000000000000", true, false, Type::Int64, {}},
 
-        {"i64", "*", false, true, 0, {0, 1}},
-        {"i64", "*[10000000000-10000000001]", false, true, 0, {10000000000, 10000000001, 10000000000}},
-        {"i64", "*[0x2540BE400-10000000001]", false, true, 0, {10000000000, 10000000001, 10000000000}},
-        {"i64", "*[0x2540BE400-0x2540BE401]", false, true, 0, {10000000000, 10000000001, 10000000000}},
-        {"i64", "*[10000000001-10000000000]", true, true, 0, {}},
-        {"i64", "*[18446744073709551615-18446744073709551616]", true, true, 0, {}},
-        {"i64", "*[18446744073709551616-18446744073709551617]", true, true, 0, {}},
+        {"i64", "*", false, true, Type::Int64, {0, 1}},
+        {"i64", "*[10000000000-10000000001]", false, true, Type::Int64, {10000000000, 10000000001, 10000000000}},
+        {"i64", "*[0x2540BE400-10000000001]", false, true, Type::Int64, {10000000000, 10000000001, 10000000000}},
+        {"i64", "*[0x2540BE400-0x2540BE401]", false, true, Type::Int64, {10000000000, 10000000001, 10000000000}},
+        {"i64", "*[10000000001-10000000000]", true, true, Type::Int64, {}},
+        {"i64", "*[18446744073709551615-18446744073709551616]", true, true, Type::Int64, {}},
+        {"i64", "*[18446744073709551616-18446744073709551617]", true, true, Type::Int64, {}},
 
-        {"i64", "0x", true, false, 0, {}},
-        {"i64", "0xx1", true, false, 0, {}},
-        {"i64", "x1", true, false, 0, {}},
-        {"i64", "z", true, false, 0, {}},
-        {"i64", "a", true, false, 0, {}},
-        {"i64", "-1", true, false, 0, {}},
-        {"i64", "1.1", true, false, 0, {}},
-        {"i64", ".1", true, false, 0, {}},
-        {"i64", "1.", true, false, 0, {}},
-        {"i64", "1 2", true, false, 0, {}}
+        {"i64", "0x", true, false, Type::Int64, {}},
+        {"i64", "0xx1", true, false, Type::Int64, {}},
+        {"i64", "x1", true, false, Type::Int64, {}},
+        {"i64", "z", true, false, Type::Int64, {}},
+        {"i64", "a", true, false, Type::Int64, {}},
+        {"i64", "-1", true, false, Type::Int64, {}},
+        {"i64", "1.1", true, false, Type::Int64, {}},
+        {"i64", ".1", true, false, Type::Int64, {}},
+        {"i64", "1.", true, false, Type::Int64, {}},
+        {"i64", "1 2", true, false, Type::Int64, {}}
     };
     runTestCase<uint64_t> (i64tests);
 
     static const std::vector<testcase_t<double>> dbltests =
     {
-        {"float", "0.0", true, false, 0, {0}},
-        {"float", "1", false, false, 1.0, {1.0}},
-        {"float", "1.0", false, false, 1.0, {1.0}},
-        {"float", "3.14", false, false, 3.14, {3.14}},
-        {"float", "3.15", true, false, 0, {}},
-        {"float", "*", false, true, 1, {1}},
+        {"float", "0.0", true, false, Type::Float, {0}},
+        {"float", "1", false, false, Type::Float, {1.0}},
+        {"float", "1.0", false, false, Type::Float, {1.0}},
+        {"float", "3.14", false, false, Type::Float, {3.14}},
+        {"float", "3.15", true, false, Type::Float, {}},
+        {"float", "*", false, true, Type::Float, {1}},
 
-        {"float", ".2", true, false, 0, {0}},
-        {"float", "0x", true, false, 0, {}},
-        {"float", "0xx1", true, false, 0, {}},
-        {"float", "x1", true, false, 0, {}},
-        {"float", "z", true, false, 0, {}},
-        {"float", "a", true, false, 0, {}},
-        {"float", "-1", true, false, 0, {}},
+        {"float", ".2", true, false, Type::Float, {0}},
+        {"float", "0x", true, false, Type::Float, {}},
+        {"float", "0xx1", true, false, Type::Float, {}},
+        {"float", "x1", true, false, Type::Float, {}},
+        {"float", "z", true, false, Type::Float, {}},
+        {"float", "a", true, false, Type::Float, {}},
+        {"float", "-1", true, false, Type::Float, {}},
     };
     runTestCase<double> (dbltests);
 
     static const std::vector<testcase_t<uint32_t>> inttests =
     {
-        {"int", "0", true, false, 0, {}},
-        {"int", "0x0", true, false, 0, {}},
-        {"int", "99", true, false, 0, {}},
-        {"int", "0x63", true, false, 0, {}},
-        {"int", "200001", true, false, 0, {}},
-        {"int", "0x30D41", true, false, 0, {}},
-        {"int", "18446744073709551615", true, false, 0, {}},
-        {"int", "0xffffffffffffffff", true, false, 0, {}},
-        {"int", "18446744073709551616", true, false, 0, {}},
-        {"int", "0x10000000000000000", true, false, 0, {}},
+        {"int", "0", true, false, Type::Integer, {}},
+        {"int", "0x0", true, false, Type::Integer, {}},
+        {"int", "99", true, false, Type::Integer, {}},
+        {"int", "0x63", true, false, Type::Integer, {}},
+        {"int", "200001", true, false, Type::Integer, {}},
+        {"int", "0x30D41", true, false, Type::Integer, {}},
+        {"int", "18446744073709551615", true, false, Type::Integer, {}},
+        {"int", "0xffffffffffffffff", true, false, Type::Integer, {}},
+        {"int", "18446744073709551616", true, false, Type::Integer, {}},
+        {"int", "0x10000000000000000", true, false, Type::Integer, {}},
 
-        {"int", "100", false, false, 100, {100}},
-        {"int", "0x64", false, false, 100, {100}},
-        {"int", "4200", false, false, 4200, {4200}},
-        {"int", "0x1068", false, false, 4200, {4200}},
-        {"int", "200000", false, false, 200000, {200000}},
-        {"int", "0x30D40", false, false, 200000, {200000}},
+        {"int", "100", false, false, Type::Integer, {100}},
+        {"int", "0x64", false, false, Type::Integer, {100}},
+        {"int", "4200", false, false, Type::Integer, {4200}},
+        {"int", "0x1068", false, false, Type::Integer, {4200}},
+        {"int", "200000", false, false, Type::Integer, {200000}},
+        {"int", "0x30D40", false, false, Type::Integer, {200000}},
 
-        {"int", "*", false, true, 100, {100, 101}},
-        {"int", "*[1000-1001]", false, true, 100, {1000, 1001, 1000}},
-        {"int", "*[0x3e8-1001]", false, true, 100, {1000, 1001, 1000}},
-        {"int", "*[0x3e8-0x3e9]", false, true, 100, {1000, 1001, 1000}},
-        {"int", "*[199999-200000]", false, true, 100, {199999, 200000, 199999}},
-        {"int", "*[200000-200001]", true, true, 0, {}},
-        {"int", "*[200001-200002]", true, true, 0, {}},
+        {"int", "*", false, true, Type::Integer, {100, 101}},
+        {"int", "*[1000-1001]", false, true, Type::Integer, {1000, 1001, 1000}},
+        {"int", "*[0x3e8-1001]", false, true, Type::Integer, {1000, 1001, 1000}},
+        {"int", "*[0x3e8-0x3e9]", false, true, Type::Integer, {1000, 1001, 1000}},
+        {"int", "*[199999-200000]", false, true, Type::Integer, {199999, 200000, 199999}},
+        {"int", "*[200000-200001]", true, true, Type::Integer, {}},
+        {"int", "*[200001-200002]", true, true, Type::Integer, {}},
 
-        {"int", "0x", true, false, 0, {}},
-        {"int", "0xx1", true, false, 0, {}},
-        {"int", "x1", true, false, 0, {}},
-        {"int", "z", true, false, 0, {}},
-        {"int", "a", true, false, 0, {}},
-        {"int", "-1", true, false, 0, {}},
-        {"int", "1.1", true, false, 0, {}},
-        {"int", ".1", true, false, 0, {}},
-        {"int", "1.", true, false, 0, {}},
-        {"int", "1 2", true, false, 0, {}}
+        {"int", "0x", true, false, Type::Integer, {}},
+        {"int", "0xx1", true, false, Type::Integer, {}},
+        {"int", "x1", true, false, Type::Integer, {}},
+        {"int", "z", true, false, Type::Integer, {}},
+        {"int", "a", true, false, Type::Integer, {}},
+        {"int", "-1", true, false, Type::Integer, {}},
+        {"int", "1.1", true, false, Type::Integer, {}},
+        {"int", ".1", true, false, Type::Integer, {}},
+        {"int", "1.", true, false, Type::Integer, {}},
+        {"int", "1 2", true, false, Type::Integer, {}}
     };
     runTestCase<uint32_t> (inttests);
 
     static const std::vector<testcase_t<cUUID>> uuidtests =
     {
 #if (HAVE_BIG_ENDIAN)
-        {"uuid", "*", false, true, "00000000-0000-0000-0000-000000000000", {"00000000-0000-0400-8000-000000000001", "00000000-0000-0402-8000-000000000003"}},
+        {"uuid", "*", false, true, Type::UUID, {"00000000-0000-0400-8000-000000000001", "00000000-0000-0402-8000-000000000003"}},
 #else
-        {"uuid", "*", false, true, "00000000-0000-0000-0000-000000000000", {"00000000-0000-0400-8100-000000000000", "02000000-0000-0400-8300-000000000000"}},
+        {"uuid", "*", false, true, Type::UUID, {"00000000-0000-0400-8100-000000000000", "02000000-0000-0400-8300-000000000000"}},
 #endif
-        {"uuid", "00112233-4455-6677-8899-aabbccddeeff", false, false, "00112233-4455-6677-8899-aabbccddeeff", {}},
+        {"uuid", "00112233-4455-6677-8899-aabbccddeeff", false, false, Type::UUID, {}},
 
         // uuid syntax errors are tested in cUUID::unitTest()
     };
     runTestCase<cUUID> (uuidtests);
 
-    static const std::vector<stream_testcase_t> streamtests =
+    static const std::vector<testcase_t<std::vector<uint8_t>>> streamtests =
     {
-        {"str", "000102", false, false, {{0, 1, 2}, {0, 1, 2}}},
-        {"str", "\"Hello World!\"", false, false, {{'H','e','l','l','o',' ','W','o','r','l','d','!'}, {'H','e','l','l','o',' ','W','o','r','l','d','!'}}},
-        {"str", "*", false, true, {{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31}, {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31}}},
-        {"str", "*[32-32]", false, true, {{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31}, {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31}}},
-        {"str", "*[2-4]", false, true, {{0,1}, {0,1,2}, {0,1,2,3}, {0,1}}},
-        {"str", "*[0-2]", false, true, {{}, {0}, {0,1}, {}}},
-        {"str", "*[0-1048576]", false, true, {{}, {0}}},
-        {"str", "*16", false, true, {{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15},{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}}},
-        {"str", "*0x10", false, true, {{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15},{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}}},
-        {"str", "*0", false, true, {{}}},
-        {"str", "*1048577", true, false, {}},
-        {"str", "*[10-1048577]", true, false, {}},
+        {"str", "000102", false, false, Type::Bytestream, {{0, 1, 2}, {0, 1, 2}}},
+        {"str", "\"Hello World!\"", false, false, Type::Bytestream,{{'H','e','l','l','o',' ','W','o','r','l','d','!'}, {'H','e','l','l','o',' ','W','o','r','l','d','!'}}},
+        {"str", "*", false, true, Type::Bytestream,{{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31}, {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31}}},
+        {"str", "*[32-32]", false, true, Type::Bytestream,{{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31}, {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31}}},
+        {"str", "*[2-4]", false, true, Type::Bytestream,{{0,1}, {0,1,2}, {0,1,2,3}, {0,1}}},
+        {"str", "*[0-2]", false, true, Type::Bytestream,{{}, {0}, {0,1}, {}}},
+        {"str", "*[0-1048576]", false, true, Type::Bytestream,{{}, {0}}},
+        {"str", "*16", false, true, Type::Bytestream,{{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15},{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}}},
+        {"str", "*0x10", false, true, Type::Bytestream,{{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15},{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}}},
+        {"str", "*0", false, true, Type::Bytestream,{{}}},
+        {"str", "*1048577", true, false, Type::Bytestream,{}},
+        {"str", "*[10-1048577]", true, false, Type::Bytestream,{}},
 
-        {"str_range", "000102", true, false, {}},
-        {"str_range", "\"Hello World!\"", true, false, {}},
-        {"str_range", "000000000000000000000000000000000000000000", true, false, {}},
-        {"str_range", "\"aaaaaaaaaaaaaaaaaaaaa\"", true, false, {}},
-        {"str_range", "0000000000000000000000000000000000000000", false, false, {{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}}},
-        {"str_range", "\"aaaaaaaaaaaaaaaaaaaa\"", false, false, {{'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a'}}},
-        {"str_range", "*", false, true, {{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}}},
-        {"str_range", "*16", false, true, {{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}}},
-        {"str_range", "*20", false, true, {{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19}}},
-        {"str_range", "*15", true, false, {}},
-        {"str_range", "*21", true, false, {}},
-        {"str_range", "*[15-20]", true, false, {}},
-        {"str_range", "*[16-21]", true, false, {}},
-        {"str_range", "*[16-20]", false, true, {{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15},{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16}}},
+        {"str_range", "000102", true, false, Type::Bytestream,{}},
+        {"str_range", "\"Hello World!\"", true, false, Type::Bytestream,{}},
+        {"str_range", "000000000000000000000000000000000000000000", true, false, Type::Bytestream,{}},
+        {"str_range", "\"aaaaaaaaaaaaaaaaaaaaa\"", true, false, Type::Bytestream,{}},
+        {"str_range", "0000000000000000000000000000000000000000", false, false, Type::Bytestream,{{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}}},
+        {"str_range", "\"aaaaaaaaaaaaaaaaaaaa\"", false, false, Type::Bytestream,{{'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a'}}},
+        {"str_range", "*", false, true, Type::Bytestream,{{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}}},
+        {"str_range", "*16", false, true, Type::Bytestream,{{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}}},
+        {"str_range", "*20", false, true, Type::Bytestream,{{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19}}},
+        {"str_range", "*15", true, false, Type::Bytestream,{}},
+        {"str_range", "*21", true, false, Type::Bytestream,{}},
+        {"str_range", "*[15-20]", true, false, Type::Bytestream,{}},
+        {"str_range", "*[16-21]", true, false, Type::Bytestream,{}},
+        {"str_range", "*[16-20]", false, true, Type::Bytestream,{{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15},{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16}}},
     };
-    runStreamTestCase (streamtests);
+    runTestCase (streamtests);
 
     {
         char name[] = "multi";
@@ -913,9 +913,9 @@ void ProtocolParameter::unitTest ()
             ProtocolParameter obj (name, sizeof(name)-1, value, sizeof(value)-1, PR_UNIT.mandatory, PR_UNIT.optional);
             BUG_ON (obj.type() != Type::Bytestream);
             auto v = obj.asStream();
-            BUG_ON (v.second != (sizeof(value)-1)/2);
+            BUG_ON (v.size() != (sizeof(value)-1)/2);
             uint8_t data[] = {0x12,0x34};
-            BUG_ON (std::memcmp (v.first, data, v.second));
+            BUG_ON (std::memcmp (v.data(), data, v.size()));
         }
         catch (...)
         {
@@ -923,8 +923,42 @@ void ProtocolParameter::unitTest ()
         }
     }
     // TODO nested
+}
 
+template<typename T>
+void ProtocolParameter::runTestCase(const std::vector<testcase_t<T>>& tests)
+{
+    bool catched;
+    for (const auto& t : tests)
     {
+        try
+        {
+            cRandom::setCounterMode (0);
+            catched = false;
+            ProtocolParameter obj (t.name.c_str(), t.name.size(), t.value.c_str(), t.value.size(), PR_UNIT.mandatory, PR_UNIT.optional);
+            if (t.willThrow)
+                BUG ("expected to throw");
+            BUG_ON (t.expType != obj.type());
+            BUG_ON (t.isRandom != obj.m_isRandom);
+
+            for (const auto& expValue : t.expExternalValues)
+            {
+                T value = obj.get<T>();
+
+                BUG_ON (value != expValue);
+            }
+        }
+        catch(...)
+        {
+            catched = true;
+        }
+        BUG_ON (t.willThrow != catched);
+    }
+}
+
+void Protocol::unitTest ()
+{
+        {
         MUST_THROW (Protocol (""));
         MUST_THROW (Protocol ("  eth \tde_0f  ghi"));
         MUST_THROW (Protocol ("eth \tde_0f  ghi"));
@@ -1010,69 +1044,6 @@ void ProtocolParameter::unitTest ()
             BUG ("expected not to throw");
         }
 #endif
-    }
-}
-
-template<typename T>
-void ProtocolParameter::runTestCase(const std::vector<testcase_t<T>>& tests)
-{
-    bool catched;
-    for (const auto& t : tests)
-    {
-        try
-        {
-            cRandom::setCounterMode (0);
-            catched = false;
-            ProtocolParameter obj (t.name.c_str(), t.name.size(), t.value.c_str(), t.value.size(), PR_UNIT.mandatory, PR_UNIT.optional);
-            if (t.willThrow)
-                BUG ("expected to throw");
-            BUG_ON (t.isRandom != obj.m_isRandom);
-//            if constexpr (std::is_integral_v<T>)
-//                BUG_ON (t.expInternalValue != static_cast<T>(std::get<uint64_t> (obj.m_value)));
-//            else
-//                BUG_ON (t.expInternalValue != std::get<T> (obj.m_value));
-
-            for (const auto& expValue : t.expExternalValues)
-            {
-                T value = obj.get<T>();
-
-                BUG_ON (value != expValue);
-            }
-        }
-        catch(...)
-        {
-            catched = true;
-        }
-        BUG_ON (t.willThrow != catched);
-    }
-}
-
-void ProtocolParameter::runStreamTestCase (const std::vector<stream_testcase_t>& testcases)
-{
-    bool catched;
-    for (const auto& t : testcases)
-    {
-        try
-        {
-            cRandom::setCounterMode (0);
-            catched = false;
-            ProtocolParameter obj (t.name.c_str(), t.name.size(), t.value.c_str(), t.value.size(), PR_UNIT.mandatory, PR_UNIT.optional);
-            if (t.willThrow)
-                BUG ("expected to throw");
-            BUG_ON (t.isRandom != obj.m_isRandom);
-
-            for (const auto& expValue : t.expExternalValues)
-            {
-                std::pair<const uint8_t*, size_t> value = obj.asStream();
-                BUG_ON (value.second != expValue.size());
-                BUG_ON (std::memcmp (value.first, expValue.data(), value.second));
-            }
-        }
-        catch(...)
-        {
-            catched = true;
-        }
-        BUG_ON (t.willThrow != catched);
     }
 }
 
