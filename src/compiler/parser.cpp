@@ -79,6 +79,22 @@ Protocol::Protocol (const char* instruction, bool acceptTrailingGarbage)
         m_parameters.emplace_back (name, nameLen, value, valueLen, 
             protSyntax->mandatory, protSyntax->optional, m_parameters.size ());
     }
+
+    // check whether all mandatory parameters are provided
+    for (auto s = protSyntax->mandatory; *s;  s++)
+    {
+        bool found = false;
+        for (const auto &par : m_parameters)
+        {
+            if (par.key () == (*s)->key)
+            {
+                found = true;
+                break;
+            }
+        }
+        if (!found)
+            throw FormatException (exParUnknown, (*s)->syntax, std::strlen ((*s)->syntax)); 
+    }
 }
 
 ProtocolParameter* Protocol::findParameter (const ParameterSyntax* parameter, 
@@ -960,25 +976,28 @@ void Protocol::unitTest ()
 {
         {
         MUST_THROW (Protocol (""));
-        MUST_THROW (Protocol ("  eth \tde_0f  ghi"));
-        MUST_THROW (Protocol ("eth \tde_0f  ghi"));
-        MUST_THROW (Protocol ("  eth (\tde_0f  ghi"));
-        MUST_THROW (Protocol ("  eth("));
-        MUST_THROW (Protocol ("  eth ("));
-        MUST_THROW (Protocol ("  eth\t("));
-        MUST_THROW (Protocol ("eth("));
-        MUST_THROW (Protocol ("eth(=)"));
-        MUST_THROW (Protocol ("eth(dmac)"));
-        MUST_THROW (Protocol ("eth(dmac=)"));
-        MUST_THROW (Protocol ("eth(x=1)"));
-        MUST_THROW (Protocol ("eth(dmac=11:11:11:11:11:11) dd"));
-        MUST_THROW (Protocol ("eth(dmac=11:11:11:11:11)"));
-        MUST_NOT_THROW (Protocol ("eth(dmac=11:11:11:11:11:11) "));
-        MUST_NOT_THROW (Protocol ("eth(dmac=11:11:11:11:11:11) dd", true));
+        MUST_THROW (Protocol ("  raw \tde_0f  ghi"));
+        MUST_THROW (Protocol ("raw \tde_0f  ghi"));
+        MUST_THROW (Protocol ("  raw (\tde_0f  ghi"));
+        MUST_THROW (Protocol ("  raw("));
+        MUST_THROW (Protocol ("  raw ("));
+        MUST_THROW (Protocol ("  raw\t("));
+        MUST_THROW (Protocol ("raw("));
+        MUST_THROW (Protocol ("raw(=)"));
+        MUST_THROW (Protocol ("raw(mac)"));
+        MUST_THROW (Protocol ("raw(mac=)"));
+        MUST_THROW (Protocol ("raw(x=1)"));
+        MUST_THROW (Protocol ("raw(mac=11:11:11:11:11:11) dd"));
+        MUST_THROW (Protocol ("raw(mac=11:11:11:11:11)"));
+        MUST_NOT_THROW (Protocol ("raw(mac=11:11:11:11:11:11) "));
+        MUST_NOT_THROW (Protocol ("raw(mac=11:11:11:11:11:11) dd", true));
+        MUST_NOT_THROW (Protocol ("eth(dmac=11:11:11:11:11:11, payload=*)"));
+        MUST_THROW (Protocol ("eth(dmac=11:11:11:11:11:11), payload=*"));
+        MUST_THROW (Protocol ("eth(dmac=11:11:11:11:11:11)"));
 
         try
         {
-            Protocol obj("eth(dmac=11:11:11:11:11:11, ethertype = 0x1234) ");
+            Protocol obj("eth(dmac=11:11:11:11:11:11, ethertype = 0x1234, payload=*) ");
             MUST_THROW (obj.find (&PAR_ETH_SMAC));
             BUG_ON (obj.find (&PAR_ETH_SMAC, true));
             {
@@ -1001,7 +1020,7 @@ void Protocol::unitTest ()
         {
             ProtocolParameter* par = nullptr;
             ProtocolParameter* parVID = nullptr;
-            Protocol obj("eth(vid=10, prio=1, vid=20, vid=30, prio=3, ethertype=0x1234)");
+            Protocol obj("eth(dmac=11:11:11:11:11:11, vid=10, prio=1, vid=20, vid=30, prio=3, ethertype=0x1234, payload=*)");
             parVID = obj.find (&PAR_ETH_VID);
             BUG_ON (!parVID);
             BUG_ON (parVID->asInt16() != 10);
@@ -1034,7 +1053,7 @@ void Protocol::unitTest ()
             ProtocolParameter* parVID = nullptr;
             int16_t val = 42;
 
-            Protocol obj("eth(vid=10, prio=1, vid=20, vid=30, prio=3, ethertype=0x1234)");
+            Protocol obj("eth(dmac=11:11:11:11:11:11, vid=10, prio=1, vid=20, vid=30, prio=3, ethertype=0x1234, payload=*)");
             BUG_ON (obj.getValueOrDefault<uint16_t>(&PAR_ETH_VID, val) != 10);
             parVID = obj.find (&PAR_ETH_VID);
             BUG_ON (!parVID);
