@@ -153,10 +153,14 @@ public:
         return get<std::vector<uint8_t>> ();
     }
 
+    bool isRandom () const
+    {
+        return m_isRandom;
+    }
+
 private:
     uint64_t getAndCheckIntegerValue (uint64_t min, uint64_t max) const;
     double getAndCheckDoubleValue (double min, double max) const;
-    bool isRandom (uint64_t min, uint64_t max);
     bool checkForRandomStream (size_t rangeMin, size_t rangeMax);
 
     template<typename T>
@@ -448,10 +452,31 @@ class Protocol
 public:
     Protocol (const char* instruction, bool acceptTrailingGarbage = false);
 
+    /**
+     * Finds the first parameter with the given syntax.
+     * @param parameter the parameter syntax to search for
+     * @param dontThrow if true, no exception will be thrown if the parameter is not found, instead nullptr will be returned
+     * @return the first parameter with the given syntax or nullptr if not found and dontThrow is true
+     */
     ProtocolParameter* find (const ParameterSyntax* parameter, bool dontThrow = false)
     {
         return findParameter (parameter, nullptr, nullptr, dontThrow);
     }
+    
+    /**
+     * Finds the first parameter with the given syntax within a range.
+     * 
+     * Note: The start parameter is exclusive. Means, the search will begin
+     * with the parameter that follows the start parameter.The stop parameter
+     * is inclusive. 
+     * If the stop parameter is nullptr, the search will continue until the end of the parameters.
+     * 
+     * @param parameter the parameter syntax to search for
+     * @param start the starting parameter (exclusive)
+     * @param stop the stopping parameter (inclusive)
+     * @param dontThrow if true, no exception will be thrown if the parameter is not found, instead nullptr will be returned
+     * @return the first parameter with the given syntax or nullptr if not found and dontThrow is true
+     */
     ProtocolParameter* findInRange (const ParameterSyntax* parameter,
         const ProtocolParameter* start, const ParameterSyntax* stop = nullptr, bool dontThrow = false)
     {
@@ -480,6 +505,15 @@ public:
         return defaultValue;
     }
 
+    /**
+     * Checks if at least one parameter is a dynamic parameter (i.e. a random value).
+     * @return true if at least one parameter is dynamic, false otherwise
+     */
+    bool isDynamic () const
+    {
+        return m_isDynamic;
+    }
+
 private:
     ProtocolParameter* findParameter (const ParameterSyntax* parameter, 
         const ProtocolParameter* start, const ParameterSyntax* stop, bool optional);
@@ -488,6 +522,7 @@ private:
 private:
     struct ProtocolSyntax *m_syntax;
     std::vector<ProtocolParameter> m_parameters;
+    bool m_isDynamic;
 
 #ifdef WITH_UNITTESTS
 public:

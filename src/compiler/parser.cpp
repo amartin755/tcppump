@@ -29,7 +29,7 @@
 #include "parameterlist.hpp"
 
 
-Protocol::Protocol (const char* instruction, bool acceptTrailingGarbage)
+Protocol::Protocol (const char* instruction, bool acceptTrailingGarbage) : m_syntax (nullptr), m_isDynamic (false)
 {
     const char* p = instruction;
     const char* pProtId = nullptr;
@@ -78,6 +78,10 @@ Protocol::Protocol (const char* instruction, bool acceptTrailingGarbage)
 
         m_parameters.emplace_back (name, nameLen, value, valueLen, 
             protSyntax->mandatory, protSyntax->optional, m_parameters.size ());
+
+        // remember, if we have some dynamic parameters
+        if (m_parameters.back().isRandom())
+            m_isDynamic = true;
     }
 
     // check whether all mandatory parameters are provided
@@ -998,6 +1002,7 @@ void Protocol::unitTest ()
         try
         {
             Protocol obj("eth(dmac=11:11:11:11:11:11, ethertype = 0x1234, payload=*) ");
+            BUG_ON (!obj.isDynamic());
             MUST_THROW (obj.find (&PAR_ETH_SMAC));
             BUG_ON (obj.find (&PAR_ETH_SMAC, true));
             {
@@ -1020,7 +1025,8 @@ void Protocol::unitTest ()
         {
             ProtocolParameter* par = nullptr;
             ProtocolParameter* parVID = nullptr;
-            Protocol obj("eth(dmac=11:11:11:11:11:11, vid=10, prio=1, vid=20, vid=30, prio=3, ethertype=0x1234, payload=*)");
+            Protocol obj("eth(dmac=11:11:11:11:11:11, vid=10, prio=1, vid=20, vid=30, prio=3, ethertype=0x1234, payload=\"hello\")");
+            BUG_ON (obj.isDynamic());
             parVID = obj.find (&PAR_ETH_VID);
             BUG_ON (!parVID);
             BUG_ON (parVID->asInt16() != 10);
