@@ -148,7 +148,7 @@ public:
         // TODO unify via get
         return *m_value.pNested;
     }
-    const std::vector<uint8_t> asStream ()
+    const std::vector<uint8_t>& asStream ()
     {
         return get<std::vector<uint8_t>> ();
     }
@@ -462,7 +462,7 @@ public:
     {
         return findParameter (parameter, nullptr, nullptr, dontThrow);
     }
-    
+
     /**
      * Finds the first parameter with the given syntax within a range.
      * 
@@ -513,6 +513,22 @@ public:
     {
         return m_isDynamic;
     }
+
+    /**
+     * Counts the number of parameters.
+     * @return the number of parameters
+     */
+    size_t count () const
+    {
+        return m_parameters.size();
+    }
+
+    /**
+     * Counts the number of parameters with the given syntax.
+     * @param parameter the parameter syntax to count
+     * @return the number of parameters with the given syntax
+     */
+    size_t count (const ParameterSyntax& parameter) const;
 
 private:
     ProtocolParameter* findParameter (const ParameterSyntax* parameter, 

@@ -124,6 +124,17 @@ ProtocolParameter* Protocol::findParameter (const ParameterSyntax* parameter,
     return nullptr;
 }
 
+size_t Protocol::count (const ParameterSyntax& parameter) const
+{
+    size_t seen = 0;
+
+    for (const auto& p : m_parameters)
+    {
+        if (p.key () == parameter.key)
+            seen++;
+    }
+    return seen;
+}
 
 ProtocolParameter::ProtocolParameter (const char* name, size_t nameLen, const char* value, size_t valueLen,
     ParameterSyntaxArray mandatory, ParameterSyntaxArray optional, size_t position)
@@ -1003,6 +1014,7 @@ void Protocol::unitTest ()
         {
             Protocol obj("eth(dmac=11:11:11:11:11:11, ethertype = 0x1234, payload=*) ");
             BUG_ON (!obj.isDynamic());
+            BUG_ON (obj.count () != 3);
             MUST_THROW (obj.find (&PAR_ETH_SMAC));
             BUG_ON (obj.find (&PAR_ETH_SMAC, true));
             {
@@ -1027,6 +1039,7 @@ void Protocol::unitTest ()
             ProtocolParameter* parVID = nullptr;
             Protocol obj("eth(dmac=11:11:11:11:11:11, vid=10, prio=1, vid=20, vid=30, prio=3, ethertype=0x1234, payload=\"hello\")");
             BUG_ON (obj.isDynamic());
+            BUG_ON (obj.count () != 8);
             parVID = obj.find (&PAR_ETH_VID);
             BUG_ON (!parVID);
             BUG_ON (parVID->asInt16() != 10);
@@ -1060,6 +1073,7 @@ void Protocol::unitTest ()
             int16_t val = 42;
 
             Protocol obj("eth(dmac=11:11:11:11:11:11, vid=10, prio=1, vid=20, vid=30, prio=3, ethertype=0x1234, payload=*)");
+            BUG_ON (obj.count (PAR_ETH_VID) != 3);
             BUG_ON (obj.getValueOrDefault<uint16_t>(&PAR_ETH_VID, val) != 10);
             parVID = obj.find (&PAR_ETH_VID);
             BUG_ON (!parVID);
