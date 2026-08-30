@@ -1093,6 +1093,33 @@ void Protocol::unitTest ()
         {
             BUG ("expected not to throw");
         }
+
+        try
+        {
+            ProtocolParameter* parVID = nullptr;
+            int16_t val = 42;
+
+            Protocol obj("eth(dmac=11:11:11:11:11:11, vid=10, prio=1, vid=20, vid=30, prio=3, ethertype=0x1234, payload=*)");
+            BUG_ON (obj.count (PAR_ETH_VID) != 3);
+            BUG_ON (obj.getValue<uint16_t>(&PAR_ETH_VID) != 10);
+            parVID = obj.find (&PAR_ETH_VID);
+            BUG_ON (!parVID);
+            BUG_ON (obj.getValueInRange<uint16_t> (&PAR_ETH_PRIO, parVID, &PAR_ETH_VID) != 1);
+            BUG_ON (obj.getValueInRange<uint16_t> (&PAR_ETH_VID, parVID, &PAR_ETH_ETHERTYPE) != 20);
+            parVID = obj.findInRange (&PAR_ETH_VID, parVID);
+            BUG_ON (!parVID);
+            BUG_ON (parVID->asInt16() != 20);
+            MUST_THROW (obj.getValueInRange<uint16_t> (&PAR_ETH_PRIO, parVID, &PAR_ETH_VID));
+            BUG_ON (obj.getValueInRange<uint16_t> (&PAR_ETH_VID, parVID, &PAR_ETH_ETHERTYPE) != 30);
+            parVID = obj.findInRange (&PAR_ETH_VID, parVID);
+            BUG_ON (!parVID);
+            BUG_ON (parVID->asInt16() != 30);
+            BUG_ON (obj.getValueInRange<uint16_t> (&PAR_ETH_PRIO, parVID, &PAR_ETH_VID) != 3);
+        }
+        catch (...)
+        {
+            BUG ("expected not to throw");
+        }
     }
 }
 

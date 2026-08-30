@@ -468,7 +468,8 @@ public:
      * 
      * Note: The start parameter is exclusive. Means, the search will begin
      * with the parameter that follows the start parameter.The stop parameter
-     * is inclusive. 
+     * is inclusive.
+     * If the start parameter is nullptr, the search will begin with the first parameter.
      * If the stop parameter is nullptr, the search will continue until the end of the parameters.
      * 
      * @param parameter the parameter syntax to search for
@@ -488,9 +489,21 @@ public:
         std::conditional_t<is_value_type_v<T>, T, const T&>;
 
     template<typename T>
+    get_set_t<T> getValue (const ParameterSyntax* parameter)
+    {
+        return find (parameter)->get<T>();
+    }
+
+    template<typename T>
     get_set_t<T> getValueOrDefault (const ParameterSyntax* parameter, const T& defaultValue)
     {
         return getValueInRangeOrDefault (parameter, nullptr, nullptr, defaultValue);
+    }
+
+    template<typename T>
+    get_set_t<T> getValueInRange (const ParameterSyntax* parameter, const ProtocolParameter* start, const ParameterSyntax* stop)
+    {
+        return findInRange (parameter, start, stop)->get<T>();
     }
 
     template<typename T>

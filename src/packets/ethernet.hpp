@@ -17,202 +17,264 @@
  */
 
 
-#ifndef ETHERNET_PACKET_H_
-#define ETHERNET_PACKET_H_
+#ifndef ETHERNET_HPP_
+#define ETHERNET_HPP_
 
 #include <cstdint>
-#include <cstddef>    // size_t
+#include <cstddef>    // size_t, offsetof
+#include <memory>
+#include <utility>
+#include <vector>
 
 #include "bug.hpp"
 #include "formatexception.hpp"
 #include "inet.h"
 #include "macaddress.hpp"
 #include "linkable.hpp"
+#include "parser.hpp"
 
 
-class cEthernetPacket : public cLinkable
+namespace Protocols
+{
+
+class Ethernet : public cLinkable
 {
 public:
-    cEthernetPacket ();
-    cEthernetPacket (size_t maxLength);
-    cEthernetPacket (const cEthernetPacket& obj); // copy constructor
-    virtual ~cEthernetPacket ();
-    cEthernetPacket (cEthernetPacket&& other);
-    cEthernetPacket& operator=(cEthernetPacket&& other);
-    void operator=(const cEthernetPacket&) = delete;       // no copy-assignment operator
+    Ethernet (const Ethernet&) = delete;
+    Ethernet (const Ethernet&&) = delete;
+    Ethernet& operator= (const Ethernet&) = delete;
+    Ethernet& operator= (const Ethernet&&) = delete;
 
-    void setRandomSrcMac (bool unicast = true, bool multicast = false)
+    explicit Ethernet(std::unique_ptr<Protocol> protocol);
+    virtual ~Ethernet ();
+
+    void compile ();
+    inline size_t fragments () const {return m_data.size();}
+    inline std::pair<const uint8_t*, size_t> get (size_t fragment) const
     {
-        setSrcMac (cMacAddress (unicast, multicast));
+        assert (fragment < m_data.size());
+        return std::make_pair (
+            reinterpret_cast<const uint8_t*>(m_data[fragment].first),
+            length (fragment));
     }
-    void setRandomDestMac (bool unicast = true, bool multicast = false)
+    inline size_t payloadLength (size_t fragment) const
     {
-        setDestMac (cMacAddress (unicast, multicast));
+        assert (fragment < m_data.size());
+        return m_data[fragment].second;
     }
-    void setSrcMac (const cMacAddress& src);
-    void getSrcMac (cMacAddress& src) const;
-    void setDestMac (const cMacAddress& dest);
-    void getDestMac (cMacAddress& dest) const;
-    void setMacHeader (const cMacAddress& src, const cMacAddress& dest);
-    void addLlcHeader (uint8_t dsap, uint8_t ssap, uint16_t control);
-    void addSnapHeader (uint32_t oui, uint16_t protocol);
-    void addVlanTag (bool isCTag, uint16_t id, uint16_t prio, uint16_t dei);
-    void setTypeLength (uint16_t ethertypeLenth);
-    void setLength ();
+    inline size_t length (size_t fragment) const
+    {
+        return m_payloadOffset + payloadLength (fragment);
+    }
+/*
     void setPayload (const uint8_t* payload, size_t len);
     void appendPayload (const uint8_t* payload, size_t len);
     void setRaw (const uint8_t* payload, size_t len);
-    const uint8_t* get () const;
-    inline size_t getLength () const {return pPayload - packet + payloadLength;}
-    inline void clear () {reset ();};
-    inline bool hasLlcHeader () const {return llcHeaderLength != 0;}
-    inline bool hasPayload () const {return payloadLength != 0;}
-    inline bool hasDestMac () const {return hasDMAC;}
-    inline const uint8_t * getPayload () const {return pPayload;}
-    inline uint8_t getPayloadAt8 (unsigned offset) const
+    inline size_t getLength () const {return m_payloadOffset + m_payloadLength;}
+    inline bool hasDestMac () const {return m_hasDMAC;}
+    inline const uint8_t * getPayload () const {return m_packet + m_payloadOffset;}
+    inline size_t getPayloadLength () const {return m_payloadLength;}
+    inline uint16_t getTypeLength () const {return ntohs(*ptrEthertypeLength (0));}
+*/
+    static constexpr size_t   MAX_ETHERNET_PAYLOAD     = 1500;
+    static constexpr size_t   MAX_PACKET               = 6+6+2+MAX_ETHERNET_PAYLOAD;
+    static constexpr size_t   MAX_TAGGED_PACKET        = MAX_PACKET + 4;
+    static constexpr size_t   MAX_DOUBLE_TAGGED_PACKET = MAX_TAGGED_PACKET + 4;
+
+    #pragma pack(push, 1)
+    struct mac_header_t
     {
-        if (offset > payloadLength)
-            throw FormatException (exParRange, NULL);
+        cMacAddress::mac_t  dest;
+        cMacAddress::mac_t  src;
+        uint16_t ethertypeLength;
+    };
+    #pragma pack(pop)
 
-        return pPayload[offset];
-    }
-    inline uint16_t getPayloadAt16 (unsigned offset) const // note: offset is a byte offset!!!
+    enum ethertypes_t : uint16_t
     {
-        if (offset > payloadLength)
-            throw FormatException (exParRange, NULL);
-
-        return ((uint16_t*)pPayload)[offset/2];
-    }
-    inline size_t getPayloadLength () const {return payloadLength;}
-    inline uint16_t getTypeLength () const {return ntohs(*pEthertypeLength);}
-    void updatePayloadAt (unsigned offset, const void* payload, size_t len);
-
-    static const size_t   MAX_ETHERNET_PAYLOAD     = 1500;
-    static const size_t   MAX_PACKET               = 6+6+2+MAX_ETHERNET_PAYLOAD;
-    static const size_t   MAX_TAGGED_PACKET        = MAX_PACKET + 4;
-    static const size_t   MAX_DOUBLE_TAGGED_PACKET = MAX_TAGGED_PACKET + 4;
+        ETHERTYPE_IPV4  = 0x0800,
+        ETHERTYPE_ARP   = 0x0806,
+        ETHERTYPE_CVLAN = 0x8100,
+        ETHERTYPE_IPV6  = 0x86DD,
+        ETHERTYPE_SVLAN = 0x88a8,
+        ETHERTYPE_PN    = 0x8892,
+        ETHERTYPE_LLDP  = 0x88CC
+    };
 
 #ifdef WITH_UNITTESTS
     static void unitTest ();
 #endif
 
 protected:
-    inline size_t getMtu () const {return pPayload - packet + packetMaxLength;}
+    inline void setTypeLength (uint16_t ethertypeLength)
+    {
+        *ptrEthertypeLength (0) = htons (ethertypeLength);
+    }
+    inline void setLength (unsigned fragment)
+    {
+        setTypeLength (uint16_t(payloadLength(fragment) + m_llcHeaderLength));
+    }
+    uint8_t* compile (size_t payloadLength, const cMacAddress* dstMac = nullptr);
+    uint8_t* compileFragment (size_t fragment, size_t payloadLength);
+
+    std::unique_ptr<Protocol> m_protocol;
+
+
 
 private:
-    void reset ();
-    void updatePosition (size_t len);
-    inline void checkPacketLength (size_t addedBytes) const
+
+    #pragma pack(push, 1)
+    struct vlan_t
     {
-        if ((getLength () + addedBytes) > packetMaxLength)
+        uint16_t tpid;
+        uint16_t tci;  // tag control information | prio (3 bit) | CFI/DEI (1 bit) | vlan id (12 bit)
+
+    public:
+        void setCTag (uint16_t id, uint16_t prio = 0, uint16_t dei = 0)
+        {
+            tpid = htons (ETHERTYPE_CVLAN);
+            setTci (id, prio, dei);
+        }
+        void setSTag (uint16_t id, uint16_t prio = 0, uint16_t dei = 0)
+        {
+            tpid = htons (ETHERTYPE_SVLAN);
+            setTci (id, prio, dei);
+        }
+        unsigned getId () const
+        {
+            return unsigned (ntohs (tci) & 0x03ff);
+        }
+        unsigned getPrio () const
+        {
+            return unsigned ((ntohs (tci) >> 13) & 0x0007);
+        }
+        unsigned getDEI () const
+        {
+            return unsigned ((ntohs (tci) >> 12) & 0x0001);
+        }
+        bool isVlan () const
+        {
+            uint16_t type = ntohs (tpid);
+            return type == ETHERTYPE_CVLAN || type == ETHERTYPE_SVLAN;
+        }
+        bool isCVlan () const
+        {
+            return ntohs (tpid) == ETHERTYPE_CVLAN;
+        }
+        bool isPVlan () const
+        {
+            return ntohs (tpid) == ETHERTYPE_SVLAN;
+        }
+    private:
+        void setTci (uint16_t vid, uint16_t prio, uint16_t dei)
+        {
+            tci = htons ((vid & 0x0FFF)| ((dei & 1) << 12) | ((prio & 7) << 13));
+        }
+
+    };
+
+    struct llc_t
+    {
+        uint8_t  dsap;
+        uint8_t  ssap;
+        union
+        {
+            uint16_t c16;
+            uint8_t  c8;
+        }control;
+    };
+
+    struct oui_t
+    {
+        uint8_t a;
+        uint8_t b;
+        uint8_t c;
+    };
+
+    struct snap_t
+    {
+        oui_t    oui;
+        uint16_t protocol;
+    };
+    #pragma pack(pop)
+
+    void reset ();
+    inline void checkPacketLength (size_t fragment,  size_t addedBytes) const
+    {
+        if (unlikely((length (fragment) + addedBytes) > m_packetMaxLength))
             throw FormatException (exParRange, NULL);
     }
+    inline bool hasLlcHeader () const {return m_llcHeaderLength != 0;}
+    void addLlcHeader (uint8_t dsap, uint8_t ssap, uint16_t control);
+    void addSnapHeader (uint32_t oui, uint16_t protocol);
+    void addVlanTag (bool isCTag, uint16_t id, uint16_t prio, uint16_t dei);
 
-    const uint32_t* data;       // holds the packet data; do never access directly; use packet instead!
-    uint8_t*  packet;            // always points to packet begin
-    size_t    packetMaxLength;
-    uint8_t*  pPayload;         // points at begin of payload (will be moved in case of tagging)
-    uint16_t* pEthertypeLength; // points at ethertype/length field (will be moved in case of tagging)
-    size_t    payloadLength;
-    size_t    llcHeaderLength;
-    bool      hasDMAC;
+    inline uint8_t* ptrPacket (unsigned fragment) const
+    {
+        return reinterpret_cast<uint8_t*>(std::get<0>(m_data[fragment]));
+    }
+    inline uint8_t* ptrPayload (unsigned fragment) const
+    {
+        return ptrPacket (fragment) + m_payloadOffset;
+    }
+    inline uint16_t* ptrEthertypeLength (unsigned fragment) const
+    {
+        return reinterpret_cast <uint16_t*>(ptrPacket (fragment) + m_EthertypeLengthOffset);
+    }
+    inline void setPayloadLength (unsigned fragment, size_t paylodLength)
+    {
+        m_data[fragment].second = paylodLength;
+    }
+    inline void setMacHeader (const cMacAddress& src, const cMacAddress& dest)
+    {
+        setSrcMac (src);
+        setDestMac (dest);
+    }
+    inline void setDestMac (const cMacAddress& dest)
+    {
+        // mac header contains source and destination mac and is always at the begin of the packet
+        mac_header_t* header = (mac_header_t*)ptrPacket(0);
+        std::memcpy(&header->dest, dest.get(), dest.size());
+        m_hasDMAC = true;
+    }
+    inline void getDestMac (cMacAddress& dest) const
+    {
+        mac_header_t* header = (mac_header_t*)ptrPacket(0);
+        dest.set(&header->dest, sizeof (header->dest));
+    }
+    inline void setSrcMac (const cMacAddress& src)
+    {
+        // mac header contains source and destination mac and is always at the begin of the packet
+        mac_header_t* header = (mac_header_t*)ptrPacket(0);
+        std::memcpy(&header->src, src.get(), src.size());
+    }
+    inline void getSrcMac (cMacAddress& src) const
+    {
+        mac_header_t* header = (mac_header_t*)ptrPacket(0);
+        src.set(&header->src, sizeof (header->src));
+    }
+#ifdef WITH_UNITTESTS
+    bool checkConsistency () const;
+#endif
+
+    /**
+     * holds the data of all fragments
+     * 
+     * first: pointer to the data, where the packet is stored
+     * second: size of the payload in bytes
+     */
+    std::vector <std::pair<uint64_t*, size_t>> m_data;
+    const size_t m_packetMaxLength;  // maximum length of the packet in bytes (including mac header and payload)
+    const size_t m_allocSize64;
+
+//    const uint32_t* m_data;       // holds the packet data; do never access directly; use packet instead!
+    size_t  m_payloadOffset;         // points at begin of payload (will be moved in case of tagging)
+    size_t  m_EthertypeLengthOffset; // points at ethertype/length field (will be moved in case of tagging)
+    size_t    m_llcHeaderLength;
+    bool      m_hasDMAC;
+    bool   m_hasEthertype;
 };
 
-enum ethertypes_t : uint16_t
-{
-    ETHERTYPE_IPV4  = 0x0800,
-    ETHERTYPE_ARP   = 0x0806,
-    ETHERTYPE_CVLAN = 0x8100,
-    ETHERTYPE_IPV6  = 0x86DD,
-    ETHERTYPE_SVLAN = 0x88a8,
-    ETHERTYPE_PN    = 0x8892,
-    ETHERTYPE_LLDP  = 0x88CC
-};
+}
 
-#pragma pack(1)
-
-struct mac_header_t
-{
-    cMacAddress::mac_t  dest;
-    cMacAddress::mac_t  src;
-    uint16_t ethertypeLength;
-};
-
-struct vlan_t
-{
-    uint16_t tpid;
-    uint16_t tci;  // tag control information | prio (3 bit) | CFI/DEI (1 bit) | vlan id (12 bit)
-
-public:
-    void setCTag (uint16_t id, uint16_t prio = 0, uint16_t dei = 0)
-    {
-        tpid = htons (ETHERTYPE_CVLAN);
-        setTci (id, prio, dei);
-    }
-    void setSTag (uint16_t id, uint16_t prio = 0, uint16_t dei = 0)
-    {
-        tpid = htons (ETHERTYPE_SVLAN);
-        setTci (id, prio, dei);
-    }
-    unsigned getId () const
-    {
-        return unsigned (ntohs (tci) & 0x03ff);
-    }
-    unsigned getPrio () const
-    {
-        return unsigned ((ntohs (tci) >> 13) & 0x0007);
-    }
-    unsigned getDEI () const
-    {
-        return unsigned ((ntohs (tci) >> 12) & 0x0001);
-    }
-    bool isVlan () const
-    {
-        uint16_t type = ntohs (tpid);
-        return type == ETHERTYPE_CVLAN || type == ETHERTYPE_SVLAN;
-    }
-    bool isCVlan () const
-    {
-        return ntohs (tpid) == ETHERTYPE_CVLAN;
-    }
-    bool isPVlan () const
-    {
-        return ntohs (tpid) == ETHERTYPE_SVLAN;
-    }
-
-
-private:
-    void setTci (uint16_t vid, uint16_t prio, uint16_t dei)
-    {
-        tci = htons ((vid & 0x0FFF)| ((dei & 1) << 12) | ((prio & 7) << 13));
-    }
-
-};
-
-struct llc_t
-{
-    uint8_t  dsap;
-    uint8_t  ssap;
-    union
-    {
-        uint16_t c16;
-        uint8_t  c8;
-    }control;
-};
-
-struct oui_t
-{
-    uint8_t a;
-    uint8_t b;
-    uint8_t c;
-};
-
-struct snap_t
-{
-    oui_t    oui;
-    uint16_t protocol;
-};
-
-#pragma pack()
-
-#endif /* ETHERNET_PACKET_H_ */
+#endif /* ETHERNET_HPP_ */

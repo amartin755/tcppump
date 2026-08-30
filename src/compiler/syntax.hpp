@@ -217,7 +217,7 @@ inline constexpr ParameterSyntax PAR_ETH_VID = {
 };
 inline constexpr ParameterSyntax PAR_ETH_VTYPE = {
     "vtype",
-    "VLAN Type",
+    "VLAN Type: 1 = Customer VLAN (C-TAG), 2 = Provider VLAN (S-TAG)",
     Integer,
     __LINE__,
     "1",

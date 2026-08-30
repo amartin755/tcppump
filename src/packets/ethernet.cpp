@@ -18,193 +18,172 @@
 
 
 #include <cstring>
+#include <cstddef>
 
-#include "ethernetpacket.hpp"
+#include "ethernet.hpp"
 #include "settings.hpp"
 #include "bug.hpp"
 
+#ifdef WITH_UNITTESTS
+#include "console.hpp"
+#define MEMSET_VAL 0xef
+#endif
 
-
-cEthernetPacket::cEthernetPacket ()
-: cEthernetPacket (cSettings::get().getMyMTU() + sizeof (mac_header_t) + 4)
+namespace Protocols
 {
-}
 
-
-cEthernetPacket::cEthernetPacket (size_t maxLength)
+Ethernet::Ethernet (std::unique_ptr<Protocol> protocol) : 
+    m_protocol (std::move (protocol)),
+    m_packetMaxLength (cSettings::get().getMyMTU() + sizeof (mac_header_t) + 4),
+    m_allocSize64 ((m_packetMaxLength + sizeof (uint64_t) - 1) / sizeof (uint64_t))
 {
-    BUG_ON (maxLength < sizeof (mac_header_t));
-
-    /*
-     * note: We use an array of uint32_t here to force 32bit aligment of our packet data.
-     * Yes, that's paranoid. I know that 'new' always aligns to __STDCPP_DEFAULT_NEW_ALIGNMENT__, which is
-     * typically 8 or 16 bytes, but you never know ;-)
-     */
-    data = new uint32_t[(maxLength + sizeof (uint32_t) - 1) / sizeof (uint32_t)];
-
-    packet          = (uint8_t*)data;
-    packetMaxLength = maxLength;
-    std::memset (packet, 0, sizeof (mac_header_t)); // initialize at least the ethernet header to zero
+    uint64_t* p = new uint64_t[m_allocSize64];
+#ifdef WITH_UNITTESTS
+    std::memset (p, MEMSET_VAL, m_allocSize64 * sizeof (uint64_t));
+#endif
+    m_data.emplace_back (p, 0);
     reset ();
 }
 
-// move constructor
-cEthernetPacket::cEthernetPacket (cEthernetPacket&& other)
+
+Ethernet::~Ethernet ()
 {
-    data             = other.data;
-    packet           = other.packet;
-    packetMaxLength  = other.packetMaxLength;
-    pPayload         = other.pPayload;
-    pEthertypeLength = other.pEthertypeLength;
-    payloadLength    = other.payloadLength;
-    llcHeaderLength  = other.llcHeaderLength;
-    hasDMAC          = other.hasDMAC;
-
-    other.data             = nullptr;
-    other.packet           = nullptr;
-    other.packetMaxLength  = 0;
-    other.pPayload         = nullptr;
-    other.pEthertypeLength = nullptr;
-    other.payloadLength    = 0;
-    other.llcHeaderLength  = 0;
-}
-
-// copy constructor
-cEthernetPacket::cEthernetPacket (const cEthernetPacket& obj) : cEthernetPacket (obj.packetMaxLength)
-{
-    BUG_ON (packetMaxLength != obj.packetMaxLength);
-
-    payloadLength    = obj.payloadLength;
-    llcHeaderLength  = obj.llcHeaderLength;
-    hasDMAC          = obj.hasDMAC;
-
-    // copy packet data
-    std::memcpy (packet, obj.packet, obj.getLength());
-
-    // recalculate offsets
-    pPayload         = packet + (obj.pPayload - obj.packet);
-    pEthertypeLength = (uint16_t*)(packet + ((uint8_t*)obj.pEthertypeLength - obj.packet));
+    for (auto& d : m_data)
+        delete[] d.first;
 }
 
 
-cEthernetPacket::~cEthernetPacket ()
+void Ethernet::reset ()
 {
-    delete[] data;
+    m_payloadOffset          = sizeof (mac_header_t);
+    m_EthertypeLengthOffset  = offsetof (mac_header_t, ethertypeLength);
+    m_llcHeaderLength        = 0;
+    m_hasDMAC                = false;
+    m_hasEthertype           = false;
+    *ptrEthertypeLength (0)  = 0;
+    setPayloadLength (0, 0);
 }
 
 
-cEthernetPacket& cEthernetPacket::operator=(cEthernetPacket&& other)
+void Ethernet::compile ()
 {
-    if (this != &other)
+    const auto& payload = m_protocol->find (&PAR_ETH_PAYLOAD)->asStream();
+    uint8_t* p = compile (payload.size());
+    std::memcpy (p, payload.data(), payload.size());
+}
+
+
+uint8_t* Ethernet::compile (size_t payloadLength, const cMacAddress* dstMac)
+{
+    reset ();
+
+    bool optionalDMAC = dstMac != nullptr;
+
+    // if dstMac is not provided, PAR_ETH_DMAC is mandatory. Otherwise we use dstMac, but only if
+    // PAR_ETH_DMAC is not provided!
+    // -> PAR_ETH_DMAC has priority over an upper layer provided dstMac
+    const cMacAddress& dmac = optionalDMAC 
+        ? m_protocol->getValueOrDefault (&PAR_ETH_DMAC, *dstMac) 
+        : m_protocol->getValue<cMacAddress> (&PAR_ETH_DMAC);
+    const cMacAddress& smac = m_protocol->getValueOrDefault (&PAR_ETH_SMAC, cSettings::get().getMyMAC());
+    setMacHeader (smac, dmac);
+
+    // VLAN tags
+    ProtocolParameter* parVid = nullptr;
+    while ((parVid = m_protocol->findInRange (&PAR_ETH_VID, parVid, nullptr, true)) != nullptr)
     {
-        delete[] data;
-
-        data             = other.data;
-        packet           = other.packet;
-        packetMaxLength  = other.packetMaxLength;
-        pPayload         = other.pPayload;
-        pEthertypeLength = other.pEthertypeLength;
-        payloadLength    = other.payloadLength;
-        llcHeaderLength  = other.llcHeaderLength;
-        hasDMAC          = other.hasDMAC;
-
-        other.data             = nullptr;
-        other.packet           = nullptr;
-        other.packetMaxLength  = 0;
-        other.pPayload         = nullptr;
-        other.pEthertypeLength = nullptr;
-        other.payloadLength    = 0;
-        other.llcHeaderLength  = 0;
+        bool isCTag   = m_protocol->getValueInRangeOrDefault (&PAR_ETH_VTYPE, parVid, &PAR_ETH_VID, 1) == 1;
+        uint16_t vid  = parVid->asInt16();
+        uint16_t prio = m_protocol->getValueInRangeOrDefault (&PAR_ETH_PRIO, parVid, &PAR_ETH_VID, 0);
+        uint16_t dei  = m_protocol->getValueInRangeOrDefault (&PAR_ETH_DEI, parVid, &PAR_ETH_VID, 0);
+        addVlanTag (isCTag, vid, prio, dei);
     }
 
-    return *this;
+    // LLC header
+    // NOTE: dsap and ssap are mandatory parameters for LLC header;
+    //       if only one of them is defined, we ignore all LLC parameters
+    ProtocolParameter* parDsap = m_protocol->find (&PAR_ETH_DSAP, true);
+    if (parDsap)
+    {
+        uint8_t  dsap = parDsap->asInt8();
+        uint8_t  ssap = m_protocol->getValue<uint8_t> (&PAR_ETH_SSAP);
+        uint16_t ctrl = m_protocol->getValueOrDefault<uint16_t> (&PAR_ETH_CONTROL, 0x0003);
+        addLlcHeader (dsap, ssap, ctrl);
+    }
+    else
+    {
+        // if there is no dsap parameter, we check for a SNAP header
+        ProtocolParameter* parOui = m_protocol->find (&PAR_ETH_OUI, true);
+        if (parOui)
+        {
+            uint32_t oui      = parOui->asInt32();
+            uint16_t protocol = m_protocol->getValue<uint16_t> (&PAR_ETH_PROTOCOL);
+            addSnapHeader (oui, protocol);
+        }
+    }
+
+    // reserve space for payload
+    setPayloadLength  (0, 0);
+    checkPacketLength (0, payloadLength);
+    setPayloadLength  (0, payloadLength);
+
+    // if llc header or no ethertype/length is provided, we calculate the length ourself
+    ProtocolParameter* parEthertypeLength = nullptr;
+    if (hasLlcHeader () || (parEthertypeLength = m_protocol->find (&PAR_ETH_ETHERTYPE, true)) == nullptr)
+    {
+        setLength (0);
+    }
+    else
+    {
+        m_hasEthertype = true;
+        setTypeLength (parEthertypeLength->asInt16 ());
+    }
+
+    // return pointer to payload
+    return ptrPayload (0);
 }
 
 
-void cEthernetPacket::reset ()
+uint8_t* Ethernet::compileFragment (size_t fragment, size_t payloadLength)
 {
-    pPayload          = packet;
-    pPayload         += sizeof (mac_header_t);
-    pEthertypeLength  = (uint16_t*)(&((mac_header_t*)packet)->ethertypeLength);
-    payloadLength     = 0;
-    llcHeaderLength   = 0;
-    hasDMAC           = false;
-    *pEthertypeLength = 0;
+    BUG_ON (fragment < 1); // compile() must be used for the first fragment
+
+    // allocate memory
+    if (fragment >= m_data.size ())
+    {
+        uint64_t* p = new uint64_t[m_allocSize64];
+#ifdef WITH_UNITTESTS
+        std::memset (p, MEMSET_VAL, m_allocSize64 * sizeof (uint64_t));
+#endif
+        m_data.emplace_back (p, 0);
+    }
+
+    // copy header of first fragment
+    std::memcpy (ptrPacket(fragment), ptrPacket(0), m_payloadOffset);
+
+    // reserve space for payload
+    setPayloadLength  (fragment, 0);
+    checkPacketLength (fragment, payloadLength);
+    setPayloadLength  (fragment, payloadLength);
+
+    // adjust length in case of non-ethertype
+    if (!m_hasEthertype)
+        setLength (fragment);
+
+    // return pointer to payload
+    return ptrPayload (fragment);
 }
 
 
-void cEthernetPacket::updatePosition (size_t len)
-{
-    pPayload += len;
-    pEthertypeLength = (uint16_t*)((uint8_t*)pEthertypeLength + len);
-}
-
-
-void cEthernetPacket::setTypeLength (uint16_t ethertypeLength)
-{
-    *pEthertypeLength = htons (ethertypeLength);
-}
-
-
-void cEthernetPacket::setLength ()
-{
-    setTypeLength (uint16_t(payloadLength + llcHeaderLength));
-}
-
-
-void cEthernetPacket::setMacHeader (const cMacAddress& src, const cMacAddress& dest)
-{
-    setSrcMac (src);
-    setDestMac (dest);
-}
-
-
-void cEthernetPacket::setDestMac (const cMacAddress& dest)
-{
-    // mac header contains source and destination mac and is always at the begin of the packet
-    mac_header_t* header = (mac_header_t*)packet;
-    std::memcpy(&header->dest, dest.get(), dest.size());
-    hasDMAC = true;
-}
-
-
-void cEthernetPacket::getDestMac (cMacAddress& dest) const
-{
-    mac_header_t* header = (mac_header_t*)packet;
-    dest.set(&header->dest, sizeof (header->dest));
-}
-
-
-void cEthernetPacket::setSrcMac (const cMacAddress& src)
-{
-    // mac header contains source and destination mac and is always at the begin of the packet
-    mac_header_t* header = (mac_header_t*)packet;
-    std::memcpy(&header->src, src.get(), src.size());
-}
-
-
-void cEthernetPacket::getSrcMac (cMacAddress& src) const
-{
-    mac_header_t* header = (mac_header_t*)packet;
-    src.set(&header->src, sizeof (header->src));
-}
-
-
-void cEthernetPacket::addLlcHeader (uint8_t dsap, uint8_t ssap, uint16_t control)
+void Ethernet::addLlcHeader (uint8_t dsap, uint8_t ssap, uint16_t control)
 {
     // size of the control word can either be 8 or 16 bits (depends on its content)
-    llcHeaderLength = (control & 0x0003) == 3 ?
+    m_llcHeaderLength = (control & 0x0003) == 3 ?
             sizeof (llc_t) - 1 : sizeof (llc_t);
 
-    checkPacketLength (llcHeaderLength);
+    checkPacketLength (0, m_llcHeaderLength);
 
-    // if there is already payload, we move it
-    if (payloadLength)
-    {
-        std::memmove (pPayload + llcHeaderLength, pPayload, payloadLength);
-    }
-
-    llc_t* llc = (llc_t*)pPayload;
+    llc_t* llc = (llc_t*)ptrPayload (0);
 
     llc->dsap = dsap;
     llc->ssap = ssap;
@@ -218,372 +197,330 @@ void cEthernetPacket::addLlcHeader (uint8_t dsap, uint8_t ssap, uint16_t control
         llc->control.c16 = htons (control);
     }
 
-    pPayload += llcHeaderLength;
-    setLength ();
+    m_payloadOffset += m_llcHeaderLength;
 }
 
 
-void cEthernetPacket::addSnapHeader (uint32_t oui, uint16_t protocol)
+void Ethernet::addSnapHeader (uint32_t oui, uint16_t protocol)
 {
     addLlcHeader (0xaa, 0xaa, 3);
 
-    checkPacketLength (sizeof (snap_t));
+    checkPacketLength (0, sizeof (snap_t));
 
-    // if there is already payload, we move it
-    if (payloadLength)
-    {
-        std::memmove (pPayload + sizeof (snap_t), pPayload, payloadLength);
-    }
-
-    llcHeaderLength += sizeof (snap_t);
+    m_llcHeaderLength += sizeof (snap_t);
     oui = htonl (oui);
 
-    snap_t* snap   = (snap_t*)pPayload;
+    snap_t* snap   = (snap_t*)ptrPayload (0);
     snap->oui.a    = uint8_t((oui >>  8) & 0x000000ff);
     snap->oui.b    = uint8_t((oui >> 16) & 0x000000ff);
     snap->oui.c    = uint8_t((oui >> 24) & 0x000000ff);
     snap->protocol = htons (protocol);
 
-    pPayload += sizeof (snap_t);
-    setLength ();
+    m_payloadOffset += sizeof (snap_t);
 }
 
 
-void cEthernetPacket::addVlanTag (bool isCTag, uint16_t id, uint16_t prio, uint16_t dei)
+void Ethernet::addVlanTag (bool isCTag, uint16_t id, uint16_t prio, uint16_t dei)
 {
-    checkPacketLength (sizeof (vlan_t));
+    checkPacketLength (0, sizeof (vlan_t));
 
-    vlan_t* tag = (vlan_t*)pEthertypeLength;
+    vlan_t* tag = (vlan_t*)ptrEthertypeLength (0);
 
-    std::memmove ((uint8_t*)pEthertypeLength + sizeof (vlan_t), pEthertypeLength, 2 + payloadLength);
     isCTag ? tag->setCTag (id, prio, dei) : tag->setSTag (id, prio, dei);
-    updatePosition (sizeof (vlan_t));
+
+    m_payloadOffset += sizeof (vlan_t);
+    m_EthertypeLengthOffset += sizeof (vlan_t);
+}
+
+/*
+void Ethernet::setPayload (const uint8_t* payload, size_t len)
+{
+    m_payloadLength = 0;
+    checkPacketLength (len);
+    std::memcpy (this->ptrPayload (0), payload, len);
+    m_payloadLength = len;
 }
 
 
-void cEthernetPacket::setPayload (const uint8_t* payload, size_t len)
-{
-    payloadLength = 0;
-    checkPacketLength (len);
-    std::memcpy (pPayload, payload, len);
-    payloadLength = len;
-}
-
-
-void cEthernetPacket::appendPayload (const uint8_t* payload, size_t len)
+void Ethernet::appendPayload (const uint8_t* payload, size_t len)
 {
     checkPacketLength (len);
-    uint8_t* p = pPayload + payloadLength;
+    uint8_t* p = this->ptrPayload (0) + m_payloadLength;
     std::memcpy (p, payload, len);
-    payloadLength += len;
+    m_payloadLength += len;
 }
 
 
-void cEthernetPacket::setRaw (const uint8_t* payload, size_t len)
+void Ethernet::setRaw (const uint8_t* payload, size_t len)
 {
     reset ();
-    if (len > packetMaxLength)
+    if (unlikely (len > m_packetMaxLength))
         throw FormatException (exParRange, NULL);
-    std::memcpy (packet, payload, len);
-    payloadLength = len - sizeof (mac_header_t);
-    hasDMAC       = true;
+    std::memcpy (ptrPacket(0), payload, len);
+    m_payloadLength = len - sizeof (mac_header_t);
+    m_hasDMAC       = true;
 }
+*/
 
 
-const uint8_t* cEthernetPacket::get () const
-{
-    return packet;
-}
-
-
-void cEthernetPacket::updatePayloadAt (unsigned offset, const void* payload, size_t len)
-{
-    if ((offset + len) > payloadLength)
-        throw FormatException (exParRange, NULL);
-
-    std::memcpy (&(pPayload[offset]), payload, len);
-}
 
 
 #ifdef WITH_UNITTESTS
-#include "console.hpp"
-
-void cEthernetPacket::unitTest ()
+void Ethernet::unitTest ()
 {
     Console::PrintDebug("-- " __FILE__ " --\n");
 
-    cMacAddress src("12:34:56:78:9a:bc");
-    cMacAddress dst("11:22:33:44:55:66");
-
+    try
+    {
+        Ethernet obj(std::unique_ptr<Protocol>(new Protocol ("eth(dmac=11:22:33:44:55:66, smac=10:20:30:40:50:60, payload=1234)")));
+        BUG_ON (obj.m_payloadOffset != 14);
+        BUG_ON (obj.m_EthertypeLengthOffset != 12);
+        BUG_ON (obj.m_llcHeaderLength != 0);
+        BUG_ON (obj.m_hasDMAC);
+        BUG_ON (obj.m_hasEthertype);
+        BUG_ON (obj.m_data.size() != 1);
+        BUG_ON (obj.length(0) != 14);
+        BUG_ON (obj.payloadLength(0) != 0);
+        BUG_ON (!obj.checkConsistency ());
+        obj.compile ();
+        BUG_ON (obj.m_payloadOffset != 14);
+        BUG_ON (obj.m_EthertypeLengthOffset != 12);
+        BUG_ON (obj.m_llcHeaderLength != 0);
+        BUG_ON (!obj.m_hasDMAC);
+        BUG_ON (obj.m_hasEthertype);
+        BUG_ON (obj.m_data.size() != 1);
+        BUG_ON (obj.length(0) != 16);
+        BUG_ON (obj.payloadLength(0) != 2);
+        const auto& [data, len] = obj.get(0);
+        BUG_ON (len != 16);
+        BUG_ON (memcmp (data, "\x11\x22\x33\x44\x55\x66\x10\x20\x30\x40\x50\x60\x00\x02\x12\x34", len));
+        BUG_ON (!obj.checkConsistency ());
+    }
+    catch (...)
+    {
+        BUG ("expected not to throw");
+    }
 
     try
     {
-        cEthernetPacket obj(MAX_DOUBLE_TAGGED_PACKET + 1);
-        memset (obj.packet, 0xcc, MAX_DOUBLE_TAGGED_PACKET + 1);
-        obj.clear();
-
-        obj.setMacHeader(src, dst);
-        BUG_IF_NOT (!memcmp (obj.packet, "\x11\x22\x33\x44\x55\x66\x12\x34\x56\x78\x9a\xbc\x00\x00\xcc\xcc", 16));
-        BUG_IF_NOT (obj.getLength() == 14);
-        obj.setLength ();
-        BUG_IF_NOT (obj.getLength() == 14);
-        BUG_IF_NOT (!memcmp (obj.packet, "\x11\x22\x33\x44\x55\x66\x12\x34\x56\x78\x9a\xbc\x00\x00\xcc\xcc", 16));
-        obj.setTypeLength (0x1234);
-        BUG_IF_NOT (!memcmp (obj.packet, "\x11\x22\x33\x44\x55\x66\x12\x34\x56\x78\x9a\xbc\x12\x34\xcc\xcc", 16));
-        BUG_IF_NOT (obj.getLength() == 14);
-        obj.addVlanTag(false, 12, 7, 0);
-        BUG_IF_NOT (!memcmp (obj.packet, "\x11\x22\x33\x44\x55\x66\x12\x34\x56\x78\x9a\xbc\x88\xa8\xe0\x0c\x12\x34\xcc\xcc", 20));
-        BUG_IF_NOT (obj.getLength() == 18);
-        obj.setPayload ((uint8_t*)"\xaa\xbb\xcc\xdd\xee\xff\x0a\x0b\x0c\x0d\x0e\x0f", 12);
-        BUG_IF_NOT (obj.getLength() == 30);
-        BUG_IF_NOT (!memcmp (obj.packet, "\x11\x22\x33\x44\x55\x66\x12\x34\x56\x78\x9a\xbc\x88\xa8\xe0\x0c\x12\x34\xaa\xbb\xcc\xdd\xee\xff\x0a\x0b\x0c\x0d\x0e\x0f\xcc\xcc", 32));
-        obj.addVlanTag(true, 12, 7, 0);
-        BUG_IF_NOT (!memcmp (obj.packet, "\x11\x22\x33\x44\x55\x66\x12\x34\x56\x78\x9a\xbc\x88\xa8\xe0\x0c\x81\x00\xe0\x0c\x12\x34\xaa\xbb\xcc\xdd\xee\xff\x0a\x0b\x0c\x0d\x0e\x0f\xcc\xcc", 36));
-        BUG_IF_NOT (obj.getLength() == 34);
-        obj.setLength();
-        BUG_IF_NOT (!memcmp (obj.packet, "\x11\x22\x33\x44\x55\x66\x12\x34\x56\x78\x9a\xbc\x88\xa8\xe0\x0c\x81\x00\xe0\x0c\x00\x0c\xaa\xbb\xcc\xdd\xee\xff\x0a\x0b\x0c\x0d\x0e\x0f\xcc\xcc", 36));
-        obj.addLlcHeader(0x10, 0x20, 3);
-        BUG_IF_NOT (obj.getLength() == 37);
-
+        Ethernet obj(std::unique_ptr<Protocol>(new Protocol ("eth(dmac=11:22:33:44:55:66, smac=10:20:30:40:50:60, payload=1234, ethertype=0x800)")));
+        for (int n = 0; n < 2; n++)
         {
-            // test copy constructor
-            cEthernetPacket cpy(obj);
-            BUG_IF_NOT (obj.data != cpy.data);
-            BUG_IF_NOT (obj.packet != cpy.packet);
-            BUG_IF_NOT (obj.pPayload != cpy.pPayload);
-            BUG_IF_NOT (obj.pEthertypeLength != cpy.pEthertypeLength);
-            BUG_IF_NOT (obj.packetMaxLength == cpy.packetMaxLength);
-            BUG_IF_NOT (obj.payloadLength == cpy.payloadLength);
-            BUG_IF_NOT (obj.llcHeaderLength == cpy.llcHeaderLength);
-            BUG_IF_NOT (*obj.data == *cpy.data);
-            BUG_IF_NOT (*obj.packet == *cpy.packet);
-            BUG_IF_NOT (*obj.pPayload == *cpy.pPayload);
-            BUG_IF_NOT (*obj.pEthertypeLength == *cpy.pEthertypeLength);
-            BUG_IF_NOT (!memcmp (obj.packet, cpy.packet, (obj.pPayload + obj.payloadLength) - obj.packet));
-        }
-
-        memset (obj.packet, 0xcc, MAX_DOUBLE_TAGGED_PACKET + 1);
-        obj.reset();
-        obj.setMacHeader(src, dst);
-        obj.addSnapHeader(0x00808182, 0x9876);
-        BUG_IF_NOT (!memcmp (obj.packet, "\x11\x22\x33\x44\x55\x66\x12\x34\x56\x78\x9a\xbc\x00\x08\xaa\xaa\x03\x80\x81\x82\x98\x76\xcc\xcc", 24));
-        BUG_IF_NOT (obj.getLength() == 22);
-
-        {
-            // test copy constructor
-            cEthernetPacket cpy(obj);
-            BUG_IF_NOT (obj.data != cpy.data);
-            BUG_IF_NOT (obj.packet != cpy.packet);
-            BUG_IF_NOT (obj.pPayload != cpy.pPayload);
-            BUG_IF_NOT (obj.pEthertypeLength != cpy.pEthertypeLength);
-            BUG_IF_NOT (obj.packetMaxLength == cpy.packetMaxLength);
-            BUG_IF_NOT (obj.payloadLength == cpy.payloadLength);
-            BUG_IF_NOT (obj.llcHeaderLength == cpy.llcHeaderLength);
-            BUG_IF_NOT (*obj.data == *cpy.data);
-            BUG_IF_NOT (*obj.packet == *cpy.packet);
-            BUG_IF_NOT (*obj.pEthertypeLength == *cpy.pEthertypeLength);
-            BUG_IF_NOT (!memcmp (obj.packet, cpy.packet, obj.getLength()));
+            obj.compile ();
+            BUG_ON (obj.m_payloadOffset != 14);
+            BUG_ON (obj.m_EthertypeLengthOffset != 12);
+            BUG_ON (obj.m_llcHeaderLength != 0);
+            BUG_ON (!obj.m_hasDMAC);
+            BUG_ON (!obj.m_hasEthertype);
+            BUG_ON (obj.m_data.size() != 1);
+            BUG_ON (obj.length(0) != 16);
+            BUG_ON (obj.payloadLength(0) != 2);
+            const auto& [data, len] = obj.get(0);
+            BUG_ON (len != 16);
+            BUG_ON (memcmp (data, "\x11\x22\x33\x44\x55\x66\x10\x20\x30\x40\x50\x60\x08\x00\x12\x34", len));
+            BUG_ON (!obj.checkConsistency ());
         }
     }
-    catch (FormatException& )
+    catch (...)
     {
-        BUG_IF_NOT (0);
+        BUG ("expected not to throw");
     }
 
-    bool catched = false;
     try
     {
-        cEthernetPacket obj(sizeof (mac_header_t) + sizeof(vlan_t));
-        obj.addVlanTag(false, 12, 7, 0);
+        Ethernet obj(std::unique_ptr<Protocol>(new Protocol ("eth(dmac=11:22:33:44:55:66, smac=10:20:30:40:50:60, payload=1234, ethertype=0x800, vid=0x42)")));
+        for (int n = 0; n < 2; n++)
+        {
+            obj.compile ();
+            BUG_ON (obj.m_payloadOffset != 18);
+            BUG_ON (obj.m_EthertypeLengthOffset != 16);
+            BUG_ON (obj.m_llcHeaderLength != 0);
+            BUG_ON (!obj.m_hasDMAC);
+            BUG_ON (!obj.m_hasEthertype);
+            BUG_ON (obj.m_data.size() != 1);
+            BUG_ON (obj.length(0) != 20);
+            BUG_ON (obj.payloadLength(0) != 2);
+            const auto& [data, len] = obj.get(0);
+            BUG_ON (len != 20);
+            BUG_ON (memcmp (data, "\x11\x22\x33\x44\x55\x66\x10\x20\x30\x40\x50\x60\x81\x00\x00\x42\x08\x00\x12\x34", len));
+            BUG_ON (!obj.checkConsistency ());
+        }
     }
-    catch (FormatException& )
+    catch (...)
     {
-        BUG_IF_NOT (0);
+        BUG ("expected not to throw");
     }
-    try
-    {
-        catched = false;
-        cEthernetPacket obj(sizeof (mac_header_t) + sizeof(vlan_t)-1);
-        obj.addVlanTag(false, 12, 7, 0);
-    }
-    catch (FormatException& )
-    {
-        catched = true;
-    }
-    BUG_IF_NOT (catched);
-
-    try
-    {
-        cEthernetPacket obj(sizeof (mac_header_t) + 2*sizeof(vlan_t));
-        obj.addVlanTag(false, 12, 7, 0);
-        obj.addVlanTag(true, 12, 7, 0);
-    }
-    catch (FormatException& )
-    {
-        BUG_IF_NOT (0);
-    }
-    try
-    {
-        catched = false;
-        cEthernetPacket obj(sizeof (mac_header_t) + 2*sizeof(vlan_t)-1);
-        obj.addVlanTag(false, 12, 7, 0);
-        obj.addVlanTag(true, 12, 7, 0);
-    }
-    catch (FormatException& )
-    {
-        catched = true;
-    }
-    BUG_IF_NOT (catched);
 
     try
     {
-        cEthernetPacket obj(sizeof (mac_header_t));
-        obj.setRaw((uint8_t*)"\x12\x34\x56\x78\x90\x12\x34\x56\x78\x90\xaa\xbb\xcc\xdd", 14);
+        Ethernet obj(std::unique_ptr<Protocol>(new Protocol ("eth(dmac=11:22:33:44:55:66, smac=10:20:30:40:50:60, payload=1234, ethertype=0x800, vid=0x1, prio=1, dei=1, vtype=2)")));
+        for (int n = 0; n < 2; n++)
+        {
+            obj.compile ();
+            BUG_ON (obj.m_payloadOffset != 18);
+            BUG_ON (obj.m_EthertypeLengthOffset != 16);
+            BUG_ON (obj.m_llcHeaderLength != 0);
+            BUG_ON (!obj.m_hasDMAC);
+            BUG_ON (!obj.m_hasEthertype);
+            BUG_ON (obj.m_data.size() != 1);
+            BUG_ON (obj.length(0) != 20);
+            BUG_ON (obj.payloadLength(0) != 2);
+            const auto& [data, len] = obj.get(0);
+            BUG_ON (len != 20);
+            BUG_ON (memcmp (data, "\x11\x22\x33\x44\x55\x66\x10\x20\x30\x40\x50\x60\x88\xa8\x30\x01\x08\x00\x12\x34", len));
+            BUG_ON (!obj.checkConsistency ());
+        }
     }
-    catch (FormatException& )
+    catch (...)
     {
-        BUG_IF_NOT (0);
+        BUG ("expected not to throw");
     }
-    try
-    {
-        catched = false;
-        cEthernetPacket obj(sizeof (mac_header_t));
-        obj.setRaw((uint8_t* )"\x12\x34\x56\x78\x90\x12\x34\x56\x78\x90\xaa\xbb\xcc\xdd\xee", 15);
-    }
-    catch (FormatException& )
-    {
-        catched = true;
-    }
-    BUG_IF_NOT (catched);
 
     try
     {
-        cEthernetPacket obj(sizeof (mac_header_t) + 1);
-        obj.setPayload ((uint8_t* )"\xaa", 1);
+        Ethernet obj(std::unique_ptr<Protocol>(new Protocol ("eth(dmac=11:22:33:44:55:66, smac=10:20:30:40:50:60, payload=1234, ethertype=0x800, vid=0x1, prio=1, dei=1, vtype=2, vid=42)")));
+        for (int n = 0; n < 2; n++)
+        {
+            obj.compile ();
+            BUG_ON (obj.m_payloadOffset != 22);
+            BUG_ON (obj.m_EthertypeLengthOffset != 20);
+            BUG_ON (obj.m_llcHeaderLength != 0);
+            BUG_ON (!obj.m_hasDMAC);
+            BUG_ON (!obj.m_hasEthertype);
+            BUG_ON (obj.m_data.size() != 1);
+            BUG_ON (obj.length(0) != 24);
+            BUG_ON (obj.payloadLength(0) != 2);
+            const auto& [data, len] = obj.get(0);
+            BUG_ON (len != 24);
+            BUG_ON (memcmp (data, "\x11\x22\x33\x44\x55\x66\x10\x20\x30\x40\x50\x60\x88\xa8\x30\x01\x81\x00\x00\x2a\x08\x00\x12\x34", len));
+            BUG_ON (!obj.checkConsistency ());
+        }
     }
-    catch (FormatException& )
+    catch (...)
     {
-        BUG_IF_NOT (0);
+        BUG ("expected not to throw");
     }
-    try
-    {
-        catched = false;
-        cEthernetPacket obj(sizeof (mac_header_t) + 1);
-        obj.setPayload ((uint8_t* )"\xaa\xbb", 2);
-    }
-    catch (FormatException& )
-    {
-        catched = true;
-    }
-    BUG_IF_NOT (catched);
 
     try
     {
-        cEthernetPacket obj(sizeof (mac_header_t) + sizeof(llc_t));
-        obj.addLlcHeader(12, 34, 0);
+        Ethernet obj(std::unique_ptr<Protocol>(new Protocol ("eth(dmac=11:22:33:44:55:66, smac=10:20:30:40:50:60, payload=1234, dsap=1, ssap=2, control=3)")));
+        for (int n = 0; n < 2; n++)
+        {
+            obj.compile ();
+            BUG_ON (obj.m_payloadOffset != 17);
+            BUG_ON (obj.m_EthertypeLengthOffset != 12);
+            BUG_ON (obj.m_llcHeaderLength != 3);
+            BUG_ON (!obj.m_hasDMAC);
+            BUG_ON (obj.m_hasEthertype);
+            BUG_ON (obj.m_data.size() != 1);
+            BUG_ON (obj.length(0) != 19);
+            BUG_ON (obj.payloadLength(0) != 2);
+            const auto& [data, len] = obj.get(0);
+            BUG_ON (len != 19);
+            BUG_ON (memcmp (data, "\x11\x22\x33\x44\x55\x66\x10\x20\x30\x40\x50\x60\x00\x05\x01\x02\x03\x12\x34", len));
+            BUG_ON (!obj.checkConsistency ());
+        }
     }
-    catch (FormatException& )
+    catch (...)
     {
-        BUG_IF_NOT (0);
+        BUG ("expected not to throw");
     }
-    try
-    {
-        catched = false;
-        cEthernetPacket obj(sizeof (mac_header_t) + sizeof(llc_t)-1);
-        obj.addLlcHeader(12, 34, 0);
-    }
-    catch (FormatException& )
-    {
-        catched = true;
-    }
-    BUG_IF_NOT (catched);
 
     try
     {
-        cEthernetPacket obj(sizeof (mac_header_t) + sizeof(llc_t) - 1);
-        obj.addLlcHeader(12, 34, 3);
+        Ethernet obj(std::unique_ptr<Protocol>(new Protocol ("eth(dmac=11:22:33:44:55:66, smac=10:20:30:40:50:60, payload=1234, dsap=1, ssap=2, control=4)")));
+        for (int n = 0; n < 2; n++)
+        {
+            obj.compile ();
+            BUG_ON (obj.m_payloadOffset != 18);
+            BUG_ON (obj.m_EthertypeLengthOffset != 12);
+            BUG_ON (obj.m_llcHeaderLength != 4);
+            BUG_ON (!obj.m_hasDMAC);
+            BUG_ON (obj.m_hasEthertype);
+            BUG_ON (obj.m_data.size() != 1);
+            BUG_ON (obj.length(0) != 20);
+            BUG_ON (obj.payloadLength(0) != 2);
+            const auto& [data, len] = obj.get(0);
+            BUG_ON (len != 20);
+            BUG_ON (memcmp (data, "\x11\x22\x33\x44\x55\x66\x10\x20\x30\x40\x50\x60\x00\x06\x01\x02\x00\x04\x12\x34", len));
+            BUG_ON (!obj.checkConsistency ());
+        }
     }
-    catch (FormatException& )
+    catch (...)
     {
-        BUG_IF_NOT (0);
+        BUG ("expected not to throw");
     }
-    try
-    {
-        catched = false;
-        cEthernetPacket obj(sizeof (mac_header_t) + sizeof(llc_t) - 1 - 1);
-        obj.addLlcHeader(12, 34, 3);
-    }
-    catch (FormatException& )
-    {
-        catched = true;
-    }
-    BUG_IF_NOT (catched);
 
     try
     {
-        cEthernetPacket obj(sizeof (mac_header_t) + sizeof(llc_t) + sizeof(snap_t) - 1);
-        obj.addSnapHeader(0x123456, 1234);
+        Ethernet obj(std::unique_ptr<Protocol>(new Protocol ("eth(dmac=11:22:33:44:55:66, smac=10:20:30:40:50:60, payload=1234, dsap=1, ssap=2, control=4, vid=0x42)")));
+        for (int n = 0; n < 2; n++)
+        {
+            obj.compile ();
+            BUG_ON (obj.m_payloadOffset != 22);
+            BUG_ON (obj.m_EthertypeLengthOffset != 16);
+            BUG_ON (obj.m_llcHeaderLength != 4);
+            BUG_ON (!obj.m_hasDMAC);
+            BUG_ON (obj.m_hasEthertype);
+            BUG_ON (obj.m_data.size() != 1);
+            BUG_ON (obj.length(0) != 24);
+            BUG_ON (obj.payloadLength(0) != 2);
+            const auto& [data, len] = obj.get(0);
+            BUG_ON (len != 24);
+            BUG_ON (memcmp (data, "\x11\x22\x33\x44\x55\x66\x10\x20\x30\x40\x50\x60\x81\x00\x00\x42\x00\x06\x01\x02\x00\x04\x12\x34", len));
+            BUG_ON (!obj.checkConsistency ());
+        }
     }
-    catch (FormatException& )
+    catch (...)
     {
-        BUG_IF_NOT (0);
+        BUG ("expected not to throw");
     }
-    try
-    {
-        catched = false;
-        cEthernetPacket obj(sizeof (mac_header_t) + sizeof(llc_t) + sizeof(snap_t) - 1 - 1);
-        obj.addSnapHeader(0x123456, 1234);
-    }
-    catch (FormatException& )
-    {
-        catched = true;
-    }
-    BUG_IF_NOT (catched);
 
     try
     {
-        uint8_t payload[(MAX_DOUBLE_TAGGED_PACKET - 30)];
-        memset (payload, 0, sizeof (payload));
-        cEthernetPacket obj(MAX_DOUBLE_TAGGED_PACKET+1);
-        memset (obj.packet, 0xcc, MAX_DOUBLE_TAGGED_PACKET+1);
-        obj.reset();
-        obj.addVlanTag(false, 12, 7, 0);
-        BUG_IF_NOT (obj.packet[18] == 0xcc);
-        obj.addVlanTag(true, 12, 7, 0);
-        BUG_IF_NOT (obj.packet[22] == 0xcc);
-        obj.addSnapHeader(0x123456, 1234);
-        BUG_IF_NOT (obj.packet[30] == 0xcc);
-        obj.setPayload (payload, sizeof (payload));
-        BUG_IF_NOT (obj.packet[30] == 0);
-        BUG_IF_NOT (obj.packet[MAX_DOUBLE_TAGGED_PACKET-1] == 0);
-        BUG_IF_NOT (obj.packet[MAX_DOUBLE_TAGGED_PACKET] == 0xcc);
+        Ethernet obj(std::unique_ptr<Protocol>(new Protocol ("eth(dmac=11:22:33:44:55:66, smac=10:20:30:40:50:60, payload=1234, dsap=1, ssap=2, control=4, vid=0x42, vid=4095)")));
+        for (int n = 0; n < 2; n++)
+        {
+            obj.compile ();
+            BUG_ON (obj.m_payloadOffset != 26);
+            BUG_ON (obj.m_EthertypeLengthOffset != 20);
+            BUG_ON (obj.m_llcHeaderLength != 4);
+            BUG_ON (!obj.m_hasDMAC);
+            BUG_ON (obj.m_hasEthertype);
+            BUG_ON (obj.m_data.size() != 1);
+            BUG_ON (obj.length(0) != 28);
+            BUG_ON (obj.payloadLength(0) != 2);
+            const auto& [data, len] = obj.get(0);
+            BUG_ON (len != 28);
+            BUG_ON (memcmp (data, "\x11\x22\x33\x44\x55\x66\x10\x20\x30\x40\x50\x60\x81\x00\x00\x42\x81\x00\x0f\xff\x00\x06\x01\x02\x00\x04\x12\x34", len));
+            BUG_ON (!obj.checkConsistency ());
+        }
     }
-    catch (FormatException& )
+    catch (...)
     {
-        BUG_IF_NOT (0);
+        BUG ("expected not to throw");
     }
-    try
+}
+
+bool Ethernet::checkConsistency () const
+{
+    for (const auto& d : m_data)
     {
-        catched = false;
-        uint8_t payload[(MAX_DOUBLE_TAGGED_PACKET - 29)];
-        memset (payload, 0, sizeof (payload));
-        cEthernetPacket obj(MAX_DOUBLE_TAGGED_PACKET);
-        memset (obj.packet, 0xcc, MAX_DOUBLE_TAGGED_PACKET);
-        obj.reset();
-        obj.addVlanTag(false, 12, 7, 0);
-        BUG_IF_NOT (obj.packet[18] == 0xcc);
-        obj.addVlanTag(true, 12, 7, 0);
-        BUG_IF_NOT (obj.packet[22] == 0xcc);
-        obj.addSnapHeader(0x123456, 1234);
-        BUG_IF_NOT (obj.packet[30] == 0xcc);
-        obj.setPayload (payload, sizeof (payload));
-        BUG_IF_NOT (obj.packet[30] == 0);
-        BUG_IF_NOT (obj.packet[MAX_DOUBLE_TAGGED_PACKET-1] == 0);
+        if (d.first == nullptr)
+            return false;
+        if (d.second + m_payloadOffset > m_packetMaxLength)
+            return false;
+        
+        uint8_t* p = reinterpret_cast<uint8_t*>(d.first) + m_payloadOffset + d.second;
+        while (p < reinterpret_cast<uint8_t*>(d.first) + m_allocSize64 * sizeof (uint64_t))
+        {
+            if (*p != MEMSET_VAL)
+                return false;
+            p++;
+        }
     }
-    catch (FormatException& )
-    {
-        catched = true;
-    }
-    BUG_IF_NOT (catched);
+    return true;
 }
 #endif
+
+}

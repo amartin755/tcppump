@@ -20,11 +20,13 @@
 #include <cstdio>
 
 #include "bug.hpp"
+#include "settings.hpp"
 #include "console.hpp"
 #include "timeval.hpp"
 #include "cmdline.hpp"
 #include "pcapfileio.hpp"
 #include "ethernetpacket.hpp"
+#include "ethernet.hpp"
 #include "arppacket.hpp"
 #include "bug.hpp"
 #include "ippacket.hpp"
@@ -73,9 +75,11 @@ int main (int argc, char* argv[])
         cIPv4::unitTest ();
         cIPv6::unitTest ();
         cMacAddress::unitTest ();
+        cSettings::get().setMyMAC(cMacAddress("00:af:fe:0c:af:fe"));
         cTimeval::unitTest ();
         cInetChecksum::unitTest();
         cEthernetPacket::unitTest ();
+        Protocols::Ethernet::unitTest ();
         cArpPacket::unitTest ();
         cIPPacket::unitTest ();
         cParameterList::unitTest ();
