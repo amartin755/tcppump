@@ -1,5 +1,20 @@
-# 0.4.1
+# 0.5.0
 _UNRELEASED_, Andreas Martin <netnag@mailbox.org>
+
+## Added
+-
+
+## Changed
+-
+
+## Fixed
+-
+
+## Removed
+-
+
+# 0.4.1
+_2026-11-04 20:10:01 +0100_, Andreas Martin <netnag@mailbox.org>
 
 ## Added
 - compiler: The IPv4 header checksum can be set manually using the new 'hchksum' parameter.
