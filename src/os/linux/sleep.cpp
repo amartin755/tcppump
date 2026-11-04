@@ -78,7 +78,7 @@ cTimeval SleepInit ()
         totalTime += elapsedTime.count ();
     }
     totalTime /= 1000;
-    resolution.setUs (totalTime / LOOPS);
+    resolution.setUs (totalTime / LOOPS < 1 ? 1 : totalTime / LOOPS);
 
     return resolution;
 }
