@@ -114,11 +114,11 @@ jobs:
         install: >-
           git
           make
+          python-yaml
         pacboy: >-
           toolchain:p
           cmake:p
           ninja:p
-          python-yaml:p
 
     - name: 'msys2: Configure, build and test'
       working-directory: ${{github.workspace}}
