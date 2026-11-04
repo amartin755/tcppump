@@ -33,7 +33,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         submodules: 'true'
 
@@ -47,7 +47,7 @@ jobs:
         scripts/build-and-test-${{ matrix.toolchain }}.sh
 
     - name: Upload logfiles
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: always()
       with:
         name: logfiles-${{ matrix.os }}-${{ matrix.toolchain }}
@@ -68,7 +68,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         submodules: 'true'
 
@@ -142,7 +142,7 @@ jobs:
         ctest -C ${{ matrix.build }}
 
     - name: Upload logfiles
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: always()
       with:
         name: logfiles-${{ matrix.build }}-${{ matrix.os }}-${{ matrix.toolchain }}
@@ -152,7 +152,7 @@ jobs:
           ${{github.workspace}}/build/Testing/Temporary/LastTest.log
 
     - name: Upload binaries in case of failed test
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: failure() && (steps.ctest_step.outcome == 'failure' || steps.ctest_step2.outcome == 'failure')
       with:
         name: tcppump-exe-${{ matrix.build }}-${{ matrix.os }}-${{ matrix.toolchain }}
