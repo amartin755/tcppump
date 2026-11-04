@@ -8,13 +8,11 @@ _UNRELEASED_, Andreas Martin <netnag@mailbox.org>
 - build: build options for profiling (WITH_PROFILE)
 
 ## Changed
-- 
+- Updated submodule URL for libcmdline to relative path
 
 ## Fixed
 - IPv6: Fixed IPv6 source address handling. The --myip6 flag is now used reliably as the source address. Link-local IPv6 addresses are now correctly applied as the source address.
 
-## Removed
-- 
 
 # 0.4.0
 _2026-01-17 20:02:02 +0100_, Andreas Martin <netnag@mailbox.org>
