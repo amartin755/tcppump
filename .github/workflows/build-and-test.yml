@@ -33,7 +33,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         submodules: 'true'
 
@@ -47,7 +47,7 @@ jobs:
         scripts/build-and-test-${{ matrix.toolchain }}.sh
 
     - name: Upload logfiles
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: always()
       with:
         name: logfiles-${{ matrix.os }}-${{ matrix.toolchain }}
@@ -68,7 +68,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         submodules: 'true'
 
@@ -83,15 +83,26 @@ jobs:
       id: get_adapter
       run: |
         ipconfig /all
-        $name = (Get-NetAdapter | Where-Object {$_.Status -eq "Up" -and $_.InterfaceDescription -like "*Network Adapter*"} | Select-Object -First 1 -ExpandProperty Name)
+        $route = Get-NetRoute -AddressFamily IPv4 -DestinationPrefix "0.0.0.0/0" |
+          Sort-Object -Property RouteMetric |
+          Select-Object -First 1
+        if ($null -eq $route) {
+          throw "No IPv4 default route found; cannot determine the network adapter."
+        }
+        $adapter = Get-NetAdapter -InterfaceIndex $route.InterfaceIndex
+        if ($adapter.Status -ne "Up") {
+          throw "The IPv4 default route uses an adapter that is not up: $($adapter.Name)"
+        }
+        $name = $adapter.Name
+        Write-Host "Selected network adapter: $name ($($adapter.InterfaceDescription))"
         echo "adapter_name=$name" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-        
+
         # Download nmap only if not cached
         if (-Not (Test-Path "${{ runner.temp }}/nmap-cache/nmap.exe")) {
           New-Item -ItemType Directory -Force -Path "${{ runner.temp }}/nmap-cache" | Out-Null
           Invoke-WebRequest -Uri "https://nmap.org/dist/nmap-7.12-setup.exe" -OutFile "${{ runner.temp }}/nmap-cache/nmap.exe"
         }
-        
+
         Start-Process -Filepath "${{ runner.temp }}/nmap-cache/nmap.exe" -ArgumentList /S -Wait
 
     - name: 'Setup MSYS2'
@@ -103,11 +114,11 @@ jobs:
         install: >-
           git
           make
+          python-yaml
         pacboy: >-
           toolchain:p
           cmake:p
           ninja:p
-          python-yaml:p
 
     - name: 'msys2: Configure, build and test'
       working-directory: ${{github.workspace}}
@@ -131,7 +142,7 @@ jobs:
         ctest -C ${{ matrix.build }}
 
     - name: Upload logfiles
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: always()
       with:
         name: logfiles-${{ matrix.build }}-${{ matrix.os }}-${{ matrix.toolchain }}
@@ -141,7 +152,7 @@ jobs:
           ${{github.workspace}}/build/Testing/Temporary/LastTest.log
 
     - name: Upload binaries in case of failed test
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: failure() && (steps.ctest_step.outcome == 'failure' || steps.ctest_step2.outcome == 'failure')
       with:
         name: tcppump-exe-${{ matrix.build }}-${{ matrix.os }}-${{ matrix.toolchain }}
