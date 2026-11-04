@@ -95,6 +95,7 @@ jobs:
         }
         $name = $adapter.Name
         Write-Host "Selected network adapter: $name ($($adapter.InterfaceDescription))"
+        echo "adapter_name=$name" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
         # Download nmap only if not cached
         if (-Not (Test-Path "${{ runner.temp }}/nmap-cache/nmap.exe")) {
