@@ -83,15 +83,25 @@ jobs:
       id: get_adapter
       run: |
         ipconfig /all
-        $name = (Get-NetAdapter | Where-Object {$_.Status -eq "Up" -and $_.InterfaceDescription -like "*Network Adapter*"} | Select-Object -First 1 -ExpandProperty Name)
-        echo "adapter_name=$name" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-        
+        $route = Get-NetRoute -AddressFamily IPv4 -DestinationPrefix "0.0.0.0/0" |
+          Sort-Object -Property RouteMetric |
+          Select-Object -First 1
+        if ($null -eq $route) {
+          throw "No IPv4 default route found; cannot determine the network adapter."
+        }
+        $adapter = Get-NetAdapter -InterfaceIndex $route.InterfaceIndex
+        if ($adapter.Status -ne "Up") {
+          throw "The IPv4 default route uses an adapter that is not up: $($adapter.Name)"
+        }
+        $name = $adapter.Name
+        Write-Host "Selected network adapter: $name ($($adapter.InterfaceDescription))"
+
         # Download nmap only if not cached
         if (-Not (Test-Path "${{ runner.temp }}/nmap-cache/nmap.exe")) {
           New-Item -ItemType Directory -Force -Path "${{ runner.temp }}/nmap-cache" | Out-Null
           Invoke-WebRequest -Uri "https://nmap.org/dist/nmap-7.12-setup.exe" -OutFile "${{ runner.temp }}/nmap-cache/nmap.exe"
         }
-        
+
         Start-Process -Filepath "${{ runner.temp }}/nmap-cache/nmap.exe" -ArgumentList /S -Wait
 
     - name: 'Setup MSYS2'
