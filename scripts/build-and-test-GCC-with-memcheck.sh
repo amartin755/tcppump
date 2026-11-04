@@ -34,4 +34,4 @@ $SCRIPTPATH/utils/clean-build.sh -t -C RelWithDebInfo -T GCC -B $BUILDDIRNAME
 # execute all ctest test cases that don't need raw privileges (exclude diff)
 ###############################################################################
 cd $PROJROOT/$BUILDDIRNAME
-ctest -T memcheck -E "--diff|online-*" -j
+ctest -T memcheck -E "diff|online" -j
